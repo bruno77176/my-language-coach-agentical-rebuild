@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@language-coach/config": "workspace:*",
+    "@types/node": "^25.6.2",
     "@types/react": "~19.1.0",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "react-test-renderer": "19.1.0",
