@@ -52,3 +52,47 @@ export async function* streamChatCompletion(
     );
   }
 }
+
+// ---- TTS via OpenAI (replaces ElevenLabs while we're on free tier) ----
+
+export type TtsInput = {
+  text: string;
+  voiceId: string; // alloy | echo | fable | onyx | nova | shimmer
+  modelId?: string;
+};
+
+export type TtsResult = {
+  audioBuffer: Buffer;
+  contentType: string;
+};
+
+export async function synthesizeSpeechOpenAI(
+  client: OpenAI,
+  input: TtsInput,
+): Promise<TtsResult> {
+  try {
+    const response = await client.audio.speech.create({
+      model: input.modelId ?? "tts-1",
+      voice: input.voiceId as
+        | "alloy"
+        | "echo"
+        | "fable"
+        | "onyx"
+        | "nova"
+        | "shimmer",
+      input: input.text,
+      response_format: "mp3",
+    });
+    const arrayBuf = await response.arrayBuffer();
+    return {
+      audioBuffer: Buffer.from(arrayBuf),
+      contentType: "audio/mpeg",
+    };
+  } catch (err) {
+    throw new ProviderError(
+      "TTS_PROVIDER_FAILURE",
+      503,
+      `OpenAI TTS error: ${(err as Error).message}`,
+    );
+  }
+}

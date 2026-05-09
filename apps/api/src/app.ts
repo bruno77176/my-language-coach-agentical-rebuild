@@ -11,8 +11,11 @@ import { createSupabaseVerifier } from "./lib/supabase-verifier";
 import { createHealthRoutes } from "./routes/health";
 import { createVoiceRoutes } from "./routes/voice";
 import { createDeepgram, transcribeAudio } from "./providers/deepgram";
-import { createOpenAI, streamChatCompletion } from "./providers/openai";
-import { createElevenLabs, synthesizeSpeech } from "./providers/elevenlabs";
+import {
+  createOpenAI,
+  streamChatCompletion,
+  synthesizeSpeechOpenAI,
+} from "./providers/openai";
 import { createStorageClient, uploadCoachAudio } from "./lib/storage";
 
 export type AppEnv = {
@@ -45,7 +48,6 @@ export function createApp(env: Env, db: Database = createDb(env)) {
 
   const deepgram = createDeepgram(env);
   const openai = createOpenAI(env);
-  const elevenlabs = createElevenLabs(env);
   const storage = createStorageClient(env);
 
   app.route(
@@ -54,7 +56,11 @@ export function createApp(env: Env, db: Database = createDb(env)) {
       db,
       transcribeAudio: (input) => transcribeAudio(deepgram, input),
       streamChatCompletion: (input) => streamChatCompletion(openai, input),
-      synthesizeSpeech: (input) => synthesizeSpeech(elevenlabs, input),
+      // TTS via OpenAI (ElevenLabs free + pay-as-you-go credits both block
+      // library voices via API; only Creator subscription tier unlocks them).
+      // Swap back to ElevenLabs by importing from ./providers/elevenlabs
+      // once we're on a paid subscription.
+      synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadCoachAudio: (input) => uploadCoachAudio(storage, input),
     }),
   );

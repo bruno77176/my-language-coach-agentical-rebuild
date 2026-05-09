@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useAudioRecorder, useAudioPlayer, RecordingPresets } from "expo-audio";
+import {
+  useAudioRecorder,
+  useAudioPlayer,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  getRecordingPermissionsAsync,
+} from "expo-audio";
 import {
   configureForPlayback,
   configureForRecording,
@@ -58,6 +64,18 @@ export function useConversation(targetLang: string) {
     if (state.phase !== "idle") return;
     const conversationId = state.conversationId;
     try {
+      // Android 6+ requires runtime permission. Check first; if not granted,
+      // prompt. If user denies, surface a clear error.
+      let perm = await getRecordingPermissionsAsync();
+      if (!perm.granted) {
+        perm = await requestRecordingPermissionsAsync();
+      }
+      if (!perm.granted) {
+        throw new Error(
+          "Microphone permission denied. Enable it in Settings → Apps → My Language Coach → Permissions.",
+        );
+      }
+
       await configureForRecording();
       await recorder.prepareToRecordAsync();
       recorder.record();
