@@ -6,6 +6,7 @@ dist/
 build/
 .turbo/
 .expo/
+*.tsbuildinfo
 
 # Coverage
 coverage/
