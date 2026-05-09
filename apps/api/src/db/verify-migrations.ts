@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- CLI script: stdout output is the user-facing UI */
 /**
  * Post-migration verification.
  *
