@@ -24,6 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-notifications",
+    "expo-audio",
     [
       "@sentry/react-native/expo",
       {
