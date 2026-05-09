@@ -1,9 +1,12 @@
 # Single-stage Node + pnpm Dockerfile.
 #
-# Build context is the monorepo root (see fly.toml: dockerfile = "apps/api/Dockerfile").
-# We deviated from the plan's multi-stage Bun image because Bun ignores pnpm-lock.yaml
-# and would force a different lockfile in CI vs prod. Node + pnpm matches local dev.
-# Image size ~600MB; multi-stage prod-only optimization can come in Plan 7 (polish).
+# Build context is the monorepo root (passed via --dockerfile + working-dir
+# on the flyctl deploy command). We use tsx in production (not a separate
+# tsc build step) because TypeScript ESM output doesn't add .js extensions
+# to relative imports and Node ESM rejects extensionless module specifiers.
+# tsx handles both TS and extensionless imports transparently. Tradeoff:
+# ~100ms cold-start overhead. Optimization to esbuild bundling deferred to
+# Plan 7 (polish) if it becomes a bottleneck.
 
 FROM node:22-alpine
 
@@ -19,16 +22,14 @@ COPY packages/config/package.json packages/config/
 
 RUN pnpm install --frozen-lockfile
 
-# Copy source and build the api.
+# Copy source. No tsc build step — tsx loads TS at runtime.
 COPY apps/api apps/api
 COPY packages/shared packages/shared
 COPY packages/config packages/config
-
-RUN pnpm -F @language-coach/api build
 
 ENV NODE_ENV=production
 ENV PORT=8080
 EXPOSE 8080
 
 WORKDIR /app/apps/api
-CMD ["node", "dist/index.js"]
+CMD ["node", "--import", "tsx", "src/index.ts"]
