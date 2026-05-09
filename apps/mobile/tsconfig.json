@@ -1,0 +1,20 @@
+{
+  "extends": [
+    "expo/tsconfig.base",
+    "@language-coach/config/tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "vitest.config.ts"]
+}
