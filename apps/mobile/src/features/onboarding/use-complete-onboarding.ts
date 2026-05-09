@@ -23,8 +23,11 @@ export function useCompleteOnboarding() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    onSuccess: async () => {
+      // Await the refetch so the index gate sees the new profile when we navigate.
+      // Without this, navigation can race ahead of the cache update and the gate
+      // bounces back to onboarding.
+      await queryClient.refetchQueries({ queryKey: ["profile"] });
       reset();
     },
   });

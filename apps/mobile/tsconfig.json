@@ -9,12 +9,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "types/**/*.d.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "types/**/*.d.ts", "nativewind-env.d.ts"],
   "exclude": ["node_modules", "vitest.config.ts"]
 }

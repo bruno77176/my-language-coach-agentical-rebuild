@@ -1,4 +1,10 @@
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import { LANGUAGES } from "@language-coach/shared";
 import { useOnboardingStore } from "@/src/features/onboarding/onboarding-store";
@@ -8,44 +14,123 @@ export default function NativeLangStep() {
   const setNativeLang = useOnboardingStore((s) => s.setNativeLang);
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="px-6 pt-12">
-        <Text className="mb-2 text-3xl font-bold">Your native language?</Text>
-        <Text className="mb-6 text-gray-600">Used for translations.</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Your native language?</Text>
+        <Text style={styles.subtitle}>Used for translations.</Text>
       </View>
-      <ScrollView className="flex-1 px-6">
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+      >
         {LANGUAGES.map((lang) => {
           const isSelected = selected === lang.code;
           return (
             <TouchableOpacity
               key={lang.code}
               onPress={() => setNativeLang(lang.code)}
-              className={`mb-2 flex-row items-center rounded-lg border p-4 ${
-                isSelected ? "border-blue-600 bg-blue-50" : "border-gray-200"
-              }`}
+              style={[
+                styles.row,
+                isSelected ? styles.rowSelected : styles.rowUnselected,
+              ]}
             >
-              <Text className="mr-3 text-2xl">{lang.flag}</Text>
-              <View className="flex-1">
-                <Text className="text-base font-medium">
-                  {lang.englishName}
-                </Text>
-                <Text className="text-sm text-gray-500">{lang.nativeName}</Text>
+              <Text style={styles.flag}>{lang.flag}</Text>
+              <View style={styles.rowText}>
+                <Text style={styles.rowTitle}>{lang.englishName}</Text>
+                <Text style={styles.rowSubtitle}>{lang.nativeName}</Text>
               </View>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-      <View className="border-t border-gray-100 bg-white p-6">
+      <View style={styles.footer}>
         <TouchableOpacity
           onPress={() => router.push("/(onboarding)/target-lang")}
           disabled={!selected}
-          className={`rounded-lg p-4 ${selected ? "bg-blue-600" : "bg-gray-300"}`}
+          style={[styles.button, !selected && styles.buttonDisabled]}
         >
-          <Text className="text-center text-base font-semibold text-white">
-            Next
-          </Text>
+          <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 48,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 24,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: 24,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  rowSelected: {
+    borderColor: "#2563eb",
+    backgroundColor: "#dbeafe",
+  },
+  rowUnselected: {
+    borderColor: "#e5e7eb",
+  },
+  flag: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  rowText: {
+    flex: 1,
+  },
+  rowTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#111827",
+  },
+  rowSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+    padding: 24,
+    backgroundColor: "#ffffff",
+  },
+  button: {
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    padding: 14,
+  },
+  buttonDisabled: {
+    backgroundColor: "#d1d5db",
+  },
+  buttonText: {
+    color: "#ffffff",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});

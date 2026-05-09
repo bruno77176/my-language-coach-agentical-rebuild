@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { router } from "expo-router";
 import { useCompleteOnboarding } from "@/src/features/onboarding/use-complete-onboarding";
 import { useOnboardingStore } from "@/src/features/onboarding/onboarding-store";
 
@@ -15,40 +16,96 @@ export default function DailyGoalStep() {
     setDailyGoalMinutes(selected);
     try {
       await mutation.mutateAsync();
-      // The auth listener + profile query detect the new profile,
-      // and the root index gate redirects to /(tabs)/home.
+      // Navigate directly to /(tabs)/home — the mutation's onSuccess awaited
+      // the profile refetch, so going through the index gate would also work,
+      // but going direct skips an extra render cycle.
+      router.replace("/(tabs)/home");
     } catch (err) {
       Alert.alert("Couldn't complete onboarding", String(err));
     }
   };
 
   return (
-    <View className="flex-1 justify-center bg-white px-6">
-      <Text className="mb-2 text-3xl font-bold">Daily practice goal</Text>
-      <Text className="mb-6 text-gray-600">How many minutes per day?</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Daily practice goal</Text>
+      <Text style={styles.subtitle}>How many minutes per day?</Text>
       {GOAL_OPTIONS.map((m) => {
         const isSelected = selected === m;
         return (
           <TouchableOpacity
             key={m}
             onPress={() => setSelected(m)}
-            className={`mb-2 rounded-lg border p-4 ${
-              isSelected ? "border-blue-600 bg-blue-50" : "border-gray-200"
-            }`}
+            style={[
+              styles.row,
+              isSelected ? styles.rowSelected : styles.rowUnselected,
+            ]}
           >
-            <Text className="text-base font-medium">{m} minutes</Text>
+            <Text style={styles.rowText}>{m} minutes</Text>
           </TouchableOpacity>
         );
       })}
       <TouchableOpacity
         onPress={onFinish}
         disabled={mutation.isPending}
-        className={`mt-6 rounded-lg p-4 ${mutation.isPending ? "bg-gray-300" : "bg-blue-600"}`}
+        style={[styles.button, mutation.isPending && styles.buttonDisabled]}
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text style={styles.buttonText}>
           {mutation.isPending ? "Setting up…" : "Start practicing"}
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 24,
+  },
+  row: {
+    padding: 14,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  rowSelected: {
+    borderColor: "#2563eb",
+    backgroundColor: "#dbeafe",
+  },
+  rowUnselected: {
+    borderColor: "#e5e7eb",
+  },
+  rowText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#111827",
+  },
+  button: {
+    marginTop: 24,
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    padding: 14,
+  },
+  buttonDisabled: {
+    backgroundColor: "#d1d5db",
+  },
+  buttonText: {
+    color: "#ffffff",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
