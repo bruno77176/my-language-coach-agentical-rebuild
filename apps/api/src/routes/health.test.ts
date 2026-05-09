@@ -10,6 +10,9 @@ const baseEnv = {
   SUPABASE_SECRET_KEY: "secret",
   DATABASE_URL: "postgres://test:test@localhost:5432/test",
   SENTRY_DSN: "https://stub@sentry.io/1",
+  OPENAI_API_KEY: "openai-stub",
+  DEEPGRAM_API_KEY: "deepgram-stub",
+  ELEVENLABS_API_KEY: "elevenlabs-stub",
 };
 
 describe("GET /health", () => {

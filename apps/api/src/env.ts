@@ -10,9 +10,17 @@ const EnvSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().min(1), // sb_secret_... (replaces legacy "service_role" key)
   DATABASE_URL: z.string().url(),
   SENTRY_DSN: z.string().url(),
+  OPENAI_API_KEY: z.string().min(1),
+  DEEPGRAM_API_KEY: z.string().min(1),
+  ELEVENLABS_API_KEY: z.string().min(1),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
+
+// Voice loop tuning constants — consumed by quota helper (Task 8) and turn route (Task 9).
+export const FREE_TIER_VOICE_SECONDS_PER_MONTH = 30 * 60; // 30 minutes
+export const MAX_TURN_AUDIO_SECONDS = 60;
+export const MIN_TURN_AUDIO_SECONDS = 1;
 
 export function loadEnv(): Env {
   const result = EnvSchema.safeParse(process.env);

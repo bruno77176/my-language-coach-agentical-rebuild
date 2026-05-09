@@ -1,0 +1,72 @@
+import { describe, expect, it, vi } from "vitest";
+import { transcribeAudio } from "./deepgram";
+
+describe("transcribeAudio", () => {
+  it("returns transcript text + duration on success", async () => {
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi.fn().mockResolvedValue({
+              results: {
+                channels: [
+                  { alternatives: [{ transcript: "Hola, cómo estás?" }] },
+                ],
+              },
+              metadata: { duration: 3.4 },
+            }),
+          },
+        },
+      },
+    };
+    const result = await transcribeAudio(fakeClient as never, {
+      audioBuffer: Buffer.from("fake"),
+      languageCode: "es",
+    });
+    expect(result.text).toBe("Hola, cómo estás?");
+    expect(result.durationSeconds).toBe(3.4);
+  });
+
+  it("throws STT_PROVIDER_FAILURE when Deepgram throws", async () => {
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi
+              .fn()
+              .mockRejectedValue(new Error("rate limited")),
+          },
+        },
+      },
+    };
+    await expect(
+      transcribeAudio(fakeClient as never, {
+        audioBuffer: Buffer.from("x"),
+        languageCode: "en",
+      }),
+    ).rejects.toMatchObject({ code: "STT_PROVIDER_FAILURE" });
+  });
+
+  it("throws AUDIO_SILENT when transcript is empty", async () => {
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi.fn().mockResolvedValue({
+              results: {
+                channels: [{ alternatives: [{ transcript: "   " }] }],
+              },
+              metadata: { duration: 5 },
+            }),
+          },
+        },
+      },
+    };
+    await expect(
+      transcribeAudio(fakeClient as never, {
+        audioBuffer: Buffer.from("x"),
+        languageCode: "en",
+      }),
+    ).rejects.toMatchObject({ code: "AUDIO_SILENT" });
+  });
+});

@@ -8,6 +8,9 @@ describe("env", () => {
     delete process.env.DATABASE_URL;
     delete process.env.SENTRY_DSN;
     delete process.env.PORT;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.DEEPGRAM_API_KEY;
+    delete process.env.ELEVENLABS_API_KEY;
   });
 
   it("throws a clear error when required vars are missing", async () => {
@@ -24,6 +27,9 @@ describe("env", () => {
     process.env.DATABASE_URL = "postgres://test:test@localhost:5432/test";
     process.env.SENTRY_DSN = "https://stub@sentry.io/1";
     process.env.PORT = "4000";
+    process.env.OPENAI_API_KEY = "openai-key-stub";
+    process.env.DEEPGRAM_API_KEY = "deepgram-key-stub";
+    process.env.ELEVENLABS_API_KEY = "elevenlabs-key-stub";
 
     const { loadEnv } = await import("./env");
     const env = loadEnv();
@@ -37,9 +43,25 @@ describe("env", () => {
     process.env.SUPABASE_SECRET_KEY = "secret-key-stub";
     process.env.DATABASE_URL = "postgres://test:test@localhost:5432/test";
     process.env.SENTRY_DSN = "https://stub@sentry.io/1";
+    process.env.OPENAI_API_KEY = "openai-key-stub";
+    process.env.DEEPGRAM_API_KEY = "deepgram-key-stub";
+    process.env.ELEVENLABS_API_KEY = "elevenlabs-key-stub";
 
     const { loadEnv } = await import("./env");
     const env = loadEnv();
     expect(env.PORT).toBe(3000);
+  });
+
+  it("requires OPENAI_API_KEY, DEEPGRAM_API_KEY, ELEVENLABS_API_KEY", async () => {
+    process.env.SUPABASE_URL = "https://test.supabase.co";
+    process.env.SUPABASE_PUBLISHABLE_KEY = "publishable-key-stub";
+    process.env.SUPABASE_SECRET_KEY = "secret-key-stub";
+    process.env.DATABASE_URL = "postgres://test:test@localhost:5432/test";
+    process.env.SENTRY_DSN = "https://stub@sentry.io/1";
+    // intentionally NOT setting the new provider keys
+    await expect(async () => {
+      const { loadEnv } = await import("./env");
+      loadEnv();
+    }).rejects.toThrow(/OPENAI_API_KEY/);
   });
 });

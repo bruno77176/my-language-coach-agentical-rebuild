@@ -29,6 +29,9 @@ const baseEnv = {
     TEST_DB_URL ??
     "postgres://placeholder:placeholder@localhost:5432/placeholder",
   SENTRY_DSN: "https://stub@sentry.io/1",
+  OPENAI_API_KEY: "openai-stub",
+  DEEPGRAM_API_KEY: "deepgram-stub",
+  ELEVENLABS_API_KEY: "elevenlabs-stub",
 };
 
 describe.skipIf(!TEST_DB_URL)(
