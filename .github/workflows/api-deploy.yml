@@ -1,0 +1,43 @@
+name: API Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/shared/**"
+      - ".github/workflows/api-deploy.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+
+concurrency:
+  group: api-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        # Working directory is the monorepo root so the Dockerfile's
+        # COPY pnpm-workspace.yaml etc. resolves against the right context.
+        # --dockerfile is explicit because fly.toml's [build] section
+        # interprets dockerfile paths relative to fly.toml, not the build
+        # context, which doesn't work for monorepo layouts.
+        run: |
+          flyctl deploy . \
+            --app my-language-coach-agentical-rebuild \
+            --config apps/api/fly.toml \
+            --dockerfile apps/api/Dockerfile \
+            --ignorefile apps/api/.dockerignore \
+            --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
