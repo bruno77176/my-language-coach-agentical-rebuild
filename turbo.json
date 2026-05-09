@@ -11,7 +11,8 @@
     },
     "test": {
       "dependsOn": ["^test"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "env": ["DATABASE_URL_TEST"]
     },
     "build": {
       "dependsOn": ["^build"],
