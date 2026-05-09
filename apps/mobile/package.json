@@ -1,0 +1,10 @@
+{
+  "name": "@language-coach/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "echo \"Mobile typecheck wired in Plan 3\" && exit 0",
+    "lint": "echo \"Mobile lint wired in Plan 3\" && exit 0",
+    "test": "echo \"Mobile tests wired in Plan 3\" && exit 0"
+  }
+}

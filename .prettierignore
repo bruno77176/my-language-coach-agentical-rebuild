@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+.turbo/
+.expo/
+coverage/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

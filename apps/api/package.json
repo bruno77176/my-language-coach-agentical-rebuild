@@ -1,0 +1,19 @@
+{
+  "name": "@language-coach/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "echo \"API tests wired in Plan 2\" && exit 0"
+  },
+  "dependencies": {
+    "@language-coach/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@language-coach/config": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}
