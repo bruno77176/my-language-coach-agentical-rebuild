@@ -13,11 +13,17 @@ export function useUpdateProfile(userId: string) {
 
   return useMutation({
     mutationFn: async (update: ProfileUpdate) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .update(update)
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .select();
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error(
+          "Update affected 0 rows — likely an RLS policy issue. Check Supabase profiles_update_own policy.",
+        );
+      }
 
       if (update.native_lang) {
         const { error: rpcErr } = await supabase.rpc("clear_my_translations");

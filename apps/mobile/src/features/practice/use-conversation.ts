@@ -133,7 +133,15 @@ export function useConversation(targetLang: string) {
           });
           setCoachAudioUrl(event.audioUrl);
         } else if (event.type === "done") {
-          // Stream finished cleanly
+          // Replace the client-generated coach id with the server's UUID so
+          // translation calls (POST /v1/messages/:id/translate) hit a real row.
+          if (coachMessageId && event.messageId) {
+            const serverId = event.messageId;
+            const localId = coachMessageId;
+            setMessages((prev) =>
+              prev.map((m) => (m.id === localId ? { ...m, id: serverId } : m)),
+            );
+          }
         } else if (event.type === "error") {
           throw new Error(`${event.code}: ${event.message}`);
         }
@@ -151,5 +159,25 @@ export function useConversation(targetLang: string) {
     return endSession(conversationId);
   }
 
-  return { state, messages, start, stop, end };
+  function dismissError() {
+    if (state.phase !== "error") return;
+    const conversationId = conversationIdRef.current;
+    if (conversationId) {
+      setState({ phase: "idle", conversationId });
+    } else {
+      // No session yet — kick off a fresh one.
+      setState({ phase: "loading-session" });
+      void (async () => {
+        try {
+          const { conversation_id } = await startSession(targetLang);
+          conversationIdRef.current = conversation_id;
+          setState({ phase: "idle", conversationId: conversation_id });
+        } catch (err) {
+          setState({ phase: "error", message: (err as Error).message });
+        }
+      })();
+    }
+  }
+
+  return { state, messages, start, stop, end, dismissError };
 }

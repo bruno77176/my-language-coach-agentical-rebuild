@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
 type Props = {
   initialValue: number;
@@ -19,6 +19,8 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
       try {
         await onSave(value);
         (ref as { current: BottomSheetModal | null }).current?.dismiss();
+      } catch (err) {
+        Alert.alert("Couldn't save", (err as Error).message);
       } finally {
         setSaving(false);
       }

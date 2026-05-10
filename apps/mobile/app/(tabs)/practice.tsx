@@ -24,7 +24,8 @@ export default function PracticeScreen() {
 
   const [startedAt] = useState<Date>(() => new Date());
 
-  const { state, messages, start, stop, end } = useConversation(targetLang);
+  const { state, messages, start, stop, end, dismissError } =
+    useConversation(targetLang);
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
 
   // Auto-scroll on new message
@@ -82,11 +83,16 @@ export default function PracticeScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>{state.message}</Text>
+        <Pressable onPress={dismissError} style={styles.button}>
+          <Text style={styles.buttonText}>Try again</Text>
+        </Pressable>
         <Pressable
           onPress={() => router.replace("/(tabs)/home")}
-          style={styles.button}
+          style={[styles.button, styles.buttonSecondary]}
         >
-          <Text style={styles.buttonText}>Back to Home</Text>
+          <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
+            Back to Home
+          </Text>
         </Pressable>
       </View>
     );
@@ -190,4 +196,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  buttonSecondary: {
+    backgroundColor: "#e5e7eb",
+    marginTop: 8,
+  },
+  buttonTextSecondary: { color: "#374151" },
 });

@@ -4,7 +4,7 @@ import {
   BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, Text } from "react-native";
 
 type Props = {
   initialValue: string;
@@ -25,6 +25,8 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
       try {
         await onSave(trimmed);
         (ref as { current: BottomSheetModal | null }).current?.dismiss();
+      } catch (err) {
+        Alert.alert("Couldn't save", (err as Error).message);
       } finally {
         setSaving(false);
       }

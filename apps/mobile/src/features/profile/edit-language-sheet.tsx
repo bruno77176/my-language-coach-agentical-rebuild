@@ -1,10 +1,10 @@
 import { forwardRef, useState } from "react";
 import {
-  BottomSheetFlatList,
   BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
 
 type Props = {
@@ -23,23 +23,26 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
       try {
         await onSave(value);
         (ref as { current: BottomSheetModal | null }).current?.dismiss();
+      } catch (err) {
+        Alert.alert("Couldn't save", (err as Error).message);
       } finally {
         setSaving(false);
       }
     }
 
     return (
-      <BottomSheetModal ref={ref} snapPoints={["75%"]}>
+      <BottomSheetModal ref={ref} snapPoints={["80%"]}>
         <BottomSheetView style={styles.content}>
           <Text style={styles.title}>{title}</Text>
-          <BottomSheetFlatList
-            data={LANGUAGES}
-            keyExtractor={(l) => l.code}
-            style={styles.list}
-            renderItem={({ item }) => {
+          <BottomSheetScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {LANGUAGES.map((item) => {
               const selected = item.code === value;
               return (
                 <Pressable
+                  key={item.code}
                   onPress={() => setValue(item.code as SupportedLang)}
                   style={[styles.row, selected && styles.rowSelected]}
                 >
@@ -55,15 +58,19 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
                   <Text style={styles.native}>{item.nativeName}</Text>
                 </Pressable>
               );
-            }}
-          />
-          <Pressable
-            onPress={handleSave}
-            disabled={saving}
-            style={[styles.button, saving && styles.disabled]}
-          >
-            <Text style={styles.buttonText}>{saving ? "Saving…" : "Save"}</Text>
-          </Pressable>
+            })}
+          </BottomSheetScrollView>
+          <View style={styles.footer}>
+            <Pressable
+              onPress={handleSave}
+              disabled={saving}
+              style={[styles.button, saving && styles.disabled]}
+            >
+              <Text style={styles.buttonText}>
+                {saving ? "Saving…" : "Save"}
+              </Text>
+            </Pressable>
+          </View>
         </BottomSheetView>
       </BottomSheetModal>
     );
@@ -71,9 +78,15 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
 );
 
 const styles = StyleSheet.create({
-  content: { padding: 24, gap: 12, flex: 1 },
-  title: { fontSize: 18, fontWeight: "600", color: "#111827" },
-  list: { flex: 1 },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 12,
+  },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 16 },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -81,12 +94,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     gap: 12,
+    marginBottom: 4,
   },
   rowSelected: { backgroundColor: "#dbeafe" },
   flag: { fontSize: 20 },
   rowLabel: { fontSize: 16, color: "#374151", flex: 1 },
   rowLabelSelected: { color: "#1d4ed8", fontWeight: "600" },
   native: { fontSize: 13, color: "#6b7280" },
+  footer: {
+    paddingVertical: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#e5e7eb",
+  },
   button: {
     backgroundColor: "#2563eb",
     padding: 14,
