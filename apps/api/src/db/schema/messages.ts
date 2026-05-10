@@ -6,6 +6,7 @@ import {
   index,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { conversations } from "./conversations";
 
 export const messageRole = pgEnum("message_role", ["user", "coach"]);
@@ -35,3 +36,10 @@ export const messages = pgTable(
 
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id],
+  }),
+}));
