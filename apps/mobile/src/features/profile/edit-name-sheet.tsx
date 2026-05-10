@@ -33,7 +33,7 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
     }
 
     return (
-      <BottomSheetModal ref={ref} snapPoints={["35%"]}>
+      <BottomSheetModal ref={ref} snapPoints={["55%"]}>
         <BottomSheetView style={styles.content}>
           <Text style={styles.title}>Display name</Text>
           <BottomSheetTextInput
@@ -58,7 +58,7 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
 );
 
 const styles = StyleSheet.create({
-  content: { padding: 24, gap: 16 },
+  content: { padding: 24, paddingBottom: 48, gap: 16 },
   title: { fontSize: 18, fontWeight: "600", color: "#111827" },
   input: {
     fontSize: 16,

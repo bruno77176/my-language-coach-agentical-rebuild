@@ -27,7 +27,7 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
     }
 
     return (
-      <BottomSheetModal ref={ref} snapPoints={["50%"]}>
+      <BottomSheetModal ref={ref} snapPoints={["75%"]}>
         <BottomSheetView style={styles.content}>
           <Text style={styles.title}>Daily goal</Text>
           <ScrollView style={styles.list}>
@@ -62,7 +62,7 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
 );
 
 const styles = StyleSheet.create({
-  content: { padding: 24, gap: 16, flex: 1 },
+  content: { padding: 24, paddingBottom: 48, gap: 16, flex: 1 },
   title: { fontSize: 18, fontWeight: "600", color: "#111827" },
   list: { maxHeight: 280 },
   option: {

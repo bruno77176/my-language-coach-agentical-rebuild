@@ -31,7 +31,7 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
     }
 
     return (
-      <BottomSheetModal ref={ref} snapPoints={["80%"]}>
+      <BottomSheetModal ref={ref} snapPoints={["90%"]}>
         <BottomSheetView style={styles.content}>
           <Text style={styles.title}>{title}</Text>
           <BottomSheetScrollView
@@ -102,7 +102,8 @@ const styles = StyleSheet.create({
   rowLabelSelected: { color: "#1d4ed8", fontWeight: "600" },
   native: { fontSize: 13, color: "#6b7280" },
   footer: {
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 48,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "#e5e7eb",
   },
