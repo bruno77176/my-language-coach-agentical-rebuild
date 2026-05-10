@@ -12,9 +12,9 @@ This is the rebuild of the My Language Coach app. See:
 | ---------------------------------------- | ------- |
 | 1 — Foundation                           | ✓ done  |
 | 2 — Backend + Supabase + DB              | ✓ done  |
-| 3 — Mobile + auth + onboarding           | pending |
-| 4 — Voice loop                           | pending |
-| 5 — Around-the-voice features            | pending |
+| 3 — Mobile + auth + onboarding           | ✓ done  |
+| 4 — Voice loop                           | ✓ done  |
+| 5 — Around-the-voice features            | ✓ done  |
 | 6 — Topics + vocab + freemium + push     | pending |
 | 7 — Polish + Play Store internal release | pending |
 
@@ -78,7 +78,17 @@ Local Docker is currently blocked on Bruno's corporate Windows machine (no
 
 ## Frontend
 
-Scaffolded by `pnpm create expo-app` in **Plan 3** (not yet started).
+Expo app at `apps/mobile/` (SDK 54, TypeScript, Expo Router). Email + password auth via Supabase.
+
+```bash
+cd apps/mobile
+pnpm start              # starts Metro on http://localhost:8081
+adb reverse tcp:8081 tcp:8081  # USB-tunnel for the dev client (corporate Wi-Fi blocks LAN)
+```
+
+Mobile dev workflow + gotchas: see `apps/mobile/DEV.md`.
+
+**Adding native modules:** always use `npx expo install <pkg>` (NOT `pnpm add`) so the SDK-compatible version is picked. After install, run `npx expo-doctor` to verify no duplicate copies of `react-native-*` packages landed in the workspace-root `node_modules` — duplicate copies of `react-native-reanimated` / `react-native-worklets` cause `[runtime not ready]: TypeError: property is not writable` at app launch.
 
 ## Deployment
 
