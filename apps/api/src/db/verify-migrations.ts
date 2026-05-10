@@ -21,7 +21,13 @@ const EXPECTED_TABLES = [
   "vocab_items",
   "waitlist",
 ];
-const EXPECTED_FUNCTIONS = ["complete_onboarding", "current_streak"];
+const EXPECTED_FUNCTIONS = [
+  "complete_onboarding",
+  "current_streak",
+  "get_progress_summary",
+  "longest_streak",
+  "clear_my_translations",
+];
 
 async function main() {
   const env = loadEnv();
