@@ -81,6 +81,7 @@ describe("POST /v1/messages/:id/translate", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ translation: "Bonjour" });
     expect(translate).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
   });
 
   it("calls LLM, caches, and returns translation on cache miss", async () => {

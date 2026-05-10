@@ -58,10 +58,15 @@ export function createMessagesRoutes(deps: MessagesDeps) {
       );
     }
 
-    await deps.db
-      .update(messages)
-      .set({ translation })
-      .where(eq(messages.id, messageId));
+    try {
+      await deps.db
+        .update(messages)
+        .set({ translation })
+        .where(eq(messages.id, messageId));
+    } catch (err) {
+      // Best-effort cache write; the translation is still correct, return it.
+      console.error("Failed to cache translation for message", messageId, err);
+    }
 
     return c.json({ translation });
   });
