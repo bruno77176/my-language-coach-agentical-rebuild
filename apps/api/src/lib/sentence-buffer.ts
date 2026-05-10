@@ -21,7 +21,7 @@ export class SentenceBuffer {
 
     while (true) {
       const m = this.buffer.match(re);
-      if (!m) break;
+      if (!m || m[1] === undefined || m[0] === undefined) break;
       sentences.push(m[1].trim());
       this.buffer = this.buffer.slice(m[0].length);
     }
