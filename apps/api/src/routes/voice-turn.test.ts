@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
-import { createVoiceRoutes, type VoiceDeps } from "./voice";
+import {
+  createVoiceRoutes,
+  type VoiceDeps,
+  type UploadCoachAudioChunkFn,
+} from "./voice";
 import { ProviderError } from "../providers/deepgram";
 
 const userId = "00000000-0000-0000-0000-000000000001";
@@ -44,7 +48,7 @@ type SetupOverrides = {
   transcribeAudio?: VoiceDeps["transcribeAudio"];
   streamChatCompletion?: VoiceDeps["streamChatCompletion"];
   synthesizeSpeech?: VoiceDeps["synthesizeSpeech"];
-  uploadCoachAudio?: VoiceDeps["uploadCoachAudio"];
+  uploadCoachAudioChunk?: VoiceDeps["uploadCoachAudioChunk"];
 };
 
 function defaultConversation(): ConversationRow {
@@ -136,10 +140,12 @@ function setupRoute(overrides: SetupOverrides = {}) {
     overrides.transcribeAudio ??
     vi.fn().mockResolvedValue({ text: "Hola", durationSeconds: 5 });
 
-  // Default streaming generator yields a couple of deltas.
+  // Default streaming generator yields a couple of deltas that form two
+  // sentences once joined: "Hello world." and "How are you?"
   async function* defaultStream() {
-    yield "Hola";
-    yield " amigo";
+    yield "Hello";
+    yield " world.";
+    yield " How are you?";
   }
   const streamChatCompletion =
     overrides.streamChatCompletion ??
@@ -154,19 +160,24 @@ function setupRoute(overrides: SetupOverrides = {}) {
       contentType: "audio/mpeg",
     });
 
-  const uploadCoachAudio =
-    overrides.uploadCoachAudio ??
-    vi.fn().mockResolvedValue({
-      path: `${userId}/${conversationId}/${coachMessageId}.mp3`,
-      signedUrl: "https://signed.example/audio.mp3",
-    });
+  // Return a unique URL per chunk based on chunkIndex.
+  const defaultUploadChunk: UploadCoachAudioChunkFn = vi
+    .fn()
+    .mockImplementation(({ chunkIndex }: { chunkIndex: number }) =>
+      Promise.resolve({
+        audioUrl: `https://signed.example/chunk-${chunkIndex}.mp3`,
+      }),
+    );
+
+  const uploadCoachAudioChunk =
+    overrides.uploadCoachAudioChunk ?? defaultUploadChunk;
 
   const routes = createVoiceRoutes({
     db: fakeDb as never,
     transcribeAudio,
     streamChatCompletion,
     synthesizeSpeech,
-    uploadCoachAudio,
+    uploadCoachAudioChunk,
   });
 
   const app = new Hono<{ Variables: { userId: string } }>();
@@ -182,7 +193,7 @@ function setupRoute(overrides: SetupOverrides = {}) {
     transcribeAudio,
     streamChatCompletion,
     synthesizeSpeech,
-    uploadCoachAudio,
+    uploadCoachAudioChunk,
   };
 }
 
@@ -220,8 +231,8 @@ function makeAudioFormData(byteLength: number): FormData {
 }
 
 describe("POST /v1/voice/sessions/:id/turns", () => {
-  it("emits transcription, reply-text-delta, reply-audio, done on happy path", async () => {
-    const { app, transcribeAudio, synthesizeSpeech, uploadCoachAudio } =
+  it("emits transcription, reply-chunk events, and done on happy path (multi-sentence)", async () => {
+    const { app, transcribeAudio, synthesizeSpeech, uploadCoachAudioChunk } =
       setupRoute();
     const res = await app.request(
       `/v1/voice/sessions/${conversationId}/turns`,
@@ -235,23 +246,38 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
 
     const events = await readSseEvents(res.body!);
     const types = events.map((e) => e.event);
+
+    // Old events no longer present
+    expect(types).not.toContain("reply-text-delta");
+    expect(types).not.toContain("reply-audio");
+
+    // New events present
     expect(types).toContain("transcription");
-    expect(types).toContain("reply-text-delta");
-    expect(types).toContain("reply-audio");
+    expect(types).toContain("reply-chunk");
     expect(types).toContain("done");
 
-    // Sanity: transcription text is what the STT returned.
+    // Transcription text is what the STT returned.
     const transcription = events.find((e) => e.event === "transcription");
     expect(transcription).toBeDefined();
     expect(JSON.parse(transcription!.data)).toEqual({ text: "Hola" });
 
-    // reply-audio payload contains the signed URL.
-    const replyAudio = events.find((e) => e.event === "reply-audio");
-    expect(JSON.parse(replyAudio!.data).audioUrl).toBe(
-      "https://signed.example/audio.mp3",
-    );
+    // The default stream yields "Hello world." and "How are you?" as two
+    // sentences. Expect two reply-chunk events with index 0 and 1.
+    const chunks = events.filter((e) => e.event === "reply-chunk");
+    expect(chunks).toHaveLength(2);
 
-    // done payload includes both message ids.
+    const chunk0 = JSON.parse(chunks[0]!.data);
+    expect(chunk0.index).toBe(0);
+    expect(chunk0.text).toBe("Hello world.");
+    expect(chunk0.audioUrl).toBe("https://signed.example/chunk-0.mp3");
+    expect(chunk0.durationMs).toBe(0);
+
+    const chunk1 = JSON.parse(chunks[1]!.data);
+    expect(chunk1.index).toBe(1);
+    expect(chunk1.text).toBe("How are you?");
+    expect(chunk1.audioUrl).toBe("https://signed.example/chunk-1.mp3");
+
+    // Done payload includes both message ids.
     const done = events.find((e) => e.event === "done");
     expect(JSON.parse(done!.data)).toEqual({
       messageId: coachMessageId,
@@ -260,8 +286,37 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
 
     // Provider deps were called.
     expect(transcribeAudio).toHaveBeenCalledOnce();
-    expect(synthesizeSpeech).toHaveBeenCalledOnce();
-    expect(uploadCoachAudio).toHaveBeenCalledOnce();
+    expect(synthesizeSpeech).toHaveBeenCalledTimes(2);
+    expect(uploadCoachAudioChunk).toHaveBeenCalledTimes(2);
+  });
+
+  it("emits a single reply-chunk for a single-sentence GPT response", async () => {
+    async function* singleSentenceStream() {
+      yield "Hola amigo.";
+    }
+    const streamChatCompletion = vi.fn(
+      () => singleSentenceStream(),
+    ) as unknown as VoiceDeps["streamChatCompletion"];
+
+    const { app } = setupRoute({ streamChatCompletion });
+    const res = await app.request(
+      `/v1/voice/sessions/${conversationId}/turns`,
+      {
+        method: "POST",
+        body: makeAudioFormData(50_000),
+      },
+    );
+    expect(res.status).toBe(200);
+
+    const events = await readSseEvents(res.body!);
+    const chunks = events.filter((e) => e.event === "reply-chunk");
+
+    // "Hola amigo." is a complete sentence — ends at stream end so emitted by flush()
+    expect(chunks).toHaveLength(1);
+    const chunk = JSON.parse(chunks[0]!.data);
+    expect(chunk.index).toBe(0);
+    expect(chunk.text).toBe("Hola amigo.");
+    expect(chunk.audioUrl).toBe("https://signed.example/chunk-0.mp3");
   });
 
   it("returns 422 AUDIO_TOO_SHORT when audio < 4KB", async () => {
@@ -336,6 +391,29 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
     expect(errorEvent).toBeDefined();
     const payload = JSON.parse(errorEvent!.data);
     expect(payload.code).toBe("STT_PROVIDER_FAILURE");
+    expect(payload.retryable).toBe(true);
+  });
+
+  it("emits SSE error event when TTS provider fails for a chunk", async () => {
+    const synthesizeSpeech = vi
+      .fn()
+      .mockRejectedValue(
+        new ProviderError("TTS_PROVIDER_FAILURE", 503, "ElevenLabs boom"),
+      );
+    const { app } = setupRoute({ synthesizeSpeech });
+    const res = await app.request(
+      `/v1/voice/sessions/${conversationId}/turns`,
+      {
+        method: "POST",
+        body: makeAudioFormData(50_000),
+      },
+    );
+    expect(res.status).toBe(200);
+    const events = await readSseEvents(res.body!);
+    const errorEvent = events.find((e) => e.event === "error");
+    expect(errorEvent).toBeDefined();
+    const payload = JSON.parse(errorEvent!.data);
+    expect(payload.code).toBe("TTS_PROVIDER_FAILURE");
     expect(payload.retryable).toBe(true);
   });
 

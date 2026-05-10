@@ -11,7 +11,7 @@ const noopProviderDeps: Omit<VoiceDeps, "db"> = {
   transcribeAudio: vi.fn(),
   streamChatCompletion: vi.fn() as unknown as VoiceDeps["streamChatCompletion"],
   synthesizeSpeech: vi.fn(),
-  uploadCoachAudio: vi.fn(),
+  uploadCoachAudioChunk: vi.fn(),
 };
 
 function appWithVoice(routes: ReturnType<typeof createVoiceRoutes>) {

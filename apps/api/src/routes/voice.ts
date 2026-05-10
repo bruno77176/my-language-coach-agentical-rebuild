@@ -14,15 +14,28 @@ import type {
   SynthesizeResult,
 } from "../providers/elevenlabs";
 import { voiceIdForLanguage } from "../providers/voice-map";
-import type { UploadInput, UploadResult } from "../lib/storage";
 import { buildCoachSystemPrompt } from "@language-coach/shared";
+import { SentenceBuffer } from "../lib/sentence-buffer";
+
+export type SynthesizeSpeechFn = (
+  input: SynthesizeInput,
+) => Promise<SynthesizeResult>;
+
+export type UploadCoachAudioChunkFn = (input: {
+  userId: string;
+  conversationId: string;
+  messageId: string;
+  chunkIndex: number;
+  audioBuffer: Buffer;
+  contentType: string;
+}) => Promise<{ audioUrl: string }>;
 
 export type VoiceDeps = {
   db: Database;
   transcribeAudio: (input: TranscribeInput) => Promise<TranscribeResult>;
   streamChatCompletion: (input: StreamInput) => AsyncGenerator<string>;
-  synthesizeSpeech: (input: SynthesizeInput) => Promise<SynthesizeResult>;
-  uploadCoachAudio: (input: UploadInput) => Promise<UploadResult>;
+  synthesizeSpeech: SynthesizeSpeechFn;
+  uploadCoachAudioChunk: UploadCoachAudioChunkFn;
 };
 
 const StartSessionBody = z.object({
@@ -203,42 +216,85 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           })),
         ];
 
-        // 4. Stream GPT
-        let fullReply = "";
-        for await (const delta of deps.streamChatCompletion({
+        // 4. Stream GPT with per-sentence TTS
+        const gptStream = deps.streamChatCompletion({
           messages: promptMessages,
           model: "gpt-4o-mini",
-        })) {
-          fullReply += delta;
+        });
+
+        const sentenceBuf = new SentenceBuffer();
+        let chunkIndex = 0;
+        const ttsPromises: Promise<void>[] = [];
+        let fullCoachText = "";
+        const turnSeq = Date.now(); // unique-per-turn for chunk paths
+        const voiceId = voiceIdForLanguage(conversation.language);
+
+        async function emitChunk(text: string, idx: number): Promise<void> {
+          let audio: SynthesizeResult;
+          try {
+            audio = await deps.synthesizeSpeech({ text, voiceId });
+          } catch {
+            await stream.writeSSE({
+              event: "error",
+              data: JSON.stringify({
+                code: "TTS_PROVIDER_FAILURE",
+                message: "TTS failed for chunk " + idx,
+                retryable: true,
+              }),
+            });
+            return;
+          }
+          const { audioUrl } = await deps.uploadCoachAudioChunk({
+            userId,
+            conversationId,
+            messageId: `pending-${conversationId}-${turnSeq}`,
+            chunkIndex: idx,
+            audioBuffer: audio.audioBuffer,
+            contentType: audio.contentType,
+          });
           await stream.writeSSE({
-            event: "reply-text-delta",
-            data: JSON.stringify({ delta }),
+            event: "reply-chunk",
+            data: JSON.stringify({
+              index: idx,
+              text,
+              audioUrl,
+              durationMs: 0,
+            }),
           });
         }
 
-        // 5. Synthesize TTS
-        const tts = await deps.synthesizeSpeech({
-          text: fullReply,
-          voiceId: voiceIdForLanguage(conversation.language),
-        });
+        for await (const delta of gptStream) {
+          fullCoachText += delta;
+          const sentences = sentenceBuf.push(delta);
+          for (const s of sentences) {
+            const idx = chunkIndex++;
+            ttsPromises.push(emitChunk(s, idx));
+          }
+        }
 
-        // 6. Insert coach message
-        const coachMsgRows = await deps.db
+        // Flush any remaining buffer
+        const tail = sentenceBuf.flush();
+        if (tail) {
+          const idx = chunkIndex++;
+          ttsPromises.push(emitChunk(tail, idx));
+        }
+
+        await Promise.all(ttsPromises);
+
+        // 5. Insert the full coach message (single row, full text)
+        const [coachRow] = await deps.db
           .insert(messages)
-          .values({ conversationId, role: "coach", text: fullReply })
-          .returning({ id: messages.id });
-        const coachMsgId = coachMsgRows[0]!.id;
+          .values({
+            conversationId,
+            role: "coach",
+            text: fullCoachText,
+            audioStoragePath: null,
+          })
+          .returning();
 
-        // 7. Upload audio
-        const upload = await deps.uploadCoachAudio({
-          userId,
-          conversationId,
-          messageId: coachMsgId,
-          audioBuffer: tts.audioBuffer,
-          contentType: tts.contentType,
-        });
+        const coachMsgId = coachRow!.id;
 
-        // 8. Update conversation seconds + entitlement (pure increments)
+        // 6. Update conversation seconds + entitlement (pure increments)
         const secondsThisTurn = Math.round(stt.durationSeconds);
         await deps.db
           .update(conversations)
@@ -254,14 +310,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           })
           .where(eq(entitlements.userId, userId));
 
-        // 9. Final events
-        await stream.writeSSE({
-          event: "reply-audio",
-          data: JSON.stringify({
-            audioUrl: upload.signedUrl,
-            durationMs: 0,
-          }),
-        });
+        // 7. Done event
         await stream.writeSSE({
           event: "done",
           data: JSON.stringify({
