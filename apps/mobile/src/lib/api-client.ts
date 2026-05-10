@@ -55,16 +55,17 @@ export async function endSession(
 
 export type TurnEvent =
   | { type: "transcription"; text: string }
-  | { type: "reply-text-delta"; delta: string }
-  | { type: "reply-audio"; audioUrl: string; durationMs: number }
+  | {
+      type: "reply-chunk";
+      index: number;
+      text: string;
+      audioUrl: string;
+      durationMs: number;
+    }
   | { type: "done"; messageId: string }
   | { type: "error"; code: string; message: string; retryable: boolean };
 
-type TurnEventName =
-  | "transcription"
-  | "reply-text-delta"
-  | "reply-audio"
-  | "done";
+type TurnEventName = "transcription" | "reply-chunk" | "done";
 
 /**
  * POST audio to the turn endpoint and consume the SSE response as an
@@ -144,19 +145,18 @@ export function streamTurn(
       const data = JSON.parse(e.data) as { text: string };
       push({ type: "transcription", text: data.text });
     });
-    es.addEventListener("reply-text-delta", (e) => {
-      if (!e.data) return;
-      const data = JSON.parse(e.data) as { delta: string };
-      push({ type: "reply-text-delta", delta: data.delta });
-    });
-    es.addEventListener("reply-audio", (e) => {
+    es.addEventListener("reply-chunk", (e) => {
       if (!e.data) return;
       const data = JSON.parse(e.data) as {
+        index: number;
+        text: string;
         audioUrl: string;
         durationMs: number;
       };
       push({
-        type: "reply-audio",
+        type: "reply-chunk",
+        index: data.index,
+        text: data.text,
         audioUrl: data.audioUrl,
         durationMs: data.durationMs,
       });
