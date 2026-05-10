@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
-import { createMessagesRoutes, type MessagesDeps } from "./messages";
+import { createMessagesRoutes } from "./messages";
 
 const userId = "00000000-0000-0000-0000-000000000001";
 const messageId = "11111111-1111-1111-1111-111111111111";
