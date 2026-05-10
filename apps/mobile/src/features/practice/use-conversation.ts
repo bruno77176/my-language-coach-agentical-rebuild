@@ -19,11 +19,20 @@ import {
 import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
+import { fetchGreetingAudio } from "./api-greeting";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const FileSystem = require("expo-file-system/legacy") as {
+  cacheDirectory: string | null;
+  getInfoAsync(uri: string): Promise<{ exists: boolean }>;
+  downloadAsync(
+    uri: string,
+    fileUri: string,
+  ): Promise<{ uri: string; status: number }>;
+};
 
-// Bundled greeting MP3s — generated once via OpenAI TTS and shipped with
-// the app. Plays instantly with no network dep, no race condition. The
-// audio is generic per language (no name interpolation); the on-screen
-// text still shows the personalized greeting.
+// Bundled greeting MP3s — emergency fallback if the personalized greeting
+// (per-user, per-language, name spoken) can't be fetched / cached. Generic
+// per language (no name); on-screen text still personalizes.
 /* eslint-disable @typescript-eslint/no-require-imports */
 const GREETING_AUDIO: Record<string, number> = {
   en: require("@/assets/sounds/greetings/en.mp3"),
@@ -50,6 +59,35 @@ const SOFT_ERROR_CODES: ReadonlySet<SoftErrorCode> = new Set([
   "LLM_PROVIDER_FAILURE",
   "TTS_PROVIDER_FAILURE",
 ]);
+
+/**
+ * Download the personalized greeting audio (server-side TTS, cached per
+ * user+lang) to a local file and return its URI. Returns null on any
+ * failure — caller should fall back to the bundled MP3.
+ */
+async function downloadPersonalizedGreeting(
+  lang: string,
+  name: string,
+): Promise<string | null> {
+  if (!FileSystem.cacheDirectory) return null;
+  try {
+    const { audioUrl } = await fetchGreetingAudio({ lang, name });
+    const safeName = name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]/g, "")
+      .slice(0, 32);
+    const localUri = `${FileSystem.cacheDirectory}greeting-${lang}-${safeName}.mp3`;
+    const info = await FileSystem.getInfoAsync(localUri);
+    if (!info.exists) {
+      const dl = await FileSystem.downloadAsync(audioUrl, localUri);
+      if (dl.status !== 200) return null;
+    }
+    return localUri;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Plays a single audio source to completion. Source can be a remote URL
@@ -171,16 +209,29 @@ export function useConversation(
         setMessages([greetingMsg]);
         setState({ phase: "idle", conversationId: conversation_id });
 
-        // Play bundled greeting audio (no network dep, instant).
+        // Play greeting: try personalized (server TTS, named) first, fall
+        // back to the bundled generic MP3 if anything fails.
         if (!greetingPlayedRef.current) {
           greetingPlayedRef.current = true;
-          const audioModule = GREETING_AUDIO[targetLang] ?? GREETING_AUDIO.en;
-          if (audioModule !== undefined) {
-            try {
-              await configureForPlayback();
+          try {
+            await configureForPlayback();
+          } catch {
+            // ignore — playback may still work
+          }
+          const personalizedUri = await downloadPersonalizedGreeting(
+            targetLang,
+            displayName,
+          );
+          if (cancelled) return;
+          if (personalizedUri) {
+            void playOnce({
+              source: { uri: personalizedUri },
+              text: greetingText,
+            });
+          } else {
+            const audioModule = GREETING_AUDIO[targetLang] ?? GREETING_AUDIO.en;
+            if (audioModule !== undefined) {
               void playOnce({ source: audioModule, text: greetingText });
-            } catch {
-              // best-effort
             }
           }
         }
