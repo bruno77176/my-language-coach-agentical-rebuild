@@ -8,7 +8,9 @@ import {
   Text,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+import { stopActivePlayer } from "@/src/features/practice/audio-controller";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
@@ -61,10 +63,23 @@ export default function PracticeScreen() {
   const { data: streak } = useCurrentStreak();
   const queryClient = useQueryClient();
 
+  // Pause timer + stop audio when the user leaves the Practice tab.
+  const [isFocused, setIsFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+        stopActivePlayer();
+      };
+    }, []),
+  );
+
   const sessionActive =
-    state.phase === "idle" ||
-    state.phase === "recording" ||
-    state.phase === "processing";
+    isFocused &&
+    (state.phase === "idle" ||
+      state.phase === "recording" ||
+      state.phase === "processing");
   const { seconds: sessionSeconds } = useSessionTimer(sessionActive);
 
   const todaySecondsAtStartRef = useRef(0);

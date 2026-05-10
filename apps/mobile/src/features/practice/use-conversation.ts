@@ -20,6 +20,10 @@ import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
+import {
+  clearActivePlayerIfMatches,
+  setActivePlayer,
+} from "./audio-controller";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const FileSystem = require("expo-file-system/legacy") as {
   cacheDirectory: string | null;
@@ -102,12 +106,14 @@ async function playOnce(input: {
   durationMs?: number;
 }): Promise<void> {
   const player = createAudioPlayer(input.source);
+  setActivePlayer(player);
   await new Promise<void>((resolve) => {
     let resolved = false;
     let triggered = false;
     const finish = () => {
       if (resolved) return;
       resolved = true;
+      clearActivePlayerIfMatches(player);
       try {
         player.remove();
       } catch {
@@ -173,7 +179,6 @@ export function useConversation(
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const conversationIdRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
-  const greetingPlayedRef = useRef(false);
 
   // Reset reveals when listening mode toggles
   useEffect(() => {
@@ -210,29 +215,34 @@ export function useConversation(
         setState({ phase: "idle", conversationId: conversation_id });
 
         // Play greeting: try personalized (server TTS, named) first, fall
-        // back to the bundled generic MP3 if anything fails.
-        if (!greetingPlayedRef.current) {
-          greetingPlayedRef.current = true;
-          try {
-            await configureForPlayback();
-          } catch {
-            // ignore — playback may still work
-          }
-          const personalizedUri = await downloadPersonalizedGreeting(
-            targetLang,
-            displayName,
+        // back to the bundled generic MP3 if anything fails. The cancelled
+        // flag handles strict-mode duplicate runs and lang-change re-runs;
+        // no need for a played-once ref.
+        try {
+          await configureForPlayback();
+        } catch {
+          // ignore — playback may still work
+        }
+        const personalizedUri = await downloadPersonalizedGreeting(
+          targetLang,
+          displayName,
+        );
+        if (cancelled) return;
+        if (personalizedUri) {
+          // Set audioUrl on the greeting so 🔁 can replay it from local file.
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === greetingMsg.id ? { ...m, audioUrl: personalizedUri } : m,
+            ),
           );
-          if (cancelled) return;
-          if (personalizedUri) {
-            void playOnce({
-              source: { uri: personalizedUri },
-              text: greetingText,
-            });
-          } else {
-            const audioModule = GREETING_AUDIO[targetLang] ?? GREETING_AUDIO.en;
-            if (audioModule !== undefined) {
-              void playOnce({ source: audioModule, text: greetingText });
-            }
+          void playOnce({
+            source: { uri: personalizedUri },
+            text: greetingText,
+          });
+        } else {
+          const audioModule = GREETING_AUDIO[targetLang] ?? GREETING_AUDIO.en;
+          if (audioModule !== undefined) {
+            void playOnce({ source: audioModule, text: greetingText });
           }
         }
       } catch (err) {
