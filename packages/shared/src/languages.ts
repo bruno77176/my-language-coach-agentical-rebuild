@@ -24,3 +24,11 @@ export const LANGUAGES: ReadonlyArray<Language> = [
   { code: "ro", englishName: "Romanian", nativeName: "Română", flag: "🇷🇴" },
   { code: "hu", englishName: "Hungarian", nativeName: "Magyar", flag: "🇭🇺" },
 ];
+
+export type SupportedLang =
+  | "en" | "fr" | "de" | "it" | "es" | "pt"
+  | "tr" | "sv" | "da" | "ru" | "ro" | "hu";
+
+export const SUPPORTED_LANG_CODES: readonly SupportedLang[] = [
+  "en", "fr", "de", "it", "es", "pt", "tr", "sv", "da", "ru", "ro", "hu",
+];
