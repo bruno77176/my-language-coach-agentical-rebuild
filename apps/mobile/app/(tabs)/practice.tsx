@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,11 +15,14 @@ import { useConversation } from "@/src/features/practice/use-conversation";
 import type { ChatMessage } from "@/src/features/practice/types";
 import { MessageBubble } from "@/src/features/practice/MessageBubble";
 import { MicButton } from "@/src/features/practice/MicButton";
+import { ShareButton } from "@/src/features/practice/share-button";
 
 export default function PracticeScreen() {
   useAudioSessionInit();
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
+
+  const [startedAt] = useState<Date>(() => new Date());
 
   const { state, messages, start, stop, end } = useConversation(targetLang);
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
@@ -92,6 +95,14 @@ export default function PracticeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
+        <ShareButton
+          languageCode={targetLang}
+          startedAt={startedAt}
+          durationMinutes={Math.floor(
+            (Date.now() - startedAt.getTime()) / 60000,
+          )}
+          messages={messages.map((m) => ({ role: m.role, text: m.text }))}
+        />
         <Pressable onPress={onExit} style={styles.exitButton}>
           <Text style={styles.exitText}>End</Text>
         </Pressable>
@@ -145,7 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
