@@ -6,7 +6,6 @@ import {
   getRecordingPermissionsAsync,
   createAudioPlayer,
 } from "expo-audio";
-import { File } from "expo-file-system";
 import {
   buildGreeting,
   getCoachFallback,
@@ -21,7 +20,6 @@ import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { fetchGreetingAudio } from "./api-greeting";
 import { AudioQueue } from "./audio-queue";
-import { isLikelySilent } from "./audio-rms";
 
 export type { ChatMessage, ConversationState } from "./types";
 
@@ -33,6 +31,74 @@ const SOFT_ERROR_CODES: ReadonlySet<SoftErrorCode> = new Set([
   "TTS_PROVIDER_FAILURE",
 ]);
 
+/**
+ * Plays a single audio URL to completion. Resolves when finished or after a
+ * timeout (estimated from text length). Auto-plays once `isLoaded` becomes
+ * true; the imperative `createAudioPlayer().play()` doesn't reliably trigger
+ * playback before the source is loaded for remote URLs.
+ */
+async function playOnce(input: {
+  uri: string;
+  text?: string;
+  durationMs?: number;
+}): Promise<void> {
+  const player = createAudioPlayer({ uri: input.uri });
+  await new Promise<void>((resolve) => {
+    let resolved = false;
+    let triggered = false;
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      try {
+        player.remove();
+      } catch {
+        // ignore
+      }
+      resolve();
+    };
+
+    const sub = player.addListener(
+      "playbackStatusUpdate",
+      (s: {
+        isLoaded?: boolean;
+        playing?: boolean;
+        didJustFinish?: boolean;
+      }) => {
+        if (s.isLoaded && !triggered) {
+          triggered = true;
+          try {
+            player.play();
+          } catch {
+            // ignore
+          }
+        }
+        if (s.didJustFinish) {
+          sub.remove();
+          finish();
+        }
+      },
+    );
+
+    // Hard timeout fallback so the queue never hangs.
+    const estimatedMs =
+      input.durationMs && input.durationMs > 0
+        ? input.durationMs
+        : Math.max(2500, (input.text?.length ?? 0) * 80);
+    setTimeout(() => {
+      sub.remove();
+      finish();
+    }, estimatedMs + 6000);
+
+    // Also try to start immediately — in case isLoaded fires before we set up
+    // the listener (or never fires for cached/local sources).
+    try {
+      player.play();
+    } catch {
+      // ignore
+    }
+  });
+}
+
 export function useConversation(targetLang: string, displayName: string) {
   const [state, setState] = useState<ConversationState>({
     phase: "loading-session",
@@ -43,6 +109,8 @@ export function useConversation(targetLang: string, displayName: string) {
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const conversationIdRef = useRef<string | null>(null);
+  const recordingStartedAtRef = useRef<number | null>(null);
+  const greetingPlayedRef = useRef(false);
 
   // Reset reveals when listening mode toggles
   useEffect(() => {
@@ -81,9 +149,11 @@ export function useConversation(targetLang: string, displayName: string) {
           setMessages((prev) =>
             prev.map((m) => (m.id === greetingMsg.id ? { ...m, audioUrl } : m)),
           );
-          await configureForPlayback();
-          const player = createAudioPlayer({ uri: audioUrl });
-          player.play();
+          if (!greetingPlayedRef.current) {
+            greetingPlayedRef.current = true;
+            await configureForPlayback();
+            void playOnce({ uri: audioUrl, text: greetingText });
+          }
         } catch {
           // best-effort
         }
@@ -111,6 +181,7 @@ export function useConversation(targetLang: string, displayName: string) {
       await configureForRecording();
       await recorder.prepareToRecordAsync();
       recorder.record();
+      recordingStartedAtRef.current = Date.now();
       setState({ phase: "recording", conversationId });
     } catch (err) {
       setState({ phase: "error", message: (err as Error).message });
@@ -134,42 +205,29 @@ export function useConversation(targetLang: string, displayName: string) {
     const conversationId = state.conversationId;
     setState({ phase: "processing", conversationId });
 
+    // Compute duration from our own timestamp BEFORE recorder.stop() resets state.
+    const startedAt = recordingStartedAtRef.current ?? Date.now();
+    const durationMs = Date.now() - startedAt;
+    recordingStartedAtRef.current = null;
+
     try {
       await recorder.stop();
       const uri = recorder.uri;
       if (!uri) throw new Error("Recorder produced no audio file");
 
-      // Client-side silence detection (heuristic on file size + duration)
-      // recorder.getStatus() is synchronous and returns RecorderState
-      const status = recorder.getStatus();
-      const durationMs: number | undefined = status.durationMillis;
-      // expo-file-system v19: use new File API (getInfoAsync throws at runtime)
-      const fileSizeBytes = new File(uri).size;
-
-      if (isLikelySilent({ durationMs, fileSizeBytes })) {
-        pushSoftErrorAsCoachMessage("AUDIO_SILENT");
-        setState({ phase: "idle", conversationId });
-        return;
-      }
+      // No client-side silence detection — server's AUDIO_SILENT check is the
+      // source of truth. Client heuristic was unreliable (recorder.getStatus()
+      // returns 0 after stop()).
 
       // Stream turn — handle the chunk-based protocol
       const { events } = streamTurn(conversationId, uri);
       const audioQueue = new AudioQueue({
         playChunk: async (chunk) => {
           await configureForPlayback();
-          const player = createAudioPlayer({ uri: chunk.audioUrl });
-          await new Promise<void>((resolve) => {
-            const sub = player.addListener(
-              "playbackStatusUpdate",
-              (s: { didJustFinish?: boolean }) => {
-                if (s.didJustFinish) {
-                  sub.remove();
-                  player.remove();
-                  resolve();
-                }
-              },
-            );
-            player.play();
+          await playOnce({
+            uri: chunk.audioUrl,
+            text: chunk.text,
+            durationMs: chunk.durationMs,
           });
         },
       });

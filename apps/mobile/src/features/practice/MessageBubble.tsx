@@ -50,7 +50,36 @@ export function MessageBubble({
       }
       if (!url) return;
       const player = createAudioPlayer({ uri: url });
-      player.play();
+      // Best-effort: try immediate play, also auto-play once loaded.
+      try {
+        player.play();
+      } catch {
+        // ignore
+      }
+      const sub = player.addListener(
+        "playbackStatusUpdate",
+        (s: {
+          isLoaded?: boolean;
+          playing?: boolean;
+          didJustFinish?: boolean;
+        }) => {
+          if (s.isLoaded && !s.playing && !s.didJustFinish) {
+            try {
+              player.play();
+            } catch {
+              // ignore
+            }
+          }
+          if (s.didJustFinish) {
+            sub.remove();
+            try {
+              player.remove();
+            } catch {
+              // ignore
+            }
+          }
+        },
+      );
     } catch {
       // best-effort
     } finally {
@@ -58,13 +87,8 @@ export function MessageBubble({
     }
   }
 
-  async function handleBubblePress() {
-    if (showsAsListening) {
-      onReveal(message.id);
-      void playAudio();
-      return;
-    }
-    if (isUser) return;
+  async function handleTranslatePress() {
+    if (isUser || listeningMode) return;
     if (translation) {
       setShowingTranslation((s) => !s);
       return;
@@ -78,8 +102,15 @@ export function MessageBubble({
     }
   }
 
-  function handleRepeatPress() {
-    void playAudio();
+  function handleBubblePress() {
+    // In listening mode, tapping the bubble reveals + plays.
+    if (showsAsListening) {
+      onReveal(message.id);
+      void playAudio();
+    }
+    // Otherwise, the bubble itself doesn't do anything — the per-icon Pressables
+    // handle repeat (🔁) and translate (🌐). This avoids gesture conflicts and
+    // makes the affordances obvious.
   }
 
   const Inner = (
@@ -105,23 +136,42 @@ export function MessageBubble({
             </>
           ) : null}
           <View style={styles.actionRow}>
-            <Pressable onPress={handleRepeatPress} hitSlop={8}>
+            <Pressable
+              onPress={handleRepeatPressWrapper}
+              hitSlop={10}
+              style={styles.actionTap}
+            >
               <Text style={styles.actionIcon}>{playingAudio ? "▶" : "🔁"}</Text>
             </Pressable>
             {!isUser && !listeningMode ? (
-              <View>
+              <Pressable
+                onPress={handleTranslatePress}
+                hitSlop={10}
+                style={styles.actionTap}
+              >
                 {translate.isPending ? (
                   <ActivityIndicator size="small" color="#6b7280" />
                 ) : (
-                  <Text style={styles.actionIcon}>🌐</Text>
+                  <Text
+                    style={[
+                      styles.actionIcon,
+                      showingTranslation && styles.actionIconActive,
+                    ]}
+                  >
+                    🌐
+                  </Text>
                 )}
-              </View>
+              </Pressable>
             ) : null}
           </View>
         </>
       )}
     </View>
   );
+
+  function handleRepeatPressWrapper() {
+    void playAudio();
+  }
 
   return <Pressable onPress={handleBubblePress}>{Inner}</Pressable>;
 }
@@ -156,8 +206,10 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    gap: 12,
+    gap: 16,
     marginTop: 6,
   },
-  actionIcon: { fontSize: 14, color: "#9ca3af" },
+  actionTap: { padding: 4 },
+  actionIcon: { fontSize: 16, color: "#6b7280" },
+  actionIconActive: { color: "#1d4ed8" },
 });

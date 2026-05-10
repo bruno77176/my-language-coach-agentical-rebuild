@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
 import { useConversation } from "@/src/features/practice/use-conversation";
@@ -58,6 +58,7 @@ export default function PracticeScreen() {
 
   const { data: todayStats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
+  const queryClient = useQueryClient();
 
   const sessionActive =
     state.phase === "idle" ||
@@ -113,6 +114,13 @@ export default function PracticeScreen() {
             } catch {
               /* best-effort */
             }
+            // Refresh home / progress queries so the just-ended session's
+            // minutes show up immediately when navigating away.
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
+              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+            ]);
             router.replace("/(tabs)/home");
           })();
         },

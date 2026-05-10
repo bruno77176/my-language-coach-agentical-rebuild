@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import ConfettiCannon from "react-native-confetti-cannon";
+import { StyleSheet, Text, View } from "react-native";
 import { createAudioPlayer, type AudioPlayer } from "expo-audio";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -12,84 +11,82 @@ type Props = {
   onHidden: () => void;
 };
 
+/**
+ * Non-animated celebration banner. Plays a victory sound and shows a green
+ * banner for ~3s, then auto-dismisses via onHidden().
+ *
+ * (We dropped react-native-confetti-cannon — it shipped with a React-version
+ * mismatch that caused "useReducer of null" render errors in this monorepo.
+ * Pure RN sound + banner is enough to feel rewarding without the lib drama.)
+ */
 export function GoalReward({ visible, streakDays, onHidden }: Props) {
-  const opacity = useRef(new Animated.Value(0)).current;
   const playerRef = useRef<AudioPlayer | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!visible) return;
 
-    // Play victory sound (best-effort)
     try {
       const player = createAudioPlayer(VICTORY_SOUND);
       playerRef.current = player;
       player.play();
     } catch {
-      // ignore
+      // best-effort — sound failure is non-blocking
     }
 
-    Animated.sequence([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.delay(2500),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    timeoutRef.current = setTimeout(() => {
       onHidden();
       playerRef.current?.remove();
       playerRef.current = null;
-    });
+      timeoutRef.current = null;
+    }, 3000);
 
     return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       playerRef.current?.remove();
       playerRef.current = null;
     };
-  }, [visible, opacity, onHidden]);
+  }, [visible, onHidden]);
 
   if (!visible) return null;
 
   return (
     <View pointerEvents="none" style={styles.overlay}>
-      <ConfettiCannon count={100} origin={{ x: 180, y: 0 }} autoStart fadeOut />
-      <Animated.View style={[styles.toast, { opacity }]}>
+      <View style={styles.toast}>
+        <Text style={styles.toastEmoji}>🎉</Text>
         <Text style={styles.toastText}>
-          🎉 Goal hit! {streakDays} day{streakDays === 1 ? "" : "s"} in a row 🔥
+          Goal hit! {streakDays} day{streakDays === 1 ? "" : "s"} in a row 🔥
         </Text>
-      </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    pointerEvents: "none",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingTop: 80,
     zIndex: 999,
   },
   toast: {
-    position: "absolute",
-    top: 80,
-    left: 16,
-    right: 16,
-    backgroundColor: "#10b981",
-    borderRadius: 12,
-    padding: 14,
+    flexDirection: "row",
     alignItems: "center",
+    gap: 10,
+    backgroundColor: "#10b981",
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    marginHorizontal: 16,
     shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    elevation: 8,
   },
-  toastText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  toastEmoji: { fontSize: 22 },
+  toastText: { color: "#ffffff", fontSize: 15, fontWeight: "700", flexShrink: 1 },
 });
