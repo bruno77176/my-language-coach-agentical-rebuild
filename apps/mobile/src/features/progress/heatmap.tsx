@@ -32,11 +32,7 @@ export function Heatmap({ days, today }: Props) {
       <View style={styles.grid}>
         {grid.map((iso) => {
           const day = dayMap.get(iso);
-          const intensity = day
-            ? day.goal_reached
-              ? "hit"
-              : "some"
-            : "none";
+          const intensity = day ? (day.goal_reached ? "hit" : "some") : "none";
           const label = day
             ? day.goal_reached
               ? `${iso} ${Math.floor(day.seconds_spoken / 60)} min, goal hit`

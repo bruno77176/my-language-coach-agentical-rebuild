@@ -36,7 +36,9 @@ export default function ProgressScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Progress</Text>
       <View style={styles.headerRow}>
-        <Text style={styles.headerStat}>🔥 {data.current_streak}-day streak</Text>
+        <Text style={styles.headerStat}>
+          🔥 {data.current_streak}-day streak
+        </Text>
         <Text style={styles.headerStat}>⏱ {data.total_minutes} min total</Text>
       </View>
 
@@ -62,9 +64,19 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
   container: { padding: 24, paddingTop: 48, backgroundColor: "#ffffff" },
-  title: { fontSize: 24, fontWeight: "700", color: "#111827", marginBottom: 12 },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 12,
+  },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",

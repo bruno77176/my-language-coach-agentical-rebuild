@@ -8,7 +8,10 @@ type Props = {
 export function TodayProgress({ secondsSpoken, dailyGoalMinutes }: Props) {
   const goalSeconds = dailyGoalMinutes * 60;
   const minutes = Math.floor(secondsSpoken / 60);
-  const ratio = Math.min(1, goalSeconds === 0 ? 0 : secondsSpoken / goalSeconds);
+  const ratio = Math.min(
+    1,
+    goalSeconds === 0 ? 0 : secondsSpoken / goalSeconds,
+  );
   const goalHit = secondsSpoken >= goalSeconds && goalSeconds > 0;
 
   return (

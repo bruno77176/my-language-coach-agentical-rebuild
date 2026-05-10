@@ -8,10 +8,7 @@ import {
   View,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import {
-  quoteForDay,
-  type SupportedLang,
-} from "@language-coach/shared";
+import { quoteForDay, type SupportedLang } from "@language-coach/shared";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useTodayStats } from "@/src/features/home/use-today-stats";
 import { QuoteCard } from "@/src/features/home/quote-card";
@@ -81,7 +78,7 @@ export default function HomeScreen() {
         style={styles.cta}
         onPress={() => router.push("/(tabs)/practice")}
       >
-        <Text style={styles.ctaText}>▶  Start practicing</Text>
+        <Text style={styles.ctaText}>▶ Start practicing</Text>
       </Pressable>
 
       <Text style={styles.streak}>{streakLabel}</Text>

@@ -1,8 +1,5 @@
 import { forwardRef, useState } from "react";
-import {
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
 type Props = {

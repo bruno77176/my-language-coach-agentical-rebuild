@@ -1,8 +1,5 @@
 import { Pressable, Share, StyleSheet, Text } from "react-native";
-import {
-  buildTranscript,
-  type TranscriptMessage,
-} from "./build-transcript";
+import { buildTranscript, type TranscriptMessage } from "./build-transcript";
 
 type Props = {
   languageCode: string;

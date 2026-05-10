@@ -1335,8 +1335,7 @@ export function dayOfYearInTimezone(date: Date, timezone: string): number {
     day: "2-digit",
   });
   const parts = fmt.formatToParts(date);
-  const get = (t: string) =>
-    parts.find((p) => p.type === t)?.value ?? "0";
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "0";
   const year = Number(get("year"));
   const month = Number(get("month"));
   const day = Number(get("day"));
@@ -1351,7 +1350,8 @@ export function quoteForDay(date: Date, timezone: string): DailyQuote {
   if (DAILY_QUOTES.length === 0) {
     throw new Error("DAILY_QUOTES is empty — populate the catalog");
   }
-  const dayIndex = (dayOfYearInTimezone(date, timezone) - 1) % DAILY_QUOTES.length;
+  const dayIndex =
+    (dayOfYearInTimezone(date, timezone) - 1) % DAILY_QUOTES.length;
   // dayIndex is always in [0, length-1] by construction; non-null assertion is safe.
   return DAILY_QUOTES[dayIndex]!;
 }

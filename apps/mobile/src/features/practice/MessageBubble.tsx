@@ -47,11 +47,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         <Text style={styles.hint}>🌐</Text>
       ) : null}
       {translate.isPending ? (
-        <ActivityIndicator
-          size="small"
-          color="#6b7280"
-          style={styles.hint}
-        />
+        <ActivityIndicator size="small" color="#6b7280" style={styles.hint} />
       ) : null}
     </View>
   );

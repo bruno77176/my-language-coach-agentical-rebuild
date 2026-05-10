@@ -28,10 +28,7 @@ export function createMessagesRoutes(deps: MessagesDeps) {
     }
 
     if (message.role !== "coach") {
-      return c.json(
-        { error: { code: "NOT_TRANSLATABLE" } },
-        422,
-      );
+      return c.json({ error: { code: "NOT_TRANSLATABLE" } }, 422);
     }
 
     if (message.translation) {
@@ -52,10 +49,7 @@ export function createMessagesRoutes(deps: MessagesDeps) {
         targetLanguageCode: profile.nativeLang,
       });
     } catch {
-      return c.json(
-        { error: { code: "LLM_PROVIDER_FAILURE" } },
-        503,
-      );
+      return c.json({ error: { code: "LLM_PROVIDER_FAILURE" } }, 503);
     }
 
     try {

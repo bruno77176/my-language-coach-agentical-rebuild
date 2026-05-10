@@ -187,9 +187,7 @@ describe("POST /v1/messages/:id/translate", () => {
       },
       profile: { nativeLang: "fr" },
     });
-    const translate = vi
-      .fn()
-      .mockRejectedValue(new Error("openai down"));
+    const translate = vi.fn().mockRejectedValue(new Error("openai down"));
     const routes = createMessagesRoutes({ db: db as never, translate });
     const app = appWithMessages(routes);
     const res = await app.request(`/v1/messages/${messageId}/translate`, {

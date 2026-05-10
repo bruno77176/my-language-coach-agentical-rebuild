@@ -10,7 +10,8 @@ type Props = {
 export function QuoteCard({ quote, nativeLang }: Props) {
   const [showTranslation, setShowTranslation] = useState(false);
   const translation = quote.translations[nativeLang];
-  const showsTranslation = showTranslation && quote.original.lang !== nativeLang;
+  const showsTranslation =
+    showTranslation && quote.original.lang !== nativeLang;
 
   return (
     <Pressable

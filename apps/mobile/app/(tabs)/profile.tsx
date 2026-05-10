@@ -28,7 +28,14 @@ function langDisplay(code: string): string {
 }
 
 function avatarColorFor(userId: string): string {
-  const colors = ["#fda4af", "#a7f3d0", "#bfdbfe", "#fcd34d", "#c4b5fd", "#fdba74"];
+  const colors = [
+    "#fda4af",
+    "#a7f3d0",
+    "#bfdbfe",
+    "#fcd34d",
+    "#c4b5fd",
+    "#fdba74",
+  ];
   let h = 0;
   for (const c of userId) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return colors[h % colors.length] ?? "#bfdbfe";
@@ -118,9 +125,7 @@ export default function ProfileScreen() {
           <ProfileRow
             label="✨ Upgrade to Pro"
             value="Coming soon"
-            onPress={() =>
-              showToast("Pro launches soon — we'll let you know.")
-            }
+            onPress={() => showToast("Pro launches soon — we'll let you know.")}
           />
         </View>
 
@@ -168,8 +173,19 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingTop: 48, backgroundColor: "#f3f4f6", flexGrow: 1 },
-  title: { fontSize: 24, fontWeight: "700", color: "#111827", marginBottom: 16, marginLeft: 8 },
+  container: {
+    padding: 16,
+    paddingTop: 48,
+    backgroundColor: "#f3f4f6",
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 16,
+    marginLeft: 8,
+  },
   headerCard: {
     flexDirection: "row",
     alignItems: "center",
