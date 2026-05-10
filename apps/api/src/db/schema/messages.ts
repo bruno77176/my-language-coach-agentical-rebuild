@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   timestamp,
+  boolean,
   index,
   pgEnum,
 } from "drizzle-orm/pg-core";
@@ -21,6 +22,7 @@ export const messages = pgTable(
     role: messageRole("role").notNull(),
     text: text("text").notNull(),
     translation: text("translation"),
+    isGreeting: boolean("is_greeting").notNull().default(false),
     audioStoragePath: text("audio_storage_path"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
