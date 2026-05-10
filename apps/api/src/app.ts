@@ -18,7 +18,13 @@ import {
   translateMessage,
 } from "./providers/openai";
 import { createMessagesRoutes } from "./routes/messages";
-import { createStorageClient, uploadCoachAudio } from "./lib/storage";
+import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
+import {
+  createStorageClient,
+  uploadCoachAudioChunk,
+  uploadGreetingAudio,
+  getGreetingAudioUrl,
+} from "./lib/storage";
 
 export type AppEnv = {
   Variables: {
@@ -63,7 +69,7 @@ export function createApp(env: Env, db: Database = createDb(env)) {
       // Swap back to ElevenLabs by importing from ./providers/elevenlabs
       // once we're on a paid subscription.
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
-      uploadCoachAudio: (input) => uploadCoachAudio(storage, input),
+      uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
     }),
   );
 
@@ -72,6 +78,18 @@ export function createApp(env: Env, db: Database = createDb(env)) {
     createMessagesRoutes({
       db,
       translate: (input) => translateMessage(openai, input),
+      synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
+      uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
+      getCachedAudioUrl: async () => null, // v1: always regenerate
+    }),
+  );
+
+  app.route(
+    "/v1/voice/greeting",
+    createVoiceGreetingRoutes({
+      synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
+      uploadGreeting: (input) => uploadGreetingAudio(storage, input),
+      getCachedGreetingUrl: (input) => getGreetingAudioUrl(storage, input),
     }),
   );
 
