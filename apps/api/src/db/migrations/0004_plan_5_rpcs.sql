@@ -3,8 +3,10 @@
 -- isolation holds even when called via supabase.rpc().
 
 -- Helper: longest streak across all of a user's history.
+-- Drop the old parameterized overload if present (pre-security-fix remnant).
+drop function if exists longest_streak(uuid);
 -- Idempotent re-create.
-create or replace function longest_streak(p_user_id uuid)
+create or replace function longest_streak()
 returns int
 language sql
 stable
@@ -13,7 +15,7 @@ as $$
   with goal_days as (
     select date
     from streak_days
-    where user_id = p_user_id and goal_reached = true
+    where user_id = auth.uid() and goal_reached = true
     order by date
   ),
   groups as (
@@ -51,7 +53,7 @@ begin
 
   return jsonb_build_object(
     'current_streak', (select current_streak()),
-    'longest_streak', longest_streak(v_user),
+    'longest_streak', longest_streak(),
     'total_minutes', coalesce(
       (select (sum(seconds_spoken) / 60)::int from streak_days where user_id = v_user),
       0
@@ -101,3 +103,7 @@ begin
     and messages.translation is not null;
 end;
 $$;
+
+grant execute on function longest_streak() to authenticated;
+grant execute on function get_progress_summary() to authenticated;
+grant execute on function clear_my_translations() to authenticated;
