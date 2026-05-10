@@ -1,11 +1,11 @@
 import EventSource from "react-native-sse";
 import { supabase } from "./supabase";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
   "https://my-language-coach-agentical-rebuild.fly.dev";
 
-async function authHeader(): Promise<string> {
+export async function authHeader(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   if (!data.session) throw new Error("Not authenticated");
   return `Bearer ${data.session.access_token}`;
