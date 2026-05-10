@@ -6,14 +6,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { createAudioPlayer, type AudioPlayer } from "expo-audio";
 import type { ChatMessage } from "./types";
 import { useTranslateMessage } from "./use-translate-message";
 import { fetchMessageAudio } from "./api-message-audio";
-import {
-  clearActivePlayerIfMatches,
-  setActivePlayer,
-} from "./audio-controller";
+import { playOnce } from "./audio-controller";
 
 type Props = {
   message: ChatMessage;
@@ -65,38 +61,10 @@ export function MessageBubble({
         }
       }
       if (!url) return;
-      const player: AudioPlayer = createAudioPlayer({ uri: url });
-      setActivePlayer(player); // app-wide single-player rule kills any prior
-      try {
-        player.play();
-      } catch {
-        // ignore
-      }
-      const sub = player.addListener(
-        "playbackStatusUpdate",
-        (s: {
-          isLoaded?: boolean;
-          playing?: boolean;
-          didJustFinish?: boolean;
-        }) => {
-          if (s.isLoaded && !s.playing && !s.didJustFinish) {
-            try {
-              player.play();
-            } catch {
-              // ignore
-            }
-          }
-          if (s.didJustFinish) {
-            sub.remove();
-            clearActivePlayerIfMatches(player);
-            try {
-              player.remove();
-            } catch {
-              // ignore
-            }
-          }
-        },
-      );
+      // Centralized playOnce: single-player rule + guaranteed cleanup with
+      // hard timeout. Awaiting it makes the spinner stay visible for the
+      // duration of playback.
+      await playOnce({ source: { uri: url }, text: message.text });
     } catch {
       // best-effort
     } finally {

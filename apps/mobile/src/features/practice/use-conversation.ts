@@ -4,7 +4,6 @@ import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
   getRecordingPermissionsAsync,
-  createAudioPlayer,
 } from "expo-audio";
 import {
   buildGreeting,
@@ -12,18 +11,12 @@ import {
   type SoftErrorCode,
   type SupportedLang,
 } from "@language-coach/shared";
-import {
-  configureForPlayback,
-  configureForRecording,
-} from "@/src/lib/audio-session";
+import { configureForRecording } from "@/src/lib/audio-session";
 import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
-import {
-  clearActivePlayerIfMatches,
-  setActivePlayer,
-} from "./audio-controller";
+import { playOnce } from "./audio-controller";
 
 // Bundled greeting MP3s — emergency fallback if the personalized greeting
 // (per-user, per-language, name spoken) can't be fetched / cached. Generic
@@ -74,76 +67,10 @@ async function fetchPersonalizedGreetingUrl(
   }
 }
 
-/**
- * Plays a single audio source to completion. Source can be a remote URL
- * ({ uri }) or a bundled module (number from require()). Resolves when
- * finished or after a timeout (estimated from text length). Auto-plays once
- * `isLoaded` becomes true; the imperative `createAudioPlayer().play()` doesn't
- * reliably trigger playback before the source is loaded for remote URLs.
- */
-async function playOnce(input: {
-  source: { uri: string } | number;
-  text?: string;
-  durationMs?: number;
-}): Promise<void> {
-  const player = createAudioPlayer(input.source);
-  setActivePlayer(player);
-  await new Promise<void>((resolve) => {
-    let resolved = false;
-    let triggered = false;
-    const finish = () => {
-      if (resolved) return;
-      resolved = true;
-      clearActivePlayerIfMatches(player);
-      try {
-        player.remove();
-      } catch {
-        // ignore
-      }
-      resolve();
-    };
-
-    const sub = player.addListener(
-      "playbackStatusUpdate",
-      (s: {
-        isLoaded?: boolean;
-        playing?: boolean;
-        didJustFinish?: boolean;
-      }) => {
-        if (s.isLoaded && !triggered) {
-          triggered = true;
-          try {
-            player.play();
-          } catch {
-            // ignore
-          }
-        }
-        if (s.didJustFinish) {
-          sub.remove();
-          finish();
-        }
-      },
-    );
-
-    // Hard timeout fallback so the queue never hangs.
-    const estimatedMs =
-      input.durationMs && input.durationMs > 0
-        ? input.durationMs
-        : Math.max(2500, (input.text?.length ?? 0) * 80);
-    setTimeout(() => {
-      sub.remove();
-      finish();
-    }, estimatedMs + 6000);
-
-    // Also try to start immediately — in case isLoaded fires before we set up
-    // the listener (or never fires for cached/local sources).
-    try {
-      player.play();
-    } catch {
-      // ignore
-    }
-  });
-}
+// playOnce lives in audio-controller.ts — it's the canonical "play one
+// source through the global slot" function used by greeting, chunks, and
+// per-message repeat. Centralizing it ensures every player is cleaned up
+// (no leaks, no stale audio session).
 
 export function useConversation(
   targetLang: string,
@@ -197,11 +124,6 @@ export function useConversation(
 
         // Play greeting: try personalized (server TTS, with name) first,
         // fall back to bundled generic MP3 only if backend fetch fails.
-        try {
-          await configureForPlayback();
-        } catch {
-          // ignore — playback may still work
-        }
         const personalizedUrl = await fetchPersonalizedGreetingUrl(
           targetLang,
           displayName,
@@ -292,7 +214,6 @@ export function useConversation(
       const { events } = streamTurn(conversationId, uri);
       const audioQueue = new AudioQueue({
         playChunk: async (chunk) => {
-          await configureForPlayback();
           await playOnce({
             source: { uri: chunk.audioUrl },
             text: chunk.text,
