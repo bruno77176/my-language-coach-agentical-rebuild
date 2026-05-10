@@ -15,7 +15,9 @@ import {
   createOpenAI,
   streamChatCompletion,
   synthesizeSpeechOpenAI,
+  translateMessage,
 } from "./providers/openai";
+import { createMessagesRoutes } from "./routes/messages";
 import { createStorageClient, uploadCoachAudio } from "./lib/storage";
 
 export type AppEnv = {
@@ -62,6 +64,14 @@ export function createApp(env: Env, db: Database = createDb(env)) {
       // once we're on a paid subscription.
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadCoachAudio: (input) => uploadCoachAudio(storage, input),
+    }),
+  );
+
+  app.route(
+    "/v1/messages",
+    createMessagesRoutes({
+      db,
+      translate: (input) => translateMessage(openai, input),
     }),
   );
 

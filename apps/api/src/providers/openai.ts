@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
+import { LANGUAGES } from "@language-coach/shared";
 
 export function createOpenAI(env: Env): OpenAI {
   return new OpenAI({ apiKey: env.OPENAI_API_KEY });
@@ -95,4 +96,35 @@ export async function synthesizeSpeechOpenAI(
       `OpenAI TTS error: ${(err as Error).message}`,
     );
   }
+}
+
+export type TranslateMessageInput = {
+  text: string;
+  targetLanguageCode: string;
+};
+
+export async function translateMessage(
+  client: OpenAI,
+  input: TranslateMessageInput,
+): Promise<string> {
+  const lang = LANGUAGES.find((l) => l.code === input.targetLanguageCode);
+  const targetName = lang?.englishName ?? input.targetLanguageCode;
+
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: `You are a translator. Translate the user message into ${targetName}. Preserve tone and register. Do not add commentary or quotation marks.`,
+      },
+      { role: "user", content: input.text },
+    ],
+    temperature: 0,
+  });
+
+  const translation = completion.choices[0]?.message?.content?.trim();
+  if (!translation) {
+    throw new Error("openai_returned_empty_translation");
+  }
+  return translation;
 }
