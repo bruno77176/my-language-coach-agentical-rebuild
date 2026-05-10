@@ -71,7 +71,13 @@ describe("POST /v1/messages/:id/translate", () => {
       profile: { nativeLang: "fr" },
     });
     const translate = vi.fn();
-    const routes = createMessagesRoutes({ db: db as never, translate });
+    const routes = createMessagesRoutes({
+      db: db as never,
+      translate,
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
+    });
     const app = appWithMessages(routes);
 
     const res = await app.request(`/v1/messages/${messageId}/translate`, {
@@ -97,7 +103,13 @@ describe("POST /v1/messages/:id/translate", () => {
       profile: { nativeLang: "fr" },
     });
     const translate = vi.fn().mockResolvedValue("Bonjour");
-    const routes = createMessagesRoutes({ db: db as never, translate });
+    const routes = createMessagesRoutes({
+      db: db as never,
+      translate,
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
+    });
     const app = appWithMessages(routes);
 
     const res = await app.request(`/v1/messages/${messageId}/translate`, {
@@ -118,6 +130,9 @@ describe("POST /v1/messages/:id/translate", () => {
     const routes = createMessagesRoutes({
       db: db as never,
       translate: vi.fn(),
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
     });
     const app = appWithMessages(routes);
     const res = await app.request(`/v1/messages/${messageId}/translate`, {
@@ -141,6 +156,9 @@ describe("POST /v1/messages/:id/translate", () => {
     const routes = createMessagesRoutes({
       db: db as never,
       translate: vi.fn(),
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
     });
     const app = appWithMessages(routes);
     const res = await app.request(`/v1/messages/${messageId}/translate`, {
@@ -164,6 +182,9 @@ describe("POST /v1/messages/:id/translate", () => {
     const routes = createMessagesRoutes({
       db: db as never,
       translate: vi.fn(),
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
     });
     const app = appWithMessages(routes);
     const res = await app.request(`/v1/messages/${messageId}/translate`, {
@@ -188,11 +209,119 @@ describe("POST /v1/messages/:id/translate", () => {
       profile: { nativeLang: "fr" },
     });
     const translate = vi.fn().mockRejectedValue(new Error("openai down"));
-    const routes = createMessagesRoutes({ db: db as never, translate });
+    const routes = createMessagesRoutes({
+      db: db as never,
+      translate,
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
+    });
     const app = appWithMessages(routes);
     const res = await app.request(`/v1/messages/${messageId}/translate`, {
       method: "POST",
     });
     expect(res.status).toBe(503);
+  });
+});
+
+describe("POST /v1/messages/:id/audio", () => {
+  it("returns cached audio URL when present", async () => {
+    const db = makeFakeDb({
+      message: null,
+      profile: { nativeLang: "fr" },
+    });
+    db.query.messages.findFirst = vi.fn().mockResolvedValue({
+      id: messageId,
+      role: "coach",
+      text: "Buongiorno",
+      conversation: { id: conversationId, userId },
+    });
+    const synthesize = vi.fn();
+    const uploadChunk = vi.fn();
+    const getCachedAudioUrl = vi
+      .fn()
+      .mockResolvedValue("https://cdn/msg.mp3");
+
+    const routes = createMessagesRoutes({
+      db: db as never,
+      translate: vi.fn(),
+      synthesizeSpeech: synthesize,
+      uploadCoachAudioChunk: uploadChunk,
+      getCachedAudioUrl,
+    });
+    const app = appWithMessages(routes);
+
+    const res = await app.request(`/v1/messages/${messageId}/audio`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ audioUrl: "https://cdn/msg.mp3" });
+    expect(synthesize).not.toHaveBeenCalled();
+    expect(uploadChunk).not.toHaveBeenCalled();
+  });
+
+  it("regenerates + uploads when no cache", async () => {
+    const db = makeFakeDb({
+      message: null,
+      profile: { nativeLang: "fr" },
+    });
+    db.query.messages.findFirst = vi.fn().mockResolvedValue({
+      id: messageId,
+      role: "coach",
+      text: "Buongiorno",
+      conversation: { id: conversationId, userId },
+    });
+    const synthesize = vi.fn().mockResolvedValue({
+      audioBuffer: Buffer.from("audio"),
+      contentType: "audio/mpeg",
+    });
+    const uploadChunk = vi
+      .fn()
+      .mockResolvedValue({ audioUrl: "https://cdn/new.mp3" });
+
+    const routes = createMessagesRoutes({
+      db: db as never,
+      translate: vi.fn(),
+      synthesizeSpeech: synthesize,
+      uploadCoachAudioChunk: uploadChunk,
+      getCachedAudioUrl: vi.fn().mockResolvedValue(null),
+    });
+    const app = appWithMessages(routes);
+
+    const res = await app.request(`/v1/messages/${messageId}/audio`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ audioUrl: "https://cdn/new.mp3" });
+    expect(synthesize).toHaveBeenCalledOnce();
+    expect(uploadChunk).toHaveBeenCalledOnce();
+  });
+
+  it("returns 404 when message belongs to another user", async () => {
+    const db = makeFakeDb({
+      message: null,
+      profile: { nativeLang: "fr" },
+    });
+    db.query.messages.findFirst = vi.fn().mockResolvedValue({
+      id: messageId,
+      role: "coach",
+      text: "x",
+      conversation: {
+        id: conversationId,
+        userId: "99999999-9999-9999-9999-999999999999",
+      },
+    });
+    const routes = createMessagesRoutes({
+      db: db as never,
+      translate: vi.fn(),
+      synthesizeSpeech: vi.fn(),
+      uploadCoachAudioChunk: vi.fn(),
+      getCachedAudioUrl: vi.fn(),
+    });
+    const app = appWithMessages(routes);
+    const res = await app.request(`/v1/messages/${messageId}/audio`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(404);
   });
 });

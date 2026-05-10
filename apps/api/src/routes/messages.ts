@@ -6,9 +6,33 @@ import { messages } from "../db/schema/messages";
 export type TranslateInput = { text: string; targetLanguageCode: string };
 export type TranslateFn = (input: TranslateInput) => Promise<string>;
 
+export type SynthesizeSpeechFn = (input: {
+  text: string;
+  voiceId: string;
+}) => Promise<{ audioBuffer: Buffer; contentType: string }>;
+
+export type UploadCoachAudioChunkFn = (input: {
+  userId: string;
+  conversationId: string;
+  messageId: string;
+  chunkIndex: number;
+  audioBuffer: Buffer;
+  contentType: string;
+}) => Promise<{ audioUrl: string }>;
+
+export type GetCachedAudioUrlFn = (input: {
+  userId: string;
+  conversationId: string;
+  messageId: string;
+  chunkIndex: number;
+}) => Promise<string | null>;
+
 export type MessagesDeps = {
   db: Database;
   translate: TranslateFn;
+  synthesizeSpeech: SynthesizeSpeechFn;
+  uploadCoachAudioChunk: UploadCoachAudioChunkFn;
+  getCachedAudioUrl: GetCachedAudioUrlFn;
 };
 
 export function createMessagesRoutes(deps: MessagesDeps) {
@@ -63,6 +87,52 @@ export function createMessagesRoutes(deps: MessagesDeps) {
     }
 
     return c.json({ translation });
+  });
+
+  app.post("/:id/audio", async (c) => {
+    const messageId = c.req.param("id");
+    const userId = c.get("userId");
+
+    const message = await deps.db.query.messages.findFirst({
+      where: (m, { eq: e }) => e(m.id, messageId),
+      with: { conversation: true },
+    });
+
+    if (!message || message.conversation.userId !== userId) {
+      return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+
+    // Try cache (chunkIndex 0 for full-message audio)
+    const cached = await deps.getCachedAudioUrl({
+      userId,
+      conversationId: message.conversation.id,
+      messageId,
+      chunkIndex: 0,
+    });
+    if (cached) {
+      return c.json({ audioUrl: cached });
+    }
+
+    let audio: { audioBuffer: Buffer; contentType: string };
+    try {
+      audio = await deps.synthesizeSpeech({
+        text: message.text,
+        voiceId: "nova",
+      });
+    } catch {
+      return c.json({ error: { code: "TTS_PROVIDER_FAILURE" } }, 503);
+    }
+
+    const { audioUrl } = await deps.uploadCoachAudioChunk({
+      userId,
+      conversationId: message.conversation.id,
+      messageId,
+      chunkIndex: 0,
+      audioBuffer: audio.audioBuffer,
+      contentType: audio.contentType,
+    });
+
+    return c.json({ audioUrl });
   });
 
   return app;
