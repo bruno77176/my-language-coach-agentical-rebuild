@@ -7,7 +7,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { BottomSheetModal, BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetModalProvider,
+  type BottomSheetModal,
+} from "@gorhom/bottom-sheet";
 import Constants from "expo-constants";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
 import { useProfile } from "@/src/features/auth/use-profile";
