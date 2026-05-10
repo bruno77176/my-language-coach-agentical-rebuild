@@ -15,8 +15,9 @@ This is the rebuild of the My Language Coach app. See:
 | 3 — Mobile + auth + onboarding           | ✓ done  |
 | 4 — Voice loop                           | ✓ done  |
 | 5 — Around-the-voice features            | ✓ done  |
-| 6 — Topics + vocab + freemium + push     | pending |
-| 7 — Polish + Play Store internal release | pending |
+| 6 — Voice-loop parity + streaming TTS    | ✓ done  |
+| 7 — Visual identity + UI polish          | pending |
+| 8 — Topics + vocab + freemium + push + release | pending |
 
 ## Layout
 
