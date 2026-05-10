@@ -358,13 +358,30 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
-    // Set ended_at if not already set.
-    if (!conversation.endedAt) {
-      await deps.db
-        .update(conversations)
-        .set({ endedAt: new Date() })
-        .where(eq(conversations.id, conversationId));
+    // Idempotent: if already ended, return current state without re-counting.
+    if (conversation.endedAt) {
+      return c.json({
+        seconds_spoken: conversation.secondsSpoken ?? 0,
+        goal_reached: false,
+      });
     }
+
+    // Practice time = wall-clock session duration (started_at → now). This
+    // is what users intuitively expect ("I spent 5 minutes practicing")
+    // rather than the Deepgram-measured speaking time (which would be ~1 min
+    // out of a 5-min session). Trade-off: gameable if you leave the screen
+    // open without talking; acceptable for v1.
+    const endedAt = new Date();
+    const startedAtMs = new Date(conversation.startedAt).getTime();
+    const sessionDurationSec = Math.max(
+      0,
+      Math.floor((endedAt.getTime() - startedAtMs) / 1000),
+    );
+
+    await deps.db
+      .update(conversations)
+      .set({ endedAt, secondsSpoken: sessionDurationSec })
+      .where(eq(conversations.id, conversationId));
 
     // Compute today's date in user's local TZ (e.g. "2026-05-09").
     const todayInTz = new Intl.DateTimeFormat("en-CA", {
@@ -372,24 +389,21 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     }).format(new Date());
 
     const dailyGoalSeconds = profile.dailyGoalMinutes * 60;
-    const secondsSpoken = conversation.secondsSpoken ?? 0;
-    const goalReached = secondsSpoken >= dailyGoalSeconds;
+    const goalReached = sessionDurationSec >= dailyGoalSeconds;
 
-    // Upsert streak_days for today: add this conversation's seconds, OR-set
-    // goal_reached. Idempotent if /end is called twice — but if it IS called
-    // twice, seconds will be double-counted, so the mobile client should only
-    // call once per session (which it does in normal flow).
+    // Upsert streak_days for today: add this session's duration, OR-set
+    // goal_reached.
     await deps.db.execute(sql`
       INSERT INTO streak_days (user_id, date, seconds_spoken, goal_reached)
-      VALUES (${userId}, ${todayInTz}, ${secondsSpoken}, ${goalReached})
+      VALUES (${userId}, ${todayInTz}, ${sessionDurationSec}, ${goalReached})
       ON CONFLICT (user_id, date)
       DO UPDATE SET
-        seconds_spoken = streak_days.seconds_spoken + ${secondsSpoken},
-        goal_reached = streak_days.goal_reached OR ${goalReached}
+        seconds_spoken = streak_days.seconds_spoken + ${sessionDurationSec},
+        goal_reached = streak_days.goal_reached OR (streak_days.seconds_spoken + ${sessionDurationSec} >= ${dailyGoalSeconds})
     `);
 
     return c.json({
-      seconds_spoken: secondsSpoken,
+      seconds_spoken: sessionDurationSec,
       goal_reached: goalReached,
     });
   });

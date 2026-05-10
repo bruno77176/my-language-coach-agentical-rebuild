@@ -18,8 +18,28 @@ import {
 } from "@/src/lib/audio-session";
 import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
-import { fetchGreetingAudio } from "./api-greeting";
 import { AudioQueue } from "./audio-queue";
+
+// Bundled greeting MP3s — generated once via OpenAI TTS and shipped with
+// the app. Plays instantly with no network dep, no race condition. The
+// audio is generic per language (no name interpolation); the on-screen
+// text still shows the personalized greeting.
+/* eslint-disable @typescript-eslint/no-require-imports */
+const GREETING_AUDIO: Record<string, number> = {
+  en: require("@/assets/sounds/greetings/en.mp3"),
+  fr: require("@/assets/sounds/greetings/fr.mp3"),
+  de: require("@/assets/sounds/greetings/de.mp3"),
+  it: require("@/assets/sounds/greetings/it.mp3"),
+  es: require("@/assets/sounds/greetings/es.mp3"),
+  pt: require("@/assets/sounds/greetings/pt.mp3"),
+  tr: require("@/assets/sounds/greetings/tr.mp3"),
+  sv: require("@/assets/sounds/greetings/sv.mp3"),
+  da: require("@/assets/sounds/greetings/da.mp3"),
+  ru: require("@/assets/sounds/greetings/ru.mp3"),
+  ro: require("@/assets/sounds/greetings/ro.mp3"),
+  hu: require("@/assets/sounds/greetings/hu.mp3"),
+};
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 export type { ChatMessage, ConversationState } from "./types";
 
@@ -32,17 +52,18 @@ const SOFT_ERROR_CODES: ReadonlySet<SoftErrorCode> = new Set([
 ]);
 
 /**
- * Plays a single audio URL to completion. Resolves when finished or after a
- * timeout (estimated from text length). Auto-plays once `isLoaded` becomes
- * true; the imperative `createAudioPlayer().play()` doesn't reliably trigger
- * playback before the source is loaded for remote URLs.
+ * Plays a single audio source to completion. Source can be a remote URL
+ * ({ uri }) or a bundled module (number from require()). Resolves when
+ * finished or after a timeout (estimated from text length). Auto-plays once
+ * `isLoaded` becomes true; the imperative `createAudioPlayer().play()` doesn't
+ * reliably trigger playback before the source is loaded for remote URLs.
  */
 async function playOnce(input: {
-  uri: string;
+  source: { uri: string } | number;
   text?: string;
   durationMs?: number;
 }): Promise<void> {
-  const player = createAudioPlayer({ uri: input.uri });
+  const player = createAudioPlayer(input.source);
   await new Promise<void>((resolve) => {
     let resolved = false;
     let triggered = false;
@@ -150,23 +171,18 @@ export function useConversation(
         setMessages([greetingMsg]);
         setState({ phase: "idle", conversationId: conversation_id });
 
-        // Fetch greeting audio in parallel; failure is non-fatal
-        try {
-          const { audioUrl } = await fetchGreetingAudio({
-            lang: targetLang,
-            name: displayName,
-          });
-          if (cancelled) return;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === greetingMsg.id ? { ...m, audioUrl } : m)),
-          );
-          if (!greetingPlayedRef.current) {
-            greetingPlayedRef.current = true;
-            await configureForPlayback();
-            void playOnce({ uri: audioUrl, text: greetingText });
+        // Play bundled greeting audio (no network dep, instant).
+        if (!greetingPlayedRef.current) {
+          greetingPlayedRef.current = true;
+          const audioModule = GREETING_AUDIO[targetLang] ?? GREETING_AUDIO.en;
+          if (audioModule !== undefined) {
+            try {
+              await configureForPlayback();
+              void playOnce({ source: audioModule, text: greetingText });
+            } catch {
+              // best-effort
+            }
           }
-        } catch {
-          // best-effort
         }
       } catch (err) {
         if (cancelled) return;
@@ -236,7 +252,7 @@ export function useConversation(
         playChunk: async (chunk) => {
           await configureForPlayback();
           await playOnce({
-            uri: chunk.audioUrl,
+            source: { uri: chunk.audioUrl },
             text: chunk.text,
             durationMs: chunk.durationMs,
           });

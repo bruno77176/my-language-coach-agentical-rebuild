@@ -8,8 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import { router } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
@@ -84,29 +83,6 @@ export default function PracticeScreen() {
     goalSeconds,
     alreadyReachedToday,
   });
-
-  // Auto-end the session when the user navigates away (tab switch, etc.) so
-  // backend records seconds → home + progress + streak refresh.
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        void (async () => {
-          try {
-            await end();
-          } catch {
-            // best-effort
-          }
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
-            queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
-            queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
-          ]);
-        })();
-      };
-      // end + queryClient are stable refs in their respective hooks; safe to omit.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []),
-  );
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   useEffect(() => {

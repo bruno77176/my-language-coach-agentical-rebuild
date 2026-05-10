@@ -24,6 +24,7 @@ import {
   uploadCoachAudioChunk,
   uploadGreetingAudio,
   getGreetingAudioUrl,
+  getCachedCoachAudioUrl,
 } from "./lib/storage";
 
 export type AppEnv = {
@@ -80,7 +81,7 @@ export function createApp(env: Env, db: Database = createDb(env)) {
       translate: (input) => translateMessage(openai, input),
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
-      getCachedAudioUrl: async () => null, // v1: always regenerate
+      getCachedAudioUrl: (input) => getCachedCoachAudioUrl(storage, input),
     }),
   );
 

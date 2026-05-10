@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { createAudioPlayer } from "expo-audio";
+import { createAudioPlayer, type AudioPlayer } from "expo-audio";
 import type { ChatMessage } from "./types";
 import { useTranslateMessage } from "./use-translate-message";
 import { fetchMessageAudio } from "./api-message-audio";
@@ -43,27 +43,49 @@ export function MessageBubble({
   const isSoftError = message.id.startsWith("soft-");
   const isGreeting = message.isGreeting === true;
 
+  const currentPlayerRef = useRef<AudioPlayer | null>(null);
+
+  function stopCurrent() {
+    if (!currentPlayerRef.current) return;
+    try {
+      currentPlayerRef.current.pause();
+    } catch {
+      // ignore
+    }
+    try {
+      currentPlayerRef.current.remove();
+    } catch {
+      // ignore
+    }
+    currentPlayerRef.current = null;
+  }
+
+  // Stop any in-flight player on unmount.
+  useEffect(() => {
+    return () => stopCurrent();
+  }, []);
+
   async function playAudio() {
+    // Kill any prior player so taps don't overlap audio.
+    stopCurrent();
     setPlayingAudio(true);
     try {
       let url: string | null | undefined;
       if (isUser || isGreeting || isSoftError) {
-        // User audio: local URI from recording.
-        // Greeting audio: pre-fetched full greeting MP3.
-        // Soft error: no audio.
         url = message.audioUrl;
       } else {
         // Non-greeting coach message: fetch full-message audio (regenerates
-        // from text + caches; chunk URLs only contain the LAST sentence).
+        // from text + caches; per-chunk URLs only contain the LAST sentence).
         try {
           const res = await fetchMessageAudio(message.id);
           url = res.audioUrl;
         } catch {
-          url = message.audioUrl; // fallback to last chunk
+          url = message.audioUrl;
         }
       }
       if (!url) return;
       const player = createAudioPlayer({ uri: url });
+      currentPlayerRef.current = player;
       try {
         player.play();
       } catch {
@@ -85,6 +107,9 @@ export function MessageBubble({
           }
           if (s.didJustFinish) {
             sub.remove();
+            if (currentPlayerRef.current === player) {
+              currentPlayerRef.current = null;
+            }
             try {
               player.remove();
             } catch {

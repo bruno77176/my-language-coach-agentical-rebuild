@@ -148,3 +148,33 @@ export async function getGreetingAudioUrl(
   if (signErr || !data?.signedUrl) return null;
   return data.signedUrl;
 }
+
+/**
+ * Return a signed URL for a cached coach audio chunk if it exists, or null.
+ * Used by /v1/messages/:id/audio so repeated taps don't regenerate TTS
+ * (which both costs money AND produces slightly different audio each call).
+ */
+export async function getCachedCoachAudioUrl(
+  client: SupabaseClient,
+  input: {
+    userId: string;
+    conversationId: string;
+    messageId: string;
+    chunkIndex: number;
+  },
+): Promise<string | null> {
+  const folder = `${input.userId}/${input.conversationId}`;
+  const fileName = `${input.messageId}-${input.chunkIndex}.mp3`;
+  const { data: list, error: listErr } = await client.storage
+    .from("user-audio")
+    .list(folder, { search: fileName });
+  if (listErr) return null;
+  if (!list || list.length === 0 || !list.find((f) => f.name === fileName)) {
+    return null;
+  }
+  const { data, error: signErr } = await client.storage
+    .from("user-audio")
+    .createSignedUrl(`${folder}/${fileName}`, 60 * 60);
+  if (signErr || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
