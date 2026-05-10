@@ -113,7 +113,8 @@ export async function uploadGreetingAudio(
       contentType: input.contentType,
       upsert: true,
     });
-  if (uploadErr) throw new Error(`greeting upload failed: ${uploadErr.message}`);
+  if (uploadErr)
+    throw new Error(`greeting upload failed: ${uploadErr.message}`);
 
   const { data, error: signErr } = await client.storage
     .from("greeting-audio")

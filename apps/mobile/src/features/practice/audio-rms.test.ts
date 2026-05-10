@@ -7,11 +7,15 @@ describe("isLikelySilent", () => {
   });
 
   it("returns true for very small file (< 2KB)", () => {
-    expect(isLikelySilent({ durationMs: 1000, fileSizeBytes: 1500 })).toBe(true);
+    expect(isLikelySilent({ durationMs: 1000, fileSizeBytes: 1500 })).toBe(
+      true,
+    );
   });
 
   it("returns false for normal audio", () => {
-    expect(isLikelySilent({ durationMs: 2000, fileSizeBytes: 20000 })).toBe(false);
+    expect(isLikelySilent({ durationMs: 2000, fileSizeBytes: 20000 })).toBe(
+      false,
+    );
   });
 
   it("handles missing duration gracefully (treated as not silent)", () => {

@@ -44,7 +44,6 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
           </Pressable>
         </BottomSheetFooter>
       ),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       [saving, value],
     );
 
@@ -68,10 +67,7 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
               >
                 <Text style={styles.flag}>{item.flag}</Text>
                 <Text
-                  style={[
-                    styles.rowLabel,
-                    selected && styles.rowLabelSelected,
-                  ]}
+                  style={[styles.rowLabel, selected && styles.rowLabelSelected]}
                 >
                   {item.englishName}
                 </Text>

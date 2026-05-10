@@ -9,26 +9,80 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
 import { useConversation } from "@/src/features/practice/use-conversation";
 import type { ChatMessage } from "@/src/features/practice/types";
 import { MessageBubble } from "@/src/features/practice/MessageBubble";
 import { MicButton } from "@/src/features/practice/MicButton";
-import { ShareButton } from "@/src/features/practice/share-button";
+import { TopStatusBar } from "@/src/features/practice/top-status-bar";
+import { useSessionTimer } from "@/src/features/practice/use-session-timer";
+import { useGoalReward } from "@/src/features/practice/use-goal-reward";
+import { GoalReward } from "@/src/features/practice/goal-reward";
+import { useTodayStats } from "@/src/features/home/use-today-stats";
+import { supabase } from "@/src/lib/supabase";
+
+function useCurrentStreak() {
+  return useQuery<number>({
+    queryKey: ["current-streak"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("current_streak");
+      if (error) throw error;
+      return Number(data ?? 0);
+    },
+  });
+}
 
 export default function PracticeScreen() {
   useAudioSessionInit();
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
+  const displayName = profile?.display_name ?? "there";
+  const goalMinutes = profile?.daily_goal_minutes ?? 10;
 
   const [startedAt] = useState<Date>(() => new Date());
 
-  const { state, messages, start, stop, end, dismissError } =
-    useConversation(targetLang);
-  const flatListRef = useRef<FlatList<ChatMessage>>(null);
+  const {
+    state,
+    messages,
+    listeningMode,
+    revealedIds,
+    start,
+    stop,
+    end,
+    dismissError,
+    toggleListeningMode,
+    revealMessage,
+  } = useConversation(targetLang, displayName);
 
-  // Auto-scroll on new message
+  const { data: todayStats } = useTodayStats();
+  const { data: streak } = useCurrentStreak();
+
+  const sessionActive =
+    state.phase === "idle" ||
+    state.phase === "recording" ||
+    state.phase === "processing";
+  const { seconds: sessionSeconds } = useSessionTimer(sessionActive);
+
+  const todaySecondsAtStartRef = useRef(0);
+  useEffect(() => {
+    if (todayStats && todaySecondsAtStartRef.current === 0) {
+      todaySecondsAtStartRef.current = todayStats.secondsSpoken ?? 0;
+    }
+  }, [todayStats]);
+
+  const todaySeconds = todaySecondsAtStartRef.current + sessionSeconds;
+  const goalSeconds = goalMinutes * 60;
+  const alreadyReachedToday = todayStats?.goalReached ?? false;
+
+  const { triggered: rewardTriggered, dismiss: dismissReward } = useGoalReward({
+    todaySeconds,
+    goalSeconds,
+    alreadyReachedToday,
+  });
+
+  const flatListRef = useRef<FlatList<ChatMessage>>(null);
   useEffect(() => {
     if (messages.length > 0) {
       requestAnimationFrame(() => {
@@ -42,13 +96,8 @@ export default function PracticeScreen() {
   const isRecording = state.phase === "recording";
 
   const onMicPress = () => {
-    if (state.phase === "idle") {
-      void start();
-      return;
-    }
-    if (state.phase === "recording") {
-      void stop();
-    }
+    if (state.phase === "idle") void start();
+    else if (state.phase === "recording") void stop();
   };
 
   const onExit = () => {
@@ -100,25 +149,33 @@ export default function PracticeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <ShareButton
-          languageCode={targetLang}
-          startedAt={startedAt}
-          durationMinutes={Math.floor(
-            (Date.now() - startedAt.getTime()) / 60000,
-          )}
-          messages={messages.map((m) => ({ role: m.role, text: m.text }))}
-        />
-        <Pressable onPress={onExit} style={styles.exitButton}>
-          <Text style={styles.exitText}>End</Text>
-        </Pressable>
-      </View>
+      <TopStatusBar
+        todaySeconds={todaySeconds}
+        goalMinutes={goalMinutes}
+        streakDays={streak ?? 0}
+        listeningMode={listeningMode}
+        onToggleListening={toggleListeningMode}
+        shareLanguageCode={targetLang}
+        shareStartedAt={startedAt}
+        shareDurationMinutes={Math.floor(
+          (Date.now() - startedAt.getTime()) / 60000,
+        )}
+        shareMessages={messages.map((m) => ({ role: m.role, text: m.text }))}
+        onExit={onExit}
+      />
 
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(m) => m.id}
-        renderItem={({ item }) => <MessageBubble message={item} />}
+        renderItem={({ item }) => (
+          <MessageBubble
+            message={item}
+            listeningMode={listeningMode}
+            revealed={revealedIds.has(item.id)}
+            onReveal={revealMessage}
+          />
+        )}
         contentContainerStyle={styles.chatContainer}
         ListEmptyComponent={
           <View style={styles.emptyState}>
@@ -142,6 +199,12 @@ export default function PracticeScreen() {
           isBusy={isBusy}
         />
       </View>
+
+      <GoalReward
+        visible={rewardTriggered}
+        streakDays={(streak ?? 0) + 1}
+        onHidden={dismissReward}
+      />
     </View>
   );
 }
@@ -157,17 +220,6 @@ const styles = StyleSheet.create({
   },
   loadingText: { marginTop: 16, color: "#6b7280" },
   errorText: { color: "#b91c1c", textAlign: "center", marginBottom: 16 },
-  topBar: {
-    height: 56,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-  exitButton: { paddingHorizontal: 12, paddingVertical: 6 },
-  exitText: { color: "#2563eb", fontWeight: "600" },
   chatContainer: { padding: 16, paddingBottom: 120 },
   emptyState: { alignItems: "center", paddingTop: 80, paddingHorizontal: 24 },
   emptyText: { color: "#6b7280", textAlign: "center", fontSize: 14 },
@@ -196,9 +248,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
-  buttonSecondary: {
-    backgroundColor: "#e5e7eb",
-    marginTop: 8,
-  },
+  buttonSecondary: { backgroundColor: "#e5e7eb", marginTop: 8 },
   buttonTextSecondary: { color: "#374151" },
 });

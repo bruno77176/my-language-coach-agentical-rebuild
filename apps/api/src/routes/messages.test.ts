@@ -238,9 +238,7 @@ describe("POST /v1/messages/:id/audio", () => {
     });
     const synthesize = vi.fn();
     const uploadChunk = vi.fn();
-    const getCachedAudioUrl = vi
-      .fn()
-      .mockResolvedValue("https://cdn/msg.mp3");
+    const getCachedAudioUrl = vi.fn().mockResolvedValue("https://cdn/msg.mp3");
 
     const routes = createMessagesRoutes({
       db: db as never,

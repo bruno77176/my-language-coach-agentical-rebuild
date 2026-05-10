@@ -44,7 +44,6 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
           </Pressable>
         </BottomSheetFooter>
       ),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       [saving, value],
     );
 

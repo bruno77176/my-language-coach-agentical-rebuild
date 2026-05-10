@@ -16,10 +16,7 @@ describe("SentenceBuffer", () => {
 
   it("emits multiple sentences in one push", () => {
     const buf = new SentenceBuffer();
-    expect(buf.push("Hi! How are you? ")).toEqual([
-      "Hi!",
-      "How are you?",
-    ]);
+    expect(buf.push("Hi! How are you? ")).toEqual(["Hi!", "How are you?"]);
   });
 
   it("handles question and exclamation marks", () => {

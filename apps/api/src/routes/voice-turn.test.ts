@@ -294,8 +294,8 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
     async function* singleSentenceStream() {
       yield "Hola amigo.";
     }
-    const streamChatCompletion = vi.fn(
-      () => singleSentenceStream(),
+    const streamChatCompletion = vi.fn(() =>
+      singleSentenceStream(),
     ) as unknown as VoiceDeps["streamChatCompletion"];
 
     const { app } = setupRoute({ streamChatCompletion });

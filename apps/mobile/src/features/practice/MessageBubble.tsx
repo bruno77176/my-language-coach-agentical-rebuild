@@ -89,9 +89,7 @@ export function MessageBubble({
       {showsAsListening ? (
         <View style={styles.listeningRow}>
           <Text style={styles.listeningIcon}>🎧</Text>
-          <Text
-            style={isUser ? styles.bubbleUserText : styles.bubbleCoachText}
-          >
+          <Text style={isUser ? styles.bubbleUserText : styles.bubbleCoachText}>
             {formatDuration(message.audioDurationMs)}
           </Text>
         </View>
@@ -108,9 +106,7 @@ export function MessageBubble({
           ) : null}
           <View style={styles.actionRow}>
             <Pressable onPress={handleRepeatPress} hitSlop={8}>
-              <Text style={styles.actionIcon}>
-                {playingAudio ? "▶" : "🔁"}
-              </Text>
+              <Text style={styles.actionIcon}>{playingAudio ? "▶" : "🔁"}</Text>
             </Pressable>
             {!isUser && !listeningMode ? (
               <View>

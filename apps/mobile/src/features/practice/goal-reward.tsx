@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-// @ts-expect-error react-native-confetti-cannon ships no bundled types
 import ConfettiCannon from "react-native-confetti-cannon";
 import { createAudioPlayer, type AudioPlayer } from "expo-audio";
 
-const VICTORY_SOUND = require("@/assets/sounds/victory.mp3");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const VICTORY_SOUND = require("@/assets/sounds/victory.mp3") as number;
 
 type Props = {
   visible: boolean;
@@ -56,12 +56,7 @@ export function GoalReward({ visible, streakDays, onHidden }: Props) {
 
   return (
     <View pointerEvents="none" style={styles.overlay}>
-      <ConfettiCannon
-        count={100}
-        origin={{ x: 180, y: 0 }}
-        autoStart
-        fadeOut
-      />
+      <ConfettiCannon count={100} origin={{ x: 180, y: 0 }} autoStart fadeOut />
       <Animated.View style={[styles.toast, { opacity }]}>
         <Text style={styles.toastText}>
           🎉 Goal hit! {streakDays} day{streakDays === 1 ? "" : "s"} in a row 🔥

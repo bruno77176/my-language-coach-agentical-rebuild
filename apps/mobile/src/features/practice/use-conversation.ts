@@ -79,9 +79,7 @@ export function useConversation(targetLang: string, displayName: string) {
           });
           if (cancelled) return;
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === greetingMsg.id ? { ...m, audioUrl } : m,
-            ),
+            prev.map((m) => (m.id === greetingMsg.id ? { ...m, audioUrl } : m)),
           );
           await configureForPlayback();
           const player = createAudioPlayer({ uri: audioUrl });

@@ -28,7 +28,8 @@ export const COACH_FALLBACKS: Record<SupportedLang, FallbackMap> = {
     AUDIO_SILENT: "Hmm, das habe ich nicht gehört — kannst du es wiederholen?",
     AUDIO_TOO_SHORT: "Das war etwas zu kurz — versuch es noch einmal!",
     STT_PROVIDER_FAILURE: "Ich höre dich schlecht — kannst du es wiederholen?",
-    LLM_PROVIDER_FAILURE: "Bei mir ist etwas schiefgelaufen — machen wir weiter.",
+    LLM_PROVIDER_FAILURE:
+      "Bei mir ist etwas schiefgelaufen — machen wir weiter.",
     TTS_PROVIDER_FAILURE: "(Audio fehlgeschlagen — lies meine Nachricht oben.)",
   },
   it: {

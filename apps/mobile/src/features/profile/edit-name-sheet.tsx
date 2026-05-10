@@ -40,16 +40,12 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
           <Pressable
             onPress={handleSave}
             disabled={!valid || saving}
-            style={[
-              styles.saveButton,
-              (!valid || saving) && styles.disabled,
-            ]}
+            style={[styles.saveButton, (!valid || saving) && styles.disabled]}
           >
             <Text style={styles.saveText}>{saving ? "Saving…" : "Save"}</Text>
           </Pressable>
         </BottomSheetFooter>
       ),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       [saving, valid, value],
     );
 
