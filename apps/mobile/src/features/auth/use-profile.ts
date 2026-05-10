@@ -3,7 +3,9 @@ import { supabase } from "@/src/lib/supabase";
 import { useAuthStore } from "./auth-store";
 
 export function useProfile() {
-  const userId = useAuthStore((s) => s.session?.user.id);
+  const session = useAuthStore((s) => s.session);
+  const userId = session?.user.id;
+  const email = session?.user.email;
   return useQuery({
     queryKey: ["profile", userId],
     enabled: !!userId,
@@ -14,7 +16,10 @@ export function useProfile() {
         .eq("user_id", userId!)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      // Merge the authenticated user's email (from the JWT session) into the
+      // profile object so the profile screen can display it without an extra
+      // Supabase auth.getUser() call.
+      return data ? { ...data, email: email ?? null } : data;
     },
   });
 }
