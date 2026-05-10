@@ -24,15 +24,6 @@ import {
   clearActivePlayerIfMatches,
   setActivePlayer,
 } from "./audio-controller";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const FileSystem = require("expo-file-system/legacy") as {
-  cacheDirectory: string | null;
-  getInfoAsync(uri: string): Promise<{ exists: boolean }>;
-  downloadAsync(
-    uri: string,
-    fileUri: string,
-  ): Promise<{ uri: string; status: number }>;
-};
 
 // Bundled greeting MP3s — emergency fallback if the personalized greeting
 // (per-user, per-language, name spoken) can't be fetched / cached. Generic
@@ -65,30 +56,20 @@ const SOFT_ERROR_CODES: ReadonlySet<SoftErrorCode> = new Set([
 ]);
 
 /**
- * Download the personalized greeting audio (server-side TTS, cached per
- * user+lang) to a local file and return its URI. Returns null on any
+ * Fetch the personalized greeting audio URL from backend (server-side
+ * TTS cached per user+lang via signed Storage URL). Returns null on any
  * failure — caller should fall back to the bundled MP3.
  */
-async function downloadPersonalizedGreeting(
+async function fetchPersonalizedGreetingUrl(
   lang: string,
   name: string,
 ): Promise<string | null> {
-  if (!FileSystem.cacheDirectory) return null;
   try {
     const { audioUrl } = await fetchGreetingAudio({ lang, name });
-    const safeName = name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]/g, "")
-      .slice(0, 32);
-    const localUri = `${FileSystem.cacheDirectory}greeting-${lang}-${safeName}.mp3`;
-    const info = await FileSystem.getInfoAsync(localUri);
-    if (!info.exists) {
-      const dl = await FileSystem.downloadAsync(audioUrl, localUri);
-      if (dl.status !== 200) return null;
-    }
-    return localUri;
-  } catch {
+    console.log("[GREETING] got personalized URL:", audioUrl.slice(0, 80));
+    return audioUrl;
+  } catch (err) {
+    console.warn("[GREETING] personalized fetch failed:", err);
     return null;
   }
 }
@@ -214,32 +195,32 @@ export function useConversation(
         setMessages([greetingMsg]);
         setState({ phase: "idle", conversationId: conversation_id });
 
-        // Play greeting: try personalized (server TTS, named) first, fall
-        // back to the bundled generic MP3 if anything fails. The cancelled
-        // flag handles strict-mode duplicate runs and lang-change re-runs;
-        // no need for a played-once ref.
+        // Play greeting: try personalized (server TTS, with name) first,
+        // fall back to bundled generic MP3 only if backend fetch fails.
         try {
           await configureForPlayback();
         } catch {
           // ignore — playback may still work
         }
-        const personalizedUri = await downloadPersonalizedGreeting(
+        const personalizedUrl = await fetchPersonalizedGreetingUrl(
           targetLang,
           displayName,
         );
         if (cancelled) return;
-        if (personalizedUri) {
-          // Set audioUrl on the greeting so 🔁 can replay it from local file.
+        if (personalizedUrl) {
+          console.log("[GREETING] playing personalized");
+          // Set audioUrl on the greeting so 🔁 can replay it.
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === greetingMsg.id ? { ...m, audioUrl: personalizedUri } : m,
+              m.id === greetingMsg.id ? { ...m, audioUrl: personalizedUrl } : m,
             ),
           );
           void playOnce({
-            source: { uri: personalizedUri },
+            source: { uri: personalizedUrl },
             text: greetingText,
           });
         } else {
+          console.log("[GREETING] falling back to bundled (no name)");
           const audioModule = GREETING_AUDIO[targetLang] ?? GREETING_AUDIO.en;
           if (audioModule !== undefined) {
             void playOnce({ source: audioModule, text: greetingText });

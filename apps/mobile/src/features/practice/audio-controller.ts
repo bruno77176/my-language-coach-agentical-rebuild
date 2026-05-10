@@ -15,15 +15,20 @@ import type { AudioPlayer } from "expo-audio";
 
 let currentPlayer: AudioPlayer | null = null;
 
-function safePause(p: AudioPlayer): void {
+function safeStop(p: AudioPlayer): void {
+  // Order matters: muting is the only operation that takes effect
+  // immediately on Android. pause() and remove() can lag behind the native
+  // audio buffer, leading to overlapping playback when called too fast.
+  try {
+    (p as { volume?: number }).volume = 0;
+  } catch {
+    // ignore
+  }
   try {
     p.pause();
   } catch {
     // ignore
   }
-}
-
-function safeRemove(p: AudioPlayer): void {
   try {
     p.remove();
   } catch {
@@ -33,16 +38,14 @@ function safeRemove(p: AudioPlayer): void {
 
 export function setActivePlayer(player: AudioPlayer): void {
   if (currentPlayer && currentPlayer !== player) {
-    safePause(currentPlayer);
-    safeRemove(currentPlayer);
+    safeStop(currentPlayer);
   }
   currentPlayer = player;
 }
 
 export function stopActivePlayer(): void {
   if (!currentPlayer) return;
-  safePause(currentPlayer);
-  safeRemove(currentPlayer);
+  safeStop(currentPlayer);
   currentPlayer = null;
 }
 
