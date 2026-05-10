@@ -49,3 +49,101 @@ export async function uploadCoachAudio(
   }
   return { path, signedUrl: signed.data.signedUrl };
 }
+
+/**
+ * Upload a single TTS audio chunk for streaming coach responses.
+ *
+ * Path scheme: {userId}/{conversationId}/{messageId}-{chunkIndex}.mp3
+ * Bucket: user-audio (same RLS policies as uploadCoachAudio).
+ */
+export async function uploadCoachAudioChunk(
+  client: SupabaseClient,
+  input: {
+    userId: string;
+    conversationId: string;
+    messageId: string;
+    chunkIndex: number;
+    audioBuffer: Buffer;
+    contentType: string;
+  },
+): Promise<{ audioUrl: string }> {
+  const path = `${input.userId}/${input.conversationId}/${input.messageId}-${input.chunkIndex}.mp3`;
+  const { error: uploadErr } = await client.storage
+    .from("user-audio")
+    .upload(path, input.audioBuffer, {
+      contentType: input.contentType,
+      upsert: true,
+    });
+  if (uploadErr) throw new Error(`storage upload failed: ${uploadErr.message}`);
+
+  const { data, error: signErr } = await client.storage
+    .from("user-audio")
+    .createSignedUrl(path, 60 * 60); // 1 hour
+  if (signErr || !data?.signedUrl) {
+    throw new Error(`storage sign failed: ${signErr?.message}`);
+  }
+  return { audioUrl: data.signedUrl };
+}
+
+/**
+ * Upload a pre-generated greeting audio clip to the shared greeting-audio bucket.
+ *
+ * Path scheme: greeting-{lang}-{nameHash}.mp3
+ * Bucket: greeting-audio (public).
+ *
+ * REQUIRES (one-shot, run once in Supabase SQL Editor before first use):
+ *
+ *   INSERT INTO storage.buckets (id, name, public)
+ *   VALUES ('greeting-audio', 'greeting-audio', true)
+ *   ON CONFLICT (id) DO UPDATE SET public = true;
+ */
+export async function uploadGreetingAudio(
+  client: SupabaseClient,
+  input: {
+    lang: string;
+    nameHash: string;
+    audioBuffer: Buffer;
+    contentType: string;
+  },
+): Promise<{ audioUrl: string }> {
+  const path = `greeting-${input.lang}-${input.nameHash}.mp3`;
+  const { error: uploadErr } = await client.storage
+    .from("greeting-audio")
+    .upload(path, input.audioBuffer, {
+      contentType: input.contentType,
+      upsert: true,
+    });
+  if (uploadErr) throw new Error(`greeting upload failed: ${uploadErr.message}`);
+
+  const { data, error: signErr } = await client.storage
+    .from("greeting-audio")
+    .createSignedUrl(path, 60 * 60 * 24 * 7); // 1 week
+  if (signErr || !data?.signedUrl) {
+    throw new Error(`greeting sign failed: ${signErr?.message}`);
+  }
+  return { audioUrl: data.signedUrl };
+}
+
+/**
+ * Return a signed URL for a cached greeting clip, or null if it doesn't exist yet.
+ *
+ * Bucket: greeting-audio (public).
+ */
+export async function getGreetingAudioUrl(
+  client: SupabaseClient,
+  input: { lang: string; nameHash: string },
+): Promise<string | null> {
+  const path = `greeting-${input.lang}-${input.nameHash}.mp3`;
+  const { data: list, error: listErr } = await client.storage
+    .from("greeting-audio")
+    .list("", { search: path });
+  if (listErr) return null;
+  if (!list || list.length === 0 || !list.find((f) => f.name === path)) {
+    return null;
+  }
+  const { data, error: signErr } = await client.storage
+    .from("greeting-audio")
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
+  if (signErr || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
