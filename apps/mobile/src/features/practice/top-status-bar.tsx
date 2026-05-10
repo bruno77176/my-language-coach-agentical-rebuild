@@ -1,4 +1,11 @@
-import { Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { ShareButton } from "./share-button";
 import type { TranscriptMessage } from "./build-transcript";
 
@@ -65,7 +72,8 @@ export function TopStatusBar(props: Props) {
   );
 }
 
-const STATUS_BAR_HEIGHT = Platform.OS === "android" ? StatusBar.currentHeight ?? 24 : 44;
+const STATUS_BAR_HEIGHT =
+  Platform.OS === "android" ? (StatusBar.currentHeight ?? 24) : 44;
 
 const styles = StyleSheet.create({
   wrapper: {

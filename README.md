@@ -8,15 +8,15 @@ This is the rebuild of the My Language Coach app. See:
 
 ## Status
 
-| Plan                                     | Status  |
-| ---------------------------------------- | ------- |
-| 1 — Foundation                           | ✓ done  |
-| 2 — Backend + Supabase + DB              | ✓ done  |
-| 3 — Mobile + auth + onboarding           | ✓ done  |
-| 4 — Voice loop                           | ✓ done  |
-| 5 — Around-the-voice features            | ✓ done  |
-| 6 — Voice-loop parity + streaming TTS    | ✓ done  |
-| 7 — Visual identity + UI polish          | pending |
+| Plan                                           | Status  |
+| ---------------------------------------------- | ------- |
+| 1 — Foundation                                 | ✓ done  |
+| 2 — Backend + Supabase + DB                    | ✓ done  |
+| 3 — Mobile + auth + onboarding                 | ✓ done  |
+| 4 — Voice loop                                 | ✓ done  |
+| 5 — Around-the-voice features                  | ✓ done  |
+| 6 — Voice-loop parity + streaming TTS          | ✓ done  |
+| 7 — Visual identity + UI polish                | pending |
 | 8 — Topics + vocab + freemium + push + release | pending |
 
 ## Layout

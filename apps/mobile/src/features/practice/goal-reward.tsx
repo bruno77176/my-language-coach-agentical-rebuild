@@ -105,5 +105,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   toastEmoji: { fontSize: 22 },
-  toastText: { color: "#ffffff", fontSize: 15, fontWeight: "700", flexShrink: 1 },
+  toastText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+    flexShrink: 1,
+  },
 });
