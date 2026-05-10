@@ -5,6 +5,12 @@ export type ChatMessage = {
   audioUrl?: string | null;
   audioDurationMs?: number;
   isGreeting?: boolean;
+  /**
+   * Pre-computed translation in the user's native language. Set client-side
+   * for messages where translation is templated (e.g. greetings) so the
+   * translate icon doesn't need to call the backend API.
+   */
+  clientTranslation?: string;
 };
 
 export type ConversationState =

@@ -99,7 +99,11 @@ async function playOnce(input: {
   });
 }
 
-export function useConversation(targetLang: string, displayName: string) {
+export function useConversation(
+  targetLang: string,
+  displayName: string,
+  nativeLang: string,
+) {
   const [state, setState] = useState<ConversationState>({
     phase: "loading-session",
   });
@@ -130,11 +134,18 @@ export function useConversation(targetLang: string, displayName: string) {
           targetLang as SupportedLang,
           displayName,
         );
+        // Pre-compute the native-lang translation so 🌐 toggles instantly
+        // without an API call. (Greeting isn't a DB row so /translate would 404.)
+        const greetingTranslation =
+          nativeLang !== targetLang
+            ? buildGreeting(nativeLang as SupportedLang, displayName)
+            : undefined;
         const greetingMsg: ChatMessage = {
           id: `greeting-${Date.now()}`,
           role: "coach",
           text: greetingText,
           isGreeting: true,
+          clientTranslation: greetingTranslation,
         };
         setMessages([greetingMsg]);
         setState({ phase: "idle", conversationId: conversation_id });
@@ -165,7 +176,7 @@ export function useConversation(targetLang: string, displayName: string) {
     return () => {
       cancelled = true;
     };
-  }, [targetLang, displayName]);
+  }, [targetLang, displayName, nativeLang]);
 
   async function start() {
     if (state.phase !== "idle") return;

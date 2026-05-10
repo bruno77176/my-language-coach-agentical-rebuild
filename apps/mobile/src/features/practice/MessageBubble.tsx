@@ -40,17 +40,30 @@ export function MessageBubble({
 
   const showsAsListening = listeningMode && !revealed;
 
+  const isSoftError = message.id.startsWith("soft-");
+  const isGreeting = message.isGreeting === true;
+
   async function playAudio() {
     setPlayingAudio(true);
     try {
-      let url = message.audioUrl;
-      if (!url && !isUser) {
-        const res = await fetchMessageAudio(message.id);
-        url = res.audioUrl;
+      let url: string | null | undefined;
+      if (isUser || isGreeting || isSoftError) {
+        // User audio: local URI from recording.
+        // Greeting audio: pre-fetched full greeting MP3.
+        // Soft error: no audio.
+        url = message.audioUrl;
+      } else {
+        // Non-greeting coach message: fetch full-message audio (regenerates
+        // from text + caches; chunk URLs only contain the LAST sentence).
+        try {
+          const res = await fetchMessageAudio(message.id);
+          url = res.audioUrl;
+        } catch {
+          url = message.audioUrl; // fallback to last chunk
+        }
       }
       if (!url) return;
       const player = createAudioPlayer({ uri: url });
-      // Best-effort: try immediate play, also auto-play once loaded.
       try {
         player.play();
       } catch {
@@ -88,7 +101,18 @@ export function MessageBubble({
   }
 
   async function handleTranslatePress() {
-    if (isUser || listeningMode) return;
+    if (isUser || listeningMode || isSoftError) return;
+    // Greetings have a hardcoded client translation set in useConversation.
+    // Just toggle visibility — no API call.
+    if (message.clientTranslation) {
+      if (translation) {
+        setShowingTranslation((s) => !s);
+      } else {
+        setTranslation(message.clientTranslation);
+        setShowingTranslation(true);
+      }
+      return;
+    }
     if (translation) {
       setShowingTranslation((s) => !s);
       return;
@@ -135,35 +159,39 @@ export function MessageBubble({
               <Text style={styles.translation}>{translation}</Text>
             </>
           ) : null}
-          <View style={styles.actionRow}>
-            <Pressable
-              onPress={handleRepeatPressWrapper}
-              hitSlop={10}
-              style={styles.actionTap}
-            >
-              <Text style={styles.actionIcon}>{playingAudio ? "▶" : "🔁"}</Text>
-            </Pressable>
-            {!isUser && !listeningMode ? (
+          {!isSoftError ? (
+            <View style={styles.actionRow}>
               <Pressable
-                onPress={handleTranslatePress}
+                onPress={handleRepeatPressWrapper}
                 hitSlop={10}
                 style={styles.actionTap}
               >
-                {translate.isPending ? (
-                  <ActivityIndicator size="small" color="#6b7280" />
-                ) : (
-                  <Text
-                    style={[
-                      styles.actionIcon,
-                      showingTranslation && styles.actionIconActive,
-                    ]}
-                  >
-                    🌐
-                  </Text>
-                )}
+                <Text style={styles.actionIcon}>
+                  {playingAudio ? "▶" : "🔁"}
+                </Text>
               </Pressable>
-            ) : null}
-          </View>
+              {!isUser && !listeningMode ? (
+                <Pressable
+                  onPress={handleTranslatePress}
+                  hitSlop={10}
+                  style={styles.actionTap}
+                >
+                  {translate.isPending ? (
+                    <ActivityIndicator size="small" color="#6b7280" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.actionIcon,
+                        showingTranslation && styles.actionIconActive,
+                      ]}
+                    >
+                      🌐
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
         </>
       )}
     </View>

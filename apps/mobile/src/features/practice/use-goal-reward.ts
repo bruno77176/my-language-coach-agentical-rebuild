@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type UseGoalRewardInput = {
   /** Total seconds spoken today INCLUDING the in-flight session. */
@@ -32,9 +32,12 @@ export function useGoalReward(input: UseGoalRewardInput) {
     prevSecondsRef.current = now;
   }, [input.todaySeconds, input.goalSeconds, input.alreadyReachedToday]);
 
-  function dismiss() {
+  // useCallback so the reference is stable — passed into GoalReward's effect
+  // deps; without this, the effect re-runs every render and starts overlapping
+  // victory sounds.
+  const dismiss = useCallback(() => {
     setTriggered(false);
-  }
+  }, []);
 
   return { triggered, dismiss };
 }

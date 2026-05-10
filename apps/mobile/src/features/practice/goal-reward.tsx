@@ -16,15 +16,31 @@ type Props = {
  * banner for ~3s, then auto-dismisses via onHidden().
  *
  * (We dropped react-native-confetti-cannon — it shipped with a React-version
- * mismatch that caused "useReducer of null" render errors in this monorepo.
- * Pure RN sound + banner is enough to feel rewarding without the lib drama.)
+ * mismatch that caused "useReducer of null" render errors in this monorepo.)
  */
 export function GoalReward({ visible, streakDays, onHidden }: Props) {
   const playerRef = useRef<AudioPlayer | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onHiddenRef = useRef(onHidden);
+  onHiddenRef.current = onHidden;
 
   useEffect(() => {
     if (!visible) return;
+
+    function stopPlayer() {
+      if (!playerRef.current) return;
+      try {
+        playerRef.current.pause();
+      } catch {
+        // ignore
+      }
+      try {
+        playerRef.current.remove();
+      } catch {
+        // ignore
+      }
+      playerRef.current = null;
+    }
 
     try {
       const player = createAudioPlayer(VICTORY_SOUND);
@@ -35,18 +51,19 @@ export function GoalReward({ visible, streakDays, onHidden }: Props) {
     }
 
     timeoutRef.current = setTimeout(() => {
-      onHidden();
-      playerRef.current?.remove();
-      playerRef.current = null;
+      onHiddenRef.current();
+      stopPlayer();
       timeoutRef.current = null;
     }, 3000);
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      playerRef.current?.remove();
-      playerRef.current = null;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      stopPlayer();
     };
-  }, [visible, onHidden]);
+  }, [visible]);
 
   if (!visible) return null;
 

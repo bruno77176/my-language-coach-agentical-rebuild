@@ -8,7 +8,8 @@ import {
   Text,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
@@ -39,6 +40,7 @@ export default function PracticeScreen() {
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
   const displayName = profile?.display_name ?? "there";
+  const nativeLang = profile?.native_lang ?? "en";
   const goalMinutes = profile?.daily_goal_minutes ?? 10;
 
   const [startedAt] = useState<Date>(() => new Date());
@@ -54,7 +56,7 @@ export default function PracticeScreen() {
     dismissError,
     toggleListeningMode,
     revealMessage,
-  } = useConversation(targetLang, displayName);
+  } = useConversation(targetLang, displayName, nativeLang);
 
   const { data: todayStats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
@@ -82,6 +84,29 @@ export default function PracticeScreen() {
     goalSeconds,
     alreadyReachedToday,
   });
+
+  // Auto-end the session when the user navigates away (tab switch, etc.) so
+  // backend records seconds → home + progress + streak refresh.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        void (async () => {
+          try {
+            await end();
+          } catch {
+            // best-effort
+          }
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+            queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
+            queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+          ]);
+        })();
+      };
+      // end + queryClient are stable refs in their respective hooks; safe to omit.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   useEffect(() => {
