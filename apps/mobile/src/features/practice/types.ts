@@ -3,6 +3,8 @@ export type ChatMessage = {
   role: "user" | "coach";
   text: string;
   audioUrl?: string | null;
+  audioDurationMs?: number;
+  isGreeting?: boolean;
 };
 
 export type ConversationState =
