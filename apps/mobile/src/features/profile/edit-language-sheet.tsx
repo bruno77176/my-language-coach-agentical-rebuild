@@ -1,10 +1,12 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, useCallback, useState } from "react";
 import {
+  BottomSheetFooter,
   BottomSheetModal,
   BottomSheetScrollView,
   BottomSheetView,
+  type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text } from "react-native";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
 
 type Props = {
@@ -30,63 +32,66 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
       }
     }
 
-    return (
-      <BottomSheetModal ref={ref} snapPoints={["90%"]}>
-        <BottomSheetView style={styles.content}>
-          <Text style={styles.title}>{title}</Text>
-          <BottomSheetScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
+    const renderFooter = useCallback(
+      (props: BottomSheetFooterProps) => (
+        <BottomSheetFooter {...props} bottomInset={24}>
+          <Pressable
+            onPress={handleSave}
+            disabled={saving}
+            style={[styles.saveButton, saving && styles.disabled]}
           >
-            {LANGUAGES.map((item) => {
-              const selected = item.code === value;
-              return (
-                <Pressable
-                  key={item.code}
-                  onPress={() => setValue(item.code as SupportedLang)}
-                  style={[styles.row, selected && styles.rowSelected]}
-                >
-                  <Text style={styles.flag}>{item.flag}</Text>
-                  <Text
-                    style={[
-                      styles.rowLabel,
-                      selected && styles.rowLabelSelected,
-                    ]}
-                  >
-                    {item.englishName}
-                  </Text>
-                  <Text style={styles.native}>{item.nativeName}</Text>
-                </Pressable>
-              );
-            })}
-          </BottomSheetScrollView>
-          <View style={styles.footer}>
-            <Pressable
-              onPress={handleSave}
-              disabled={saving}
-              style={[styles.button, saving && styles.disabled]}
-            >
-              <Text style={styles.buttonText}>
-                {saving ? "Saving…" : "Save"}
-              </Text>
-            </Pressable>
-          </View>
+            <Text style={styles.saveText}>{saving ? "Saving…" : "Save"}</Text>
+          </Pressable>
+        </BottomSheetFooter>
+      ),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [saving, value],
+    );
+
+    return (
+      <BottomSheetModal
+        ref={ref}
+        snapPoints={["85%"]}
+        footerComponent={renderFooter}
+      >
+        <BottomSheetView style={styles.header}>
+          <Text style={styles.title}>{title}</Text>
         </BottomSheetView>
+        <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
+          {LANGUAGES.map((item) => {
+            const selected = item.code === value;
+            return (
+              <Pressable
+                key={item.code}
+                onPress={() => setValue(item.code as SupportedLang)}
+                style={[styles.row, selected && styles.rowSelected]}
+              >
+                <Text style={styles.flag}>{item.flag}</Text>
+                <Text
+                  style={[
+                    styles.rowLabel,
+                    selected && styles.rowLabelSelected,
+                  ]}
+                >
+                  {item.englishName}
+                </Text>
+                <Text style={styles.native}>{item.nativeName}</Text>
+              </Pressable>
+            );
+          })}
+        </BottomSheetScrollView>
       </BottomSheetModal>
     );
   },
 );
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: 12,
+  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
+  title: { fontSize: 18, fontWeight: "600", color: "#111827" },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 100, // leave room for the floating footer
   },
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 16 },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -101,18 +106,13 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 16, color: "#374151", flex: 1 },
   rowLabelSelected: { color: "#1d4ed8", fontWeight: "600" },
   native: { fontSize: 13, color: "#6b7280" },
-  footer: {
-    paddingTop: 16,
-    paddingBottom: 48,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e5e7eb",
-  },
-  button: {
+  saveButton: {
+    marginHorizontal: 24,
     backgroundColor: "#2563eb",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
   },
-  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  saveText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
   disabled: { opacity: 0.5 },
 });
