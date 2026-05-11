@@ -43,7 +43,8 @@
         "SENTRY_DSN_MOBILE": "https://2441378aa3508ef04734add3d7c4c447@o4511359436783616.ingest.de.sentry.io/4511359440257104",
         "POSTHOG_API_KEY": "placeholder_posthog_to_be_replaced_in_plan_6",
         "POSTHOG_HOST": "https://us.i.posthog.com",
-        "EAS_PROJECT_ID": "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7"
+        "EAS_PROJECT_ID": "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },
