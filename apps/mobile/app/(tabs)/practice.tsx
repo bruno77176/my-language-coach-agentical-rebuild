@@ -94,7 +94,8 @@ export default function PracticeScreen() {
     (state.phase === "idle" ||
       state.phase === "recording" ||
       state.phase === "processing");
-  const { seconds: sessionSeconds } = useSessionTimer(sessionActive);
+  const { seconds: sessionSeconds, reset: resetSessionTimer } =
+    useSessionTimer(sessionActive);
 
   const todaySecondsAtStartRef = useRef(0);
   useEffect(() => {
@@ -144,8 +145,13 @@ export default function PracticeScreen() {
             } catch {
               /* best-effort */
             }
-            // Refresh home / progress queries so the just-ended session's
-            // minutes show up immediately when navigating away.
+            // Reset local session counters BEFORE invalidating queries.
+            // Otherwise the refetched todayStats (which now includes the
+            // session we just ended) gets added on top of sessionSeconds in
+            // todaySecondsAtStartRef, double-counting today's seconds and
+            // mis-triggering the goal-reward.
+            resetSessionTimer();
+            todaySecondsAtStartRef.current = 0;
             await Promise.all([
               queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
               queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),

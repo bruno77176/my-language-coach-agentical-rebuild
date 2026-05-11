@@ -19,6 +19,12 @@ export function useGoalReward(input: UseGoalRewardInput) {
   const prevSecondsRef = useRef(input.todaySeconds);
 
   useEffect(() => {
+    // Reset the once-fired guard when todaySeconds drops back near 0 (new day
+    // or session reset). Without this, a Practice screen left mounted across
+    // midnight would never fire the reward again.
+    if (firedRef.current && input.todaySeconds === 0) {
+      firedRef.current = false;
+    }
     if (firedRef.current) return;
     if (input.alreadyReachedToday) return;
     if (input.goalSeconds <= 0) return;
