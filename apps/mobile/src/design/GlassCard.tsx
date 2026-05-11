@@ -57,9 +57,5 @@ export function GlassCard({
 
 const styles = StyleSheet.create({
   shadow: { ...shadow.card },
-  inner: {
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
-  },
+  inner: { overflow: "hidden" },
 });
