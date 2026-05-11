@@ -34,3 +34,6 @@ Thumbs.db
 
 # Sentry
 .sentryclirc
+
+# Brainstorm artifacts
+.superpowers/
