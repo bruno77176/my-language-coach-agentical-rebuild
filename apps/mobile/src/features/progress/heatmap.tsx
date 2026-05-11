@@ -1,6 +1,14 @@
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 import type { ProgressDay } from "./use-progress-summary";
+import { HeatmapPopover } from "./heatmap-popover";
 
 type Props = {
   days: ProgressDay[];
@@ -47,6 +55,11 @@ function buildGrid(today: Date): string[] {
 export function Heatmap({ days, today }: Props) {
   const dayMap = new Map<string, ProgressDay>(days.map((d) => [d.date, d]));
   const grid = buildGrid(today);
+  const { width: screenWidth } = useWindowDimensions();
+  const [popover, setPopover] = useState<{
+    label: string;
+    anchor: { x: number; y: number };
+  } | null>(null);
 
   return (
     <View style={styles.gridContainer}>
@@ -63,7 +76,15 @@ export function Heatmap({ days, today }: Props) {
               key={iso}
               testID={`heatmap-cell-${iso}`}
               accessibilityLabel={label}
-              onPress={() => Alert.alert(iso, label)}
+              onPress={(e) =>
+                setPopover({
+                  label,
+                  anchor: {
+                    x: e.nativeEvent.pageX,
+                    y: e.nativeEvent.pageY,
+                  },
+                })
+              }
               style={[styles.cell, { backgroundColor: cellColor(day) }]}
             />
           );
@@ -77,6 +98,14 @@ export function Heatmap({ days, today }: Props) {
         <View style={[styles.cell, { backgroundColor: LEVEL_COLORS[4] }]} />
         <Text style={styles.legendText}>goal hit</Text>
       </View>
+      {popover !== null && (
+        <HeatmapPopover
+          label={popover.label}
+          anchor={popover.anchor}
+          screenWidth={screenWidth}
+          onDismiss={() => setPopover(null)}
+        />
+      )}
     </View>
   );
 }
