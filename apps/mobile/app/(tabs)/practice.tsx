@@ -5,13 +5,23 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TAB_BAR_RESERVE } from "@/src/design";
+import {
+  EditorialText,
+  GlassCard,
+  Screen,
+  TAB_BAR_RESERVE,
+} from "@/src/design";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+} from "@language-coach/design-tokens";
 import { stopActivePlayer } from "@/src/features/practice/audio-controller";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
@@ -150,48 +160,53 @@ export default function PracticeScreen() {
 
   if (state.phase === "loading-session") {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Starting conversation…</Text>
-      </View>
+      <Screen variant="gradient">
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={palette.accent} />
+          <EditorialText
+            kind="bodyMd"
+            color={palette.inkSoft}
+            style={{ marginTop: spacing.base }}
+          >
+            Starting conversation…
+          </EditorialText>
+        </View>
+      </Screen>
     );
   }
+
   if (state.phase === "error") {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{state.message}</Text>
-        <Pressable onPress={dismissError} style={styles.button}>
-          <Text style={styles.buttonText}>Try again</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.replace("/(tabs)/home")}
-          style={[styles.button, styles.buttonSecondary]}
-        >
-          <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
-            Back to Home
-          </Text>
-        </Pressable>
-      </View>
+      <Screen variant="gradient">
+        <View style={styles.center}>
+          <EditorialText
+            kind="bodyMd"
+            color={palette.danger}
+            align="center"
+            style={{ marginBottom: spacing.base }}
+          >
+            {state.message}
+          </EditorialText>
+          <Pressable onPress={dismissError} style={styles.ctaButton}>
+            <EditorialText kind="bodyMd" color={palette.peach}>
+              Try again
+            </EditorialText>
+          </Pressable>
+          <Pressable
+            onPress={() => router.replace("/(tabs)/home")}
+            style={[styles.ctaButton, styles.ctaButtonSecondary]}
+          >
+            <EditorialText kind="bodyMd" color={palette.inkSoft}>
+              Back to Home
+            </EditorialText>
+          </Pressable>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TopStatusBar
-        todaySeconds={todaySeconds}
-        goalMinutes={goalMinutes}
-        streakDays={streak ?? 0}
-        listeningMode={listeningMode}
-        onToggleListening={toggleListeningMode}
-        shareLanguageCode={targetLang}
-        shareStartedAt={startedAt}
-        shareDurationMinutes={Math.floor(
-          (Date.now() - startedAt.getTime()) / 60000,
-        )}
-        shareMessages={messages.map((m) => ({ role: m.role, text: m.text }))}
-        onExit={onExit}
-      />
-
+    <Screen variant="gradient" edgeToEdge>
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -207,19 +222,53 @@ export default function PracticeScreen() {
         contentContainerStyle={styles.chatContainer}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
-              Tap the mic to start talking with your coach.
-            </Text>
+            <EditorialText
+              kind="displayMd"
+              italic
+              align="center"
+              color={palette.inkSoft}
+            >
+              Tap the mic to say hello.
+            </EditorialText>
+            <EditorialText
+              kind="bodySm"
+              align="center"
+              color={palette.inkSoft}
+              style={{ marginTop: spacing.md, opacity: 0.7 }}
+            >
+              Your coach is listening — just talk like you would to a friend.
+            </EditorialText>
           </View>
         }
       />
 
+      <TopStatusBar
+        todaySeconds={todaySeconds}
+        goalMinutes={goalMinutes}
+        streakDays={streak ?? 0}
+        listeningMode={listeningMode}
+        onToggleListening={toggleListeningMode}
+        shareLanguageCode={targetLang}
+        shareStartedAt={startedAt}
+        shareDurationMinutes={Math.floor(
+          (Date.now() - startedAt.getTime()) / 60000,
+        )}
+        shareMessages={messages.map((m) => ({ role: m.role, text: m.text }))}
+        onExit={onExit}
+      />
+
       <View style={[styles.micBar, { bottom: micBarBottom }]}>
         {state.phase === "processing" && (
-          <View style={styles.processingPill}>
-            <ActivityIndicator size="small" color="#2563eb" />
-            <Text style={styles.processingText}>Coach is thinking…</Text>
-          </View>
+          <GlassCard
+            radiusToken="pill"
+            padding="sm"
+            style={styles.processingPill}
+          >
+            <ActivityIndicator size="small" color={palette.accent} />
+            <EditorialText kind="bodySm" color={palette.inkSoft}>
+              Coach is thinking…
+            </EditorialText>
+          </GlassCard>
         )}
         <MicButton
           onPress={onMicPress}
@@ -233,24 +282,26 @@ export default function PracticeScreen() {
         streakDays={(streak ?? 0) + 1}
         onHidden={dismissReward}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffffff",
-    padding: 24,
+    padding: spacing.xl,
   },
-  loadingText: { marginTop: 16, color: "#6b7280" },
-  errorText: { color: "#b91c1c", textAlign: "center", marginBottom: 16 },
-  chatContainer: { padding: 16, paddingBottom: 200 },
-  emptyState: { alignItems: "center", paddingTop: 80, paddingHorizontal: 24 },
-  emptyText: { color: "#6b7280", textAlign: "center", fontSize: 14 },
+  chatContainer: {
+    padding: spacing.base,
+    paddingBottom: 200,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingTop: spacing["3xl"] * 2,
+    paddingHorizontal: spacing.xl,
+  },
   micBar: {
     position: "absolute",
     left: 0,
@@ -260,21 +311,20 @@ const styles = StyleSheet.create({
   processingPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f3f4f6",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 12,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  processingText: { color: "#374151", marginLeft: 8, fontSize: 13 },
-  button: {
-    marginTop: 16,
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    padding: 14,
-    paddingHorizontal: 24,
+  ctaButton: {
+    marginTop: spacing.base,
+    backgroundColor: palette.ink,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    paddingHorizontal: spacing.xl,
+    ...shadow.cta,
   },
-  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
-  buttonSecondary: { backgroundColor: "#e5e7eb", marginTop: 8 },
-  buttonTextSecondary: { color: "#374151" },
+  ctaButtonSecondary: {
+    backgroundColor: palette.glassStrong,
+    marginTop: spacing.sm,
+    ...shadow.card,
+  },
 });
