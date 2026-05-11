@@ -73,6 +73,7 @@ describe("POST /v1/voice/sessions/:id/end", () => {
       userId: string;
       endedAt: Date | null;
       secondsSpoken: number;
+      startedAt: Date;
     } | null;
     profile: { timezone: string; dailyGoalMinutes: number } | null;
   }) {
@@ -93,12 +94,16 @@ describe("POST /v1/voice/sessions/:id/end", () => {
   }
 
   it("returns seconds_spoken + goal_reached=true when goal met", async () => {
+    // Plan 6: seconds_spoken is wall-clock session duration computed from
+    // startedAt → now, not the stored conversation.secondsSpoken. Setting
+    // startedAt 700s in the past simulates a 700s session (> 10 min goal).
     const fakeDb = makeFakeDb({
       conversation: {
         id: conversationId,
         userId,
         endedAt: null,
-        secondsSpoken: 700, // > 10 min goal
+        secondsSpoken: 0,
+        startedAt: new Date(Date.now() - 700 * 1000),
       },
       profile: { timezone: "Europe/Paris", dailyGoalMinutes: 10 },
     });
@@ -115,7 +120,7 @@ describe("POST /v1/voice/sessions/:id/end", () => {
       seconds_spoken: number;
       goal_reached: boolean;
     };
-    expect(body.seconds_spoken).toBe(700);
+    expect(body.seconds_spoken).toBeGreaterThanOrEqual(700);
     expect(body.goal_reached).toBe(true);
     // Sets ended_at
     expect(fakeDb.update).toHaveBeenCalled();
@@ -124,12 +129,14 @@ describe("POST /v1/voice/sessions/:id/end", () => {
   });
 
   it("returns goal_reached=false when below goal", async () => {
+    // Session duration = 120s wall-clock (< 10 min goal)
     const fakeDb = makeFakeDb({
       conversation: {
         id: conversationId,
         userId,
         endedAt: null,
-        secondsSpoken: 120, // < 10 min goal
+        secondsSpoken: 0,
+        startedAt: new Date(Date.now() - 120 * 1000),
       },
       profile: { timezone: "Europe/Paris", dailyGoalMinutes: 10 },
     });
