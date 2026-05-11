@@ -53,7 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
     POSTHOG_HOST: process.env.POSTHOG_HOST,
     eas: {
-      projectId: process.env.EAS_PROJECT_ID,
+      projectId: "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
     },
   },
 });
