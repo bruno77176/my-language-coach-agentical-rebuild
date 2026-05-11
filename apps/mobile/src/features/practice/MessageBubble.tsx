@@ -111,13 +111,14 @@ export function MessageBubble({
   }
 
   const textColor = isUser ? palette.peach : palette.ink;
+  const listeningColor = isUser ? palette.peach : palette.inkSoft;
 
   const Inner = (
     <Bubble variant={isUser ? "you" : "coach"}>
       {showsAsListening ? (
         <View style={styles.listeningRow}>
-          <Ionicons name="headset" size={18} color={palette.inkSoft} />
-          <EditorialText kind="bodyMd" color={palette.inkSoft}>
+          <Ionicons name="headset" size={18} color={listeningColor} />
+          <EditorialText kind="bodyMd" color={listeningColor}>
             {formatDuration(message.audioDurationMs)}
           </EditorialText>
         </View>
