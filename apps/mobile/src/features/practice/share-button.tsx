@@ -1,4 +1,7 @@
-import { Pressable, Share, StyleSheet, Text } from "react-native";
+import { Pressable, Share, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { GlassCard } from "@/src/design";
+import { palette } from "@language-coach/design-tokens";
 import { buildTranscript, type TranscriptMessage } from "./build-transcript";
 
 type Props = {
@@ -25,16 +28,22 @@ export function ShareButton(props: Props) {
     <Pressable
       onPress={handlePress}
       disabled={disabled}
-      style={[styles.button, disabled && styles.disabled]}
-      hitSlop={10}
+      hitSlop={8}
+      style={disabled && styles.disabled}
     >
-      <Text style={styles.icon}>↗</Text>
+      <GlassCard radiusToken="pill" padding="xs" style={styles.button}>
+        <Ionicons name="share-outline" size={16} color={palette.ink} />
+      </GlassCard>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  button: { padding: 8 },
+  button: {
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   disabled: { opacity: 0.3 },
-  icon: { fontSize: 20, color: "#2563eb" },
 });

@@ -219,7 +219,13 @@ export default function PracticeScreen() {
             onReveal={revealMessage}
           />
         )}
-        contentContainerStyle={styles.chatContainer}
+        contentContainerStyle={[
+          styles.chatContainer,
+          {
+            paddingTop: insets.top + 64,
+            paddingBottom: micBarBottom + 96,
+          },
+        ]}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <EditorialText
@@ -294,8 +300,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   chatContainer: {
-    padding: spacing.base,
-    paddingBottom: 200,
+    paddingHorizontal: spacing.base,
   },
   emptyState: {
     alignItems: "center",

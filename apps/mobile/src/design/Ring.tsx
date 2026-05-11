@@ -53,18 +53,20 @@ export function Ring({
           strokeWidth={stroke}
           fill="none"
         />
-        <AnimatedCircle
-          cx={size / 2}
-          cy={size / 2}
-          r={radiusPx}
-          stroke={color}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={`${circumference} ${circumference}`}
-          strokeDashoffset={strokeDashoffset}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
+        {clamped > 0 && (
+          <AnimatedCircle
+            cx={size / 2}
+            cy={size / 2}
+            r={radiusPx}
+            stroke={color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={`${circumference} ${circumference}`}
+            strokeDashoffset={strokeDashoffset}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        )}
       </Svg>
       {label && (
         <View style={styles.center} pointerEvents="none">

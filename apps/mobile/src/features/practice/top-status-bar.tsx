@@ -59,11 +59,7 @@ export function TopStatusBar(props: Props) {
 
       {/* Right: listening toggle + share + exit */}
       <View style={styles.rightRow}>
-        <Pressable
-          onPress={props.onToggleListening}
-          hitSlop={8}
-          style={styles.iconButtonWrapper}
-        >
+        <Pressable onPress={props.onToggleListening} hitSlop={8}>
           <GlassCard radiusToken="pill" padding="xs" style={styles.iconButton}>
             <Ionicons
               name={props.listeningMode ? "headset" : "eye-outline"}
@@ -73,20 +69,14 @@ export function TopStatusBar(props: Props) {
           </GlassCard>
         </Pressable>
 
-        <View style={styles.iconButtonWrapper}>
-          <ShareButton
-            languageCode={props.shareLanguageCode}
-            startedAt={props.shareStartedAt}
-            durationMinutes={props.shareDurationMinutes}
-            messages={props.shareMessages}
-          />
-        </View>
+        <ShareButton
+          languageCode={props.shareLanguageCode}
+          startedAt={props.shareStartedAt}
+          durationMinutes={props.shareDurationMinutes}
+          messages={props.shareMessages}
+        />
 
-        <Pressable
-          onPress={props.onExit}
-          hitSlop={8}
-          style={styles.iconButtonWrapper}
-        >
+        <Pressable onPress={props.onExit} hitSlop={8}>
           <GlassCard radiusToken="pill" padding="xs" style={styles.iconButton}>
             <Ionicons name="close" size={16} color={palette.ink} />
           </GlassCard>
@@ -116,9 +106,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-  },
-  iconButtonWrapper: {
-    // ensures the hitSlop on the Pressable has room; ShareButton manages itself
   },
   iconButton: {
     width: 32,

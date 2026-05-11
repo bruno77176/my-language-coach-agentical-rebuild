@@ -12,10 +12,11 @@ import {
 import { EditorialText } from "./EditorialText";
 import { GlassCard } from "./GlassCard";
 
-/** Approximate visual height of the floating tab bar including its margin.
+/** Approximate visual height of the floating tab bar including its margin
+ * and a comfortable clearance so screen content doesn't kiss the tab bar.
  * Screens with their own bottom-anchored content (e.g. Practice mic) should
  * reserve `TAB_BAR_RESERVE + insets.bottom` of padding to avoid overlap. */
-export const TAB_BAR_RESERVE = 86;
+export const TAB_BAR_RESERVE = 110;
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   home: "home-outline",

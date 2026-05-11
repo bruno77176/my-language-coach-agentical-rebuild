@@ -29,17 +29,18 @@ function langDisplay(code: string): string {
 }
 
 function avatarColorFor(userId: string): string {
+  // Sunrise-palette-only options — no purple/teal/mint to avoid clashing
+  // with the warm gradient.
   const colors = [
-    "#fda4af",
-    "#a7f3d0",
-    "#bfdbfe",
-    "#fcd34d",
-    "#c4b5fd",
-    "#fdba74",
+    palette.accent,
+    palette.coral,
+    palette.mauve,
+    "#e8b390", // warm sand
+    "#c9b89e", // soft beige
   ];
   let h = 0;
   for (const c of userId) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return colors[h % colors.length] ?? "#bfdbfe";
+  return colors[h % colors.length] ?? palette.accent;
 }
 
 export default function ProfileScreen() {
@@ -163,7 +164,7 @@ export default function ProfileScreen() {
           </EditorialText>
           <GlassCard padding="sm" radiusToken="lg" style={styles.sectionCard}>
             <ProfileRow
-              label="✨ Upgrade to Pro"
+              label="Upgrade to Pro"
               value="Coming soon"
               onPress={() =>
                 showToast("Pro launches soon — we'll let you know.")
