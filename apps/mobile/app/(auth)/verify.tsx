@@ -98,7 +98,15 @@ export default function VerifyScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, padding: spacing.xl, gap: spacing.base, alignItems: "center", justifyContent: "center" }}>
+    <View
+      style={{
+        flex: 1,
+        padding: spacing.xl,
+        gap: spacing.base,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <ActivityIndicator size="large" color={palette.accent} />
       <EditorialText kind="displayLg" align="center">
         Signing you in…

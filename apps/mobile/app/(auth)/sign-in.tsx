@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { EditorialText, GlassCard } from "@/src/design";
@@ -98,7 +92,11 @@ export default function SignInScreen() {
       </EditorialText>
 
       <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.fieldLabel}>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.fieldLabel}
+        >
           Email
         </EditorialText>
         <TextInput
@@ -114,7 +112,11 @@ export default function SignInScreen() {
       </GlassCard>
 
       <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.fieldLabel}>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.fieldLabel}
+        >
           Password
         </EditorialText>
         <TextInput
@@ -140,7 +142,8 @@ export default function SignInScreen() {
       </Pressable>
 
       <EditorialText kind="bodySm" color={palette.inkSoft} align="center">
-        First time? Pick any password you&apos;ll remember; we&apos;ll create your account.
+        First time? Pick any password you&apos;ll remember; we&apos;ll create
+        your account.
       </EditorialText>
     </View>
   );
