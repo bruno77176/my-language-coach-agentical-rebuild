@@ -1,11 +1,8 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Bubble, EditorialText } from "@/src/design";
+import { palette, spacing } from "@language-coach/design-tokens";
 import type { ChatMessage } from "./types";
 import { useTranslateMessage } from "./use-translate-message";
 import { fetchMessageAudio } from "./api-message-audio";
@@ -105,30 +102,40 @@ export function MessageBubble({
       void playAudio();
     }
     // Otherwise, the bubble itself doesn't do anything — the per-icon Pressables
-    // handle repeat (🔁) and translate (🌐). This avoids gesture conflicts and
+    // handle repeat and translate. This avoids gesture conflicts and
     // makes the affordances obvious.
   }
 
+  function handleRepeatPressWrapper() {
+    void playAudio();
+  }
+
+  const textColor = isUser ? palette.peach : palette.ink;
+
   const Inner = (
-    <View
-      style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleCoach]}
-    >
+    <Bubble variant={isUser ? "you" : "coach"}>
       {showsAsListening ? (
         <View style={styles.listeningRow}>
-          <Text style={styles.listeningIcon}>🎧</Text>
-          <Text style={isUser ? styles.bubbleUserText : styles.bubbleCoachText}>
+          <Ionicons name="headset" size={18} color={palette.inkSoft} />
+          <EditorialText kind="bodyMd" color={palette.inkSoft}>
             {formatDuration(message.audioDurationMs)}
-          </Text>
+          </EditorialText>
         </View>
       ) : (
         <>
-          <Text style={isUser ? styles.bubbleUserText : styles.bubbleCoachText}>
+          <EditorialText kind="bodyLg" color={textColor}>
             {message.text}
-          </Text>
+          </EditorialText>
           {!isUser && showingTranslation && translation ? (
             <>
               <View style={styles.divider} />
-              <Text style={styles.translation}>{translation}</Text>
+              <EditorialText
+                kind="bodySm"
+                italic
+                color={isUser ? palette.coral : palette.inkSoft}
+              >
+                {translation}
+              </EditorialText>
             </>
           ) : null}
           {!isSoftError ? (
@@ -138,9 +145,18 @@ export function MessageBubble({
                 hitSlop={10}
                 style={styles.actionTap}
               >
-                <Text style={styles.actionIcon}>
-                  {playingAudio ? "▶" : "🔁"}
-                </Text>
+                {playingAudio ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={isUser ? palette.peach : palette.inkSoft}
+                  />
+                ) : (
+                  <Ionicons
+                    name="refresh"
+                    size={14}
+                    color={isUser ? palette.coral : palette.inkSoft}
+                  />
+                )}
               </Pressable>
               {!isUser && !listeningMode ? (
                 <Pressable
@@ -149,16 +165,15 @@ export function MessageBubble({
                   style={styles.actionTap}
                 >
                   {translate.isPending ? (
-                    <ActivityIndicator size="small" color="#6b7280" />
+                    <ActivityIndicator size="small" color={palette.inkSoft} />
                   ) : (
-                    <Text
-                      style={[
-                        styles.actionIcon,
-                        showingTranslation && styles.actionIconActive,
-                      ]}
-                    >
-                      🌐
-                    </Text>
+                    <Ionicons
+                      name="language"
+                      size={14}
+                      color={
+                        showingTranslation ? palette.accent : palette.inkSoft
+                      }
+                    />
                   )}
                 </Pressable>
               ) : null}
@@ -166,50 +181,36 @@ export function MessageBubble({
           ) : null}
         </>
       )}
-    </View>
+    </Bubble>
   );
 
-  function handleRepeatPressWrapper() {
-    void playAudio();
-  }
-
-  return <Pressable onPress={handleBubblePress}>{Inner}</Pressable>;
+  return (
+    <Pressable onPress={handleBubblePress} style={styles.messageRow}>
+      {Inner}
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
-  bubble: {
-    padding: 12,
-    borderRadius: 16,
-    marginVertical: 4,
-    maxWidth: "85%",
+  messageRow: {
+    marginVertical: spacing.xs,
   },
-  bubbleUser: {
-    backgroundColor: "#dbeafe",
-    alignSelf: "flex-end",
-    borderTopRightRadius: 4,
-  },
-  bubbleCoach: {
-    backgroundColor: "#f3f4f6",
-    alignSelf: "flex-start",
-    borderTopLeftRadius: 4,
-  },
-  bubbleUserText: { color: "#111827", fontSize: 16 },
-  bubbleCoachText: { color: "#111827", fontSize: 16 },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#9ca3af",
-    marginVertical: 8,
+    backgroundColor: palette.inkSoft,
+    opacity: 0.2,
+    marginVertical: spacing.sm,
   },
-  translation: { fontSize: 14, color: "#4b5563", fontStyle: "italic" },
-  listeningRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  listeningIcon: { fontSize: 18 },
+  listeningRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   actionRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    gap: 16,
-    marginTop: 6,
+    gap: spacing.base,
+    marginTop: spacing.xs,
   },
-  actionTap: { padding: 4 },
-  actionIcon: { fontSize: 16, color: "#6b7280" },
-  actionIconActive: { color: "#1d4ed8" },
+  actionTap: { padding: spacing.xs },
 });

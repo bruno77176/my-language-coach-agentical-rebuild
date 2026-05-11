@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { palette, shadow } from "@language-coach/design-tokens";
 
 export type MicButtonProps = {
   onPress: () => void;
@@ -7,17 +9,25 @@ export type MicButtonProps = {
 };
 
 export function MicButton({ onPress, isRecording, isBusy }: MicButtonProps) {
+  const bgColor = isBusy
+    ? palette.glassStrong
+    : isRecording
+      ? palette.accent
+      : palette.ink;
+
   return (
     <Pressable
       onPress={onPress}
       disabled={isBusy}
-      style={[
-        styles.mic,
-        isRecording && styles.micRecording,
-        isBusy && styles.micDisabled,
-      ]}
+      style={[styles.mic, { backgroundColor: bgColor }]}
     >
-      <Text style={styles.micIcon}>{isRecording ? "■" : "🎙"}</Text>
+      {isBusy ? (
+        <ActivityIndicator size="small" color={palette.ink} />
+      ) : isRecording ? (
+        <View style={styles.stopSquare} />
+      ) : (
+        <Ionicons name="mic" size={28} color={palette.peach} />
+      )}
     </Pressable>
   );
 }
@@ -27,16 +37,14 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#2563eb",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    ...shadow.cta,
   },
-  micRecording: { backgroundColor: "#dc2626" },
-  micDisabled: { backgroundColor: "#9ca3af" },
-  micIcon: { color: "#ffffff", fontSize: 28 },
+  stopSquare: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    backgroundColor: palette.peach,
+  },
 });
