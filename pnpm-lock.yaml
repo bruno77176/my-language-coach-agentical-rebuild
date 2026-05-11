@@ -248,6 +248,15 @@ importers:
         specifier: ^8.18.0
         version: 8.59.2(eslint@9.39.4(jiti@1.21.7))(typescript@6.0.3)
 
+  packages/design-tokens:
+    devDependencies:
+      '@language-coach/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/shared:
     devDependencies:
       '@language-coach/config':
