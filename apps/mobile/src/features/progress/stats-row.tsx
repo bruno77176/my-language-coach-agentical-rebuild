@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { palette, spacing } from "@language-coach/design-tokens";
+import { EditorialText, GlassCard } from "@/src/design";
 
 type Props = {
   weekMinutes: number;
@@ -7,40 +9,69 @@ type Props = {
   totalMinutes: number;
 };
 
+type StatCard = {
+  label: string;
+  value: string | number;
+  unit?: string;
+};
+
 export function StatsRow(props: Props) {
-  const rows: [string, string][] = [
-    ["This week", `${props.weekMinutes} min`],
-    ["Best streak", `${props.longestStreak} days`],
-    ["Sessions total", `${props.totalSessions}`],
-    ["Total minutes", `${props.totalMinutes}`],
+  const cards: StatCard[] = [
+    { label: "This week", value: props.weekMinutes, unit: "min" },
+    { label: "Best streak", value: `${props.longestStreak} days` },
+    { label: "Sessions", value: props.totalSessions },
+    { label: "Total minutes", value: props.totalMinutes, unit: "min" },
   ];
+
   return (
-    <View style={styles.container}>
-      {rows.map(([label, value]) => (
-        <View key={label} style={styles.row}>
-          <Text style={styles.label}>{label}</Text>
-          <Text style={styles.value}>{value}</Text>
-        </View>
+    <View style={styles.grid}>
+      {cards.map((card) => (
+        <GlassCard
+          key={card.label}
+          padding="md"
+          radiusToken="md"
+          style={styles.card}
+        >
+          <View style={styles.valueRow}>
+            <EditorialText kind="displayMd" color={palette.ink}>
+              {card.value}
+            </EditorialText>
+            {card.unit ? (
+              <EditorialText
+                kind="bodySm"
+                color={palette.inkSoft}
+                style={styles.unit}
+              >
+                {card.unit}
+              </EditorialText>
+            ) : null}
+          </View>
+          <EditorialText kind="caps" color={palette.inkSoft}>
+            {card.label}
+          </EditorialText>
+        </GlassCard>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    backgroundColor: "#f9fafb",
-    borderRadius: 12,
-    paddingVertical: 4,
-  },
-  row: {
+  grid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
+    flexWrap: "wrap",
+    gap: spacing.sm,
   },
-  label: { fontSize: 14, color: "#374151" },
-  value: { fontSize: 14, fontWeight: "600", color: "#111827" },
+  card: {
+    flex: 1,
+    minWidth: "47%",
+  },
+  valueRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  unit: {
+    marginBottom: 3,
+  },
 });
