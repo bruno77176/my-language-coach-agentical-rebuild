@@ -9,6 +9,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   userInterfaceStyle: "light",
   newArchEnabled: true,
+  icon: "./assets/icon.png",
+  splash: {
+    image: "./assets/icon.png",
+    resizeMode: "contain",
+    backgroundColor: "#fde7d1",
+  },
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.brunomoise.mylanguagecoach",
@@ -16,8 +22,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: "com.anonymous.mylanguagecoach",
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#ffffff",
+      foregroundImage: "./assets/icon.png",
+      backgroundColor: "#fde7d1",
     },
   },
   plugins: [
