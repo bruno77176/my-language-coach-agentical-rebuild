@@ -19,6 +19,7 @@ import { useProfile } from "@/src/features/auth/use-profile";
 import { useTodayStats } from "@/src/features/home/use-today-stats";
 import { QuoteCard } from "@/src/features/home/quote-card";
 import { TodayProgress } from "@/src/features/home/today-progress";
+import { useOfflineQuote } from "@/src/features/home/use-offline-quote";
 import { supabase } from "@/src/lib/supabase";
 
 function useCurrentStreak() {
@@ -46,8 +47,10 @@ export default function HomeScreen() {
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: stats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
+  const cachedQuote = useOfflineQuote(profile ?? null);
 
-  if (loadingProfile || !profile) {
+  // Block on spinner only if profile hasn't loaded AND there's no cached quote.
+  if (loadingProfile && !cachedQuote) {
     return (
       <Screen variant="gradient">
         <View style={styles.loading}>
@@ -57,14 +60,23 @@ export default function HomeScreen() {
     );
   }
 
-  const quote = quoteForDay(new Date(), profile.timezone);
+  // Use live quote when profile is available, otherwise fall back to cache.
+  const quote = profile
+    ? quoteForDay(new Date(), profile.timezone)
+    : cachedQuote!;
+
+  // Derive display values: use profile data when available, else sensible fallbacks.
+  const displayName = profile?.display_name ?? "there";
+  const timezone = profile?.timezone ?? "UTC";
+  const dailyGoalMinutes = profile?.daily_goal_minutes ?? 10;
+  const nativeLang = (profile?.native_lang ?? "en") as SupportedLang;
 
   return (
     <Screen variant="gradient">
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.row}>
           <EditorialText kind="caps" color={palette.inkSoft}>
-            {dateLabel(profile.timezone)}
+            {dateLabel(timezone)}
           </EditorialText>
           <View style={styles.streakPill}>
             <EditorialText kind="bodySm" color={palette.peach}>
@@ -74,17 +86,14 @@ export default function HomeScreen() {
         </View>
 
         <EditorialText kind="displayXl" style={styles.greeting}>
-          Hi {profile.display_name}.
+          Hi {displayName}.
         </EditorialText>
 
-        <QuoteCard
-          quote={quote}
-          nativeLang={profile.native_lang as SupportedLang}
-        />
+        <QuoteCard quote={quote} nativeLang={nativeLang} />
 
         <TodayProgress
           secondsSpoken={stats?.secondsSpoken ?? 0}
-          dailyGoalMinutes={profile.daily_goal_minutes}
+          dailyGoalMinutes={dailyGoalMinutes}
         />
 
         <Pressable
