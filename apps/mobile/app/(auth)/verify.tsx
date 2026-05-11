@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
+import { EditorialText } from "@/src/design";
+import { palette, spacing } from "@language-coach/design-tokens";
 
 export default function VerifyScreen() {
   const [debugMsg, setDebugMsg] = useState("Waiting for magic link…");
@@ -95,34 +97,15 @@ export default function VerifyScreen() {
     return () => sub.remove();
   }, []);
 
-  // Inline RN styles (NativeWind className is intentionally absent — debugging
-  // why className isn't applying anywhere; inline styles always work).
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#2563eb" />
-      <Text style={styles.title}>Signing you in…</Text>
-      <Text style={styles.debug}>{debugMsg}</Text>
+    <View style={{ flex: 1, padding: spacing.xl, gap: spacing.base, alignItems: "center", justifyContent: "center" }}>
+      <ActivityIndicator size="large" color={palette.accent} />
+      <EditorialText kind="displayLg" align="center">
+        Signing you in…
+      </EditorialText>
+      <EditorialText kind="bodySm" color={palette.inkSoft} align="center">
+        {debugMsg}
+      </EditorialText>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ffffff",
-    padding: 24,
-  },
-  title: {
-    marginTop: 16,
-    fontSize: 18,
-    color: "#374151",
-  },
-  debug: {
-    marginTop: 24,
-    fontSize: 12,
-    color: "#9ca3af",
-    textAlign: "center",
-  },
-});
