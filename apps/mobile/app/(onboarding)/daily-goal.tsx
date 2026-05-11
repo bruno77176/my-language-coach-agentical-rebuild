@@ -1,10 +1,37 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useCompleteOnboarding } from "@/src/features/onboarding/use-complete-onboarding";
 import { useOnboardingStore } from "@/src/features/onboarding/onboarding-store";
+import { GlassCard, EditorialText } from "@/src/design";
+import {
+  palette,
+  spacing,
+  radius,
+  shadow,
+} from "@language-coach/design-tokens";
 
 const GOAL_OPTIONS = [3, 5, 10, 15, 20];
+
+function ProgressDots({ step, total }: { step: number; total: number }) {
+  return (
+    <View
+      style={{ flexDirection: "row", gap: spacing.xs, paddingTop: spacing.sm }}
+    >
+      {Array.from({ length: total }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: i === step ? palette.accent : palette.glassFaint,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
 
 export default function DailyGoalStep() {
   const initial = useOnboardingStore((s) => s.dailyGoalMinutes);
@@ -27,32 +54,51 @@ export default function DailyGoalStep() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily practice goal</Text>
-      <Text style={styles.subtitle}>How many minutes per day?</Text>
-      {GOAL_OPTIONS.map((m) => {
-        const isSelected = selected === m;
-        return (
-          <TouchableOpacity
-            key={m}
-            onPress={() => setSelected(m)}
-            style={[
-              styles.row,
-              isSelected ? styles.rowSelected : styles.rowUnselected,
-            ]}
-          >
-            <Text style={styles.rowText}>{m} minutes</Text>
-          </TouchableOpacity>
-        );
-      })}
-      <TouchableOpacity
+      <ProgressDots step={3} total={4} />
+
+      <EditorialText kind="displayLg">Daily practice goal</EditorialText>
+      <EditorialText kind="bodyMd" color={palette.inkSoft}>
+        How many minutes per day?
+      </EditorialText>
+
+      <View style={styles.pillsRow}>
+        {GOAL_OPTIONS.map((m) => {
+          const isSelected = selected === m;
+          return (
+            <Pressable
+              key={m}
+              onPress={() => setSelected(m)}
+              style={styles.pillPressable}
+            >
+              {isSelected ? (
+                <View style={styles.pillSelected}>
+                  <EditorialText kind="bodyMd" color={palette.peach}>
+                    {m} min
+                  </EditorialText>
+                </View>
+              ) : (
+                <GlassCard radiusToken="pill" padding="md">
+                  <EditorialText kind="bodyMd" color={palette.ink}>
+                    {m} min
+                  </EditorialText>
+                </GlassCard>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={{ flex: 1 }} />
+
+      <Pressable
         onPress={onFinish}
         disabled={mutation.isPending}
-        style={[styles.button, mutation.isPending && styles.buttonDisabled]}
+        style={[styles.cta, mutation.isPending && styles.ctaDisabled]}
       >
-        <Text style={styles.buttonText}>
+        <EditorialText kind="bodyLg" color={palette.peach}>
           {mutation.isPending ? "Setting up…" : "Start practicing"}
-        </Text>
-      </TouchableOpacity>
+        </EditorialText>
+      </Pressable>
     </View>
   );
 }
@@ -60,52 +106,34 @@ export default function DailyGoalStep() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: spacing.xl,
+    gap: spacing.base,
+  },
+  pillsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  pillPressable: {
+    minHeight: 44,
     justifyContent: "center",
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 24,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
+  pillSelected: {
+    backgroundColor: palette.ink,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.base,
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginBottom: 24,
+  cta: {
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.base + 2,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    ...shadow.cta,
   },
-  row: {
-    padding: 14,
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  rowSelected: {
-    borderColor: "#2563eb",
-    backgroundColor: "#dbeafe",
-  },
-  rowUnselected: {
-    borderColor: "#e5e7eb",
-  },
-  rowText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#111827",
-  },
-  button: {
-    marginTop: 24,
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    padding: 14,
-  },
-  buttonDisabled: {
-    backgroundColor: "#d1d5db",
-  },
-  buttonText: {
-    color: "#ffffff",
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "600",
+  ctaDisabled: {
+    opacity: 0.5,
   },
 });
