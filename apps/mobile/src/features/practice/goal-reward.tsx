@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { createAudioPlayer, type AudioPlayer } from "expo-audio";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const VICTORY_SOUND = require("@/assets/sounds/victory.mp3") as number;
+import { Pressable, StyleSheet, View } from "react-native";
+import LottieView from "lottie-react-native";
+import ConfettiCannon from "react-native-confetti-cannon";
+import { useAudioPlayer } from "expo-audio";
+import { EditorialText, FadeInView, Screen } from "@/src/design";
+import { palette, spacing } from "@language-coach/design-tokens";
+import avatarLottie from "../../../assets/avatar.json";
 
 type Props = {
   visible: boolean;
@@ -11,104 +13,69 @@ type Props = {
   onHidden: () => void;
 };
 
-/**
- * Non-animated celebration banner. Plays a victory sound and shows a green
- * banner for ~3s, then auto-dismisses via onHidden().
- *
- * (We dropped react-native-confetti-cannon — it shipped with a React-version
- * mismatch that caused "useReducer of null" render errors in this monorepo.)
- */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const VICTORY_SOUND = require("../../../assets/sounds/victory.mp3");
+
 export function GoalReward({ visible, streakDays, onHidden }: Props) {
-  const playerRef = useRef<AudioPlayer | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onHiddenRef = useRef(onHidden);
-  onHiddenRef.current = onHidden;
+  const player = useAudioPlayer(VICTORY_SOUND);
+  const confettiRef = useRef<ConfettiCannon>(null);
 
   useEffect(() => {
     if (!visible) return;
-
-    function stopPlayer() {
-      if (!playerRef.current) return;
-      try {
-        playerRef.current.pause();
-      } catch {
-        // ignore
-      }
-      try {
-        playerRef.current.remove();
-      } catch {
-        // ignore
-      }
-      playerRef.current = null;
-    }
-
-    try {
-      const player = createAudioPlayer(VICTORY_SOUND);
-      playerRef.current = player;
-      player.play();
-    } catch {
-      // best-effort — sound failure is non-blocking
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      onHiddenRef.current();
-      stopPlayer();
-      timeoutRef.current = null;
-    }, 3000);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      stopPlayer();
-    };
-  }, [visible]);
+    void player.play();
+    confettiRef.current?.start();
+    const t = setTimeout(onHidden, 4000);
+    return () => clearTimeout(t);
+  }, [visible, player, onHidden]);
 
   if (!visible) return null;
 
   return (
-    <View pointerEvents="none" style={styles.overlay}>
-      <View style={styles.toast}>
-        <Text style={styles.toastEmoji}>🎉</Text>
-        <Text style={styles.toastText}>
-          Goal hit! {streakDays} day{streakDays === 1 ? "" : "s"} in a row 🔥
-        </Text>
-      </View>
+    <View style={StyleSheet.absoluteFillObject}>
+      <Screen variant="gradient" edgeToEdge>
+        <Pressable style={styles.overlay} onPress={onHidden}>
+          <FadeInView style={styles.content}>
+            <LottieView
+              source={avatarLottie}
+              autoPlay
+              loop={false}
+              style={styles.avatar}
+            />
+            <EditorialText
+              kind="displayXl"
+              italic
+              align="center"
+              style={styles.title}
+            >
+              {"✿ Goal hit"}
+            </EditorialText>
+            <EditorialText
+              kind="bodyLg"
+              color={palette.inkSoft}
+              align="center"
+              style={styles.streak}
+            >
+              {streakDays}-day streak
+            </EditorialText>
+          </FadeInView>
+        </Pressable>
+        <ConfettiCannon
+          ref={confettiRef}
+          count={120}
+          origin={{ x: -10, y: 0 }}
+          autoStart={false}
+          fadeOut
+          colors={[palette.accent, palette.coral, palette.peach, palette.mauve]}
+        />
+      </Screen>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    paddingTop: 80,
-    zIndex: 999,
-  },
-  toast: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#10b981",
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    marginHorizontal: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
-  },
-  toastEmoji: { fontSize: 22 },
-  toastText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-    flexShrink: 1,
-  },
+  overlay: { flex: 1, alignItems: "center", justifyContent: "center" },
+  content: { alignItems: "center", padding: spacing.xl },
+  avatar: { width: 200, height: 200 },
+  title: { marginTop: spacing.md },
+  streak: { marginTop: spacing.sm },
 });
