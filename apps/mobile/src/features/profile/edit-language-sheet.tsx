@@ -6,8 +6,16 @@ import {
   BottomSheetView,
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { EditorialText, GlassCard } from "@/src/design";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+  touch,
+} from "@language-coach/design-tokens";
 
 type Props = {
   title: string;
@@ -40,7 +48,13 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
             disabled={saving}
             style={[styles.saveButton, saving && styles.disabled]}
           >
-            <Text style={styles.saveText}>{saving ? "Saving…" : "Save"}</Text>
+            <EditorialText
+              kind="bodyLg"
+              color={palette.peach}
+              style={{ fontWeight: "600" }}
+            >
+              {saving ? "Saving…" : "Save"}
+            </EditorialText>
           </Pressable>
         </BottomSheetFooter>
       ),
@@ -52,9 +66,11 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
         ref={ref}
         snapPoints={["85%"]}
         footerComponent={renderFooter}
+        backgroundStyle={styles.background}
+        handleIndicatorStyle={styles.handle}
       >
         <BottomSheetView style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
+          <EditorialText kind="displayMd">{title}</EditorialText>
         </BottomSheetView>
         <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
           {LANGUAGES.map((item) => {
@@ -63,15 +79,32 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
               <Pressable
                 key={item.code}
                 onPress={() => setValue(item.code as SupportedLang)}
-                style={[styles.row, selected && styles.rowSelected]}
+                style={styles.rowPressable}
               >
-                <Text style={styles.flag}>{item.flag}</Text>
-                <Text
-                  style={[styles.rowLabel, selected && styles.rowLabelSelected]}
+                <GlassCard
+                  padding="md"
+                  radiusToken="md"
+                  style={selected ? styles.rowCardSelected : undefined}
                 >
-                  {item.englishName}
-                </Text>
-                <Text style={styles.native}>{item.nativeName}</Text>
+                  <View style={styles.rowInner}>
+                    <EditorialText kind="bodyMd">{item.flag}</EditorialText>
+                    <EditorialText
+                      kind="bodyMd"
+                      color={selected ? palette.accent : palette.ink}
+                      style={styles.rowLabel}
+                    >
+                      {item.englishName}
+                    </EditorialText>
+                    <EditorialText kind="bodySm" color={palette.inkSoft}>
+                      {item.nativeName}
+                    </EditorialText>
+                    {selected && (
+                      <EditorialText kind="bodyMd" color={palette.accent}>
+                        {"✓"}
+                      </EditorialText>
+                    )}
+                  </View>
+                </GlassCard>
               </Pressable>
             );
           })}
@@ -82,33 +115,41 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
 );
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
-  title: { fontSize: 18, fontWeight: "600", color: "#111827" },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 100, // leave room for the floating footer
+  background: {
+    backgroundColor: palette.peach,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
   },
-  row: {
+  handle: { backgroundColor: palette.glassFaint },
+  header: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: 100,
+    gap: spacing.sm,
+  },
+  rowPressable: { minHeight: touch.min, justifyContent: "center" },
+  rowCardSelected: {
+    borderWidth: 1,
+    borderColor: palette.accent,
+  },
+  rowInner: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    gap: 12,
-    marginBottom: 4,
+    gap: spacing.md,
   },
-  rowSelected: { backgroundColor: "#dbeafe" },
-  flag: { fontSize: 20 },
-  rowLabel: { fontSize: 16, color: "#374151", flex: 1 },
-  rowLabelSelected: { color: "#1d4ed8", fontWeight: "600" },
-  native: { fontSize: 13, color: "#6b7280" },
+  rowLabel: { flex: 1 },
   saveButton: {
-    marginHorizontal: 24,
-    backgroundColor: "#2563eb",
-    padding: 14,
-    borderRadius: 10,
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.base + 2,
+    borderRadius: radius.lg,
     alignItems: "center",
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    ...shadow.cta,
   },
-  saveText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
   disabled: { opacity: 0.5 },
 });

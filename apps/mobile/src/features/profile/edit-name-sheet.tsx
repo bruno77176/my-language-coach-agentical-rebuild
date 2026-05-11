@@ -6,7 +6,15 @@ import {
   BottomSheetView,
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { EditorialText, GlassCard } from "@/src/design";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+  type as typeTokens,
+} from "@language-coach/design-tokens";
 
 type Props = {
   initialValue: string;
@@ -42,7 +50,13 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
             disabled={!valid || saving}
             style={[styles.saveButton, (!valid || saving) && styles.disabled]}
           >
-            <Text style={styles.saveText}>{saving ? "Saving…" : "Save"}</Text>
+            <EditorialText
+              kind="bodyLg"
+              color={palette.peach}
+              style={{ fontWeight: "600" }}
+            >
+              {saving ? "Saving…" : "Save"}
+            </EditorialText>
           </Pressable>
         </BottomSheetFooter>
       ),
@@ -54,17 +68,24 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
         ref={ref}
         snapPoints={["50%"]}
         footerComponent={renderFooter}
+        backgroundStyle={styles.background}
+        handleIndicatorStyle={styles.handle}
       >
         <BottomSheetView style={styles.content}>
-          <Text style={styles.title}>Display name</Text>
-          <BottomSheetTextInput
-            value={value}
-            onChangeText={setValue}
-            placeholder="Your name"
-            maxLength={30}
-            autoFocus
-            style={styles.input}
-          />
+          <View style={styles.titleRow}>
+            <EditorialText kind="displayMd">Display name</EditorialText>
+          </View>
+          <GlassCard padding="md">
+            <BottomSheetTextInput
+              value={value}
+              onChangeText={setValue}
+              placeholder="Your name"
+              maxLength={30}
+              autoFocus
+              style={[typeTokens.bodyLg, styles.input]}
+              placeholderTextColor={palette.inkSoft}
+            />
+          </GlassCard>
         </BottomSheetView>
       </BottomSheetModal>
     );
@@ -72,22 +93,30 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
 );
 
 const styles = StyleSheet.create({
-  content: { padding: 24, gap: 16 },
-  title: { fontSize: 18, fontWeight: "600", color: "#111827" },
+  background: {
+    backgroundColor: palette.peach,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+  },
+  handle: { backgroundColor: palette.glassFaint },
+  content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.base },
+  titleRow: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+  },
   input: {
-    fontSize: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 8,
+    color: palette.ink,
+    padding: 0,
+    minHeight: 28,
   },
   saveButton: {
-    marginHorizontal: 24,
-    backgroundColor: "#2563eb",
-    padding: 14,
-    borderRadius: 10,
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.base + 2,
+    borderRadius: radius.lg,
     alignItems: "center",
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    ...shadow.cta,
   },
-  saveText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
   disabled: { opacity: 0.5 },
 });

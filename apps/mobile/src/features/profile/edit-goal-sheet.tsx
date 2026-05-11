@@ -6,7 +6,15 @@ import {
   BottomSheetView,
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { EditorialText, GlassCard } from "@/src/design";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+  touch,
+} from "@language-coach/design-tokens";
 
 type Props = {
   initialValue: number;
@@ -40,7 +48,13 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
             disabled={saving}
             style={[styles.saveButton, saving && styles.disabled]}
           >
-            <Text style={styles.saveText}>{saving ? "Saving…" : "Save"}</Text>
+            <EditorialText
+              kind="bodyLg"
+              color={palette.peach}
+              style={{ fontWeight: "600" }}
+            >
+              {saving ? "Saving…" : "Save"}
+            </EditorialText>
           </Pressable>
         </BottomSheetFooter>
       ),
@@ -52,27 +66,39 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
         ref={ref}
         snapPoints={["75%"]}
         footerComponent={renderFooter}
+        backgroundStyle={styles.background}
+        handleIndicatorStyle={styles.handle}
       >
         <BottomSheetView style={styles.header}>
-          <Text style={styles.title}>Daily goal</Text>
+          <EditorialText kind="displayMd">Daily goal</EditorialText>
         </BottomSheetView>
         <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
-          {OPTIONS.map((opt) => (
-            <Pressable
-              key={opt}
-              onPress={() => setValue(opt)}
-              style={[styles.option, value === opt && styles.optionSelected]}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  value === opt && styles.optionTextSelected,
-                ]}
-              >
-                {opt} min
-              </Text>
-            </Pressable>
-          ))}
+          <View style={styles.pillRow}>
+            {OPTIONS.map((opt) => {
+              const selected = value === opt;
+              return (
+                <Pressable
+                  key={opt}
+                  onPress={() => setValue(opt)}
+                  style={styles.pillHit}
+                >
+                  {selected ? (
+                    <View style={styles.pillSelected}>
+                      <EditorialText kind="bodyMd" color={palette.peach}>
+                        {opt} min
+                      </EditorialText>
+                    </View>
+                  ) : (
+                    <GlassCard radiusToken="pill" padding="md">
+                      <EditorialText kind="bodyMd" color={palette.ink}>
+                        {opt} min
+                      </EditorialText>
+                    </GlassCard>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
     );
@@ -80,25 +106,41 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
 );
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
-  title: { fontSize: 18, fontWeight: "600", color: "#111827" },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 100 },
-  option: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 6,
+  background: {
+    backgroundColor: palette.peach,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
   },
-  optionSelected: { backgroundColor: "#dbeafe" },
-  optionText: { fontSize: 16, color: "#374151" },
-  optionTextSelected: { color: "#1d4ed8", fontWeight: "600" },
-  saveButton: {
-    marginHorizontal: 24,
-    backgroundColor: "#2563eb",
-    padding: 14,
-    borderRadius: 10,
+  handle: { backgroundColor: palette.glassFaint },
+  header: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
+  pillRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  pillHit: { minHeight: touch.min, justifyContent: "center" },
+  pillSelected: {
+    backgroundColor: palette.ink,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.base,
+    minHeight: touch.min,
+    justifyContent: "center",
     alignItems: "center",
   },
-  saveText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  saveButton: {
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.base + 2,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    ...shadow.cta,
+  },
   disabled: { opacity: 0.5 },
 });
