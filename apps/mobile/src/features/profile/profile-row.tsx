@@ -1,18 +1,35 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { palette, spacing, touch } from "@language-coach/design-tokens";
+import { EditorialText } from "@/src/design";
 
 type Props = {
   label: string;
   value: string;
   onPress: () => void;
+  /** Pass true on the last row of a section to suppress the bottom divider. */
+  isLast?: boolean;
 };
 
-export function ProfileRow({ label, value, onPress }: Props) {
+export function ProfileRow({ label, value, onPress, isLast = false }: Props) {
   return (
-    <Pressable onPress={onPress} style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
+    <Pressable
+      onPress={onPress}
+      style={[styles.row, isLast ? null : styles.divider]}
+    >
+      <EditorialText kind="bodyMd" color={palette.inkSoft}>
+        {label}
+      </EditorialText>
       <View style={styles.rightCol}>
-        <Text style={styles.value}>{value}</Text>
-        <Text style={styles.chevron}>›</Text>
+        <EditorialText kind="bodyMd" color={palette.ink}>
+          {value}
+        </EditorialText>
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={palette.inkSoft}
+          style={styles.chevron}
+        />
       </View>
     </Pressable>
   );
@@ -23,14 +40,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: "#ffffff",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.base,
+    minHeight: touch.min,
+    backgroundColor: "transparent",
   },
-  label: { fontSize: 16, color: "#111827" },
-  rightCol: { flexDirection: "row", alignItems: "center" },
-  value: { fontSize: 16, color: "#6b7280", marginRight: 8 },
-  chevron: { fontSize: 20, color: "#9ca3af" },
+  divider: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.glassFaint,
+  },
+  rightCol: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  chevron: {
+    marginLeft: spacing.sm,
+  },
 });

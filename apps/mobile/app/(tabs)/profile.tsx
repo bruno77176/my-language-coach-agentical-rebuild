@@ -1,18 +1,13 @@
 import { useRef } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   BottomSheetModalProvider,
   type BottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
+import { palette, radius, spacing } from "@language-coach/design-tokens";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { supabase } from "@/src/lib/supabase";
 import { useUpdateProfile } from "@/src/features/profile/use-update-profile";
@@ -21,6 +16,12 @@ import { EditNameSheet } from "@/src/features/profile/edit-name-sheet";
 import { EditGoalSheet } from "@/src/features/profile/edit-goal-sheet";
 import { EditLanguageSheet } from "@/src/features/profile/edit-language-sheet";
 import { showToast } from "@/src/lib/toast";
+import {
+  EditorialText,
+  GlassCard,
+  Screen,
+  TAB_BAR_RESERVE,
+} from "@/src/design";
 
 function langDisplay(code: string): string {
   const lang = LANGUAGES.find((l) => l.code === code);
@@ -42,6 +43,7 @@ function avatarColorFor(userId: string): string {
 }
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { data: profile } = useProfile();
   const update = useUpdateProfile(profile?.user_id ?? "");
   const nameRef = useRef<BottomSheetModal>(null);
@@ -73,161 +75,201 @@ export default function ProfileScreen() {
 
   return (
     <BottomSheetModalProvider>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Profile</Text>
+      <Screen variant="gradient">
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <EditorialText kind="displayLg" style={styles.title}>
+            Profile
+          </EditorialText>
 
-        <View style={styles.headerCard}>
-          <View
-            style={[
-              styles.avatar,
-              { backgroundColor: avatarColorFor(profile.user_id) },
-            ]}
+          {/* Header card: avatar + name/email */}
+          <GlassCard padding="md" radiusToken="lg">
+            <View style={styles.headerRow}>
+              <View
+                style={[
+                  styles.avatar,
+                  { backgroundColor: avatarColorFor(profile.user_id) },
+                ]}
+              >
+                <EditorialText
+                  kind="displayMd"
+                  color={palette.ink}
+                  style={styles.avatarText}
+                >
+                  {initial}
+                </EditorialText>
+              </View>
+              <View style={styles.headerText}>
+                <EditorialText kind="bodyLg" color={palette.ink}>
+                  {profile.display_name ?? ""}
+                </EditorialText>
+                <EditorialText
+                  kind="bodySm"
+                  color={palette.inkSoft}
+                  style={styles.emailText}
+                >
+                  {(profile as { email?: string }).email ?? ""}
+                </EditorialText>
+              </View>
+            </View>
+          </GlassCard>
+
+          {/* ACCOUNT section */}
+          <EditorialText
+            kind="caps"
+            color={palette.inkSoft}
+            style={styles.sectionLabel}
           >
-            <Text style={styles.avatarText}>{initial}</Text>
-          </View>
-          <View style={styles.headerText}>
-            <Text style={styles.displayName}>{profile.display_name ?? ""}</Text>
-            <Text style={styles.email}>
-              {(profile as { email?: string }).email ?? ""}
-            </Text>
-          </View>
-        </View>
+            Account
+          </EditorialText>
+          <GlassCard padding="sm" radiusToken="lg" style={styles.sectionCard}>
+            <ProfileRow
+              label="Display name"
+              value={profile.display_name ?? ""}
+              onPress={() => nameRef.current?.present()}
+            />
+            <ProfileRow
+              label="Email"
+              value={(profile as { email?: string }).email ?? ""}
+              onPress={() => router.push("/(auth)/change-email")}
+            />
+            <ProfileRow
+              label="Native language"
+              value={langDisplay(profile.native_lang)}
+              onPress={() => nativeRef.current?.present()}
+            />
+            <ProfileRow
+              label="Learning"
+              value={langDisplay(profile.target_lang)}
+              onPress={() => targetRef.current?.present()}
+            />
+            <ProfileRow
+              label="Daily goal"
+              value={`${profile.daily_goal_minutes} min`}
+              onPress={() => goalRef.current?.present()}
+              isLast
+            />
+          </GlassCard>
 
-        <Text style={styles.sectionLabel}>ACCOUNT</Text>
-        <View style={styles.section}>
-          <ProfileRow
-            label="Display name"
-            value={profile.display_name ?? ""}
-            onPress={() => nameRef.current?.present()}
-          />
-          <ProfileRow
-            label="Native language"
-            value={langDisplay(profile.native_lang)}
-            onPress={() => nativeRef.current?.present()}
-          />
-          <ProfileRow
-            label="Learning"
-            value={langDisplay(profile.target_lang)}
-            onPress={() => targetRef.current?.present()}
-          />
-          <ProfileRow
-            label="Daily goal"
-            value={`${profile.daily_goal_minutes} min`}
-            onPress={() => goalRef.current?.present()}
-          />
-        </View>
+          {/* PLAN section */}
+          <EditorialText
+            kind="caps"
+            color={palette.inkSoft}
+            style={styles.sectionLabel}
+          >
+            Plan
+          </EditorialText>
+          <GlassCard padding="sm" radiusToken="lg" style={styles.sectionCard}>
+            <ProfileRow
+              label="✨ Upgrade to Pro"
+              value="Coming soon"
+              onPress={() =>
+                showToast("Pro launches soon — we'll let you know.")
+              }
+              isLast
+            />
+          </GlassCard>
 
-        <Text style={styles.sectionLabel}>PLAN</Text>
-        <View style={styles.section}>
-          <ProfileRow
-            label="✨ Upgrade to Pro"
-            value="Coming soon"
-            onPress={() => showToast("Pro launches soon — we'll let you know.")}
+          {/* Sign out */}
+          <Pressable onPress={onSignOut} style={styles.signOutButton}>
+            <EditorialText
+              kind="bodyLg"
+              color={palette.danger}
+              style={styles.signOutText}
+            >
+              Sign out
+            </EditorialText>
+          </Pressable>
+
+          {/* Version */}
+          <EditorialText kind="bodySm" color={palette.inkSoft} align="center">
+            v{version} (build {buildNumber})
+          </EditorialText>
+
+          <EditNameSheet
+            ref={nameRef}
+            initialValue={profile.display_name ?? ""}
+            onSave={async (display_name) => {
+              await update.mutateAsync({ display_name });
+            }}
           />
-        </View>
-
-        <TouchableOpacity onPress={onSignOut} style={styles.signOutButton}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.version}>
-          v{version} (build {buildNumber})
-        </Text>
-
-        <EditNameSheet
-          ref={nameRef}
-          initialValue={profile.display_name ?? ""}
-          onSave={async (display_name) => {
-            await update.mutateAsync({ display_name });
-          }}
-        />
-        <EditLanguageSheet
-          ref={nativeRef}
-          title="Native language"
-          initialValue={profile.native_lang as SupportedLang}
-          onSave={async (native_lang) => {
-            await update.mutateAsync({ native_lang });
-          }}
-        />
-        <EditLanguageSheet
-          ref={targetRef}
-          title="Learning"
-          initialValue={profile.target_lang as SupportedLang}
-          onSave={async (target_lang) => {
-            await update.mutateAsync({ target_lang });
-          }}
-        />
-        <EditGoalSheet
-          ref={goalRef}
-          initialValue={profile.daily_goal_minutes}
-          onSave={async (daily_goal_minutes) => {
-            await update.mutateAsync({ daily_goal_minutes });
-          }}
-        />
-      </ScrollView>
+          <EditLanguageSheet
+            ref={nativeRef}
+            title="Native language"
+            initialValue={profile.native_lang as SupportedLang}
+            onSave={async (native_lang) => {
+              await update.mutateAsync({ native_lang });
+            }}
+          />
+          <EditLanguageSheet
+            ref={targetRef}
+            title="Learning"
+            initialValue={profile.target_lang as SupportedLang}
+            onSave={async (target_lang) => {
+              await update.mutateAsync({ target_lang });
+            }}
+          />
+          <EditGoalSheet
+            ref={goalRef}
+            initialValue={profile.daily_goal_minutes}
+            onSave={async (daily_goal_minutes) => {
+              await update.mutateAsync({ daily_goal_minutes });
+            }}
+          />
+        </ScrollView>
+      </Screen>
     </BottomSheetModalProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingTop: 48,
-    backgroundColor: "#f3f4f6",
-    flexGrow: 1,
+    padding: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: TAB_BAR_RESERVE + spacing.xl,
+    gap: spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 16,
-    marginLeft: 8,
+    marginBottom: spacing.sm,
   },
-  headerCard: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    gap: 12,
+    gap: spacing.md,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontSize: 22, fontWeight: "700", color: "#111827" },
-  headerText: { flex: 1 },
-  displayName: { fontSize: 18, fontWeight: "600", color: "#111827" },
-  email: { fontSize: 13, color: "#6b7280", marginTop: 2 },
+  avatarText: {
+    lineHeight: 52,
+  },
+  headerText: {
+    flex: 1,
+  },
+  emailText: {
+    marginTop: 2,
+  },
   sectionLabel: {
-    fontSize: 12,
-    color: "#6b7280",
-    letterSpacing: 0.5,
-    marginLeft: 16,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: spacing.sm,
+    marginLeft: spacing.sm,
   },
-  section: { backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden" },
+  sectionCard: {
+    paddingHorizontal: 0,
+  },
   signOutButton: {
-    backgroundColor: "#fee2e2",
-    borderRadius: 12,
-    paddingVertical: 14,
+    backgroundColor: palette.dangerSurface,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.base,
     alignItems: "center",
-    marginTop: 24,
-    marginHorizontal: 0,
+    marginTop: spacing.lg,
   },
-  signOutText: { color: "#b91c1c", fontSize: 16, fontWeight: "600" },
-  version: {
-    fontSize: 12,
-    color: "#9ca3af",
-    textAlign: "center",
-    marginTop: 32,
+  signOutText: {
+    fontWeight: "600",
   },
 });
