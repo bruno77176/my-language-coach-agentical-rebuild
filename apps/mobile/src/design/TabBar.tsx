@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import {
   palette,
@@ -10,6 +11,11 @@ import {
 } from "@language-coach/design-tokens";
 import { EditorialText } from "./EditorialText";
 import { GlassCard } from "./GlassCard";
+
+/** Approximate visual height of the floating tab bar including its margin.
+ * Screens with their own bottom-anchored content (e.g. Practice mic) should
+ * reserve `TAB_BAR_RESERVE + insets.bottom` of padding to avoid overlap. */
+export const TAB_BAR_RESERVE = 86;
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   home: "home-outline",
@@ -26,8 +32,12 @@ const ICONS_ACTIVE: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.wrap} pointerEvents="box-none">
+    <View
+      style={[styles.wrap, { bottom: insets.bottom + spacing.md }]}
+      pointerEvents="box-none"
+    >
       <GlassCard padding="sm" radiusToken="xl" strong style={styles.bar}>
         <View style={styles.row}>
           {state.routes.map((route, index) => {
@@ -89,7 +99,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: spacing.lg,
     right: spacing.lg,
-    bottom: spacing.md,
     ...shadow.floating,
   },
   bar: { borderRadius: radius.xl },

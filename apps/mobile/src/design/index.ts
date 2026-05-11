@@ -5,4 +5,4 @@ export { GlassCard } from "./GlassCard";
 export { Ring } from "./Ring";
 export { Bubble } from "./Bubble";
 export { EditorialText } from "./EditorialText";
-export { TabBar } from "./TabBar";
+export { TabBar, TAB_BAR_RESERVE } from "./TabBar";

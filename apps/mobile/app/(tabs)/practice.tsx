@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TAB_BAR_RESERVE } from "@/src/design";
 import { stopActivePlayer } from "@/src/features/practice/audio-controller";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
@@ -38,6 +40,8 @@ function useCurrentStreak() {
 
 export default function PracticeScreen() {
   useAudioSessionInit();
+  const insets = useSafeAreaInsets();
+  const micBarBottom = insets.bottom + TAB_BAR_RESERVE;
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
   const displayName = profile?.display_name ?? "there";
@@ -210,7 +214,7 @@ export default function PracticeScreen() {
         }
       />
 
-      <View style={styles.micBar}>
+      <View style={[styles.micBar, { bottom: micBarBottom }]}>
         {state.phase === "processing" && (
           <View style={styles.processingPill}>
             <ActivityIndicator size="small" color="#2563eb" />
@@ -244,12 +248,11 @@ const styles = StyleSheet.create({
   },
   loadingText: { marginTop: 16, color: "#6b7280" },
   errorText: { color: "#b91c1c", textAlign: "center", marginBottom: 16 },
-  chatContainer: { padding: 16, paddingBottom: 120 },
+  chatContainer: { padding: 16, paddingBottom: 200 },
   emptyState: { alignItems: "center", paddingTop: 80, paddingHorizontal: 24 },
   emptyText: { color: "#6b7280", textAlign: "center", fontSize: 14 },
   micBar: {
     position: "absolute",
-    bottom: 24,
     left: 0,
     right: 0,
     alignItems: "center",
