@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
-import { StyleSheet, View, ViewStyle } from "react-native";
+import type { ReactNode } from "react";
+import type { ViewStyle } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   palette,
   radius,

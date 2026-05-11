@@ -8,9 +8,24 @@ export const font = {
 } as const;
 
 export const type = {
-  displayXl: { fontFamily: font.display, fontSize: 36, lineHeight: 36, letterSpacing: -0.5 },
-  displayLg: { fontFamily: font.display, fontSize: 28, lineHeight: 30, letterSpacing: -0.4 },
-  displayMd: { fontFamily: font.display, fontSize: 22, lineHeight: 26, letterSpacing: -0.3 },
+  displayXl: {
+    fontFamily: font.display,
+    fontSize: 36,
+    lineHeight: 36,
+    letterSpacing: -0.5,
+  },
+  displayLg: {
+    fontFamily: font.display,
+    fontSize: 28,
+    lineHeight: 30,
+    letterSpacing: -0.4,
+  },
+  displayMd: {
+    fontFamily: font.display,
+    fontSize: 22,
+    lineHeight: 26,
+    letterSpacing: -0.3,
+  },
   italic: { fontFamily: font.displayItalic, fontStyle: "italic" as const },
   bodyLg: { fontFamily: font.body, fontSize: 16, lineHeight: 22 },
   bodyMd: { fontFamily: font.body, fontSize: 14, lineHeight: 20 },

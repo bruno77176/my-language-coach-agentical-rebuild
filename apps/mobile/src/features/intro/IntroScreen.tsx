@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 import LottieView from "lottie-react-native";
 import { FadeInView, Screen } from "@/src/design";
 import { motion } from "@language-coach/design-tokens";
+import avatarLottie from "../../../assets/avatar.json";
 
 type Props = { onFinish: () => void };
 
@@ -19,7 +20,7 @@ export function IntroScreen({ onFinish }: Props) {
       <FadeInView style={styles.center} duration={motion.duration.slow}>
         <LottieView
           ref={lottie}
-          source={require("../../../assets/avatar.json")}
+          source={avatarLottie}
           autoPlay
           loop={false}
           style={styles.avatar}

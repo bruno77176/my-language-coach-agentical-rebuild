@@ -1,12 +1,8 @@
-import { Component, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Component } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import * as Sentry from "@sentry/react-native";
-import {
-  palette,
-  radius,
-  spacing,
-  type,
-} from "@language-coach/design-tokens";
+import { palette, radius, spacing, type } from "@language-coach/design-tokens";
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };

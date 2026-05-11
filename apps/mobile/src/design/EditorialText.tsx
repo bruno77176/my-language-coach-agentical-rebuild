@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
-import { Text, TextStyle } from "react-native";
+import type { ReactNode } from "react";
+import type { TextStyle } from "react-native";
+import { Text } from "react-native";
 import { palette, type as tokens } from "@language-coach/design-tokens";
 
 type Kind = keyof typeof tokens;
@@ -25,14 +26,7 @@ export function EditorialText({
   const italicLayer = italic ? tokens.italic : null;
 
   return (
-    <Text
-      style={[
-        base,
-        italicLayer,
-        { color, textAlign: align },
-        style,
-      ]}
-    >
+    <Text style={[base, italicLayer, { color, textAlign: align }, style]}>
       {children}
     </Text>
   );

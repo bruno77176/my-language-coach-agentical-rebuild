@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
-import { StatusBar, StyleSheet, View, ViewStyle } from "react-native";
+import type { ReactNode } from "react";
+import type { ViewStyle } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { gradients, palette } from "@language-coach/design-tokens";

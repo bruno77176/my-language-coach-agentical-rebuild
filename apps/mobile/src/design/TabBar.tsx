@@ -39,8 +39,8 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               options.title ??
               route.name;
             const iconName = focused
-              ? ICONS_ACTIVE[route.name] ?? "ellipse"
-              : ICONS[route.name] ?? "ellipse-outline";
+              ? (ICONS_ACTIVE[route.name] ?? "ellipse")
+              : (ICONS[route.name] ?? "ellipse-outline");
 
             const onPress = () => {
               const event = navigation.emit({

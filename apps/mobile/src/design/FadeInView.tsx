@@ -1,5 +1,7 @@
-import { ReactNode, useEffect, useRef } from "react";
-import { Animated, ViewStyle } from "react-native";
+import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
+import type { ViewStyle } from "react-native";
+import { Animated } from "react-native";
 import { motion } from "@language-coach/design-tokens";
 
 type Props = {
@@ -38,12 +40,7 @@ export function FadeInView({
   }, [opacity, translateY, duration, delay]);
 
   return (
-    <Animated.View
-      style={[
-        style,
-        { opacity, transform: [{ translateY }] },
-      ]}
-    >
+    <Animated.View style={[style, { opacity, transform: [{ translateY }] }]}>
       {children}
     </Animated.View>
   );
