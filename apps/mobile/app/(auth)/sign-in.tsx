@@ -1,14 +1,21 @@
 import { useState } from "react";
 import {
   Alert,
+  Pressable,
   StyleSheet,
-  Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
+import { EditorialText, GlassCard } from "@/src/design";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+  type as typeTokens,
+} from "@language-coach/design-tokens";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -81,51 +88,60 @@ export default function SignInScreen() {
     router.replace("/");
   };
 
+  const isDisabled = busy || !email.trim() || password.length < 6;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.titleHero}>My Language Coach</Text>
-      <Text style={styles.subtitle}>Sign in or create your account.</Text>
+      <EditorialText kind="displayLg">My Language Coach</EditorialText>
+      <EditorialText kind="bodyMd" color={palette.inkSoft}>
+        Sign in or create your account.
+      </EditorialText>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="you@example.com"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        style={styles.input}
-      />
+      <GlassCard padding="md" style={styles.inputCard}>
+        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.fieldLabel}>
+          Email
+        </EditorialText>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          style={[typeTokens.bodyLg, styles.textInput]}
+          placeholderTextColor={palette.inkSoft}
+        />
+      </GlassCard>
 
-      <Text style={[styles.label, styles.labelSpacing]}>Password</Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="At least 6 characters"
-        secureTextEntry
-        autoCapitalize="none"
-        autoComplete="password"
-        style={styles.input}
-      />
+      <GlassCard padding="md" style={styles.inputCard}>
+        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.fieldLabel}>
+          Password
+        </EditorialText>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder="At least 6 characters"
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="password"
+          style={[typeTokens.bodyLg, styles.textInput]}
+          placeholderTextColor={palette.inkSoft}
+        />
+      </GlassCard>
 
-      <TouchableOpacity
+      <Pressable
         onPress={submit}
-        disabled={busy || !email.trim() || password.length < 6}
-        style={[
-          styles.button,
-          (busy || !email.trim() || password.length < 6) &&
-            styles.buttonDisabled,
-        ]}
+        disabled={isDisabled}
+        style={[styles.button, isDisabled && styles.buttonDisabled]}
       >
-        <Text style={styles.buttonText}>
+        <EditorialText kind="bodyLg" color={palette.peach}>
           {busy ? "Signing in…" : "Sign in / Sign up"}
-        </Text>
-      </TouchableOpacity>
+        </EditorialText>
+      </Pressable>
 
-      <Text style={styles.hint}>
-        First time? Pick any password you'll remember; we'll create your
-        account.
-      </Text>
+      <EditorialText kind="bodySm" color={palette.inkSoft} align="center">
+        First time? Pick any password you&apos;ll remember; we&apos;ll create your account.
+      </EditorialText>
     </View>
   );
 }
@@ -133,60 +149,30 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: spacing.xl,
+    gap: spacing.base,
     justifyContent: "center",
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 24,
   },
-  titleHero: {
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 8,
-    color: "#111827",
+  inputCard: {
+    marginTop: 0,
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 32,
+  fieldLabel: {
+    marginBottom: spacing.xs,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    marginBottom: 8,
-    color: "#374151",
-  },
-  labelSpacing: {
-    marginTop: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 16,
-    backgroundColor: "#ffffff",
-    color: "#111827",
+  textInput: {
+    color: palette.ink,
+    padding: 0,
+    minHeight: 24,
   },
   button: {
-    marginTop: 24,
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    padding: 14,
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.base + 2,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    marginTop: spacing.lg,
+    ...shadow.cta,
   },
   buttonDisabled: {
-    backgroundColor: "#d1d5db",
-  },
-  buttonText: {
-    color: "#ffffff",
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  hint: {
-    marginTop: 16,
-    fontSize: 12,
-    color: "#9ca3af",
-    textAlign: "center",
+    opacity: 0.6,
   },
 });
