@@ -3,11 +3,11 @@ import {
   BottomSheetFooter,
   BottomSheetModal,
   BottomSheetScrollView,
-  BottomSheetView,
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
-import { EditorialText, GlassCard } from "@/src/design";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EditorialText, GlassCard, TAB_BAR_RESERVE } from "@/src/design";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
 import {
   palette,
@@ -25,6 +25,8 @@ type Props = {
 
 export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
   function EditLanguageSheet({ title, initialValue, onSave }, ref) {
+    const insets = useSafeAreaInsets();
+    const footerInset = insets.bottom + TAB_BAR_RESERVE;
     const [value, setValue] = useState<SupportedLang>(initialValue);
     const [saving, setSaving] = useState(false);
 
@@ -42,7 +44,7 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
 
     const renderFooter = useCallback(
       (props: BottomSheetFooterProps) => (
-        <BottomSheetFooter {...props} bottomInset={24}>
+        <BottomSheetFooter {...props} bottomInset={footerInset}>
           <Pressable
             onPress={handleSave}
             disabled={saving}
@@ -58,7 +60,7 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
           </Pressable>
         </BottomSheetFooter>
       ),
-      [saving, value],
+      [saving, value, footerInset],
     );
 
     return (
@@ -69,10 +71,15 @@ export const EditLanguageSheet = forwardRef<BottomSheetModal, Props>(
         backgroundStyle={styles.background}
         handleIndicatorStyle={styles.handle}
       >
-        <BottomSheetView style={styles.header}>
-          <EditorialText kind="displayMd">{title}</EditorialText>
-        </BottomSheetView>
-        <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
+        <BottomSheetScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: footerInset + 80 },
+          ]}
+        >
+          <View style={styles.header}>
+            <EditorialText kind="displayMd">{title}</EditorialText>
+          </View>
           {LANGUAGES.map((item) => {
             const selected = item.code === value;
             return (
@@ -122,13 +129,11 @@ const styles = StyleSheet.create({
   },
   handle: { backgroundColor: palette.glassFaint },
   header: {
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: 100,
     gap: spacing.sm,
   },
   rowPressable: { minHeight: touch.min, justifyContent: "center" },

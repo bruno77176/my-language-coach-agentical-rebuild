@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { ViewStyle } from "react-native";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { BlurView } from "expo-blur";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 

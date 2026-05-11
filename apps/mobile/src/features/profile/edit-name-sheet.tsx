@@ -7,7 +7,8 @@ import {
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
-import { EditorialText, GlassCard } from "@/src/design";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EditorialText, GlassCard, TAB_BAR_RESERVE } from "@/src/design";
 import {
   palette,
   radius,
@@ -23,6 +24,8 @@ type Props = {
 
 export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
   function EditNameSheet({ initialValue, onSave }, ref) {
+    const insets = useSafeAreaInsets();
+    const footerInset = insets.bottom + TAB_BAR_RESERVE;
     const [value, setValue] = useState(initialValue);
     const [saving, setSaving] = useState(false);
 
@@ -44,7 +47,7 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
 
     const renderFooter = useCallback(
       (props: BottomSheetFooterProps) => (
-        <BottomSheetFooter {...props} bottomInset={24}>
+        <BottomSheetFooter {...props} bottomInset={footerInset}>
           <Pressable
             onPress={handleSave}
             disabled={!valid || saving}
@@ -60,7 +63,7 @@ export const EditNameSheet = forwardRef<BottomSheetModal, Props>(
           </Pressable>
         </BottomSheetFooter>
       ),
-      [saving, valid, value],
+      [saving, valid, value, footerInset],
     );
 
     return (

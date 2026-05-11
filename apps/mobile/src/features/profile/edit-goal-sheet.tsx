@@ -3,11 +3,11 @@ import {
   BottomSheetFooter,
   BottomSheetModal,
   BottomSheetScrollView,
-  BottomSheetView,
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
-import { EditorialText, GlassCard } from "@/src/design";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EditorialText, GlassCard, TAB_BAR_RESERVE } from "@/src/design";
 import {
   palette,
   radius,
@@ -25,6 +25,8 @@ const OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50, 60];
 
 export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
   function EditGoalSheet({ initialValue, onSave }, ref) {
+    const insets = useSafeAreaInsets();
+    const footerInset = insets.bottom + TAB_BAR_RESERVE;
     const [value, setValue] = useState(initialValue);
     const [saving, setSaving] = useState(false);
 
@@ -42,7 +44,7 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
 
     const renderFooter = useCallback(
       (props: BottomSheetFooterProps) => (
-        <BottomSheetFooter {...props} bottomInset={24}>
+        <BottomSheetFooter {...props} bottomInset={footerInset}>
           <Pressable
             onPress={handleSave}
             disabled={saving}
@@ -58,7 +60,7 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
           </Pressable>
         </BottomSheetFooter>
       ),
-      [saving, value],
+      [saving, value, footerInset],
     );
 
     return (
@@ -69,10 +71,15 @@ export const EditGoalSheet = forwardRef<BottomSheetModal, Props>(
         backgroundStyle={styles.background}
         handleIndicatorStyle={styles.handle}
       >
-        <BottomSheetView style={styles.header}>
-          <EditorialText kind="displayMd">Daily goal</EditorialText>
-        </BottomSheetView>
-        <BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
+        <BottomSheetScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: footerInset + 80 },
+          ]}
+        >
+          <View style={styles.header}>
+            <EditorialText kind="displayMd">Daily goal</EditorialText>
+          </View>
           <View style={styles.pillRow}>
             {OPTIONS.map((opt) => {
               const selected = value === opt;
@@ -113,11 +120,10 @@ const styles = StyleSheet.create({
   },
   handle: { backgroundColor: palette.glassFaint },
   header: {
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
   },
-  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: spacing.xl },
   pillRow: {
     flexDirection: "row",
     flexWrap: "wrap",
