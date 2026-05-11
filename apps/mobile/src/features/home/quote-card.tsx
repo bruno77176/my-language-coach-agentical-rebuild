@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import type { DailyQuote, SupportedLang } from "@language-coach/shared";
+import { palette, spacing } from "@language-coach/design-tokens";
+import { EditorialText, GlassCard } from "@/src/design";
 
 type Props = {
   quote: DailyQuote;
@@ -17,58 +19,55 @@ export function QuoteCard({ quote, nativeLang }: Props) {
     <Pressable
       testID="quote-card"
       onPress={() => setShowTranslation((s) => !s)}
-      style={styles.card}
     >
-      <Text style={styles.original}>"{quote.original.text}"</Text>
-      <Text style={styles.attribution}>
-        — {quote.attribution} {quote.original.flag}
-      </Text>
-      {showsTranslation ? (
-        <>
-          <View style={styles.divider} />
-          <Text style={styles.translation}>{translation}</Text>
-          <Text style={styles.hint}>▲ hide translation</Text>
-        </>
-      ) : quote.original.lang !== nativeLang ? (
-        <Text style={styles.hint}>▽ tap for translation</Text>
-      ) : null}
+      <GlassCard padding="lg" radiusToken="lg">
+        <EditorialText kind="displayMd" italic>
+          &ldquo;{quote.original.text}&rdquo;
+        </EditorialText>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          align="right"
+          style={styles.attribution}
+        >
+          — {quote.attribution} {quote.original.flag}
+        </EditorialText>
+        {showsTranslation ? (
+          <>
+            <View style={styles.divider} />
+            <EditorialText kind="bodyMd" color={palette.inkSoft}>
+              {translation}
+            </EditorialText>
+            <EditorialText
+              kind="bodySm"
+              color={palette.inkSoft}
+              align="center"
+              style={styles.hint}
+            >
+              ▲ hide translation
+            </EditorialText>
+          </>
+        ) : quote.original.lang !== nativeLang ? (
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            align="center"
+            style={styles.hint}
+          >
+            ▽ tap for translation
+          </EditorialText>
+        ) : null}
+      </GlassCard>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#f9fafb",
-    borderRadius: 12,
-    padding: 20,
-    width: "100%",
-  },
-  original: {
-    fontSize: 18,
-    fontStyle: "italic",
-    color: "#111827",
-    lineHeight: 26,
-    marginBottom: 12,
-  },
-  attribution: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "right",
-  },
+  attribution: { marginTop: spacing.md },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#d1d5db",
-    marginVertical: 12,
+    backgroundColor: "rgba(0,0,0,0.12)",
+    marginVertical: spacing.md,
   },
-  translation: {
-    fontSize: 15,
-    color: "#4b5563",
-    lineHeight: 22,
-  },
-  hint: {
-    fontSize: 12,
-    color: "#9ca3af",
-    marginTop: 12,
-    textAlign: "center",
-  },
+  hint: { marginTop: spacing.md },
 });

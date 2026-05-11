@@ -4,11 +4,17 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { quoteForDay, type SupportedLang } from "@language-coach/shared";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+} from "@language-coach/design-tokens";
+import { EditorialText, Screen } from "@/src/design";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useTodayStats } from "@/src/features/home/use-today-stats";
 import { QuoteCard } from "@/src/features/home/quote-card";
@@ -43,69 +49,91 @@ export default function HomeScreen() {
 
   if (loadingProfile || !profile) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator />
-      </View>
+      <Screen variant="gradient">
+        <View style={styles.loading}>
+          <ActivityIndicator color={palette.ink} />
+        </View>
+      </Screen>
     );
   }
 
   const quote = quoteForDay(new Date(), profile.timezone);
-  const streakLabel =
-    (streak ?? 0) > 0
-      ? `🔥 ${streak}-day streak`
-      : "Build your first streak today";
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.greeting}>Hi {profile.display_name} 👋</Text>
-      <Text style={styles.date}>{dateLabel(profile.timezone)}</Text>
+    <Screen variant="gradient">
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.row}>
+          <EditorialText kind="caps" color={palette.inkSoft}>
+            {dateLabel(profile.timezone)}
+          </EditorialText>
+          <View style={styles.streakPill}>
+            <EditorialText kind="bodySm" color={palette.peach}>
+              {"🔥"} {streak ?? 0}
+            </EditorialText>
+          </View>
+        </View>
 
-      <View style={styles.spacerLg} />
+        <EditorialText kind="displayXl" style={styles.greeting}>
+          Hi {profile.display_name}.
+        </EditorialText>
 
-      <QuoteCard
-        quote={quote}
-        nativeLang={profile.native_lang as SupportedLang}
-      />
+        <QuoteCard
+          quote={quote}
+          nativeLang={profile.native_lang as SupportedLang}
+        />
 
-      <View style={styles.spacerLg} />
+        <TodayProgress
+          secondsSpoken={stats?.secondsSpoken ?? 0}
+          dailyGoalMinutes={profile.daily_goal_minutes}
+        />
 
-      <TodayProgress
-        secondsSpoken={stats?.secondsSpoken ?? 0}
-        dailyGoalMinutes={profile.daily_goal_minutes}
-      />
-
-      <Pressable
-        style={styles.cta}
-        onPress={() => router.push("/(tabs)/practice")}
-      >
-        <Text style={styles.ctaText}>▶ Start practicing</Text>
-      </Pressable>
-
-      <Text style={styles.streak}>{streakLabel}</Text>
-    </ScrollView>
+        <Pressable
+          style={styles.cta}
+          onPress={() => router.push("/(tabs)/practice")}
+          hitSlop={8}
+        >
+          <EditorialText
+            kind="bodyLg"
+            color={palette.peach}
+            style={styles.ctaText}
+          >
+            {"▸"} Start practising
+          </EditorialText>
+        </Pressable>
+      </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: "center", justifyContent: "center" },
   container: {
-    padding: 24,
-    paddingTop: 48,
-    backgroundColor: "#ffffff",
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: 120, // reserves TAB_BAR_RESERVE + spacing.xl clearance for floating tab bar
+    gap: spacing.lg,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  greeting: { fontSize: 24, fontWeight: "700", color: "#111827" },
-  date: { fontSize: 14, color: "#6b7280", marginTop: 4 },
-  spacerLg: { height: 24 },
+  streakPill: {
+    backgroundColor: palette.ink,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    minHeight: 28,
+    justifyContent: "center",
+  },
+  greeting: { marginTop: spacing.sm },
   cta: {
-    backgroundColor: "#2563eb",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    width: "100%",
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.base + 2,
+    borderRadius: radius.lg,
     alignItems: "center",
-    marginTop: 8,
+    minHeight: 52,
+    ...shadow.cta,
   },
-  ctaText: { color: "#ffffff", fontSize: 18, fontWeight: "700" },
-  streak: { fontSize: 14, color: "#374151", marginTop: 24 },
+  ctaText: { fontWeight: "600" },
 });
