@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import LottieView from "lottie-react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
-import { useAudioPlayer } from "expo-audio";
 import { EditorialText, FadeInView, Screen } from "@/src/design";
 import { palette, spacing } from "@language-coach/design-tokens";
 import avatarLottie from "../../../assets/avatar.json";
+import { playOnce } from "./audio-controller";
 
 type Props = {
   visible: boolean;
@@ -17,16 +17,17 @@ type Props = {
 const VICTORY_SOUND = require("../../../assets/sounds/victory.mp3");
 
 export function GoalReward({ visible, streakDays, onHidden }: Props) {
-  const player = useAudioPlayer(VICTORY_SOUND);
   const confettiRef = useRef<ConfettiCannon>(null);
 
   useEffect(() => {
     if (!visible) return;
-    void player.play();
+    // Route through audio-controller so the iOS session is flipped to playback
+    // first (matters if reward fires right after a recording ends).
+    void playOnce({ source: VICTORY_SOUND });
     confettiRef.current?.start();
     const t = setTimeout(onHidden, 4000);
     return () => clearTimeout(t);
-  }, [visible, player, onHidden]);
+  }, [visible, onHidden]);
 
   if (!visible) return null;
 
