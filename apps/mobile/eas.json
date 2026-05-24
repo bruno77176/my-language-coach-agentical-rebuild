@@ -49,6 +49,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "bruno.a.moise@gmail.com",
+        "appleTeamId": "428X7TF9S6"
+      }
+    }
   }
 }

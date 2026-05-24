@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.brunomoise.mylanguagecoach",
-    buildNumber: "1",
+    buildNumber: "4",
     infoPlist: {
       NSMicrophoneUsageDescription:
         "We use the microphone so you can talk to your coach.",
