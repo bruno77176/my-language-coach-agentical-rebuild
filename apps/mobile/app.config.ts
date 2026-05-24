@@ -22,6 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       NSMicrophoneUsageDescription:
         "We use the microphone so you can talk to your coach.",
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
@@ -38,13 +39,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-notifications",
     "expo-audio",
-    [
-      "@sentry/react-native/expo",
-      {
-        organization: "bruno77176",
-        project: "language-coach-mobile",
-      },
-    ],
   ],
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,
