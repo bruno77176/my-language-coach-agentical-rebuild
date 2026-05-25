@@ -48,7 +48,13 @@ export const SignInMethodsSheet = forwardRef<BottomSheetModal>(
         else await signInWithApple();
         showToast(`${PROVIDER_LABEL[provider]} linked.`);
       } catch (err) {
-        if (!(err instanceof SocialSignInCancelled)) {
+        if (err instanceof SocialSignInCancelled) return;
+        const msg = err instanceof Error ? err.message : "";
+        if (/unconfirmed|not confirmed|email not verified|verify your email/i.test(msg)) {
+          showToast(
+            "This email has an unconfirmed account. Check your inbox or use Forgot password.",
+          );
+        } else {
           showToast(`Couldn't link ${PROVIDER_LABEL[provider]}.`);
         }
       } finally {

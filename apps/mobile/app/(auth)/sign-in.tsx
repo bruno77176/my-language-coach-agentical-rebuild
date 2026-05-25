@@ -34,7 +34,13 @@ export default function SignInScreen() {
       await signInWithGoogle();
       router.replace("/");
     } catch (err) {
-      if (!(err instanceof SocialSignInCancelled)) {
+      if (err instanceof SocialSignInCancelled) return;
+      const msg = err instanceof Error ? err.message : "";
+      if (/unconfirmed|not confirmed|email not verified|verify your email/i.test(msg)) {
+        showToast(
+          "This email has an unconfirmed account. Check your inbox or use Forgot password.",
+        );
+      } else {
         showToast("Couldn't sign in with Google. Try again.");
       }
     } finally {
@@ -48,7 +54,13 @@ export default function SignInScreen() {
       await signInWithApple();
       router.replace("/");
     } catch (err) {
-      if (!(err instanceof SocialSignInCancelled)) {
+      if (err instanceof SocialSignInCancelled) return;
+      const msg = err instanceof Error ? err.message : "";
+      if (/unconfirmed|not confirmed|email not verified|verify your email/i.test(msg)) {
+        showToast(
+          "This email has an unconfirmed account. Check your inbox or use Forgot password.",
+        );
+      } else {
         showToast("Couldn't sign in with Apple. Try again.");
       }
     } finally {

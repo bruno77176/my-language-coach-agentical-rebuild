@@ -31,14 +31,13 @@ export function SocialButton({
       <View style={styles.row}>
         {busy ? (
           <ActivityIndicator color={isDark ? palette.peach : palette.ink} />
-        ) : (
-          <EditorialText
-            kind="bodyLg"
-            color={isDark ? palette.peach : palette.ink}
-          >
-            {label}
-          </EditorialText>
-        )}
+        ) : null}
+        <EditorialText
+          kind="bodyLg"
+          color={isDark ? palette.peach : palette.ink}
+        >
+          {label}
+        </EditorialText>
       </View>
     </Pressable>
   );
