@@ -7,6 +7,8 @@ const EnvSchema = z.object({
   SENTRY_DSN_MOBILE: z.string().url(),
   POSTHOG_API_KEY: z.string().min(1),
   POSTHOG_HOST: z.string().url(),
+  GOOGLE_WEB_CLIENT_ID: z.string().min(1),
+  GOOGLE_IOS_CLIENT_ID: z.string().min(1),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

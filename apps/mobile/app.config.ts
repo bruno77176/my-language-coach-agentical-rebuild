@@ -19,6 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     bundleIdentifier: "com.brunomoise.mylanguagecoach",
     buildNumber: "6",
+    usesAppleSignIn: true,
     infoPlist: {
       NSMicrophoneUsageDescription:
         "We use the microphone so you can talk to your coach.",
@@ -39,6 +40,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-notifications",
     "expo-audio",
+    "expo-apple-authentication",
+    [
+      "@react-native-google-signin/google-signin",
+      {
+        iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME,
+      },
+    ],
   ],
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,
@@ -46,6 +54,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     SENTRY_DSN_MOBILE: process.env.SENTRY_DSN_MOBILE,
     POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
     POSTHOG_HOST: process.env.POSTHOG_HOST,
+    GOOGLE_WEB_CLIENT_ID: process.env.GOOGLE_WEB_CLIENT_ID,
+    GOOGLE_IOS_CLIENT_ID: process.env.GOOGLE_IOS_CLIENT_ID,
     eas: {
       projectId: "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
     },
