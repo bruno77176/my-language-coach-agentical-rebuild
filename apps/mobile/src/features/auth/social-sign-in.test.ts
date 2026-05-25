@@ -8,6 +8,7 @@ vi.mock("@react-native-google-signin/google-signin", () => ({
   },
   statusCodes: {
     SIGN_IN_CANCELLED: "SIGN_IN_CANCELLED",
+    IN_PROGRESS: "IN_PROGRESS",
   },
 }));
 
@@ -79,6 +80,15 @@ describe("signInWithGoogle", () => {
     );
   });
 
+  it("throws SocialSignInCancelled when a sign-in is already in progress", async () => {
+    (GoogleSignin.signIn as ReturnType<typeof vi.fn>).mockRejectedValue({
+      code: "IN_PROGRESS",
+    });
+    await expect(signInWithGoogle()).rejects.toBeInstanceOf(
+      SocialSignInCancelled,
+    );
+  });
+
   it("throws SocialSignInError when Google returns no ID token", async () => {
     (GoogleSignin.signIn as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { idToken: null },
@@ -135,6 +145,16 @@ describe("signInWithApple", () => {
     (
       AppleAuthentication.signInAsync as ReturnType<typeof vi.fn>
     ).mockResolvedValue({ identityToken: null });
+    await expect(signInWithApple()).rejects.toBeInstanceOf(SocialSignInError);
+  });
+
+  it("throws SocialSignInError when Supabase rejects the token", async () => {
+    (
+      AppleAuthentication.signInAsync as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({ identityToken: "apple-id-token" });
+    (
+      supabase.auth.signInWithIdToken as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({ data: { session: null }, error: { message: "bad" } });
     await expect(signInWithApple()).rejects.toBeInstanceOf(SocialSignInError);
   });
 });

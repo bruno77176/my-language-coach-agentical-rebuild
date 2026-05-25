@@ -8,6 +8,8 @@ import {
 import { supabase } from "@/src/lib/supabase";
 import { env } from "@/src/lib/env";
 
+const APPLE_CANCEL_CODE = "ERR_REQUEST_CANCELED";
+
 export class SocialSignInCancelled extends Error {
   constructor() {
     super("Sign-in was cancelled");
@@ -40,7 +42,7 @@ export async function signInWithGoogle(): Promise<Session> {
     result = await GoogleSignin.signIn();
   } catch (err) {
     const code = (err as { code?: string })?.code;
-    if (code === statusCodes.SIGN_IN_CANCELLED) {
+    if (code === statusCodes.SIGN_IN_CANCELLED || code === statusCodes.IN_PROGRESS) {
       throw new SocialSignInCancelled();
     }
     throw new SocialSignInError(
@@ -82,7 +84,7 @@ export async function signInWithApple(): Promise<Session> {
     });
   } catch (err) {
     const code = (err as { code?: string })?.code;
-    if (code === "ERR_REQUEST_CANCELED") {
+    if (code === APPLE_CANCEL_CODE) {
       throw new SocialSignInCancelled();
     }
     throw new SocialSignInError(
