@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { SocialButton } from "@/src/features/auth/social-button";
+import {
+  signInWithGoogle,
+  signInWithApple,
+  SocialSignInCancelled,
+} from "@/src/features/auth/social-sign-in";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
@@ -19,6 +25,36 @@ export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [appleBusy, setAppleBusy] = useState(false);
+
+  const onGoogle = async () => {
+    setGoogleBusy(true);
+    try {
+      await signInWithGoogle();
+      router.replace("/");
+    } catch (err) {
+      if (!(err instanceof SocialSignInCancelled)) {
+        showToast("Couldn't sign in with Google. Try again.");
+      }
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
+  const onApple = async () => {
+    setAppleBusy(true);
+    try {
+      await signInWithApple();
+      router.replace("/");
+    } catch (err) {
+      if (!(err instanceof SocialSignInCancelled)) {
+        showToast("Couldn't sign in with Apple. Try again.");
+      }
+    } finally {
+      setAppleBusy(false);
+    }
+  };
 
   const submit = async () => {
     const trimmedEmail = email.trim().toLowerCase();
@@ -62,7 +98,12 @@ export default function SignInScreen() {
     router.replace("/");
   };
 
-  const isDisabled = busy || !email.trim() || password.length < 6;
+  const isDisabled =
+    busy ||
+    googleBusy ||
+    appleBusy ||
+    !email.trim() ||
+    password.length < 6;
   const buttonLabel = mode === "signIn" ? "Sign in" : "Create account";
 
   return (
@@ -72,10 +113,34 @@ export default function SignInScreen() {
         {mode === "signIn" ? "Welcome back." : "Create your account."}
       </EditorialText>
 
+      {Platform.OS === "ios" ? (
+        <SocialButton
+          label="Continue with Apple"
+          onPress={onApple}
+          busy={appleBusy}
+          disabled={googleBusy || busy}
+          variant="apple"
+        />
+      ) : null}
+      <SocialButton
+        label="Continue with Google"
+        onPress={onGoogle}
+        busy={googleBusy}
+        disabled={appleBusy || busy}
+        variant="google"
+      />
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <EditorialText kind="bodySm" color={palette.inkSoft}>
+          or
+        </EditorialText>
+        <View style={styles.dividerLine} />
+      </View>
+
       <View style={styles.tabRow}>
         <Pressable
           onPress={() => setMode("signIn")}
-          disabled={busy}
+          disabled={busy || googleBusy || appleBusy}
           style={[styles.tab, mode === "signIn" && styles.tabActive]}
         >
           <EditorialText
@@ -87,7 +152,7 @@ export default function SignInScreen() {
         </Pressable>
         <Pressable
           onPress={() => setMode("signUp")}
-          disabled={busy}
+          disabled={busy || googleBusy || appleBusy}
           style={[styles.tab, mode === "signUp" && styles.tabActive]}
         >
           <EditorialText
@@ -210,5 +275,16 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginVertical: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: palette.glassFaint,
   },
 });
