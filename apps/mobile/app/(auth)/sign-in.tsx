@@ -48,6 +48,7 @@ export default function SignInScreen() {
     if (error) {
       if (/already|registered|exists/i.test(error.message)) {
         showToast("This email already has an account — sign in instead.");
+        // Intentionally don't reset email/password — they're prefilled for the sign-in retry.
         setMode("signIn");
         return;
       }
@@ -74,6 +75,7 @@ export default function SignInScreen() {
       <View style={styles.tabRow}>
         <Pressable
           onPress={() => setMode("signIn")}
+          disabled={busy}
           style={[styles.tab, mode === "signIn" && styles.tabActive]}
         >
           <EditorialText
@@ -85,6 +87,7 @@ export default function SignInScreen() {
         </Pressable>
         <Pressable
           onPress={() => setMode("signUp")}
+          disabled={busy}
           style={[styles.tab, mode === "signUp" && styles.tabActive]}
         >
           <EditorialText
