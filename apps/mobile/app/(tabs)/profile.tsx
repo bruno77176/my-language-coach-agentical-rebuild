@@ -15,6 +15,7 @@ import { ProfileRow } from "@/src/features/profile/profile-row";
 import { EditNameSheet } from "@/src/features/profile/edit-name-sheet";
 import { EditGoalSheet } from "@/src/features/profile/edit-goal-sheet";
 import { EditLanguageSheet } from "@/src/features/profile/edit-language-sheet";
+import { SignInMethodsSheet } from "@/src/features/profile/sign-in-methods-sheet";
 import { showToast } from "@/src/lib/toast";
 import {
   EditorialText,
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
   const nativeRef = useRef<BottomSheetModal>(null);
   const targetRef = useRef<BottomSheetModal>(null);
   const goalRef = useRef<BottomSheetModal>(null);
+  const signInMethodsRef = useRef<BottomSheetModal>(null);
 
   if (!profile) return null;
 
@@ -147,6 +149,11 @@ export default function ProfileScreen() {
               onPress={() => targetRef.current?.present()}
             />
             <ProfileRow
+              label="Sign-in methods"
+              value="Manage"
+              onPress={() => signInMethodsRef.current?.present()}
+            />
+            <ProfileRow
               label="Daily goal"
               value={`${profile.daily_goal_minutes} min`}
               onPress={() => goalRef.current?.present()}
@@ -219,6 +226,7 @@ export default function ProfileScreen() {
               await update.mutateAsync({ daily_goal_minutes });
             }}
           />
+          <SignInMethodsSheet ref={signInMethodsRef} />
         </ScrollView>
       </Screen>
     </BottomSheetModalProvider>
