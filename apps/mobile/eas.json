@@ -52,7 +52,8 @@
     "production": {
       "ios": {
         "appleId": "bruno.a.moise@gmail.com",
-        "appleTeamId": "428X7TF9S6"
+        "appleTeamId": "428X7TF9S6",
+        "ascAppId": "6746396786"
       }
     }
   }
