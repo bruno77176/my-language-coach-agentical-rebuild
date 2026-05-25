@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
+import { showToast } from "@/src/lib/toast";
 import { EditorialText, GlassCard } from "@/src/design";
 import {
   palette,
@@ -11,7 +12,10 @@ import {
   type as typeTokens,
 } from "@language-coach/design-tokens";
 
+type Mode = "signIn" | "signUp";
+
 export default function SignInScreen() {
+  const [mode, setMode] = useState<Mode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21,75 +25,76 @@ export default function SignInScreen() {
     if (!trimmedEmail || password.length < 6) return;
     setBusy(true);
 
-    // Try sign in first; if user doesn't exist, fall through to sign up.
-    const signInResult = await supabase.auth.signInWithPassword({
-      email: trimmedEmail,
-      password,
-    });
-    if (!signInResult.error) {
-      // eslint-disable-next-line no-console
-      console.log("[SIGN-IN] signInWithPassword OK");
+    if (mode === "signIn") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
       setBusy(false);
+      if (error) {
+        showToast("Email or password is incorrect.");
+        return;
+      }
       router.replace("/");
       return;
     }
-    // eslint-disable-next-line no-console
-    console.log(
-      "[SIGN-IN] signInWithPassword failed:",
-      signInResult.error.message,
-    );
 
-    // "Invalid login credentials" can mean wrong password OR no such user.
-    // Try sign up; if THAT errors with "already registered", the password
-    // was wrong on the first call.
-    const signUpResult = await supabase.auth.signUp({
+    // Create account
+    const { data, error } = await supabase.auth.signUp({
       email: trimmedEmail,
       password,
     });
     setBusy(false);
-
-    if (signUpResult.error) {
-      const msg = signUpResult.error.message;
-      // eslint-disable-next-line no-console
-      console.log("[SIGN-IN] signUp failed:", msg);
-      if (/already|registered|exists/i.test(msg)) {
-        Alert.alert(
-          "Wrong password",
-          "This email is registered but the password didn't match.",
-        );
-      } else {
-        Alert.alert("Sign-in failed", msg);
+    if (error) {
+      if (/already|registered|exists/i.test(error.message)) {
+        showToast("This email already has an account — sign in instead.");
+        setMode("signIn");
+        return;
       }
+      showToast(error.message);
       return;
     }
-
-    // eslint-disable-next-line no-console
-    console.log(
-      "[SIGN-IN] signUp OK — has session:",
-      !!signUpResult.data.session,
-    );
-
-    // Sign-up succeeded. Some Supabase configs auto-confirm + return a session
-    // immediately; if the session is null, the user needs to confirm email.
-    if (!signUpResult.data.session) {
-      Alert.alert(
-        "Email confirmation required",
-        "Account created but Supabase needs you to confirm the email first. Either check your inbox for a confirmation link, or in Supabase dashboard → Authentication → Providers → Email, turn off 'Confirm email'.",
-      );
+    if (!data.session) {
+      showToast("Check your inbox to confirm your email.");
       return;
     }
-    // Successful new account with session → navigate.
     router.replace("/");
   };
 
   const isDisabled = busy || !email.trim() || password.length < 6;
+  const buttonLabel = mode === "signIn" ? "Sign in" : "Create account";
 
   return (
     <View style={styles.container}>
       <EditorialText kind="displayLg">My Language Coach</EditorialText>
       <EditorialText kind="bodyMd" color={palette.inkSoft}>
-        Sign in or create your account.
+        {mode === "signIn" ? "Welcome back." : "Create your account."}
       </EditorialText>
+
+      <View style={styles.tabRow}>
+        <Pressable
+          onPress={() => setMode("signIn")}
+          style={[styles.tab, mode === "signIn" && styles.tabActive]}
+        >
+          <EditorialText
+            kind="bodyMd"
+            color={mode === "signIn" ? palette.ink : palette.inkSoft}
+          >
+            Sign in
+          </EditorialText>
+        </Pressable>
+        <Pressable
+          onPress={() => setMode("signUp")}
+          style={[styles.tab, mode === "signUp" && styles.tabActive]}
+        >
+          <EditorialText
+            kind="bodyMd"
+            color={mode === "signUp" ? palette.ink : palette.inkSoft}
+          >
+            Create account
+          </EditorialText>
+        </Pressable>
+      </View>
 
       <GlassCard padding="md" style={styles.inputCard}>
         <EditorialText
@@ -131,20 +136,26 @@ export default function SignInScreen() {
         />
       </GlassCard>
 
+      {mode === "signIn" ? (
+        <Pressable
+          onPress={() => router.push("/(auth)/forgot-password")}
+          style={styles.forgotLink}
+        >
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Forgot password?
+          </EditorialText>
+        </Pressable>
+      ) : null}
+
       <Pressable
         onPress={submit}
         disabled={isDisabled}
         style={[styles.button, isDisabled && styles.buttonDisabled]}
       >
         <EditorialText kind="bodyLg" color={palette.peach}>
-          {busy ? "Signing in…" : "Sign in / Sign up"}
+          {busy ? "Working…" : buttonLabel}
         </EditorialText>
       </Pressable>
-
-      <EditorialText kind="bodySm" color={palette.inkSoft} align="center">
-        First time? Pick any password you&apos;ll remember; we&apos;ll create
-        your account.
-      </EditorialText>
     </View>
   );
 }
@@ -156,6 +167,21 @@ const styles = StyleSheet.create({
     gap: spacing.base,
     justifyContent: "center",
   },
+  tabRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+    borderRadius: radius.md,
+    backgroundColor: palette.glassFaint,
+  },
+  tabActive: {
+    backgroundColor: palette.peach,
+  },
   inputCard: {
     marginTop: 0,
   },
@@ -166,6 +192,10 @@ const styles = StyleSheet.create({
     color: palette.ink,
     padding: 0,
     minHeight: 24,
+  },
+  forgotLink: {
+    alignSelf: "flex-end",
+    paddingVertical: spacing.xs,
   },
   button: {
     backgroundColor: palette.ink,
