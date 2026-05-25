@@ -11,8 +11,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   newArchEnabled: true,
   icon: "./assets/icon.png",
   splash: {
-    image: "./assets/icon.png",
-    resizeMode: "contain",
     backgroundColor: "#fde7d1",
   },
   ios: {

@@ -21,6 +21,13 @@ export function QuoteCard({ quote, nativeLang }: Props) {
       onPress={() => setShowTranslation((s) => !s)}
     >
       <GlassCard padding="lg" radiusToken="lg">
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.label}
+        >
+          ✦ Quote of the day
+        </EditorialText>
         <EditorialText kind="displayMd" italic>
           &ldquo;{quote.original.text}&rdquo;
         </EditorialText>
@@ -63,6 +70,7 @@ export function QuoteCard({ quote, nativeLang }: Props) {
 }
 
 const styles = StyleSheet.create({
+  label: { marginBottom: spacing.sm, letterSpacing: 1.5 },
   attribution: { marginTop: spacing.md },
   divider: {
     height: StyleSheet.hairlineWidth,
