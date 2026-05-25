@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.brunomoise.mylanguagecoach",
-    buildNumber: "5",
+    buildNumber: "6",
     infoPlist: {
       NSMicrophoneUsageDescription:
         "We use the microphone so you can talk to your coach.",
@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.anonymous.mylanguagecoach",
-    versionCode: 39,
+    versionCode: 40,
     permissions: ["RECORD_AUDIO"],
     adaptiveIcon: {
       foregroundImage: "./assets/icon.png",
