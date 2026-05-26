@@ -49,8 +49,10 @@ export default function HomeScreen() {
   const { data: streak } = useCurrentStreak();
   const cachedQuote = useOfflineQuote(profile ?? null);
 
-  // Block on spinner only if profile hasn't loaded AND there's no cached quote.
-  if (loadingProfile && !cachedQuote) {
+  // Block on spinner if profile hasn't loaded AND there's no cached quote, OR
+  // if we have no profile and no cached quote at all (e.g., anonymous user
+  // landed here via a stray redirect — the auth gate will catch up shortly).
+  if ((loadingProfile && !cachedQuote) || (!profile && !cachedQuote)) {
     return (
       <Screen variant="gradient">
         <View style={styles.loading}>

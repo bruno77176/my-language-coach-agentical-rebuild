@@ -11,6 +11,20 @@ export default function VerifyScreen() {
 
   useEffect(() => {
     const consume = async (url: string) => {
+      // Ignore Metro's bootstrap URL (exp://host:port with no path/query/fragment)
+      // and any other URL that clearly doesn't carry auth material. Without this
+      // guard, every dev-client launch triggers a spurious "Couldn't sign in" alert.
+      const hasAuthMarker =
+        url.includes("access_token=") ||
+        url.includes("refresh_token=") ||
+        url.includes("code=") ||
+        url.includes("/verify") ||
+        url.includes("/reset-password");
+      if (!hasAuthMarker) {
+        setDebugMsg("No auth tokens in URL — redirecting to sign in…");
+        router.replace("/(auth)/sign-in");
+        return;
+      }
       setDebugMsg(`Got URL: ${url.slice(0, 80)}…`);
       // eslint-disable-next-line no-console
       console.log("[VERIFY] received url:", url);
