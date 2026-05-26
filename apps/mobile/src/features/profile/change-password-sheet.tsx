@@ -10,11 +10,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
-import {
-  EditorialText,
-  GlassCard,
-  TAB_BAR_RESERVE,
-} from "@/src/design";
+import { EditorialText, GlassCard, TAB_BAR_RESERVE } from "@/src/design";
 import {
   palette,
   radius,

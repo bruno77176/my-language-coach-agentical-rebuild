@@ -42,7 +42,10 @@ export async function signInWithGoogle(): Promise<Session> {
     result = await GoogleSignin.signIn();
   } catch (err) {
     const code = (err as { code?: string })?.code;
-    if (code === statusCodes.SIGN_IN_CANCELLED || code === statusCodes.IN_PROGRESS) {
+    if (
+      code === statusCodes.SIGN_IN_CANCELLED ||
+      code === statusCodes.IN_PROGRESS
+    ) {
       throw new SocialSignInCancelled();
     }
     throw new SocialSignInError(
@@ -60,7 +63,9 @@ export async function signInWithGoogle(): Promise<Session> {
     token: idToken,
   });
   if (error || !data.session) {
-    throw new SocialSignInError(error?.message ?? "Supabase rejected the token");
+    throw new SocialSignInError(
+      error?.message ?? "Supabase rejected the token",
+    );
   }
   return data.session;
 }
@@ -102,7 +107,9 @@ export async function signInWithApple(): Promise<Session> {
     nonce: rawNonce,
   });
   if (error || !data.session) {
-    throw new SocialSignInError(error?.message ?? "Supabase rejected the token");
+    throw new SocialSignInError(
+      error?.message ?? "Supabase rejected the token",
+    );
   }
   return data.session;
 }

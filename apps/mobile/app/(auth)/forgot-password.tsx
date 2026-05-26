@@ -92,10 +92,7 @@ export default function ForgotPasswordScreen() {
         </EditorialText>
       </Pressable>
 
-      <Pressable
-        onPress={() => router.back()}
-        style={styles.secondary}
-      >
+      <Pressable onPress={() => router.back()} style={styles.secondary}>
         <EditorialText kind="bodyMd" color={palette.inkSoft}>
           Cancel
         </EditorialText>

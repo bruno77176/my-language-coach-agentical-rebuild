@@ -36,7 +36,11 @@ export default function SignInScreen() {
     } catch (err) {
       if (err instanceof SocialSignInCancelled) return;
       const msg = err instanceof Error ? err.message : "";
-      if (/unconfirmed|not confirmed|email not verified|verify your email/i.test(msg)) {
+      if (
+        /unconfirmed|not confirmed|email not verified|verify your email/i.test(
+          msg,
+        )
+      ) {
         showToast(
           "This email has an unconfirmed account. Check your inbox or use Forgot password.",
         );
@@ -56,7 +60,11 @@ export default function SignInScreen() {
     } catch (err) {
       if (err instanceof SocialSignInCancelled) return;
       const msg = err instanceof Error ? err.message : "";
-      if (/unconfirmed|not confirmed|email not verified|verify your email/i.test(msg)) {
+      if (
+        /unconfirmed|not confirmed|email not verified|verify your email/i.test(
+          msg,
+        )
+      ) {
         showToast(
           "This email has an unconfirmed account. Check your inbox or use Forgot password.",
         );
@@ -111,11 +119,7 @@ export default function SignInScreen() {
   };
 
   const isDisabled =
-    busy ||
-    googleBusy ||
-    appleBusy ||
-    !email.trim() ||
-    password.length < 6;
+    busy || googleBusy || appleBusy || !email.trim() || password.length < 6;
   const buttonLabel = mode === "signIn" ? "Sign in" : "Create account";
 
   return (

@@ -1,17 +1,10 @@
 import { forwardRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
-import {
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
 import { EditorialText, GlassCard } from "@/src/design";
-import {
-  palette,
-  radius,
-  spacing,
-} from "@language-coach/design-tokens";
+import { palette, radius, spacing } from "@language-coach/design-tokens";
 import {
   signInWithGoogle,
   signInWithApple,
@@ -50,7 +43,11 @@ export const SignInMethodsSheet = forwardRef<BottomSheetModal>(
       } catch (err) {
         if (err instanceof SocialSignInCancelled) return;
         const msg = err instanceof Error ? err.message : "";
-        if (/unconfirmed|not confirmed|email not verified|verify your email/i.test(msg)) {
+        if (
+          /unconfirmed|not confirmed|email not verified|verify your email/i.test(
+            msg,
+          )
+        ) {
           showToast(
             "This email has an unconfirmed account. Check your inbox or use Forgot password.",
           );

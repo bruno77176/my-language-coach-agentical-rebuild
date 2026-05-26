@@ -1,6 +1,11 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { EditorialText } from "@/src/design";
-import { palette, radius, spacing, shadow } from "@language-coach/design-tokens";
+import {
+  palette,
+  radius,
+  spacing,
+  shadow,
+} from "@language-coach/design-tokens";
 
 type Props = {
   label: string;
