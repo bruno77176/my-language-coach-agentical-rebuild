@@ -78,6 +78,19 @@ The dev client header shows: dev mode | refresh | inspector toggles.
 - **App stuck on "Bundling..."** — check Metro window for a syntax error or missing module. Fix the source, save, Metro auto-rebuilds.
 - **Magic-link email opens browser instead of app** — the link's `redirect_to` URL must be allowlisted in Supabase dashboard → Authentication → URL Configuration → Redirect URLs. We have `mylanguagecoach://**` registered.
 - **NativeWind className not styling anything** — currently being debugged. Inline `style={{...}}` always works as a fallback.
+- **`TurboModuleRegistry.getEnforcing(...): 'RNSomething' could not be found`** — pnpm workspace symlink gone missing. After `npx expo install <native-package>`, the package lands in workspace-root `node_modules/` but pnpm sometimes doesn't symlink it into `apps/mobile/node_modules/`, so React Native autolinking misses it on the next EAS build. Fix: from `app/` (workspace root), run `pnpm install`. Check the result with `ls apps/mobile/node_modules | grep <package>` — a symlink should be there. Then rebuild the dev client. The TS/Node processes locking files during `pnpm install` (EPERM errors on Windows) can be released without closing VSCode by `Ctrl+Shift+P` → "TypeScript: Restart TS Server".
+
+## After installing a new native module
+
+After `npx expo install <native-package>`, do this **before** triggering `eas build` to make sure the package is visible to autolinking:
+
+```powershell
+cd "C:\Users\bruno.moise\My Language Coach - rebuild\app"
+pnpm install
+ls apps/mobile/node_modules | Select-String <package-name>   # should print a row
+```
+
+If the symlink is missing despite `pnpm install`, see the gotcha above. As a future hardening: switching to `node-linker=hoisted` in `.npmrc` removes the per-app symlink layer entirely (flat npm-style `node_modules`), at the cost of pnpm's isolation. Don't do this lightly — it changes how every workspace package resolves deps and requires nuking + reinstalling all `node_modules`.
 
 ## When to rebuild the dev client (vs. just hot-reloading JS)
 
