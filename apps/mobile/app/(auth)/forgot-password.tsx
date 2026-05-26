@@ -47,8 +47,8 @@ export default function ForgotPasswordScreen() {
     <View style={styles.container}>
       <EditorialText kind="displayLg">Forgot password?</EditorialText>
       <EditorialText kind="bodyMd" color={palette.inkSoft}>
-        Enter the email you signed up with. We&apos;ll send a code to reset
-        your password.
+        Enter the email you signed up with. We&apos;ll send a code to reset your
+        password.
       </EditorialText>
 
       <GlassCard padding="md" style={styles.inputCard}>
