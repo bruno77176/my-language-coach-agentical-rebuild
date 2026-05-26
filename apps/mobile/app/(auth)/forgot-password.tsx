@@ -24,11 +24,21 @@ export default function ForgotPasswordScreen() {
       return;
     }
     setBusy(true);
-    await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
       redirectTo: "mylanguagecoach://reset-password",
     });
     setBusy(false);
-    // Always show success regardless of whether the email exists — prevents enumeration.
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.log("[FORGOT] resetPasswordForEmail error:", error.message);
+      // Rate-limit errors don't reveal whether the email exists, so surface
+      // them. Other errors stay generic to prevent enumeration.
+      if (/rate|too many|try again/i.test(error.message)) {
+        showToast("Too many requests. Wait a minute before trying again.");
+        return;
+      }
+    }
+    // Always show success otherwise — prevents email enumeration.
     setSent(true);
   };
 

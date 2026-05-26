@@ -28,38 +28,82 @@ export default function ResetPasswordScreen() {
 
   useEffect(() => {
     const consume = async (url: string) => {
-      // PKCE first
+      // eslint-disable-next-line no-console
+      console.log("[RESET] received url:", url);
+
+      // Path 1: PKCE flow — URL has ?code=...
       try {
         const { data, error } = await supabase.auth.exchangeCodeForSession(url);
         if (!error && data.session) {
+          // eslint-disable-next-line no-console
+          console.log("[RESET] PKCE exchange OK");
           setPhase("ready");
           return;
         }
-      } catch {
-        // fall through
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.log("[RESET] PKCE error:", error.message);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("[RESET] PKCE threw:", e);
       }
-      // Fragment / query tokens
+
+      // Parse params from query string AND fragment (Supabase puts them in
+      // different places depending on flow type and template).
       const fragmentIndex = url.indexOf("#");
       const queryIndex = url.indexOf("?");
-      const tokenSource =
-        fragmentIndex >= 0
-          ? url.slice(fragmentIndex + 1)
-          : queryIndex >= 0
-            ? url.slice(queryIndex + 1)
-            : "";
-      const params = new URLSearchParams(tokenSource);
-      const access_token = params.get("access_token");
-      const refresh_token = params.get("refresh_token");
+      const fragment = fragmentIndex >= 0 ? url.slice(fragmentIndex + 1) : "";
+      const query =
+        queryIndex >= 0
+          ? url.slice(
+              queryIndex + 1,
+              fragmentIndex >= 0 ? fragmentIndex : undefined,
+            )
+          : "";
+      const combined = new URLSearchParams(
+        [query, fragment].filter(Boolean).join("&"),
+      );
+
+      // Path 2: token_hash flow — URL has ?token_hash=...&type=recovery
+      // Supabase's default email template uses this format.
+      const token_hash = combined.get("token_hash");
+      const otp_type = combined.get("type");
+      if (token_hash && otp_type === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: "recovery",
+        });
+        if (!error) {
+          // eslint-disable-next-line no-console
+          console.log("[RESET] verifyOtp recovery OK");
+          setPhase("ready");
+          return;
+        }
+        // eslint-disable-next-line no-console
+        console.log("[RESET] verifyOtp recovery error:", error.message);
+      }
+
+      // Path 3: implicit flow — URL fragment has access_token + refresh_token.
+      const access_token = combined.get("access_token");
+      const refresh_token = combined.get("refresh_token");
       if (access_token && refresh_token) {
         const { error } = await supabase.auth.setSession({
           access_token,
           refresh_token,
         });
         if (!error) {
+          // eslint-disable-next-line no-console
+          console.log("[RESET] setSession OK");
           setPhase("ready");
           return;
         }
+        // eslint-disable-next-line no-console
+        console.log("[RESET] setSession error:", error.message);
       }
+
+      // eslint-disable-next-line no-console
+      console.log("[RESET] no usable tokens in URL — marking expired");
       setPhase("expired");
     };
 
