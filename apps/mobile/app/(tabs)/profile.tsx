@@ -15,6 +15,9 @@ import { ProfileRow } from "@/src/features/profile/profile-row";
 import { EditNameSheet } from "@/src/features/profile/edit-name-sheet";
 import { EditGoalSheet } from "@/src/features/profile/edit-goal-sheet";
 import { EditLanguageSheet } from "@/src/features/profile/edit-language-sheet";
+import { SignInMethodsSheet } from "@/src/features/profile/sign-in-methods-sheet";
+import { ChangePasswordSheet } from "@/src/features/profile/change-password-sheet";
+import { useIdentities } from "@/src/features/auth/use-identities";
 import { showToast } from "@/src/lib/toast";
 import {
   EditorialText,
@@ -51,8 +54,14 @@ export default function ProfileScreen() {
   const nativeRef = useRef<BottomSheetModal>(null);
   const targetRef = useRef<BottomSheetModal>(null);
   const goalRef = useRef<BottomSheetModal>(null);
+  const signInMethodsRef = useRef<BottomSheetModal>(null);
+  const changePasswordRef = useRef<BottomSheetModal>(null);
+  const identities = useIdentities();
+  const hasEmailIdentity = identities.some((i) => i.provider === "email");
 
   if (!profile) return null;
+
+  const email = (profile as { email?: string }).email ?? "";
 
   const onSignOut = () => {
     Alert.alert("Sign out?", "You'll need to sign in again.", [
@@ -136,6 +145,13 @@ export default function ProfileScreen() {
               value={(profile as { email?: string }).email ?? ""}
               onPress={() => router.push("/(auth)/change-email")}
             />
+            {hasEmailIdentity ? (
+              <ProfileRow
+                label="Change password"
+                value="•••••••"
+                onPress={() => changePasswordRef.current?.present()}
+              />
+            ) : null}
             <ProfileRow
               label="Native language"
               value={langDisplay(profile.native_lang)}
@@ -145,6 +161,11 @@ export default function ProfileScreen() {
               label="Learning"
               value={langDisplay(profile.target_lang)}
               onPress={() => targetRef.current?.present()}
+            />
+            <ProfileRow
+              label="Sign-in methods"
+              value="Manage"
+              onPress={() => signInMethodsRef.current?.present()}
             />
             <ProfileRow
               label="Daily goal"
@@ -219,6 +240,10 @@ export default function ProfileScreen() {
               await update.mutateAsync({ daily_goal_minutes });
             }}
           />
+          <SignInMethodsSheet ref={signInMethodsRef} />
+          {hasEmailIdentity ? (
+            <ChangePasswordSheet ref={changePasswordRef} email={email} />
+          ) : null}
         </ScrollView>
       </Screen>
     </BottomSheetModalProvider>

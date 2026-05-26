@@ -11,19 +11,19 @@ export const type = {
   displayXl: {
     fontFamily: font.display,
     fontSize: 36,
-    lineHeight: 36,
+    lineHeight: 44,
     letterSpacing: -0.5,
   },
   displayLg: {
     fontFamily: font.display,
     fontSize: 28,
-    lineHeight: 30,
+    lineHeight: 36,
     letterSpacing: -0.4,
   },
   displayMd: {
     fontFamily: font.display,
     fontSize: 22,
-    lineHeight: 26,
+    lineHeight: 28,
     letterSpacing: -0.3,
   },
   italic: { fontFamily: font.displayItalic, fontStyle: "italic" as const },

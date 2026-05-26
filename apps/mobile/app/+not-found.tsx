@@ -23,10 +23,7 @@ export default function NotFound() {
       >
         We couldn&apos;t find what you were looking for.
       </EditorialText>
-      <Pressable
-        style={styles.cta}
-        onPress={() => router.replace("/(tabs)/home")}
-      >
+      <Pressable style={styles.cta} onPress={() => router.replace("/")}>
         <EditorialText kind="bodyLg" color={palette.peach}>
           Take me home
         </EditorialText>
