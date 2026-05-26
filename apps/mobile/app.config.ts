@@ -1,9 +1,27 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  if (!process.env.GOOGLE_IOS_URL_SCHEME) {
+  const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
+
+  // EAS's local pre-flight evaluates this file without loading .env; only the
+  // remote build VM gets env vars from eas.json. Skip the Google plugin when
+  // the env var is missing so pre-flight doesn't crash. The plugin is included
+  // on actual builds (local --local or remote) where eas.json env applies.
+  const plugins: ExpoConfig["plugins"] = [
+    "expo-router",
+    "expo-secure-store",
+    "expo-notifications",
+    "expo-audio",
+    "expo-apple-authentication",
+  ];
+  if (googleIosUrlScheme) {
+    plugins.push([
+      "@react-native-google-signin/google-signin",
+      { iosUrlScheme: googleIosUrlScheme },
+    ]);
+  } else {
     console.warn(
-      "[app.config] GOOGLE_IOS_URL_SCHEME is not set — iOS Google sign-in will not return to the app",
+      "[app.config] GOOGLE_IOS_URL_SCHEME is not set — Google sign-in plugin skipped (expected during EAS pre-flight; real builds set it via eas.json)",
     );
   }
 
@@ -42,20 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         backgroundColor: "#fde7d1",
       },
     },
-    plugins: [
-      "expo-router",
-      "expo-secure-store",
-      "expo-notifications",
-      "expo-audio",
-      "expo-apple-authentication",
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          // build-time only — not forwarded to JS via extra
-          iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME,
-        },
-      ],
-    ],
+    plugins,
     extra: {
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
