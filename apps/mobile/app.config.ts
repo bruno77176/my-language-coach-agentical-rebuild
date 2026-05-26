@@ -43,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "6",
+      buildNumber: "7",
       usesAppleSignIn: true,
       infoPlist: {
         NSMicrophoneUsageDescription:
@@ -53,7 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 40,
+      versionCode: 41,
       permissions: ["RECORD_AUDIO"],
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
