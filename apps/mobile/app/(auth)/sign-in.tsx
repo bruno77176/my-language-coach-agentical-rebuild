@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { SocialButton } from "@/src/features/auth/social-button";
 import {
   signInWithGoogle,
@@ -130,12 +131,12 @@ export default function SignInScreen() {
       </EditorialText>
 
       {Platform.OS === "ios" ? (
-        <SocialButton
-          label="Continue with Apple"
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          cornerRadius={radius.lg}
+          style={styles.appleButton}
           onPress={onApple}
-          busy={appleBusy}
-          disabled={googleBusy || busy}
-          variant="apple"
         />
       ) : null}
       <SocialButton
@@ -143,7 +144,6 @@ export default function SignInScreen() {
         onPress={onGoogle}
         busy={googleBusy}
         disabled={appleBusy || busy}
-        variant="google"
       />
       <View style={styles.dividerRow}>
         <View style={styles.dividerLine} />
@@ -291,6 +291,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  appleButton: {
+    height: 48,
+    width: "100%",
   },
   dividerRow: {
     flexDirection: "row",

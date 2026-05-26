@@ -58,9 +58,10 @@ export default function ProfileScreen() {
   const changePasswordRef = useRef<BottomSheetModal>(null);
   const identities = useIdentities();
   const hasEmailIdentity = identities.some((i) => i.provider === "email");
-  const email = (profile as { email?: string }).email ?? "";
 
   if (!profile) return null;
+
+  const email = (profile as { email?: string }).email ?? "";
 
   const onSignOut = () => {
     Alert.alert("Sign out?", "You'll need to sign in again.", [
