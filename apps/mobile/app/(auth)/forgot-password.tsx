@@ -15,7 +15,6 @@ import {
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
 
   const submit = async () => {
     const trimmedEmail = email.trim().toLowerCase();
@@ -24,43 +23,23 @@ export default function ForgotPasswordScreen() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-      redirectTo: "mylanguagecoach://reset-password",
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail);
     setBusy(false);
     if (error) {
       // eslint-disable-next-line no-console
       console.log("[FORGOT] resetPasswordForEmail error:", error.message);
-      // Rate-limit errors don't reveal whether the email exists, so surface
-      // them. Other errors stay generic to prevent enumeration.
       if (/rate|too many|try again/i.test(error.message)) {
         showToast("Too many requests. Wait a minute before trying again.");
         return;
       }
     }
-    // Always show success otherwise — prevents email enumeration.
-    setSent(true);
+    // Navigate to code-entry screen regardless of whether email exists
+    // (prevents enumeration; user types code from email if real, or gives up).
+    router.push({
+      pathname: "/(auth)/reset-password",
+      params: { email: trimmedEmail },
+    });
   };
-
-  if (sent) {
-    return (
-      <View style={styles.container}>
-        <EditorialText kind="displayLg">Check your inbox.</EditorialText>
-        <EditorialText kind="bodyMd" color={palette.inkSoft}>
-          If that email is registered, we&apos;ve sent a reset link. It expires
-          in about an hour.
-        </EditorialText>
-        <Pressable
-          onPress={() => router.replace("/(auth)/sign-in")}
-          style={styles.button}
-        >
-          <EditorialText kind="bodyLg" color={palette.peach}>
-            Back to sign in
-          </EditorialText>
-        </Pressable>
-      </View>
-    );
-  }
 
   const isDisabled = busy || !email.trim();
 
@@ -68,8 +47,8 @@ export default function ForgotPasswordScreen() {
     <View style={styles.container}>
       <EditorialText kind="displayLg">Forgot password?</EditorialText>
       <EditorialText kind="bodyMd" color={palette.inkSoft}>
-        Enter the email you signed up with. We&apos;ll send a link to set a new
-        password.
+        Enter the email you signed up with. We&apos;ll send a 6-digit code to
+        reset your password.
       </EditorialText>
 
       <GlassCard padding="md" style={styles.inputCard}>
@@ -98,7 +77,7 @@ export default function ForgotPasswordScreen() {
         style={[styles.button, isDisabled && styles.buttonDisabled]}
       >
         <EditorialText kind="bodyLg" color={palette.peach}>
-          {busy ? "Sending…" : "Send reset link"}
+          {busy ? "Sending…" : "Send reset code"}
         </EditorialText>
       </Pressable>
 
