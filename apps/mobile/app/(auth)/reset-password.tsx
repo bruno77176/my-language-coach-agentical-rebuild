@@ -26,8 +26,8 @@ export default function ResetPasswordScreen() {
       router.replace("/(auth)/forgot-password");
       return;
     }
-    if (code.length !== 6) {
-      showToast("Enter the 6-digit code from your email.");
+    if (code.length < 4) {
+      showToast("Enter the code from your email.");
       return;
     }
     if (password.length < 6) {
@@ -68,15 +68,15 @@ export default function ResetPasswordScreen() {
   };
 
   const isDisabled =
-    busy || code.length !== 6 || password.length < 6 || password !== confirm;
+    busy || code.length < 4 || password.length < 6 || password !== confirm;
 
   return (
     <View style={styles.container}>
       <EditorialText kind="displayLg">Enter the code.</EditorialText>
       <EditorialText kind="bodyMd" color={palette.inkSoft}>
         {email
-          ? `We sent a 6-digit code to ${email}. Check your inbox.`
-          : "Check your inbox for the 6-digit reset code."}
+          ? `We sent a code to ${email}. Check your inbox.`
+          : "Check your inbox for the reset code."}
       </EditorialText>
 
       <GlassCard padding="md" style={styles.inputCard}>
@@ -85,14 +85,14 @@ export default function ResetPasswordScreen() {
           color={palette.inkSoft}
           style={styles.fieldLabel}
         >
-          6-digit code
+          Verification code
         </EditorialText>
         <TextInput
           value={code}
-          onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
-          placeholder="000000"
+          onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 10))}
+          placeholder="Code from email"
           keyboardType="number-pad"
-          maxLength={6}
+          maxLength={10}
           autoComplete="one-time-code"
           textContentType="oneTimeCode"
           style={[typeTokens.bodyLg, styles.codeInput]}
