@@ -12,7 +12,13 @@ export type Filters = {
 // ---- helpers ----
 
 function buildVariableWhere(f: Filters): SQL {
-  const parts: SQL[] = [sql`day >= ${f.from}`, sql`day < ${f.to}`];
+  // postgres-js can't bind a JS Date directly when drizzle hands params through
+  // db.execute(sql`...`) — it ends up at Buffer.byteLength which rejects Date.
+  // Serialize to ISO so the driver gets a plain string and PG casts it back.
+  const parts: SQL[] = [
+    sql`day >= ${f.from.toISOString()}`,
+    sql`day < ${f.to.toISOString()}`,
+  ];
   if (f.platform) parts.push(sql`platform = ${f.platform}`);
   if (f.service) parts.push(sql`provider = ${f.service}`);
   if (f.userId) parts.push(sql`user_id = ${f.userId}`);
@@ -135,8 +141,8 @@ export async function getOverview(db: Database, f: Filters): Promise<Overview> {
     SELECT id, service, amount_usd::text, period, started_on, ended_on
     FROM fixed_costs
     WHERE ${f.service ? sql`service = ${f.service} AND` : sql``}
-          started_on < ${f.to}
-      AND (ended_on IS NULL OR ended_on > ${f.from})
+          started_on < ${f.to.toISOString()}
+      AND (ended_on IS NULL OR ended_on > ${f.from.toISOString()})
   `)) as unknown as Array<{
     id: string;
     service: string;
