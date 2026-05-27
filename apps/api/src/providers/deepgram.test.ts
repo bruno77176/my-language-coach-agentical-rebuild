@@ -78,7 +78,7 @@ describe("transcribeAudio", () => {
     );
   });
 
-  it("does not fire onUsage when audio is silent", async () => {
+  it("onUsage fires even on AUDIO_SILENT because Deepgram still bills for submitted audio", async () => {
     const onUsage = vi.fn();
     const fakeClient = {
       listen: {
@@ -101,7 +101,14 @@ describe("transcribeAudio", () => {
         onUsage,
       }),
     ).rejects.toMatchObject({ code: "AUDIO_SILENT" });
-    expect(onUsage).not.toHaveBeenCalled();
+    expect(onUsage).toHaveBeenCalledTimes(1);
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "deepgram",
+        operation: "transcribe:nova-3",
+        seconds: 1.0,
+      }),
+    );
   });
 
   it("throws AUDIO_SILENT when transcript is empty", async () => {

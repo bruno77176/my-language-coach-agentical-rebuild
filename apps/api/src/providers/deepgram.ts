@@ -73,14 +73,9 @@ export async function transcribeAudio(
     "";
   const durationSeconds = syncResult.metadata?.duration ?? 0;
 
-  if (!text) {
-    throw new ProviderError(
-      "AUDIO_SILENT",
-      422,
-      "Transcript was empty — likely silent audio.",
-    );
-  }
-
+  // Record usage BEFORE the silent-audio check: Deepgram bills for the audio
+  // duration regardless of whether the transcript is empty, so skipping
+  // recordUsage on AUDIO_SILENT would under-report our actual spend.
   if (input.onUsage) {
     void Promise.resolve(
       input.onUsage({
@@ -91,6 +86,14 @@ export async function transcribeAudio(
     ).catch(() => {
       // fire-and-forget; recordUsage reports to Sentry on its own
     });
+  }
+
+  if (!text) {
+    throw new ProviderError(
+      "AUDIO_SILENT",
+      422,
+      "Transcript was empty — likely silent audio.",
+    );
   }
 
   return { text, durationSeconds };

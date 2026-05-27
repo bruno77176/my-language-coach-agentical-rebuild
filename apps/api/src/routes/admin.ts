@@ -12,6 +12,7 @@ import {
   getTimeseries,
   type Filters,
 } from "../lib/cost-aggregation";
+import { __setRateCardCache } from "../lib/cost-recording";
 
 const FiltersSchema = z.object({
   from: z.string().refine((s) => !isNaN(Date.parse(s)), "invalid from"),
@@ -122,6 +123,9 @@ export function createAdminRoutes(deps: {
         (${body.provider}, ${body.operation}, ${body.unitType},
          ${body.pricePerUnit}, NOW(), ${body.notes ?? null})
     `);
+    // Bust the in-process rate-card cache so the new price takes effect on the
+    // next provider call instead of waiting for the 5-minute TTL.
+    __setRateCardCache(new Map());
     return c.json({ ok: true }, 201);
   });
 
@@ -146,14 +150,21 @@ export function createAdminRoutes(deps: {
 
   routes.patch("/fixed-costs/:id", async (c) => {
     const id = c.req.param("id");
-    const body = FixedCostInput.partial().parse(await c.req.json());
+    const raw = await c.req.json();
+    const body = FixedCostInput.partial().parse(raw);
+    // Discriminate "field omitted" (preserve existing value) from "explicitly
+    // sent as null" (clear it). Object-spread / `?? null` collapses both into
+    // null and so would silently wipe ended_on whenever the client PATCHes
+    // unrelated fields. Use hasOwnProperty on the raw payload.
+    const hasEndedOn = Object.prototype.hasOwnProperty.call(raw, "endedOn");
+    const endedOnSql = hasEndedOn ? sql`${body.endedOn ?? null}` : sql`ended_on`;
     await deps.db.execute(sql`
       UPDATE fixed_costs SET
         service     = COALESCE(${body.service ?? null},   service),
         amount_usd  = COALESCE(${body.amountUsd ?? null}, amount_usd),
         period      = COALESCE(${body.period ?? null},    period),
         started_on  = COALESCE(${body.startedOn ?? null}, started_on),
-        ended_on    = ${body.endedOn ?? null},
+        ended_on    = ${endedOnSql},
         notes       = COALESCE(${body.notes ?? null},     notes)
       WHERE id = ${id}
     `);

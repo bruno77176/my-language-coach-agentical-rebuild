@@ -61,10 +61,11 @@ const SEEDS: Seed[] = [
     pricePerUnit: "0.0000072", // $0.0043/min for nova-3 pay-as-you-go ≈ $0.0000717/s
     // NOTE: verify against your billing — Deepgram tiers change.
   },
-  // ElevenLabs TTS (when re-enabled)
+  // ElevenLabs TTS (when re-enabled). Operation name must match the provider's
+  // active default in providers/elevenlabs.ts so recordUsage finds a rate card.
   {
     provider: "elevenlabs",
-    operation: "tts:eleven_multilingual_v2",
+    operation: "tts:eleven_flash_v2_5",
     unitType: "characters",
     pricePerUnit: "0.00033", // ~$0.33/1k chars on Creator tier; verify
   },
