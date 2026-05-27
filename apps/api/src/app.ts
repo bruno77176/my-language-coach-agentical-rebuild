@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { Env } from "./env";
 import type { Database } from "./db";
 import { createDb } from "./db";
@@ -58,6 +59,26 @@ export function createApp(
   app.onError(errorHandler(reportError));
 
   app.route("/health", createHealthRoutes(db));
+
+  // CORS for the admin app (Vercel-hosted Next.js). Applied to /admin/* BEFORE
+  // the route mounts so preflight requests and credentialed cross-origin calls
+  // pass before requireAdmin runs. Allowed origins come from a comma-separated
+  // env var so we don't hard-code Vercel domains.
+  const adminAllowedOrigins = (env.ADMIN_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  app.use(
+    "/admin/*",
+    cors({
+      origin: (origin) =>
+        origin && adminAllowedOrigins.includes(origin) ? origin : null,
+      credentials: true,
+      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      allowHeaders: ["Authorization", "Content-Type", "X-Cron-Secret"],
+    }),
+  );
 
   // Internal admin routes called by Supabase pg_cron. MUST be mounted BEFORE
   // the general `/admin` route group so the require-admin middleware on the

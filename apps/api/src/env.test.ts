@@ -12,6 +12,7 @@ describe("env", () => {
     delete process.env.DEEPGRAM_API_KEY;
     delete process.env.ELEVENLABS_API_KEY;
     delete process.env.INTERNAL_CRON_SECRET;
+    delete process.env.ADMIN_ALLOWED_ORIGINS;
   });
 
   it("throws a clear error when required vars are missing", async () => {
