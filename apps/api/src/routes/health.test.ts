@@ -13,6 +13,9 @@ const baseEnv = {
   OPENAI_API_KEY: "openai-stub",
   DEEPGRAM_API_KEY: "deepgram-stub",
   ELEVENLABS_API_KEY: "elevenlabs-stub",
+  ADMIN_USER_IDS: "",
+  ADMIN_ALLOWED_ORIGINS: "",
+  INTERNAL_CRON_SECRET: "test-cron-secret-1234567890",
 };
 
 describe("GET /health", () => {

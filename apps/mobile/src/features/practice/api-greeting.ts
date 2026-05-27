@@ -1,4 +1,8 @@
-import { API_BASE_URL, authHeader } from "@/src/lib/api-client";
+import {
+  API_BASE_URL,
+  authHeader,
+  clientPlatformHeader,
+} from "@/src/lib/api-client";
 
 export async function fetchGreetingAudio(input: {
   lang: string;
@@ -9,6 +13,7 @@ export async function fetchGreetingAudio(input: {
     headers: {
       authorization: await authHeader(),
       "content-type": "application/json",
+      ...clientPlatformHeader(),
     },
     body: JSON.stringify(input),
   });

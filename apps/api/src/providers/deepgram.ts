@@ -1,10 +1,12 @@
 import type { DeepgramClient } from "@deepgram/sdk";
 import { DeepgramClient as DeepgramClientCtor } from "@deepgram/sdk";
 import type { Env } from "../env";
+import type { OnUsage } from "./usage";
 
 export type TranscribeInput = {
   audioBuffer: Buffer;
   languageCode: string; // ISO 639-1
+  onUsage?: OnUsage;
 };
 
 export type TranscribeResult = {
@@ -70,6 +72,21 @@ export async function transcribeAudio(
     syncResult.results?.channels?.[0]?.alternatives?.[0]?.transcript?.trim() ??
     "";
   const durationSeconds = syncResult.metadata?.duration ?? 0;
+
+  // Record usage BEFORE the silent-audio check: Deepgram bills for the audio
+  // duration regardless of whether the transcript is empty, so skipping
+  // recordUsage on AUDIO_SILENT would under-report our actual spend.
+  if (input.onUsage) {
+    void Promise.resolve(
+      input.onUsage({
+        provider: "deepgram",
+        operation: "transcribe:nova-3",
+        seconds: durationSeconds,
+      }),
+    ).catch(() => {
+      // fire-and-forget; recordUsage reports to Sentry on its own
+    });
+  }
 
   if (!text) {
     throw new ProviderError(

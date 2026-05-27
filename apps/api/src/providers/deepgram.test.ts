@@ -47,6 +47,70 @@ describe("transcribeAudio", () => {
     ).rejects.toMatchObject({ code: "STT_PROVIDER_FAILURE" });
   });
 
+  it("calls onUsage with seconds after successful transcription", async () => {
+    const onUsage = vi.fn();
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi.fn().mockResolvedValue({
+              results: {
+                channels: [{ alternatives: [{ transcript: "Hi" }] }],
+              },
+              metadata: { duration: 2.5 },
+            }),
+          },
+        },
+      },
+    };
+    await transcribeAudio(fakeClient as never, {
+      audioBuffer: Buffer.from("fake"),
+      languageCode: "en",
+      onUsage,
+    });
+    expect(onUsage).toHaveBeenCalledTimes(1);
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "deepgram",
+        operation: "transcribe:nova-3",
+        seconds: 2.5,
+      }),
+    );
+  });
+
+  it("onUsage fires even on AUDIO_SILENT because Deepgram still bills for submitted audio", async () => {
+    const onUsage = vi.fn();
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi.fn().mockResolvedValue({
+              results: {
+                channels: [{ alternatives: [{ transcript: "" }] }],
+              },
+              metadata: { duration: 1.0 },
+            }),
+          },
+        },
+      },
+    };
+    await expect(
+      transcribeAudio(fakeClient as never, {
+        audioBuffer: Buffer.from("x"),
+        languageCode: "en",
+        onUsage,
+      }),
+    ).rejects.toMatchObject({ code: "AUDIO_SILENT" });
+    expect(onUsage).toHaveBeenCalledTimes(1);
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "deepgram",
+        operation: "transcribe:nova-3",
+        seconds: 1.0,
+      }),
+    );
+  });
+
   it("throws AUDIO_SILENT when transcript is empty", async () => {
     const fakeClient = {
       listen: {
@@ -68,5 +132,30 @@ describe("transcribeAudio", () => {
         languageCode: "en",
       }),
     ).rejects.toMatchObject({ code: "AUDIO_SILENT" });
+  });
+
+  it("onUsage failure does not break transcribeAudio", async () => {
+    const onUsage = vi.fn().mockRejectedValue(new Error("boom"));
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi.fn().mockResolvedValue({
+              results: {
+                channels: [{ alternatives: [{ transcript: "Hi" }] }],
+              },
+              metadata: { duration: 2.5 },
+            }),
+          },
+        },
+      },
+    };
+    const result = await transcribeAudio(fakeClient as never, {
+      audioBuffer: Buffer.from("fake"),
+      languageCode: "en",
+      onUsage,
+    });
+    expect(result.text).toBe("Hi");
+    expect(result.durationSeconds).toBe(2.5);
   });
 });

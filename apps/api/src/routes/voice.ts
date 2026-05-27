@@ -16,6 +16,7 @@ import type {
 import { voiceIdForLanguage } from "../providers/voice-map";
 import { buildCoachSystemPrompt } from "@language-coach/shared";
 import { SentenceBuffer } from "../lib/sentence-buffer";
+import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
 export type SynthesizeSpeechFn = (
   input: SynthesizeInput,
@@ -79,6 +80,12 @@ export function createVoiceRoutes(deps: VoiceDeps) {
   routes.post("/sessions/:id/turns", async (c) => {
     const userId = c.get("userId");
     const conversationId = c.req.param("id");
+    const platform = platformFromHeader(c.req.header("X-Client-Platform"));
+    const onUsage = makeOnUsage(deps.db, {
+      userId,
+      platform,
+      conversationId,
+    });
 
     // Load conversation + verify ownership.
     const conversation = await deps.db.query.conversations.findFirst({
@@ -159,6 +166,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         const stt = await deps.transcribeAudio({
           audioBuffer,
           languageCode: conversation.language,
+          onUsage,
         });
         await stream.writeSSE({
           event: "transcription",
@@ -220,6 +228,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         const gptStream = deps.streamChatCompletion({
           messages: promptMessages,
           model: "gpt-4o-mini",
+          onUsage,
         });
 
         const sentenceBuf = new SentenceBuffer();
@@ -232,7 +241,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         async function emitChunk(text: string, idx: number): Promise<void> {
           let audio: SynthesizeResult;
           try {
-            audio = await deps.synthesizeSpeech({ text, voiceId });
+            audio = await deps.synthesizeSpeech({ text, voiceId, onUsage });
           } catch {
             await stream.writeSSE({
               event: "error",

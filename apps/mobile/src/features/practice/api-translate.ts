@@ -1,4 +1,8 @@
-import { API_BASE_URL, authHeader } from "@/src/lib/api-client";
+import {
+  API_BASE_URL,
+  authHeader,
+  clientPlatformHeader,
+} from "@/src/lib/api-client";
 
 export async function translateMessageApi(
   messageId: string,
@@ -7,7 +11,10 @@ export async function translateMessageApi(
     `${API_BASE_URL}/v1/messages/${messageId}/translate`,
     {
       method: "POST",
-      headers: { authorization: await authHeader() },
+      headers: {
+        authorization: await authHeader(),
+        ...clientPlatformHeader(),
+      },
     },
   );
   if (!res.ok) {

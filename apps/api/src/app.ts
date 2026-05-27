@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { Env } from "./env";
 import type { Database } from "./db";
 import { createDb } from "./db";
@@ -6,9 +7,12 @@ import { createLogger, type Logger } from "./lib/logger";
 import { reportError } from "./lib/sentry";
 import { createLoggingMiddleware } from "./middleware/logging";
 import { errorHandler } from "./middleware/error";
-import { createAuthMiddleware } from "./middleware/auth";
+import { createAuthMiddleware, type Verifier } from "./middleware/auth";
 import { createSupabaseVerifier } from "./lib/supabase-verifier";
+import { parseAdminIds } from "./lib/require-admin";
 import { createHealthRoutes } from "./routes/health";
+import { createAdminRoutes } from "./routes/admin";
+import { createAdminInternalRoutes } from "./routes/admin-internal";
 import { createVoiceRoutes } from "./routes/voice";
 import { createDeepgram, transcribeAudio } from "./providers/deepgram";
 import {
@@ -35,9 +39,14 @@ export type AppEnv = {
   };
 };
 
-export function createApp(env: Env, db: Database = createDb(env)) {
+export function createApp(
+  env: Env,
+  db: Database = createDb(env),
+  overrides?: { verifier?: Verifier },
+) {
   const app = new Hono<AppEnv>();
   const logger = createLogger(env);
+  const verifier = overrides?.verifier ?? createSupabaseVerifier(env);
 
   app.use("*", async (c, next) => {
     c.set("env", env);
@@ -51,8 +60,48 @@ export function createApp(env: Env, db: Database = createDb(env)) {
 
   app.route("/health", createHealthRoutes(db));
 
+  // CORS for the admin app (Vercel-hosted Next.js). Applied to /admin/* BEFORE
+  // the route mounts so preflight requests and credentialed cross-origin calls
+  // pass before requireAdmin runs. Allowed origins come from a comma-separated
+  // env var so we don't hard-code Vercel domains.
+  const adminAllowedOrigins = (env.ADMIN_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  app.use(
+    "/admin/*",
+    cors({
+      origin: (origin) =>
+        origin && adminAllowedOrigins.includes(origin) ? origin : null,
+      credentials: true,
+      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      allowHeaders: ["Authorization", "Content-Type", "X-Cron-Secret"],
+    }),
+  );
+
+  // Internal admin routes called by Supabase pg_cron. MUST be mounted BEFORE
+  // the general `/admin` route group so the require-admin middleware on the
+  // latter doesn't intercept `/admin/internal/*` calls. Hono matches routes
+  // in registration order; the more-specific path goes first.
+  app.route(
+    "/admin/internal",
+    createAdminInternalRoutes({ db, cronSecret: env.INTERNAL_CRON_SECRET }),
+  );
+
+  // Admin routes: /admin/* requires admin via Supabase JWT + ADMIN_USER_IDS allow-list.
+  // Mounted outside the /v1/* auth middleware so the admin middleware is the only auth applied.
+  app.route(
+    "/admin",
+    createAdminRoutes({
+      db,
+      adminUserIds: parseAdminIds(env.ADMIN_USER_IDS),
+      verifier,
+    }),
+  );
+
   // Auth-required routes: /v1/* requires a valid Supabase JWT.
-  const auth = createAuthMiddleware(createSupabaseVerifier(env));
+  const auth = createAuthMiddleware(verifier);
   app.use("/v1/*", auth);
 
   const deepgram = createDeepgram(env);
@@ -88,6 +137,7 @@ export function createApp(env: Env, db: Database = createDb(env)) {
   app.route(
     "/v1/voice/greeting",
     createVoiceGreetingRoutes({
+      db,
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadGreeting: (input) => uploadGreetingAudio(storage, input),
       getCachedGreetingUrl: (input) => getGreetingAudioUrl(storage, input),

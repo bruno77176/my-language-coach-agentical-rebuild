@@ -2,10 +2,14 @@ import { createHash } from "node:crypto";
 import { Hono } from "hono";
 import { z } from "zod";
 import { buildGreeting, type SupportedLang } from "@language-coach/shared";
+import type { Database } from "../db";
+import type { OnUsage } from "../providers/usage";
+import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
 export type SynthesizeGreetingFn = (input: {
   text: string;
   voiceId: string;
+  onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
 export type UploadGreetingFn = (input: {
@@ -21,6 +25,7 @@ export type GetCachedGreetingUrlFn = (input: {
 }) => Promise<string | null>;
 
 export type VoiceGreetingDeps = {
+  db: Database;
   synthesizeSpeech: SynthesizeGreetingFn;
   uploadGreeting: UploadGreetingFn;
   getCachedGreetingUrl: GetCachedGreetingUrlFn;
@@ -42,6 +47,8 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
   const app = new Hono<{ Variables: { userId: string } }>();
 
   app.post("/audio", async (c) => {
+    const userId = c.get("userId");
+    const platform = platformFromHeader(c.req.header("X-Client-Platform"));
     const parsed = BodySchema.safeParse(await c.req.json().catch(() => ({})));
     if (!parsed.success) {
       return c.json({ error: { code: "BAD_REQUEST" } }, 400);
@@ -55,10 +62,15 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
     }
 
     const text = buildGreeting(lang as SupportedLang, name);
+    const onUsage = makeOnUsage(deps.db, {
+      userId: userId ?? null,
+      platform,
+      conversationId: null,
+    });
 
     let audio: { audioBuffer: Buffer; contentType: string };
     try {
-      audio = await deps.synthesizeSpeech({ text, voiceId: "nova" });
+      audio = await deps.synthesizeSpeech({ text, voiceId: "nova", onUsage });
     } catch {
       return c.json({ error: { code: "TTS_PROVIDER_FAILURE" } }, 503);
     }
