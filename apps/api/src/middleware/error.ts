@@ -19,8 +19,6 @@ export function errorHandler(report: ReportError): ErrorHandler {
         400,
       );
     }
-    // TEMP DEBUG (revert before merge): surface real stack to Fly stdout.
-    console.error("[error-handler]", c.req.method, c.req.path, err);
     report(err);
     return c.json(
       {
