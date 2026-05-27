@@ -21,7 +21,7 @@ export type RateCardRow = {
 
 // In-process cache (5 min TTL). Rate cards change rarely; per-call DB lookup is
 // wasted work. Cache key includes (provider, operation, unitType).
-type CacheEntry = { card: RateCardRow | null; cachedAt: number };
+type CacheEntry = { card: RateCardRow; cachedAt: number };
 const CACHE_TTL_MS = 5 * 60 * 1000;
 let rateCardCache = new Map<string, CacheEntry>();
 
@@ -64,18 +64,17 @@ export async function lookupRateCard(
   }>;
 
   const row = rows[0];
-  const card: RateCardRow | null = row
-    ? {
-        id: row.id,
-        provider: row.provider,
-        operation: row.operation,
-        unitType: row.unit_type,
-        pricePerUnit: row.price_per_unit,
-        effectiveFrom: row.effective_from,
-        effectiveTo: row.effective_to,
-      }
-    : null;
+  if (!row) return null; // negative result not cached — admin edits should take effect immediately
 
+  const card: RateCardRow = {
+    id: row.id,
+    provider: row.provider,
+    operation: row.operation,
+    unitType: row.unit_type,
+    pricePerUnit: row.price_per_unit,
+    effectiveFrom: row.effective_from,
+    effectiveTo: row.effective_to,
+  };
   rateCardCache.set(key, { card, cachedAt: Date.now() });
   return card;
 }
@@ -130,7 +129,7 @@ export async function recordUsage(
          ${input.meta ? JSON.stringify(input.meta) : null}::jsonb)
     `);
   } catch (err) {
-    reportError(err as Error, {
+    reportError(err, {
       where: "recordUsage",
       input: { provider: input.provider, operation: input.operation },
     });

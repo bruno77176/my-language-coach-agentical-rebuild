@@ -45,6 +45,25 @@ describe("lookupRateCard", () => {
     });
     expect(card).toBeNull();
   });
+
+  it("does not cache negative results — re-queries on the next call", async () => {
+    const db = {
+      execute: vi.fn().mockResolvedValue([]),
+    } as unknown as FakeDb;
+    await lookupRateCard(db as unknown as Database, {
+      provider: "openai",
+      operation: "missing",
+      unitType: "input_tokens",
+      at: new Date(),
+    });
+    await lookupRateCard(db as unknown as Database, {
+      provider: "openai",
+      operation: "missing",
+      unitType: "input_tokens",
+      at: new Date(),
+    });
+    expect(db.execute).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("recordUsage", () => {
