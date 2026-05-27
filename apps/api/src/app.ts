@@ -11,6 +11,7 @@ import { createSupabaseVerifier } from "./lib/supabase-verifier";
 import { parseAdminIds } from "./lib/require-admin";
 import { createHealthRoutes } from "./routes/health";
 import { createAdminRoutes } from "./routes/admin";
+import { createAdminInternalRoutes } from "./routes/admin-internal";
 import { createVoiceRoutes } from "./routes/voice";
 import { createDeepgram, transcribeAudio } from "./providers/deepgram";
 import {
@@ -57,6 +58,15 @@ export function createApp(
   app.onError(errorHandler(reportError));
 
   app.route("/health", createHealthRoutes(db));
+
+  // Internal admin routes called by Supabase pg_cron. MUST be mounted BEFORE
+  // the general `/admin` route group so the require-admin middleware on the
+  // latter doesn't intercept `/admin/internal/*` calls. Hono matches routes
+  // in registration order; the more-specific path goes first.
+  app.route(
+    "/admin/internal",
+    createAdminInternalRoutes({ db, cronSecret: env.INTERNAL_CRON_SECRET }),
+  );
 
   // Admin routes: /admin/* requires admin via Supabase JWT + ADMIN_USER_IDS allow-list.
   // Mounted outside the /v1/* auth middleware so the admin middleware is the only auth applied.

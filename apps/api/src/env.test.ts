@@ -11,6 +11,7 @@ describe("env", () => {
     delete process.env.OPENAI_API_KEY;
     delete process.env.DEEPGRAM_API_KEY;
     delete process.env.ELEVENLABS_API_KEY;
+    delete process.env.INTERNAL_CRON_SECRET;
   });
 
   it("throws a clear error when required vars are missing", async () => {
@@ -30,6 +31,7 @@ describe("env", () => {
     process.env.OPENAI_API_KEY = "openai-key-stub";
     process.env.DEEPGRAM_API_KEY = "deepgram-key-stub";
     process.env.ELEVENLABS_API_KEY = "elevenlabs-key-stub";
+    process.env.INTERNAL_CRON_SECRET = "test-cron-secret-1234567890";
 
     const { loadEnv } = await import("./env");
     const env = loadEnv();
@@ -46,6 +48,7 @@ describe("env", () => {
     process.env.OPENAI_API_KEY = "openai-key-stub";
     process.env.DEEPGRAM_API_KEY = "deepgram-key-stub";
     process.env.ELEVENLABS_API_KEY = "elevenlabs-key-stub";
+    process.env.INTERNAL_CRON_SECRET = "test-cron-secret-1234567890";
 
     const { loadEnv } = await import("./env");
     const env = loadEnv();

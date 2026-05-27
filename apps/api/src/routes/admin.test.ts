@@ -14,6 +14,7 @@ const baseEnv = {
   DEEPGRAM_API_KEY: "d",
   ELEVENLABS_API_KEY: "e",
   ADMIN_USER_IDS: "admin-1",
+  INTERNAL_CRON_SECRET: "test-cron-secret-1234567890",
 };
 
 describe("GET /admin/overview", () => {
