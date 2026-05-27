@@ -1,6 +1,7 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
+import type { OnUsage } from "./usage";
 
 export function createElevenLabs(env: Env): ElevenLabsClient {
   return new ElevenLabsClient({ apiKey: env.ELEVENLABS_API_KEY });
@@ -10,6 +11,7 @@ export type SynthesizeInput = {
   text: string;
   voiceId: string;
   modelId?: string;
+  onUsage?: OnUsage;
 };
 
 export type SynthesizeResult = {
@@ -50,6 +52,18 @@ export async function synthesizeSpeech(
       503,
       `ElevenLabs stream error: ${(err as Error).message}`,
     );
+  }
+
+  if (input.onUsage) {
+    void Promise.resolve(
+      input.onUsage({
+        provider: "elevenlabs",
+        operation: `tts:${input.modelId ?? "eleven_flash_v2_5"}`,
+        characters: input.text.length,
+      }),
+    ).catch(() => {
+      // fire-and-forget; recordUsage reports to Sentry on its own
+    });
   }
 
   return {

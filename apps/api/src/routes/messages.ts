@@ -2,13 +2,20 @@ import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import type { Database } from "../db";
 import { messages } from "../db/schema/messages";
+import type { OnUsage } from "../providers/usage";
+import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
-export type TranslateInput = { text: string; targetLanguageCode: string };
+export type TranslateInput = {
+  text: string;
+  targetLanguageCode: string;
+  onUsage?: OnUsage;
+};
 export type TranslateFn = (input: TranslateInput) => Promise<string>;
 
 export type SynthesizeSpeechFn = (input: {
   text: string;
   voiceId: string;
+  onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
 export type UploadCoachAudioChunkFn = (input: {
@@ -41,6 +48,7 @@ export function createMessagesRoutes(deps: MessagesDeps) {
   app.post("/:id/translate", async (c) => {
     const messageId = c.req.param("id");
     const userId = c.get("userId");
+    const platform = platformFromHeader(c.req.header("X-Client-Platform"));
 
     const message = await deps.db.query.messages.findFirst({
       where: (m, { eq: eqOp }) => eqOp(m.id, messageId),
@@ -66,11 +74,18 @@ export function createMessagesRoutes(deps: MessagesDeps) {
       return c.json({ error: { code: "PROFILE_MISSING" } }, 404);
     }
 
+    const onUsage = makeOnUsage(deps.db, {
+      userId,
+      platform,
+      conversationId: message.conversation.id,
+    });
+
     let translation: string;
     try {
       translation = await deps.translate({
         text: message.text,
         targetLanguageCode: profile.nativeLang,
+        onUsage,
       });
     } catch {
       return c.json({ error: { code: "LLM_PROVIDER_FAILURE" } }, 503);
@@ -92,6 +107,7 @@ export function createMessagesRoutes(deps: MessagesDeps) {
   app.post("/:id/audio", async (c) => {
     const messageId = c.req.param("id");
     const userId = c.get("userId");
+    const platform = platformFromHeader(c.req.header("X-Client-Platform"));
 
     const message = await deps.db.query.messages.findFirst({
       where: (m, { eq: e }) => e(m.id, messageId),
@@ -113,11 +129,18 @@ export function createMessagesRoutes(deps: MessagesDeps) {
       return c.json({ audioUrl: cached });
     }
 
+    const onUsage = makeOnUsage(deps.db, {
+      userId,
+      platform,
+      conversationId: message.conversation.id,
+    });
+
     let audio: { audioBuffer: Buffer; contentType: string };
     try {
       audio = await deps.synthesizeSpeech({
         text: message.text,
         voiceId: "nova",
+        onUsage,
       });
     } catch {
       return c.json({ error: { code: "TTS_PROVIDER_FAILURE" } }, 503);

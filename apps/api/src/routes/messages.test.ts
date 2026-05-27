@@ -118,10 +118,12 @@ describe("POST /v1/messages/:id/translate", () => {
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ translation: "Bonjour" });
-    expect(translate).toHaveBeenCalledWith({
-      text: "Buongiorno",
-      targetLanguageCode: "fr",
-    });
+    expect(translate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: "Buongiorno",
+        targetLanguageCode: "fr",
+      }),
+    );
     expect(db.update).toHaveBeenCalled();
   });
 

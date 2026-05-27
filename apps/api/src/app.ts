@@ -88,6 +88,7 @@ export function createApp(env: Env, db: Database = createDb(env)) {
   app.route(
     "/v1/voice/greeting",
     createVoiceGreetingRoutes({
+      db,
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadGreeting: (input) => uploadGreetingAudio(storage, input),
       getCachedGreetingUrl: (input) => getGreetingAudioUrl(storage, input),

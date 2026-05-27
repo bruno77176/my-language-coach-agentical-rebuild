@@ -20,6 +20,32 @@ describe("synthesizeSpeech", () => {
     expect(result.audioBuffer.byteLength).toBe(4);
   });
 
+  it("calls onUsage with characters after successful synth", async () => {
+    const onUsage = vi.fn();
+    async function* fakeStream() {
+      yield new Uint8Array([1, 2, 3]);
+    }
+    const fakeClient = {
+      textToSpeech: {
+        stream: vi.fn().mockResolvedValue(fakeStream()),
+      },
+    };
+    const text = "Bonjour";
+    await synthesizeSpeech(fakeClient as never, {
+      text,
+      voiceId: "voice-fr",
+      onUsage,
+    });
+    expect(onUsage).toHaveBeenCalledTimes(1);
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "elevenlabs",
+        operation: "tts:eleven_flash_v2_5",
+        characters: text.length,
+      }),
+    );
+  });
+
   it("throws TTS_PROVIDER_FAILURE on error", async () => {
     const fakeClient = {
       textToSpeech: {

@@ -1,4 +1,5 @@
 import EventSource from "react-native-sse";
+import { Platform } from "react-native";
 import { supabase } from "./supabase";
 
 export const API_BASE_URL =
@@ -11,6 +12,14 @@ export async function authHeader(): Promise<string> {
   return `Bearer ${data.session.access_token}`;
 }
 
+// X-Client-Platform tells the backend which platform invoked the request, so
+// usage_events rows can be attributed correctly in the cost dashboard. The
+// backend coerces unknown values to "unknown", so we just forward Platform.OS
+// (ios | android | web).
+export function clientPlatformHeader(): { "X-Client-Platform": string } {
+  return { "X-Client-Platform": Platform.OS };
+}
+
 export type StartSessionResponse = { conversation_id: string };
 
 export async function startSession(
@@ -21,6 +30,7 @@ export async function startSession(
     headers: {
       authorization: await authHeader(),
       "content-type": "application/json",
+      ...clientPlatformHeader(),
     },
     body: JSON.stringify({ language }),
   });
@@ -43,7 +53,10 @@ export async function endSession(
     `${API_BASE_URL}/v1/voice/sessions/${conversationId}/end`,
     {
       method: "POST",
-      headers: { authorization: await authHeader() },
+      headers: {
+        authorization: await authHeader(),
+        ...clientPlatformHeader(),
+      },
     },
   );
   if (!res.ok) {
@@ -136,7 +149,7 @@ export function streamTurn(
 
     es = new EventSource<TurnEventName>(url, {
       method: "POST",
-      headers: { authorization: auth },
+      headers: { authorization: auth, ...clientPlatformHeader() },
       body: form,
     });
 

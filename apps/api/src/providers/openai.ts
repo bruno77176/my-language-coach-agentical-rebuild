@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
+import type { OnUsage } from "./usage";
 import { LANGUAGES } from "@language-coach/shared";
 
 export function createOpenAI(env: Env): OpenAI {
@@ -16,6 +17,7 @@ export type StreamInput = {
   messages: ChatMessage[];
   model?: string;
   temperature?: number;
+  onUsage?: OnUsage;
 };
 
 export async function* streamChatCompletion(
@@ -29,8 +31,11 @@ export async function* streamChatCompletion(
       messages: input.messages,
       temperature: input.temperature ?? 0.7,
       stream: true,
+      stream_options: { include_usage: true },
     })) as AsyncIterable<{
       choices: Array<{ delta: { content?: string } }>;
+      usage?: { prompt_tokens: number; completion_tokens: number };
+      model?: string;
     }>;
   } catch (err) {
     throw new ProviderError(
@@ -40,8 +45,14 @@ export async function* streamChatCompletion(
     );
   }
 
+  let lastUsage:
+    | { prompt_tokens: number; completion_tokens: number }
+    | undefined;
+  let lastModel: string | undefined;
   try {
     for await (const chunk of stream) {
+      if (chunk.usage) lastUsage = chunk.usage;
+      if (chunk.model) lastModel = chunk.model;
       const delta = chunk.choices[0]?.delta.content;
       if (delta) yield delta;
     }
@@ -52,6 +63,19 @@ export async function* streamChatCompletion(
       `OpenAI stream error: ${(err as Error).message}`,
     );
   }
+
+  if (input.onUsage && lastUsage) {
+    void Promise.resolve(
+      input.onUsage({
+        provider: "openai",
+        operation: `chat:${lastModel ?? input.model ?? "gpt-4o-mini"}`,
+        inputTokens: lastUsage.prompt_tokens,
+        outputTokens: lastUsage.completion_tokens,
+      }),
+    ).catch(() => {
+      // fire-and-forget; recordUsage reports to Sentry on its own
+    });
+  }
 }
 
 // ---- TTS via OpenAI (replaces ElevenLabs while we're on free tier) ----
@@ -60,6 +84,7 @@ export type TtsInput = {
   text: string;
   voiceId: string; // alloy | echo | fable | onyx | nova | shimmer
   modelId?: string;
+  onUsage?: OnUsage;
 };
 
 export type TtsResult = {
@@ -71,6 +96,7 @@ export async function synthesizeSpeechOpenAI(
   client: OpenAI,
   input: TtsInput,
 ): Promise<TtsResult> {
+  let arrayBuf: ArrayBuffer;
   try {
     const response = await client.audio.speech.create({
       model: input.modelId ?? "tts-1",
@@ -84,11 +110,7 @@ export async function synthesizeSpeechOpenAI(
       input: input.text,
       response_format: "mp3",
     });
-    const arrayBuf = await response.arrayBuffer();
-    return {
-      audioBuffer: Buffer.from(arrayBuf),
-      contentType: "audio/mpeg",
-    };
+    arrayBuf = await response.arrayBuffer();
   } catch (err) {
     throw new ProviderError(
       "TTS_PROVIDER_FAILURE",
@@ -96,11 +118,27 @@ export async function synthesizeSpeechOpenAI(
       `OpenAI TTS error: ${(err as Error).message}`,
     );
   }
+
+  if (input.onUsage) {
+    void Promise.resolve(
+      input.onUsage({
+        provider: "openai",
+        operation: `tts:${input.modelId ?? "tts-1"}`,
+        characters: input.text.length,
+      }),
+    ).catch(() => {});
+  }
+
+  return {
+    audioBuffer: Buffer.from(arrayBuf),
+    contentType: "audio/mpeg",
+  };
 }
 
 export type TranslateMessageInput = {
   text: string;
   targetLanguageCode: string;
+  onUsage?: OnUsage;
 };
 
 export async function translateMessage(
@@ -126,5 +164,17 @@ export async function translateMessage(
   if (!translation) {
     throw new Error("openai_returned_empty_translation");
   }
+
+  if (input.onUsage) {
+    void Promise.resolve(
+      input.onUsage({
+        provider: "openai",
+        operation: `chat:${completion.model ?? "gpt-4o-mini"}`,
+        inputTokens: completion.usage?.prompt_tokens ?? 0,
+        outputTokens: completion.usage?.completion_tokens ?? 0,
+      }),
+    ).catch(() => {});
+  }
+
   return translation;
 }

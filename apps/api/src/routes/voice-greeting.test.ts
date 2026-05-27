@@ -22,6 +22,7 @@ describe("POST /v1/voice/greeting/audio", () => {
     const tts = vi.fn();
     const upload = vi.fn();
     const routes = createVoiceGreetingRoutes({
+      db: {} as never,
       getCachedGreetingUrl: getCached,
       synthesizeSpeech: tts,
       uploadGreeting: upload,
@@ -50,6 +51,7 @@ describe("POST /v1/voice/greeting/audio", () => {
       .fn()
       .mockResolvedValue({ audioUrl: "https://cdn.test/new.mp3" });
     const routes = createVoiceGreetingRoutes({
+      db: {} as never,
       getCachedGreetingUrl: getCached,
       synthesizeSpeech: tts,
       uploadGreeting: upload,
@@ -70,6 +72,7 @@ describe("POST /v1/voice/greeting/audio", () => {
 
   it("returns 400 on missing lang or name", async () => {
     const routes = createVoiceGreetingRoutes({
+      db: {} as never,
       getCachedGreetingUrl: vi.fn(),
       synthesizeSpeech: vi.fn(),
       uploadGreeting: vi.fn(),
@@ -85,6 +88,7 @@ describe("POST /v1/voice/greeting/audio", () => {
 
   it("returns 503 when TTS fails", async () => {
     const routes = createVoiceGreetingRoutes({
+      db: {} as never,
       getCachedGreetingUrl: vi.fn().mockResolvedValue(null),
       synthesizeSpeech: vi.fn().mockRejectedValue(new Error("openai down")),
       uploadGreeting: vi.fn(),
@@ -106,6 +110,7 @@ describe("POST /v1/voice/greeting/audio", () => {
     });
     const upload = vi.fn().mockResolvedValue({ audioUrl: "https://x" });
     const routes = createVoiceGreetingRoutes({
+      db: {} as never,
       getCachedGreetingUrl: getCached,
       synthesizeSpeech: tts,
       uploadGreeting: upload,
