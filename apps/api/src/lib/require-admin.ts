@@ -39,7 +39,8 @@ export function createRequireAdmin(
   };
 }
 
-export function parseAdminIds(raw: string): string[] {
+export function parseAdminIds(raw: string | undefined | null): string[] {
+  if (!raw) return [];
   return raw
     .split(",")
     .map((s) => s.trim())

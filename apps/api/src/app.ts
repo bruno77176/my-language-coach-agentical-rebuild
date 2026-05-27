@@ -6,9 +6,11 @@ import { createLogger, type Logger } from "./lib/logger";
 import { reportError } from "./lib/sentry";
 import { createLoggingMiddleware } from "./middleware/logging";
 import { errorHandler } from "./middleware/error";
-import { createAuthMiddleware } from "./middleware/auth";
+import { createAuthMiddleware, type Verifier } from "./middleware/auth";
 import { createSupabaseVerifier } from "./lib/supabase-verifier";
+import { parseAdminIds } from "./lib/require-admin";
 import { createHealthRoutes } from "./routes/health";
+import { createAdminRoutes } from "./routes/admin";
 import { createVoiceRoutes } from "./routes/voice";
 import { createDeepgram, transcribeAudio } from "./providers/deepgram";
 import {
@@ -35,9 +37,14 @@ export type AppEnv = {
   };
 };
 
-export function createApp(env: Env, db: Database = createDb(env)) {
+export function createApp(
+  env: Env,
+  db: Database = createDb(env),
+  overrides?: { verifier?: Verifier },
+) {
   const app = new Hono<AppEnv>();
   const logger = createLogger(env);
+  const verifier = overrides?.verifier ?? createSupabaseVerifier(env);
 
   app.use("*", async (c, next) => {
     c.set("env", env);
@@ -51,8 +58,19 @@ export function createApp(env: Env, db: Database = createDb(env)) {
 
   app.route("/health", createHealthRoutes(db));
 
+  // Admin routes: /admin/* requires admin via Supabase JWT + ADMIN_USER_IDS allow-list.
+  // Mounted outside the /v1/* auth middleware so the admin middleware is the only auth applied.
+  app.route(
+    "/admin",
+    createAdminRoutes({
+      db,
+      adminUserIds: parseAdminIds(env.ADMIN_USER_IDS),
+      verifier,
+    }),
+  );
+
   // Auth-required routes: /v1/* requires a valid Supabase JWT.
-  const auth = createAuthMiddleware(createSupabaseVerifier(env));
+  const auth = createAuthMiddleware(verifier);
   app.use("/v1/*", auth);
 
   const deepgram = createDeepgram(env);

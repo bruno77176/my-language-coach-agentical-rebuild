@@ -13,6 +13,7 @@ const baseEnv = {
   OPENAI_API_KEY: "openai-stub",
   DEEPGRAM_API_KEY: "deepgram-stub",
   ELEVENLABS_API_KEY: "elevenlabs-stub",
+  ADMIN_USER_IDS: "",
 };
 
 describe("GET /health", () => {
