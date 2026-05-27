@@ -44,6 +44,7 @@ npx vercel link
 ```
 
 Choose:
+
 - Existing scope: your Vercel personal account.
 - New project: `my-language-coach-admin` (or similar).
 - Root directory: just press Enter (the link sets it to `.` since you're already inside `apps/admin/`).
@@ -117,10 +118,10 @@ If you don't have a second account, you can test by temporarily setting `ADMIN_U
 
 ## Failure-mode quick reference
 
-| Symptom | Likely fix |
-|---|---|
-| `/login` shows "redirect_to is not allowed" | Add the Vercel callback URL to Supabase Auth (Step 2). |
-| Dashboard shows "Application error" with no detail | Open Vercel function logs — usually a missing env var. |
-| Dashboard loads but API calls return 403 | Either `ADMIN_USER_IDS` on Fly doesn't include your UUID, or `ADMIN_ALLOWED_ORIGINS` is missing/wrong. |
-| Cron not running | Check Supabase Database → Cron. If `refresh-cost-views` isn't listed, re-run Step 6. |
-| Cron runs but `usage_events` stays empty | Mobile/API instrumentation isn't firing. Check Sentry for `[cost-recording] no rate card for ...` warnings — means an op needs a rate card seeded. |
+| Symptom                                            | Likely fix                                                                                                                                         |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/login` shows "redirect_to is not allowed"        | Add the Vercel callback URL to Supabase Auth (Step 2).                                                                                             |
+| Dashboard shows "Application error" with no detail | Open Vercel function logs — usually a missing env var.                                                                                             |
+| Dashboard loads but API calls return 403           | Either `ADMIN_USER_IDS` on Fly doesn't include your UUID, or `ADMIN_ALLOWED_ORIGINS` is missing/wrong.                                             |
+| Cron not running                                   | Check Supabase Database → Cron. If `refresh-cost-views` isn't listed, re-run Step 6.                                                               |
+| Cron runs but `usage_events` stays empty           | Mobile/API instrumentation isn't firing. Check Sentry for `[cost-recording] no rate card for ...` warnings — means an op needs a rate card seeded. |

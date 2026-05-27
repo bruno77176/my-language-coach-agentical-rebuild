@@ -37,7 +37,10 @@ export default async function UserDetailPage({
       </h1>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <KpiCard label="Cost" value={formatUsd(data.overview.variableCostUsd)} />
+        <KpiCard
+          label="Cost"
+          value={formatUsd(data.overview.variableCostUsd)}
+        />
         <KpiCard label="Events" value={data.overview.eventCount.toString()} />
       </div>
 

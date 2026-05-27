@@ -82,7 +82,13 @@ export function RateCardsEditor({ initial }: { initial: Row[] }) {
         className="bg-white border rounded-xl p-3 flex gap-2 flex-wrap items-end"
       >
         {(
-          ["provider", "operation", "unitType", "pricePerUnit", "notes"] as const
+          [
+            "provider",
+            "operation",
+            "unitType",
+            "pricePerUnit",
+            "notes",
+          ] as const
         ).map((k) => (
           <div key={k}>
             <label className="block text-xs text-slate-500 capitalize">

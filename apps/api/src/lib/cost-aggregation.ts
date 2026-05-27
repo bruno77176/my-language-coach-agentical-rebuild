@@ -12,16 +12,11 @@ export type Filters = {
 // ---- helpers ----
 
 function buildVariableWhere(f: Filters): SQL {
-  const parts: SQL[] = [
-    sql`day >= ${f.from}`,
-    sql`day < ${f.to}`,
-  ];
+  const parts: SQL[] = [sql`day >= ${f.from}`, sql`day < ${f.to}`];
   if (f.platform) parts.push(sql`platform = ${f.platform}`);
   if (f.service) parts.push(sql`provider = ${f.service}`);
   if (f.userId) parts.push(sql`user_id = ${f.userId}`);
-  return parts.reduce((acc, p, i) =>
-    i === 0 ? p : sql`${acc} AND ${p}`,
-  );
+  return parts.reduce((acc, p, i) => (i === 0 ? p : sql`${acc} AND ${p}`));
 }
 
 // ---- pure pro-rate / amortize math (no DB) ----
@@ -102,10 +97,7 @@ export type Overview = {
   costPerActiveUser: number;
 };
 
-export async function getOverview(
-  db: Database,
-  f: Filters,
-): Promise<Overview> {
+export async function getOverview(db: Database, f: Filters): Promise<Overview> {
   const variableRows = (await db.execute(sql`
     SELECT
       COALESCE(SUM(cost_usd), 0)::text AS variable_cost,
@@ -134,9 +126,7 @@ export async function getOverview(
       totalCostUsd: variableCostUsd,
       activeUsers: v.active_users,
       eventCount: v.event_count,
-      costPerActiveUser: v.active_users
-        ? variableCostUsd / v.active_users
-        : 0,
+      costPerActiveUser: v.active_users ? variableCostUsd / v.active_users : 0,
     };
   }
 
@@ -277,10 +267,7 @@ export type UserRow = {
   lastSeenAt: Date | null;
 };
 
-export async function getByUser(
-  db: Database,
-  f: Filters,
-): Promise<UserRow[]> {
+export async function getByUser(db: Database, f: Filters): Promise<UserRow[]> {
   const rows = (await db.execute(sql`
     SELECT user_id,
            SUM(cost_usd)::text AS cost,

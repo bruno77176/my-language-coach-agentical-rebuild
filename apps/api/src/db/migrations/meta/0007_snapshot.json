@@ -139,12 +139,8 @@
           "name": "conversations_user_id_profiles_user_id_fk",
           "tableFrom": "conversations",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -152,12 +148,8 @@
           "name": "conversations_topic_id_topics_id_fk",
           "tableFrom": "conversations",
           "tableTo": "topics",
-          "columnsFrom": [
-            "topic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["topic_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -253,12 +245,8 @@
           "name": "messages_conversation_id_conversations_id_fk",
           "tableFrom": "messages",
           "tableTo": "conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -357,12 +345,8 @@
           "name": "streak_days_user_id_profiles_user_id_fk",
           "tableFrom": "streak_days",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -370,10 +354,7 @@
       "compositePrimaryKeys": {
         "streak_days_user_id_date_pk": {
           "name": "streak_days_user_id_date_pk",
-          "columns": [
-            "user_id",
-            "date"
-          ]
+          "columns": ["user_id", "date"]
         }
       },
       "uniqueConstraints": {},
@@ -443,12 +424,8 @@
           "name": "vocab_items_user_id_profiles_user_id_fk",
           "tableFrom": "vocab_items",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -456,12 +433,8 @@
           "name": "vocab_items_first_seen_message_id_messages_id_fk",
           "tableFrom": "vocab_items",
           "tableTo": "messages",
-          "columnsFrom": [
-            "first_seen_message_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["first_seen_message_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -471,11 +444,7 @@
         "vocab_user_lang_term_unique": {
           "name": "vocab_user_lang_term_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "language",
-            "term"
-          ]
+          "columns": ["user_id", "language", "term"]
         }
       },
       "policies": {},
@@ -525,12 +494,8 @@
           "name": "entitlements_user_id_profiles_user_id_fk",
           "tableFrom": "entitlements",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -584,12 +549,8 @@
           "name": "push_tokens_user_id_profiles_user_id_fk",
           "tableFrom": "push_tokens",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -599,10 +560,7 @@
         "push_tokens_user_token_unique": {
           "name": "push_tokens_user_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "expo_push_token"
-          ]
+          "columns": ["user_id", "expo_push_token"]
         }
       },
       "policies": {},
@@ -645,12 +603,8 @@
           "name": "waitlist_user_id_profiles_user_id_fk",
           "tableFrom": "waitlist",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -826,12 +780,8 @@
           "name": "usage_events_user_id_profiles_user_id_fk",
           "tableFrom": "usage_events",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1120,12 +1070,8 @@
           "name": "revenue_events_user_id_profiles_user_id_fk",
           "tableFrom": "revenue_events",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1141,10 +1087,7 @@
     "public.message_role": {
       "name": "message_role",
       "schema": "public",
-      "values": [
-        "user",
-        "coach"
-      ]
+      "values": ["user", "coach"]
     }
   },
   "schemas": {},

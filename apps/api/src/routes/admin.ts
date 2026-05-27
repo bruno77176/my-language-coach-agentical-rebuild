@@ -157,7 +157,9 @@ export function createAdminRoutes(deps: {
     // null and so would silently wipe ended_on whenever the client PATCHes
     // unrelated fields. Use hasOwnProperty on the raw payload.
     const hasEndedOn = Object.prototype.hasOwnProperty.call(raw, "endedOn");
-    const endedOnSql = hasEndedOn ? sql`${body.endedOn ?? null}` : sql`ended_on`;
+    const endedOnSql = hasEndedOn
+      ? sql`${body.endedOn ?? null}`
+      : sql`ended_on`;
     await deps.db.execute(sql`
       UPDATE fixed_costs SET
         service     = COALESCE(${body.service ?? null},   service),

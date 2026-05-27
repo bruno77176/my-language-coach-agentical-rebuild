@@ -87,9 +87,7 @@ export function FixedCostsEditor({ initial }: { initial: Row[] }) {
                 {new Date(r.started_on).toLocaleDateString()}
               </td>
               <td className="px-3 py-2 text-xs text-slate-500">
-                {r.ended_on
-                  ? new Date(r.ended_on).toLocaleDateString()
-                  : "—"}
+                {r.ended_on ? new Date(r.ended_on).toLocaleDateString() : "—"}
               </td>
               <td className="px-3 py-2 text-right">
                 <button

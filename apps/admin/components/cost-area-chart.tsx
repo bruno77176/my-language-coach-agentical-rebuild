@@ -12,7 +12,14 @@ import {
 type Point = { day: string; service: string; costUsd: number };
 type Row = { day: string } & Record<string, number | string>;
 
-const COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#0ea5e9"];
+const COLORS = [
+  "#2563eb",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#0ea5e9",
+];
 
 export function CostAreaChart({ data }: { data: Point[] }) {
   // Pivot: rows = day, cols = service

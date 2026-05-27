@@ -10,7 +10,7 @@ export function filtersFromSearchParams(
   sp: URLSearchParams | Record<string, string | undefined>,
 ): Filters {
   const get = (k: string): string | undefined =>
-    sp instanceof URLSearchParams ? sp.get(k) ?? undefined : sp[k];
+    sp instanceof URLSearchParams ? (sp.get(k) ?? undefined) : sp[k];
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()

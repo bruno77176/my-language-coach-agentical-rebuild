@@ -9,7 +9,9 @@ export function createSupabaseServer() {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (toSet: { name: string; value: string; options: CookieOptions }[]) => {
+        setAll: (
+          toSet: { name: string; value: string; options: CookieOptions }[],
+        ) => {
           toSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options),
           );

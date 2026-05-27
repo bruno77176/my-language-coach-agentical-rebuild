@@ -5,10 +5,13 @@ import { createRequireAdmin } from "./require-admin";
 describe("requireAdmin", () => {
   const verify = vi.fn();
   const app = new Hono();
-  app.use("*", createRequireAdmin({
-    adminUserIds: ["admin-1", "admin-2"],
-    verify,
-  }));
+  app.use(
+    "*",
+    createRequireAdmin({
+      adminUserIds: ["admin-1", "admin-2"],
+      verify,
+    }),
+  );
   app.get("/secret", (c) => c.json({ ok: true }));
 
   it("401 when Authorization missing", async () => {

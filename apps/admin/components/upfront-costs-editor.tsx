@@ -31,7 +31,9 @@ export function UpfrontCostsEditor({ initial }: { initial: Row[] }) {
         label: form.label,
         amountUsd: form.amountUsd,
         paidOn: form.paidOn,
-        amortizeMonths: form.amortizeMonths ? Number(form.amortizeMonths) : null,
+        amortizeMonths: form.amortizeMonths
+          ? Number(form.amortizeMonths)
+          : null,
         notes: form.notes || undefined,
       };
       const res = await fetch("/api/proxy/admin/upfront-costs", {
@@ -130,7 +132,9 @@ export function UpfrontCostsEditor({ initial }: { initial: Row[] }) {
           />
         </div>
         <div>
-          <label className="block text-xs text-slate-500">Amortize months</label>
+          <label className="block text-xs text-slate-500">
+            Amortize months
+          </label>
           <input
             type="number"
             min="1"

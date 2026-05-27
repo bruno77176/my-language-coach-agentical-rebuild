@@ -23,7 +23,10 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 p-8 bg-white rounded-xl shadow">
+      <form
+        onSubmit={onSubmit}
+        className="w-full max-w-sm space-y-4 p-8 bg-white rounded-xl shadow"
+      >
         <h1 className="text-2xl font-semibold">Admin sign-in</h1>
         <input
           type="email"
@@ -36,7 +39,9 @@ export default function LoginPage() {
         <button className="w-full bg-slate-900 text-white rounded py-2">
           Send magic link
         </button>
-        {sent && <p className="text-green-700">Check your email for the link.</p>}
+        {sent && (
+          <p className="text-green-700">Check your email for the link.</p>
+        )}
         {error && <p className="text-red-700">{error}</p>}
       </form>
     </main>

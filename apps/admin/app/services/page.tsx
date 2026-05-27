@@ -15,12 +15,14 @@ export default async function ServicesPage({
   const f = filtersFromSearchParams(searchParams);
   const q = filtersToQuery(f);
   const [rows, ts] = await Promise.all([
-    apiGet<Array<{
-      service: string;
-      costUsd: number;
-      units: number;
-      eventCount: number;
-    }>>(`/admin/by-service?${q}`),
+    apiGet<
+      Array<{
+        service: string;
+        costUsd: number;
+        units: number;
+        eventCount: number;
+      }>
+    >(`/admin/by-service?${q}`),
     apiGet<Array<{ day: string; service: string; costUsd: number }>>(
       `/admin/timeseries?${q}`,
     ),

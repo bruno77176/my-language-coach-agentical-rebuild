@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import type { Database } from "../db";
-import {
-  __setRateCardCache,
-  lookupRateCard,
-} from "../lib/cost-recording";
+import { __setRateCardCache, lookupRateCard } from "../lib/cost-recording";
 
 const baseEnv = {
   NODE_ENV: "test" as const,
@@ -28,9 +25,12 @@ describe("GET /admin/overview", () => {
     const app = createApp(baseEnv, fakeDb, {
       verifier: async () => ({ userId: "not-admin" }),
     });
-    const res = await app.request("/admin/overview?from=2026-05-01&to=2026-05-31", {
-      headers: { Authorization: "Bearer t" },
-    });
+    const res = await app.request(
+      "/admin/overview?from=2026-05-01&to=2026-05-31",
+      {
+        headers: { Authorization: "Bearer t" },
+      },
+    );
     expect(res.status).toBe(403);
   });
 
@@ -60,9 +60,11 @@ describe("GET /admin/overview", () => {
 describe("GET /admin/by-service", () => {
   it("returns service breakdown", async () => {
     const fakeDb = {
-      execute: vi.fn().mockResolvedValue([
-        { service: "openai", cost: "8", units: "1000", event_count: 5 },
-      ]),
+      execute: vi
+        .fn()
+        .mockResolvedValue([
+          { service: "openai", cost: "8", units: "1000", event_count: 5 },
+        ]),
     } as unknown as Database;
     const app = createApp(baseEnv, fakeDb, {
       verifier: async () => ({ userId: "admin-1" }),
@@ -320,10 +322,7 @@ describe("POST /admin/rate-cards (cache invalidation)", () => {
     };
     __setRateCardCache(
       new Map([
-        [
-          "openai|chat|input_tokens",
-          { card: staleCard, cachedAt: Date.now() },
-        ],
+        ["openai|chat|input_tokens", { card: staleCard, cachedAt: Date.now() }],
       ]),
     );
 
@@ -338,7 +337,9 @@ describe("POST /admin/rate-cards (cache invalidation)", () => {
       unitType: "input_tokens",
     });
     expect(warm?.id).toBe("rc-stale");
-    expect((neverHitDb as unknown as { execute: ReturnType<typeof vi.fn> }).execute).not.toHaveBeenCalled();
+    expect(
+      (neverHitDb as unknown as { execute: ReturnType<typeof vi.fn> }).execute,
+    ).not.toHaveBeenCalled();
 
     // Now POST a new rate card.
     const execute = vi.fn().mockResolvedValue([]);
