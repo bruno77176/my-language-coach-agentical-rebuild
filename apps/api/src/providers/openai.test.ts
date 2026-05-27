@@ -170,4 +170,54 @@ describe("openai usage instrumentation", () => {
       }),
     );
   });
+
+  it("onUsage failure does not break streamChatCompletion", async () => {
+    const onUsage = vi.fn().mockRejectedValue(new Error("boom"));
+    async function* fakeStream() {
+      yield { choices: [{ delta: { content: "hi" } }], model: "gpt-4o-mini" };
+      yield {
+        choices: [{ delta: {} }],
+        model: "gpt-4o-mini",
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      };
+    }
+    const fakeClient = {
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue(fakeStream()),
+        },
+      },
+    } as unknown as OpenAI;
+
+    const out: string[] = [];
+    for await (const chunk of streamChatCompletion(fakeClient, {
+      messages: [{ role: "user", content: "hi" }],
+      model: "gpt-4o-mini",
+      onUsage,
+    })) {
+      out.push(chunk);
+    }
+    expect(out).toEqual(["hi"]);
+  });
+
+  it("onUsage failure does not break synthesizeSpeechOpenAI", async () => {
+    const onUsage = vi.fn().mockRejectedValue(new Error("boom"));
+    const fakeClient = {
+      audio: {
+        speech: {
+          create: vi.fn().mockResolvedValue({
+            arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+          }),
+        },
+      },
+    } as unknown as OpenAI;
+
+    const result = await synthesizeSpeechOpenAI(fakeClient, {
+      text: "hi",
+      voiceId: "nova",
+      onUsage,
+    });
+    expect(result.contentType).toBe("audio/mpeg");
+    expect(result.audioBuffer.byteLength).toBe(8);
+  });
 });

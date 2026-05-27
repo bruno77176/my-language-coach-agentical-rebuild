@@ -126,4 +126,29 @@ describe("transcribeAudio", () => {
       }),
     ).rejects.toMatchObject({ code: "AUDIO_SILENT" });
   });
+
+  it("onUsage failure does not break transcribeAudio", async () => {
+    const onUsage = vi.fn().mockRejectedValue(new Error("boom"));
+    const fakeClient = {
+      listen: {
+        v1: {
+          media: {
+            transcribeFile: vi.fn().mockResolvedValue({
+              results: {
+                channels: [{ alternatives: [{ transcript: "Hi" }] }],
+              },
+              metadata: { duration: 2.5 },
+            }),
+          },
+        },
+      },
+    };
+    const result = await transcribeAudio(fakeClient as never, {
+      audioBuffer: Buffer.from("fake"),
+      languageCode: "en",
+      onUsage,
+    });
+    expect(result.text).toBe("Hi");
+    expect(result.durationSeconds).toBe(2.5);
+  });
 });

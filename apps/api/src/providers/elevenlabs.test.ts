@@ -56,4 +56,23 @@ describe("synthesizeSpeech", () => {
       synthesizeSpeech(fakeClient as never, { text: "x", voiceId: "v" }),
     ).rejects.toMatchObject({ code: "TTS_PROVIDER_FAILURE" });
   });
+
+  it("onUsage failure does not break synthesizeSpeech", async () => {
+    const onUsage = vi.fn().mockRejectedValue(new Error("boom"));
+    async function* fakeStream() {
+      yield new Uint8Array([1, 2, 3]);
+    }
+    const fakeClient = {
+      textToSpeech: {
+        stream: vi.fn().mockResolvedValue(fakeStream()),
+      },
+    };
+    const result = await synthesizeSpeech(fakeClient as never, {
+      text: "Bonjour",
+      voiceId: "voice-fr",
+      onUsage,
+    });
+    expect(result.contentType).toBe("audio/mpeg");
+    expect(result.audioBuffer.byteLength).toBe(3);
+  });
 });
