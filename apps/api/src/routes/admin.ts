@@ -24,9 +24,13 @@ const FiltersSchema = z.object({
 
 function parseFilters(query: Record<string, string | undefined>): Filters {
   const parsed = FiltersSchema.parse(query);
+  // SQL uses `day < to` (exclusive), but the UI treats `to` as inclusive
+  // ("through 2026-05-27"). Bump `to` by one day so today's events fall in
+  // the range when the user picks today as the upper bound.
+  const toExclusive = new Date(new Date(parsed.to).getTime() + 24 * 60 * 60 * 1000);
   return {
     from: new Date(parsed.from),
-    to: new Date(parsed.to),
+    to: toExclusive,
     platform: parsed.platform || undefined,
     service: parsed.service || undefined,
     userId: parsed.userId || undefined,
