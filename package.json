@@ -20,5 +20,11 @@
     "eslint": "^9.17.0",
     "prettier": "^3.4.2",
     "turbo": "^2.9.12"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.1.17",
+      "@types/react-dom": "19.1.10"
+    }
   }
 }
