@@ -13,6 +13,7 @@ const EnvSchema = z.object({
   OPENAI_API_KEY: z.string().min(1),
   DEEPGRAM_API_KEY: z.string().min(1),
   ELEVENLABS_API_KEY: z.string().min(1),
+  ADMIN_USER_IDS: z.string().default(""), // comma-separated Supabase user IDs
 });
 
 export type Env = z.infer<typeof EnvSchema>;
