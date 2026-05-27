@@ -41,7 +41,9 @@ export async function lookupRateCard(
   const hit = rateCardCache.get(key);
   if (hit && Date.now() - hit.cachedAt < CACHE_TTL_MS) return hit.card;
 
-  const at = args.at ?? new Date();
+  // Stringify Date — drizzle's db.execute(sql`...`) hands params straight to
+  // postgres-js's Bind which can't serialize a JS Date. (Same bug as #6.)
+  const atIso = (args.at ?? new Date()).toISOString();
   const rows = (await db.execute(sql`
     SELECT id, provider, operation, unit_type, price_per_unit,
            effective_from, effective_to
@@ -49,8 +51,8 @@ export async function lookupRateCard(
     WHERE provider = ${args.provider}
       AND operation = ${args.operation}
       AND unit_type = ${args.unitType}
-      AND effective_from <= ${at}
-      AND (effective_to IS NULL OR effective_to > ${at})
+      AND effective_from <= ${atIso}
+      AND (effective_to IS NULL OR effective_to > ${atIso})
     ORDER BY effective_from DESC
     LIMIT 1
   `)) as unknown as Array<{
