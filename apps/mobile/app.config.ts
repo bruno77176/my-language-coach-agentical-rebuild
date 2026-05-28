@@ -43,8 +43,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "7",
+      buildNumber: "8",
       usesAppleSignIn: true,
+      associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
         NSMicrophoneUsageDescription:
           "We use the microphone so you can talk to your coach.",
@@ -53,8 +54,22 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 41,
+      versionCode: 42,
       permissions: ["RECORD_AUDIO"],
+      intentFilters: [
+        {
+          action: "VIEW",
+          autoVerify: true,
+          data: [
+            {
+              scheme: "https",
+              host: "www.mylanguagecoach.app",
+              pathPrefix: "/auth/",
+            },
+          ],
+          category: ["BROWSABLE", "DEFAULT"],
+        },
+      ],
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#fde7d1",
