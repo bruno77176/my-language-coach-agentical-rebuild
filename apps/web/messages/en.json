@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "title": "My Language Coach — Practice languages. Build confidence.",
+    "description": "Your AI conversation partner. Talk to it, get instant corrections, and become fluent in any language — anywhere."
+  },
+  "hero": {
+    "eyebrow": "Now in open beta",
+    "headline": "Practice languages.",
+    "headlineAccent": "Build confidence.",
+    "subheadline": "Your AI conversation partner, in your pocket. Talk naturally — get instant feedback in the language you're learning.",
+    "scanToInstall": "Scan to install",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Open beta",
+    "iosCta": "Get it on TestFlight",
+    "androidCta": "Get it on Google Play",
+    "iosNote": "TestFlight beta — limited spots"
+  },
+  "valueStrip": {
+    "v1": "Talk naturally",
+    "v2": "Multiple languages",
+    "v3": "Instant feedback",
+    "v4": "No appointments"
+  },
+  "features": {
+    "title": "Three things that make it work",
+    "f1": {
+      "title": "Speak. Get answered.",
+      "body": "Tap, talk, and the coach replies in real time — voice you'd swear was human."
+    },
+    "f2": {
+      "title": "Corrections that teach",
+      "body": "Every mistake comes with a quick why-and-how, not a slap on the wrist."
+    },
+    "f3": {
+      "title": "Anywhere, on your time",
+      "body": "Five minutes on the bus or an hour on the couch — the coach is always there."
+    }
+  },
+  "howItWorks": {
+    "title": "How it works",
+    "s1": {
+      "n": "1",
+      "title": "Pick a language",
+      "body": "French, German, Italian, Turkish — more on the way."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Start talking",
+      "body": "Press the mic and just speak. The coach listens and replies."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Improve every day",
+      "body": "Track your streaks and see how far you've come."
+    }
+  },
+  "languages": {
+    "title": "Available languages",
+    "more": "+ more coming soon"
+  },
+  "finalCta": {
+    "title": "Ready to start talking?",
+    "subtitle": "Two coffees a year would be too much. It's free during beta."
+  },
+  "footer": {
+    "tagline": "Practice languages. Build confidence.",
+    "links": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "contact": "Contact"
+    },
+    "switchLanguage": "Français",
+    "copyright": "© 2026 My Language Coach"
+  }
+}

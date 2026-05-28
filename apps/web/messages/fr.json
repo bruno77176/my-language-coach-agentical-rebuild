@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "title": "My Language Coach — Pratiquez les langues. Gagnez en confiance.",
+    "description": "Votre partenaire de conversation alimenté par l'IA. Parlez-lui, recevez des corrections instantanées, et devenez fluide dans n'importe quelle langue."
+  },
+  "hero": {
+    "eyebrow": "Disponible en bêta ouverte",
+    "headline": "Pratiquez les langues.",
+    "headlineAccent": "Gagnez en confiance.",
+    "subheadline": "Votre partenaire de conversation IA, dans votre poche. Parlez naturellement — recevez des retours instantanés dans la langue que vous apprenez.",
+    "scanToInstall": "Scannez pour installer",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Bêta ouverte",
+    "iosCta": "Installer via TestFlight",
+    "androidCta": "Installer sur Google Play",
+    "iosNote": "Bêta TestFlight — places limitées"
+  },
+  "valueStrip": {
+    "v1": "Parlez naturellement",
+    "v2": "Plusieurs langues",
+    "v3": "Retours instantanés",
+    "v4": "Sans rendez-vous"
+  },
+  "features": {
+    "title": "Trois choses qui font la différence",
+    "f1": {
+      "title": "Parlez. Recevez une réponse.",
+      "body": "Appuyez, parlez, et le coach répond en temps réel — une voix qu'on jurerait humaine."
+    },
+    "f2": {
+      "title": "Des corrections qui enseignent",
+      "body": "Chaque erreur s'accompagne d'un pourquoi-comment, pas d'une réprimande."
+    },
+    "f3": {
+      "title": "Partout, à votre rythme",
+      "body": "Cinq minutes dans le bus ou une heure sur le canapé — le coach est toujours là."
+    }
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "s1": {
+      "n": "1",
+      "title": "Choisissez une langue",
+      "body": "Français, allemand, italien, turc — d'autres arrivent."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Commencez à parler",
+      "body": "Appuyez sur le micro et parlez. Le coach écoute et répond."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Progressez chaque jour",
+      "body": "Suivez vos séries et voyez votre progression."
+    }
+  },
+  "languages": {
+    "title": "Langues disponibles",
+    "more": "+ d'autres bientôt"
+  },
+  "finalCta": {
+    "title": "Prêt à commencer à parler ?",
+    "subtitle": "Deux cafés par an seraient déjà trop. C'est gratuit pendant la bêta."
+  },
+  "footer": {
+    "tagline": "Pratiquez les langues. Gagnez en confiance.",
+    "links": {
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "contact": "Contact"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  }
+}

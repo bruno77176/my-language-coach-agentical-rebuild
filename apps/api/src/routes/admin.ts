@@ -27,7 +27,9 @@ function parseFilters(query: Record<string, string | undefined>): Filters {
   // SQL uses `day < to` (exclusive), but the UI treats `to` as inclusive
   // ("through 2026-05-27"). Bump `to` by one day so today's events fall in
   // the range when the user picks today as the upper bound.
-  const toExclusive = new Date(new Date(parsed.to).getTime() + 24 * 60 * 60 * 1000);
+  const toExclusive = new Date(
+    new Date(parsed.to).getTime() + 24 * 60 * 60 * 1000,
+  );
   return {
     from: new Date(parsed.from),
     to: toExclusive,
