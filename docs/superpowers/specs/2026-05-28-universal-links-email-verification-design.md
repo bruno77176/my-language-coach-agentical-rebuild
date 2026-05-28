@@ -194,6 +194,6 @@ After deploy + EAS submit:
 3. Update `apps/mobile/app.config.ts`, build + submit for both platforms.
 4. Update Supabase Dashboard (Site URL + Redirect URLs).
 5. Test end-to-end on a real device with a real new email.
-6. *(After confirmation)* run the fraudulent-account cleanup DB delete.
+6. _(After confirmation)_ run the fraudulent-account cleanup DB delete.
 
 Steps 1-2 are reversible and have zero blast radius on existing users (the email links Supabase generates today still point to `mylanguagecoach://verify` until step 4). Step 4 is the cutover moment — once that's done, all newly-sent confirmation emails use the new URL pattern. Existing already-sent emails with the old URL keep working because `mylanguagecoach://verify` stays in the allowlist.

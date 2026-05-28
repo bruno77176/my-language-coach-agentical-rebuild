@@ -13,6 +13,7 @@
 ## File Structure
 
 **New files:**
+
 - `apps/web/lib/well-known.ts` — pure builders for AASA + assetlinks JSON
 - `apps/web/lib/well-known.test.ts` — unit tests for builders
 - `apps/web/app/.well-known/apple-app-site-association/route.ts` — iOS AASA Route Handler
@@ -21,9 +22,11 @@
 - `apps/web/app/auth/verify/page.tsx` — fallback "open the app" page
 
 **Modified files:**
+
 - `apps/mobile/app.config.ts` — add `ios.associatedDomains`, `android.intentFilters`, bump `versionCode` and `buildNumber`
 
 **Dashboard / out-of-band changes:**
+
 - Extract production Android SHA-256 fingerprint via `eas credentials`
 - Supabase Dashboard → Authentication → URL Configuration
 - EAS build + submit for both platforms
@@ -67,6 +70,7 @@ Copy the SHA256 value (with colons). Paste into a scratchpad. You'll need it ver
 ## Task 2: well-known builders + tests
 
 **Files:**
+
 - Create: `apps/web/lib/well-known.ts`
 - Test: `apps/web/lib/well-known.test.ts`
 
@@ -213,6 +217,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 3: AASA Route Handler
 
 **Files:**
+
 - Create: `apps/web/app/.well-known/apple-app-site-association/route.ts`
 
 - [ ] **Step 1: Implement the route handler**
@@ -272,6 +277,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 4: assetlinks Route Handler (Android)
 
 **Files:**
+
 - Create: `apps/web/app/.well-known/assetlinks.json/route.ts`
 
 - [ ] **Step 1: Implement the route handler**
@@ -331,6 +337,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 5: Fallback /auth/verify page
 
 **Files:**
+
 - Create: `apps/web/app/auth/verify/layout.tsx`
 - Create: `apps/web/app/auth/verify/page.tsx`
 
@@ -501,6 +508,7 @@ EOF
 - [ ] **Step 3: Merge the PR**
 
 After review (CI green, Bruno's approval), merge to main. Either:
+
 - via the GitHub UI ("Squash and merge" or "Create a merge commit" — match the repo's convention), OR
 - `gh pr merge --squash --auto` if you want it to auto-merge once checks pass
 
@@ -563,6 +571,7 @@ Expected: JSON response listing your statement (`com.anonymous.mylanguagecoach` 
 ## Task 8: Mobile app config — declare deep-link association
 
 **Files:**
+
 - Modify: `apps/mobile/app.config.ts`
 
 - [ ] **Step 1: Read the current ios + android blocks**
@@ -579,6 +588,7 @@ Locate the `ios: { ... }` block (current state has `supportsTablet`, `bundleIden
 Edit `apps/mobile/app.config.ts`. Change the `ios:` block:
 
 **FROM:**
+
 ```typescript
     ios: {
       supportsTablet: true,
@@ -594,6 +604,7 @@ Edit `apps/mobile/app.config.ts`. Change the `ios:` block:
 ```
 
 **TO:**
+
 ```typescript
     ios: {
       supportsTablet: true,
@@ -614,6 +625,7 @@ Edit `apps/mobile/app.config.ts`. Change the `ios:` block:
 Change the `android:` block:
 
 **FROM:**
+
 ```typescript
     android: {
       package: "com.anonymous.mylanguagecoach",
@@ -627,6 +639,7 @@ Change the `android:` block:
 ```
 
 **TO:**
+
 ```typescript
     android: {
       package: "com.anonymous.mylanguagecoach",
@@ -813,6 +826,7 @@ Expected: the new test account appears with `email_confirmed_at` set ~minutes (N
 ## Task 13: Clean up the two fraudulent accounts
 
 **Files:**
+
 - Create: `probe-delete-fraudulent-accounts.cjs` (one-shot, kept in worktree for audit trail)
 
 - [ ] **Step 1: Write the deletion probe**
@@ -835,12 +849,21 @@ const path = require("node:path");
 const postgres = require("./apps/api/node_modules/postgres");
 
 const TARGETS = [
-  { id: "e6dafbbc-5bb9-4d39-8809-1dbadc943c9c", email: "bruno.moise@gmail.com" },
-  { id: "87f80fe2-d0ee-40b8-a4a2-2eb813079a3e", email: "albeniz_77@hotmail.com" },
+  {
+    id: "e6dafbbc-5bb9-4d39-8809-1dbadc943c9c",
+    email: "bruno.moise@gmail.com",
+  },
+  {
+    id: "87f80fe2-d0ee-40b8-a4a2-2eb813079a3e",
+    email: "albeniz_77@hotmail.com",
+  },
 ];
 
 function loadEnv() {
-  const raw = fs.readFileSync(path.join(__dirname, "apps", "api", ".env"), "utf8");
+  const raw = fs.readFileSync(
+    path.join(__dirname, "apps", "api", ".env"),
+    "utf8",
+  );
   const out = {};
   for (const line of raw.split(/\r?\n/)) {
     const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
@@ -868,10 +891,13 @@ async function main() {
         continue;
       }
       if (u[0].email !== t.email) {
-        console.log(`SKIP ${t.email}: id matches but email differs (${u[0].email}) — manual review`);
+        console.log(
+          `SKIP ${t.email}: id matches but email differs (${u[0].email}) — manual review`,
+        );
         continue;
       }
-      const result = await sql`DELETE FROM auth.users WHERE id = ${t.id} RETURNING id, email`;
+      const result =
+        await sql`DELETE FROM auth.users WHERE id = ${t.id} RETURNING id, email`;
       console.log(`DELETED ${result[0].email} (${result[0].id})`);
     }
   } finally {
@@ -904,13 +930,14 @@ Expected: 12 users remaining (down from 14), neither fraudulent email present.
 
 - [ ] **Step 4: No commit (probe is one-shot, but stays around for audit trail)**
 
-Optionally add the probe to `.gitignore`'s probe-*.cjs pattern if it doesn't already match.
+Optionally add the probe to `.gitignore`'s probe-\*.cjs pattern if it doesn't already match.
 
 ---
 
 ## Task 14: Final verification + memory update
 
 **Files:**
+
 - Modify: `C:/Users/bruno.moise/.claude/projects/.../memory/project_email_verification_bug.md` (mark resolved)
 
 - [ ] **Step 1: Re-run the auth audit one final time**
@@ -921,6 +948,7 @@ node probe-auth-audit.cjs
 ```
 
 Confirm:
+
 - 12 users (or 12 + your fresh test signup from Task 12)
 - All email-provider signups created AFTER Task 11's save have `confirm_delay` measured in minutes (not milliseconds)
 
@@ -941,10 +969,11 @@ And add at the end:
 
 ```markdown
 **2026-05-28 evening — RESOLVED:**
+
 - Supabase Confirm email toggle ON
 - Custom SMTP wired (Resend, smtp.resend.com:465, domain mylanguagecoach.app verified)
 - supabase-verifier.ts hardened with email_confirmed_at check + unit test
-- Universal Links (iOS) + App Links (Android) shipped via apps/web /.well-known/* and apps/mobile app.config.ts associatedDomains/intentFilters
+- Universal Links (iOS) + App Links (Android) shipped via apps/web /.well-known/\* and apps/mobile app.config.ts associatedDomains/intentFilters
 - App rebuilt versionCode 42 / buildNumber 8 and pushed to Open Testing + TestFlight
 - Supabase Site URL updated to https://www.mylanguagecoach.app
 - Fraudulent accounts bruno.moise@gmail.com + albeniz_77@hotmail.com deleted from auth.users
@@ -980,6 +1009,7 @@ Use TaskUpdate to mark task #10 as completed once you've confirmed Task 12 succe
 ## Spec coverage check
 
 Mapping spec sections → tasks:
+
 - Why / Goals → covered by plan as a whole.
 - AASA + assetlinks → Tasks 2-4.
 - /auth/verify fallback page → Task 5.
