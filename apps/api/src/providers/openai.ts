@@ -65,10 +65,15 @@ export async function* streamChatCompletion(
   }
 
   if (input.onUsage && lastUsage) {
+    // Rate cards are keyed on the model alias (e.g. "gpt-4o-mini"), but
+    // chunk.model returns the versioned weight name (e.g.
+    // "gpt-4o-mini-2024-07-18"). Use the alias the caller requested so the
+    // rate-card lookup hits. lastModel is unused; kept for future telemetry.
+    void lastModel;
     void Promise.resolve(
       input.onUsage({
         provider: "openai",
-        operation: `chat:${lastModel ?? input.model ?? "gpt-4o-mini"}`,
+        operation: `chat:${input.model ?? "gpt-4o-mini"}`,
         inputTokens: lastUsage.prompt_tokens,
         outputTokens: lastUsage.completion_tokens,
       }),
@@ -166,10 +171,11 @@ export async function translateMessage(
   }
 
   if (input.onUsage) {
+    // Use the requested alias for rate-card matching; see streamChatCompletion.
     void Promise.resolve(
       input.onUsage({
         provider: "openai",
-        operation: `chat:${completion.model ?? "gpt-4o-mini"}`,
+        operation: `chat:gpt-4o-mini`,
         inputTokens: completion.usage?.prompt_tokens ?? 0,
         outputTokens: completion.usage?.completion_tokens ?? 0,
       }),
