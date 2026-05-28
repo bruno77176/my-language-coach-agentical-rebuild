@@ -6,9 +6,9 @@ interface Props {
 }
 
 const SCREENS: Array<{ src: string; alt: string }> = [
-  { src: "/screens/practice.png", alt: "Practice screen showing live conversation" },
-  { src: "/screens/practice.png", alt: "Correction screen" },
-  { src: "/screens/home.png", alt: "Home screen showing daily practice" },
+  { src: "/screens/practice.jpeg", alt: "Practice screen showing live conversation" },
+  { src: "/screens/practice.jpeg", alt: "Correction screen" },
+  { src: "/screens/home.jpeg", alt: "Home screen showing daily practice" },
 ];
 
 export function Features({ messages }: Props) {

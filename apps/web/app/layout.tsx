@@ -38,13 +38,13 @@ export const metadata: Metadata = {
     description: "Practice languages. Build confidence.",
     url: "/",
     siteName: "My Language Coach",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.jpg", width: 1024, height: 500 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "My Language Coach",
     description: "Practice languages. Build confidence.",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
   icons: { icon: "/favicon.ico" },
 };

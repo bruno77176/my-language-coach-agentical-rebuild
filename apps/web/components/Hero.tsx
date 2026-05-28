@@ -29,20 +29,20 @@ export async function Hero({ messages }: HeroProps) {
         <div className="relative flex justify-center items-center">
           <div className="flex gap-4 items-end">
             <PhoneFrame
-              src="/screens/home.png"
+              src="/screens/home.jpeg"
               alt="Home screen"
               widthClass="w-[200px]"
               rotate={-4}
               priority
             />
             <PhoneFrame
-              src="/screens/practice.png"
+              src="/screens/practice.jpeg"
               alt="Practice screen"
               widthClass="w-[240px]"
               priority
             />
             <PhoneFrame
-              src="/screens/progress.png"
+              src="/screens/progress.jpeg"
               alt="Progress screen"
               widthClass="w-[200px]"
               rotate={4}
