@@ -12,9 +12,15 @@ export function createSupabaseServer() {
         setAll: (
           toSet: { name: string; value: string; options: CookieOptions }[],
         ) => {
-          toSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
+          try {
+            toSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // Called from a Server Component, where cookies are read-only.
+            // Middleware refreshes the session on every request, so it's
+            // safe to skip here — the next request will re-set the cookie.
+          }
         },
       },
     },

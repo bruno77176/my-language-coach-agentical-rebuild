@@ -46,12 +46,30 @@ const SEEDS: Seed[] = [
     unitType: "seconds",
     pricePerUnit: "0.0001", // $0.006/min ≈ $0.0001/s
   },
-  // OpenAI TTS-1 (currently used in voice loop)
+  // OpenAI TTS-1 (kept for historical events; voice loop now uses gpt-4o-mini-tts)
   {
     provider: "openai",
     operation: "tts:tts-1",
     unitType: "characters",
     pricePerUnit: "0.000015", // $15 / 1M chars
+  },
+  // OpenAI TTS-1-HD (kept for historical events / experimentation)
+  {
+    provider: "openai",
+    operation: "tts:tts-1-hd",
+    unitType: "characters",
+    pricePerUnit: "0.00003", // $30 / 1M chars
+  },
+  // OpenAI gpt-4o-mini-tts (current voice loop default — purpose-built
+  // multilingual TTS, sounds correct across all 12 supported languages).
+  // OpenAI bills this per audio output tokens (~$0.015/min audio).
+  // Approximated to ~$0.00006/char based on average speech rate; refine
+  // via admin UI once we have actual usage data.
+  {
+    provider: "openai",
+    operation: "tts:gpt-4o-mini-tts",
+    unitType: "characters",
+    pricePerUnit: "0.00006", // approx — OpenAI's billing is token-based, not per-char
   },
   // Deepgram Nova-3 (current STT)
   {
