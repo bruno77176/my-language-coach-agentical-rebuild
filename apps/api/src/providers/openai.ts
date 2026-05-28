@@ -104,7 +104,7 @@ export async function synthesizeSpeechOpenAI(
   let arrayBuf: ArrayBuffer;
   try {
     const response = await client.audio.speech.create({
-      model: input.modelId ?? "tts-1",
+      model: input.modelId ?? "tts-1-hd",
       voice: input.voiceId as
         | "alloy"
         | "echo"
@@ -128,7 +128,7 @@ export async function synthesizeSpeechOpenAI(
     void Promise.resolve(
       input.onUsage({
         provider: "openai",
-        operation: `tts:${input.modelId ?? "tts-1"}`,
+        operation: `tts:${input.modelId ?? "tts-1-hd"}`,
         characters: input.text.length,
       }),
     ).catch(() => {});

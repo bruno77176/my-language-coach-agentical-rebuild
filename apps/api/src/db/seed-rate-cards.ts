@@ -46,12 +46,20 @@ const SEEDS: Seed[] = [
     unitType: "seconds",
     pricePerUnit: "0.0001", // $0.006/min ≈ $0.0001/s
   },
-  // OpenAI TTS-1 (currently used in voice loop)
+  // OpenAI TTS-1 (kept for historical events; voice loop now uses tts-1-hd)
   {
     provider: "openai",
     operation: "tts:tts-1",
     unitType: "characters",
     pricePerUnit: "0.000015", // $15 / 1M chars
+  },
+  // OpenAI TTS-1-HD (current voice loop default — higher fidelity, fixes
+  // word-swallowing in Italian/Spanish that tts-1 exhibits)
+  {
+    provider: "openai",
+    operation: "tts:tts-1-hd",
+    unitType: "characters",
+    pricePerUnit: "0.00003", // $30 / 1M chars
   },
   // Deepgram Nova-3 (current STT)
   {
