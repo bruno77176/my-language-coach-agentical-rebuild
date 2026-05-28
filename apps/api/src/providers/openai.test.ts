@@ -165,7 +165,7 @@ describe("openai usage instrumentation", () => {
     expect(onUsage).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "openai",
-        operation: "tts:tts-1-hd",
+        operation: "tts:tts-1",
         characters: text.length,
       }),
     );
