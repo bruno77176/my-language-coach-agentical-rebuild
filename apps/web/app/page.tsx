@@ -41,7 +41,9 @@ async function FinalCta({
     <section className="py-section-y bg-sunrise">
       <div className="max-w-content mx-auto px-6 text-center space-y-8">
         <h2 className="font-display text-3xl md:text-4xl text-ink">{title}</h2>
-        <p className="font-body text-lg text-ink-soft max-w-xl mx-auto">{subtitle}</p>
+        <p className="font-body text-lg text-ink-soft max-w-xl mx-auto">
+          {subtitle}
+        </p>
         <div className="flex justify-center">
           <DownloadCTA messages={heroMessages} variant="final" />
         </div>

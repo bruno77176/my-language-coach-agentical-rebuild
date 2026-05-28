@@ -10,7 +10,10 @@ interface DownloadCTAProps {
   variant?: "hero" | "final";
 }
 
-export async function DownloadCTA({ messages, variant = "hero" }: DownloadCTAProps) {
+export async function DownloadCTA({
+  messages,
+  variant = "hero",
+}: DownloadCTAProps) {
   const ua = headers().get("user-agent");
   const platform = detectPlatform(ua);
   const links = getStoreLinks();

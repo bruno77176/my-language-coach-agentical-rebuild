@@ -9,7 +9,8 @@ export function ScrollDepthTracker() {
     let fired100 = false;
 
     const onScroll = () => {
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       if (docHeight <= 0) return;
       const ratio = window.scrollY / docHeight;
 

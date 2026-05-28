@@ -43,7 +43,9 @@ export function MobileButtonClient({
           >
             {iosLabel}
           </a>
-          <p className="font-body text-xs text-ink-soft/70 text-center">{iosNote}</p>
+          <p className="font-body text-xs text-ink-soft/70 text-center">
+            {iosNote}
+          </p>
         </>
       )}
       {showAndroid && (

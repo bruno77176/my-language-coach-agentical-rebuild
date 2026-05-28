@@ -38,9 +38,21 @@
   },
   "howItWorks": {
     "title": "Comment ça marche",
-    "s1": { "n": "1", "title": "Choisissez une langue", "body": "Français, allemand, italien, turc — d'autres arrivent." },
-    "s2": { "n": "2", "title": "Commencez à parler", "body": "Appuyez sur le micro et parlez. Le coach écoute et répond." },
-    "s3": { "n": "3", "title": "Progressez chaque jour", "body": "Suivez vos séries et voyez votre progression." }
+    "s1": {
+      "n": "1",
+      "title": "Choisissez une langue",
+      "body": "Français, allemand, italien, turc — d'autres arrivent."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Commencez à parler",
+      "body": "Appuyez sur le micro et parlez. Le coach écoute et répond."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Progressez chaque jour",
+      "body": "Suivez vos séries et voyez votre progression."
+    }
   },
   "languages": {
     "title": "Langues disponibles",

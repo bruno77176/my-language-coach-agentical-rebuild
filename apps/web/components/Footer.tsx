@@ -29,11 +29,16 @@ export function Footer({ messages, locale }: FooterProps) {
           <a href={`mailto:${contactEmail}`} className="hover:text-ink">
             {messages.links.contact}
           </a>
-          <LanguageSwitcher currentLocale={locale} label={messages.switchLanguage} />
+          <LanguageSwitcher
+            currentLocale={locale}
+            label={messages.switchLanguage}
+          />
         </nav>
       </div>
       <div className="max-w-content mx-auto px-6 pb-6">
-        <p className="font-body text-xs text-ink-soft/60">{messages.copyright}</p>
+        <p className="font-body text-xs text-ink-soft/60">
+          {messages.copyright}
+        </p>
       </div>
     </footer>
   );

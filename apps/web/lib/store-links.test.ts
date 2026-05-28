@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getStoreLinks, DEFAULT_IOS_URL, DEFAULT_ANDROID_URL } from "./store-links";
+import {
+  getStoreLinks,
+  DEFAULT_IOS_URL,
+  DEFAULT_ANDROID_URL,
+} from "./store-links";
 
 describe("getStoreLinks", () => {
   afterEach(() => {
@@ -23,7 +27,11 @@ describe("getStoreLinks", () => {
   });
 
   it("exports defaults that look like real store URLs", () => {
-    expect(DEFAULT_IOS_URL).toMatch(/^https:\/\/testflight\.apple\.com\/join\//);
-    expect(DEFAULT_ANDROID_URL).toMatch(/^https:\/\/play\.google\.com\/store\/apps\/details\?id=/);
+    expect(DEFAULT_IOS_URL).toMatch(
+      /^https:\/\/testflight\.apple\.com\/join\//,
+    );
+    expect(DEFAULT_ANDROID_URL).toMatch(
+      /^https:\/\/play\.google\.com\/store\/apps\/details\?id=/,
+    );
   });
 });

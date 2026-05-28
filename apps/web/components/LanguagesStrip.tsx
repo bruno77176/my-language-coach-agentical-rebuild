@@ -15,7 +15,9 @@ export function LanguagesStrip({ messages }: Props) {
   return (
     <section className="py-section-y bg-cream">
       <div className="max-w-content mx-auto px-6 space-y-8 text-center">
-        <h2 className="font-display text-3xl md:text-4xl text-ink">{messages.title}</h2>
+        <h2 className="font-display text-3xl md:text-4xl text-ink">
+          {messages.title}
+        </h2>
         <div className="flex flex-wrap justify-center gap-3">
           {LANGUAGES.map((l) => (
             <span

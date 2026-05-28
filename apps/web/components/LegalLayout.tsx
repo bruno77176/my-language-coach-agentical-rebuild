@@ -11,7 +11,9 @@ export function LegalLayout({ locale, children }: Props) {
   return (
     <>
       <main className="max-w-content mx-auto px-6 py-16">
-        <article className="prose prose-ink mx-auto max-w-2xl">{children}</article>
+        <article className="prose prose-ink mx-auto max-w-2xl">
+          {children}
+        </article>
       </main>
       <Footer messages={m.footer} locale={locale} />
     </>

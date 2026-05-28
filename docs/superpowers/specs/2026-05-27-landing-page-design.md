@@ -94,30 +94,30 @@ app/apps/web/
 
 Seven blocks per locale, same order:
 
-| # | Section          | Purpose                                                                                                          |
-| - | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 1 | Hero             | Headline + sub-headline + primary CTA. Right side: phone screens + character illustration on a Sunrise gradient. |
-| 2 | Value strip      | Four icon+label pairs in a row — quick rhythm break before the longer content.                                   |
-| 3 | Features         | Three columns, each with a mini phone screen + heading + one sentence.                                           |
-| 4 | How it works     | Three numbered steps: pick a language → talk → improve.                                                          |
-| 5 | Languages strip  | Visual chips of the languages the app supports today (FR, DE, IT, TR, +more).                                    |
-| 6 | Final CTA        | Repeat the DownloadCTA — last impression before footer.                                                          |
-| 7 | Footer           | Logo, copyright, /privacy + /terms links, language switcher (EN ⇄ FR), contact email link.                       |
+| #   | Section         | Purpose                                                                                                          |
+| --- | --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 1   | Hero            | Headline + sub-headline + primary CTA. Right side: phone screens + character illustration on a Sunrise gradient. |
+| 2   | Value strip     | Four icon+label pairs in a row — quick rhythm break before the longer content.                                   |
+| 3   | Features        | Three columns, each with a mini phone screen + heading + one sentence.                                           |
+| 4   | How it works    | Three numbered steps: pick a language → talk → improve.                                                          |
+| 5   | Languages strip | Visual chips of the languages the app supports today (FR, DE, IT, TR, +more).                                    |
+| 6   | Final CTA       | Repeat the DownloadCTA — last impression before footer.                                                          |
+| 7   | Footer          | Logo, copyright, /privacy + /terms links, language switcher (EN ⇄ FR), contact email link.                       |
 
 ## Visual system
 
 All values pulled from `@language-coach/design-tokens` so the site reads as a sibling of the app.
 
-| Token         | Value                                | Use                                              |
-| ------------- | ------------------------------------ | ------------------------------------------------ |
-| Background    | `#fbf6ec` (cream)                    | Page background                                  |
-| Hero gradient | Sunrise: `#fde7d1 → #f6c7b1 → #d9b4c7` | Hero section only, soft diagonal                 |
-| Accent        | `#d96b5b` (coral)                    | Primary buttons, links, QR-code frame            |
-| Accent deep   | `#a04130`                            | Button hover/active                              |
-| Ink           | `#2b1d12`                            | Body text                                        |
-| Glass         | `rgba(255,255,255,0.55)`             | Card surfaces over the gradient                  |
-| Display font  | Fraunces 700                         | Headlines, section titles                        |
-| Body font     | DM Sans 400/500                      | Everything else                                  |
+| Token         | Value                                  | Use                                   |
+| ------------- | -------------------------------------- | ------------------------------------- |
+| Background    | `#fbf6ec` (cream)                      | Page background                       |
+| Hero gradient | Sunrise: `#fde7d1 → #f6c7b1 → #d9b4c7` | Hero section only, soft diagonal      |
+| Accent        | `#d96b5b` (coral)                      | Primary buttons, links, QR-code frame |
+| Accent deep   | `#a04130`                              | Button hover/active                   |
+| Ink           | `#2b1d12`                              | Body text                             |
+| Glass         | `rgba(255,255,255,0.55)`               | Card surfaces over the gradient       |
+| Display font  | Fraunces 700                           | Headlines, section titles             |
+| Body font     | DM Sans 400/500                        | Everything else                       |
 
 **Layout rhythm:** max content width ~1140px, sections separated by 96–128px of vertical space. Subtle dot decorations near the hero (echoing the inspiration image) used restrainedly.
 
@@ -136,18 +136,18 @@ NEXT_PUBLIC_ANDROID_URL=https://play.google.com/store/apps/details?id=com.anonym
 
 **Behavior matrix:**
 
-| Viewport        | UA detection | What renders                                                                       |
-| --------------- | ------------ | ---------------------------------------------------------------------------------- |
-| ≥1024px         | any          | Two QR codes side by side, framed coral. Caption text + raw URL fallback below each. |
-| <1024px         | iOS          | Single full-width "Get it on TestFlight" button → iOS URL.                          |
-| <1024px         | Android      | Single full-width "Get it on Google Play" button → Android URL.                     |
-| <1024px         | unknown      | Both buttons stacked vertically.                                                   |
+| Viewport | UA detection | What renders                                                                         |
+| -------- | ------------ | ------------------------------------------------------------------------------------ |
+| ≥1024px  | any          | Two QR codes side by side, framed coral. Caption text + raw URL fallback below each. |
+| <1024px  | iOS          | Single full-width "Get it on TestFlight" button → iOS URL.                           |
+| <1024px  | Android      | Single full-width "Get it on Google Play" button → Android URL.                      |
+| <1024px  | unknown      | Both buttons stacked vertically.                                                     |
 
 **Implementation notes:**
 
 - UA detected server-side via Next.js `headers()` for first paint, re-checked once in `useEffect` to survive static caching. Both code paths render in HTML; CSS hides the wrong one.
 - QR codes generated at build time as inline SVG using the `qrcode` npm package. No runtime network calls, no third-party QR APIs.
-- iOS button shows a small note: *"TestFlight beta — limited spots"* — sets expectations if the public-test cap hits or the link expires.
+- iOS button shows a small note: _"TestFlight beta — limited spots"_ — sets expectations if the public-test cap hits or the link expires.
 
 ## TestFlight expiry mitigation
 
@@ -175,7 +175,7 @@ When a third locale is added: add `messages/<locale>.json`, add the route folder
 
 Both ship with **real placeholder content**, not Lorem ipsum, but the top of each file carries a visible banner:
 
-> *This document is a draft. Final legal review pending.*
+> _This document is a draft. Final legal review pending._
 
 **Privacy policy covers:**
 
@@ -196,13 +196,13 @@ Both pages rendered from MDX so legal text can be edited without touching compon
 
 **Custom events:**
 
-| Event                | Fires when                                                |
-| -------------------- | --------------------------------------------------------- |
-| `cta_ios_click`      | iOS button or iOS QR caption-link clicked                 |
-| `cta_android_click`  | Android button or Android QR caption-link clicked         |
-| `language_switch`    | Footer EN ⇄ FR toggle used (event payload: `to: 'en'` or `'fr'`) |
-| `scroll_depth_50`    | User has scrolled past 50% of page height (once/session)  |
-| `scroll_depth_100`   | User has reached page bottom (once/session)               |
+| Event               | Fires when                                                       |
+| ------------------- | ---------------------------------------------------------------- |
+| `cta_ios_click`     | iOS button or iOS QR caption-link clicked                        |
+| `cta_android_click` | Android button or Android QR caption-link clicked                |
+| `language_switch`   | Footer EN ⇄ FR toggle used (event payload: `to: 'en'` or `'fr'`) |
+| `scroll_depth_50`   | User has scrolled past 50% of page height (once/session)         |
+| `scroll_depth_100`  | User has reached page bottom (once/session)                      |
 
 No heatmaps, no session replay, no tag manager.
 
@@ -232,14 +232,14 @@ NEXT_PUBLIC_CONTACT_EMAIL=bruno.a.moise@gmail.com
 
 ## Assets to produce
 
-| Asset                       | Source                                              | Owner   |
-| --------------------------- | --------------------------------------------------- | ------- |
-| 3 phone screenshots         | Captured from running dev build (Home/Practice/Progress) | Claude  |
-| Character illustration      | Static PNG exported from `apps/mobile/assets/avatar.json` (Lottie). Live Lottie deferred — adds bundle weight for marginal value on a landing page. | Claude |
-| Favicon                     | Derived from `apps/mobile/assets/icon.png`          | Claude  |
-| Open Graph image (1200×630) | Derived from icon + tagline                         | Claude  |
-| English copy                | Draft from Play Store description + Claude rewrite  | Claude  |
-| French copy                 | Machine-translated EN, then refined with Bruno      | Bruno + Claude |
+| Asset                       | Source                                                                                                                                              | Owner          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 3 phone screenshots         | Captured from running dev build (Home/Practice/Progress)                                                                                            | Claude         |
+| Character illustration      | Static PNG exported from `apps/mobile/assets/avatar.json` (Lottie). Live Lottie deferred — adds bundle weight for marginal value on a landing page. | Claude         |
+| Favicon                     | Derived from `apps/mobile/assets/icon.png`                                                                                                          | Claude         |
+| Open Graph image (1200×630) | Derived from icon + tagline                                                                                                                         | Claude         |
+| English copy                | Draft from Play Store description + Claude rewrite                                                                                                  | Claude         |
+| French copy                 | Machine-translated EN, then refined with Bruno                                                                                                      | Bruno + Claude |
 
 Nothing new commissioned; everything reuses existing brand assets.
 

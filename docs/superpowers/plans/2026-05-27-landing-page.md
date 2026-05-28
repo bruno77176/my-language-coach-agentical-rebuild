@@ -498,7 +498,11 @@ git commit -m "test(web): configure Vitest for lib unit tests"
 
 ```ts
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getStoreLinks, DEFAULT_IOS_URL, DEFAULT_ANDROID_URL } from "./store-links";
+import {
+  getStoreLinks,
+  DEFAULT_IOS_URL,
+  DEFAULT_ANDROID_URL,
+} from "./store-links";
 
 describe("getStoreLinks", () => {
   afterEach(() => {
@@ -522,8 +526,12 @@ describe("getStoreLinks", () => {
   });
 
   it("exports defaults that look like real store URLs", () => {
-    expect(DEFAULT_IOS_URL).toMatch(/^https:\/\/testflight\.apple\.com\/join\//);
-    expect(DEFAULT_ANDROID_URL).toMatch(/^https:\/\/play\.google\.com\/store\/apps\/details\?id=/);
+    expect(DEFAULT_IOS_URL).toMatch(
+      /^https:\/\/testflight\.apple\.com\/join\//,
+    );
+    expect(DEFAULT_ANDROID_URL).toMatch(
+      /^https:\/\/play\.google\.com\/store\/apps\/details\?id=/,
+    );
   });
 });
 ```
@@ -724,7 +732,9 @@ describe("generateQrSvg", () => {
   });
 
   it("uses a coral accent color for the foreground", async () => {
-    const svg = await generateQrSvg("https://example.com", { color: "#d96b5b" });
+    const svg = await generateQrSvg("https://example.com", {
+      color: "#d96b5b",
+    });
     expect(svg).toContain("#d96b5b");
   });
 });
@@ -836,9 +846,21 @@ git commit -m "feat(web): add lib/qr to render QR codes as inline SVG"
   },
   "howItWorks": {
     "title": "How it works",
-    "s1": { "n": "1", "title": "Pick a language", "body": "French, German, Italian, Turkish — more on the way." },
-    "s2": { "n": "2", "title": "Start talking", "body": "Press the mic and just speak. The coach listens and replies." },
-    "s3": { "n": "3", "title": "Improve every day", "body": "Track your streaks and see how far you've come." }
+    "s1": {
+      "n": "1",
+      "title": "Pick a language",
+      "body": "French, German, Italian, Turkish — more on the way."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Start talking",
+      "body": "Press the mic and just speak. The coach listens and replies."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Improve every day",
+      "body": "Track your streaks and see how far you've come."
+    }
   },
   "languages": {
     "title": "Available languages",
@@ -906,9 +928,21 @@ git commit -m "feat(web): add lib/qr to render QR codes as inline SVG"
   },
   "howItWorks": {
     "title": "Comment ça marche",
-    "s1": { "n": "1", "title": "Choisissez une langue", "body": "Français, allemand, italien, turc — d'autres arrivent." },
-    "s2": { "n": "2", "title": "Commencez à parler", "body": "Appuyez sur le micro et parlez. Le coach écoute et répond." },
-    "s3": { "n": "3", "title": "Progressez chaque jour", "body": "Suivez vos séries et voyez votre progression." }
+    "s1": {
+      "n": "1",
+      "title": "Choisissez une langue",
+      "body": "Français, allemand, italien, turc — d'autres arrivent."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Commencez à parler",
+      "body": "Appuyez sur le micro et parlez. Le coach écoute et répond."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Progressez chaque jour",
+      "body": "Suivez vos séries et voyez votre progression."
+    }
   },
   "languages": {
     "title": "Langues disponibles",
@@ -1164,7 +1198,10 @@ interface DownloadCTAProps {
   variant?: "hero" | "final";
 }
 
-export async function DownloadCTA({ messages, variant = "hero" }: DownloadCTAProps) {
+export async function DownloadCTA({
+  messages,
+  variant = "hero",
+}: DownloadCTAProps) {
   const ua = headers().get("user-agent");
   const platform = detectPlatform(ua);
   const links = getStoreLinks();
@@ -1319,7 +1356,9 @@ export function MobileButtonClient({
           >
             {iosLabel}
           </a>
-          <p className="font-body text-xs text-ink-soft/70 text-center">{iosNote}</p>
+          <p className="font-body text-xs text-ink-soft/70 text-center">
+            {iosNote}
+          </p>
         </>
       )}
       {showAndroid && (
@@ -1430,11 +1469,16 @@ export function Footer({ messages, locale }: FooterProps) {
           <a href={`mailto:${contactEmail}`} className="hover:text-ink">
             {messages.links.contact}
           </a>
-          <LanguageSwitcher currentLocale={locale} label={messages.switchLanguage} />
+          <LanguageSwitcher
+            currentLocale={locale}
+            label={messages.switchLanguage}
+          />
         </nav>
       </div>
       <div className="max-w-content mx-auto px-6 pb-6">
-        <p className="font-body text-xs text-ink-soft/60">{messages.copyright}</p>
+        <p className="font-body text-xs text-ink-soft/60">
+          {messages.copyright}
+        </p>
       </div>
     </footer>
   );
@@ -1562,7 +1606,9 @@ export function ValueStrip({ messages }: Props) {
             <span className="text-xl" aria-hidden>
               {ICONS[i]}
             </span>
-            <span className="font-body text-sm font-medium text-ink-soft">{item}</span>
+            <span className="font-body text-sm font-medium text-ink-soft">
+              {item}
+            </span>
           </div>
         ))}
       </div>
@@ -1584,7 +1630,10 @@ interface Props {
 }
 
 const SCREENS: Array<{ src: string; alt: string }> = [
-  { src: "/screens/practice.png", alt: "Practice screen showing live conversation" },
+  {
+    src: "/screens/practice.png",
+    alt: "Practice screen showing live conversation",
+  },
   { src: "/screens/practice.png", alt: "Correction screen" },
   { src: "/screens/home.png", alt: "Home screen showing daily practice" },
 ];
@@ -1609,7 +1658,9 @@ export function Features({ messages }: Props) {
                 widthClass="w-[200px]"
               />
               <h3 className="font-display text-xl text-ink">{card.title}</h3>
-              <p className="font-body text-base text-ink-soft max-w-xs">{card.body}</p>
+              <p className="font-body text-base text-ink-soft max-w-xs">
+                {card.body}
+              </p>
             </article>
           ))}
         </div>
@@ -1640,12 +1691,17 @@ export function HowItWorks({ messages }: Props) {
         </h2>
         <ol className="grid md:grid-cols-3 gap-8">
           {steps.map((step) => (
-            <li key={step.n} className="flex flex-col items-center text-center gap-3">
+            <li
+              key={step.n}
+              className="flex flex-col items-center text-center gap-3"
+            >
               <span className="inline-flex items-center justify-center h-12 w-12 rounded-pill bg-accent text-cream font-display text-xl">
                 {step.n}
               </span>
               <h3 className="font-display text-xl text-ink">{step.title}</h3>
-              <p className="font-body text-base text-ink-soft max-w-xs">{step.body}</p>
+              <p className="font-body text-base text-ink-soft max-w-xs">
+                {step.body}
+              </p>
             </li>
           ))}
         </ol>
@@ -1677,7 +1733,9 @@ export function LanguagesStrip({ messages }: Props) {
   return (
     <section className="py-section-y bg-cream">
       <div className="max-w-content mx-auto px-6 space-y-8 text-center">
-        <h2 className="font-display text-3xl md:text-4xl text-ink">{messages.title}</h2>
+        <h2 className="font-display text-3xl md:text-4xl text-ink">
+          {messages.title}
+        </h2>
         <div className="flex flex-wrap justify-center gap-3">
           {LANGUAGES.map((l) => (
             <span
@@ -1739,7 +1797,8 @@ export function ScrollDepthTracker() {
     let fired100 = false;
 
     const onScroll = () => {
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       if (docHeight <= 0) return;
       const ratio = window.scrollY / docHeight;
 
@@ -1809,7 +1868,8 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mylanguagecoach.app";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://mylanguagecoach.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -1929,7 +1989,9 @@ async function FinalCta({
     <section className="py-section-y bg-sunrise">
       <div className="max-w-content mx-auto px-6 text-center space-y-8">
         <h2 className="font-display text-3xl md:text-4xl text-ink">{title}</h2>
-        <p className="font-body text-lg text-ink-soft max-w-xl mx-auto">{subtitle}</p>
+        <p className="font-body text-lg text-ink-soft max-w-xl mx-auto">
+          {subtitle}
+        </p>
         <div className="flex justify-center">
           {/* @ts-expect-error: async server component */}
           <DownloadCTA messages={heroMessages} variant="final" />
@@ -2037,7 +2099,9 @@ async function FinalCta({
     <section className="py-section-y bg-sunrise">
       <div className="max-w-content mx-auto px-6 text-center space-y-8">
         <h2 className="font-display text-3xl md:text-4xl text-ink">{title}</h2>
-        <p className="font-body text-lg text-ink-soft max-w-xl mx-auto">{subtitle}</p>
+        <p className="font-body text-lg text-ink-soft max-w-xl mx-auto">
+          {subtitle}
+        </p>
         <div className="flex justify-center">
           {/* @ts-expect-error: async server component */}
           <DownloadCTA messages={heroMessages} variant="final" />
@@ -2267,7 +2331,9 @@ export function LegalLayout({ locale, children }: Props) {
   return (
     <>
       <main className="max-w-content mx-auto px-6 py-16">
-        <article className="prose prose-ink mx-auto max-w-2xl">{children}</article>
+        <article className="prose prose-ink mx-auto max-w-2xl">
+          {children}
+        </article>
       </main>
       <Footer messages={m.footer} locale={locale} />
     </>
@@ -2300,7 +2366,10 @@ import Content from "@/content/privacy.en.mdx";
 
 export const metadata = {
   title: "Privacy Policy — My Language Coach",
-  alternates: { canonical: "/privacy", languages: { en: "/privacy", fr: "/fr/privacy" } },
+  alternates: {
+    canonical: "/privacy",
+    languages: { en: "/privacy", fr: "/fr/privacy" },
+  },
 };
 
 export default function Page() {
@@ -2320,7 +2389,10 @@ import Content from "@/content/terms.en.mdx";
 
 export const metadata = {
   title: "Terms of Service — My Language Coach",
-  alternates: { canonical: "/terms", languages: { en: "/terms", fr: "/fr/terms" } },
+  alternates: {
+    canonical: "/terms",
+    languages: { en: "/terms", fr: "/fr/terms" },
+  },
 };
 
 export default function Page() {
@@ -2340,7 +2412,10 @@ import Content from "@/content/privacy.fr.mdx";
 
 export const metadata = {
   title: "Politique de confidentialité — My Language Coach",
-  alternates: { canonical: "/fr/privacy", languages: { en: "/privacy", fr: "/fr/privacy" } },
+  alternates: {
+    canonical: "/fr/privacy",
+    languages: { en: "/privacy", fr: "/fr/privacy" },
+  },
 };
 
 export default function Page() {
@@ -2360,7 +2435,10 @@ import Content from "@/content/terms.fr.mdx";
 
 export const metadata = {
   title: "Conditions d'utilisation — My Language Coach",
-  alternates: { canonical: "/fr/terms", languages: { en: "/terms", fr: "/fr/terms" } },
+  alternates: {
+    canonical: "/fr/terms",
+    languages: { en: "/terms", fr: "/fr/terms" },
+  },
 };
 
 export default function Page() {
@@ -2507,12 +2585,12 @@ There are no component tests — sections are verified by manual smoke and Light
 
 ## Environment variables
 
-| Name                          | Purpose                                                         |
-| ----------------------------- | --------------------------------------------------------------- |
-| `NEXT_PUBLIC_IOS_URL`         | iOS install URL (TestFlight join URL, later App Store URL).     |
-| `NEXT_PUBLIC_ANDROID_URL`     | Android install URL (Play Store details URL).                   |
-| `NEXT_PUBLIC_CONTACT_EMAIL`   | Footer "Contact" link.                                          |
-| `NEXT_PUBLIC_SITE_URL`        | Used as `metadataBase` for absolute OG/canonical URLs.          |
+| Name                        | Purpose                                                     |
+| --------------------------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_IOS_URL`       | iOS install URL (TestFlight join URL, later App Store URL). |
+| `NEXT_PUBLIC_ANDROID_URL`   | Android install URL (Play Store details URL).               |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Footer "Contact" link.                                      |
+| `NEXT_PUBLIC_SITE_URL`      | Used as `metadataBase` for absolute OG/canonical URLs.      |
 
 All four have safe defaults in code, so local dev works without `.env.local`.
 

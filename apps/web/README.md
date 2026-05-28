@@ -24,12 +24,12 @@ There are no component tests — sections are verified by manual smoke and Light
 
 ## Environment variables
 
-| Name                          | Purpose                                                         |
-| ----------------------------- | --------------------------------------------------------------- |
-| `NEXT_PUBLIC_IOS_URL`         | iOS install URL (TestFlight join URL, later App Store URL).     |
-| `NEXT_PUBLIC_ANDROID_URL`     | Android install URL (Play Store details URL).                   |
-| `NEXT_PUBLIC_CONTACT_EMAIL`   | Footer "Contact" link.                                          |
-| `NEXT_PUBLIC_SITE_URL`        | Used as `metadataBase` for absolute OG/canonical URLs.          |
+| Name                        | Purpose                                                     |
+| --------------------------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_IOS_URL`       | iOS install URL (TestFlight join URL, later App Store URL). |
+| `NEXT_PUBLIC_ANDROID_URL`   | Android install URL (Play Store details URL).               |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Footer "Contact" link.                                      |
+| `NEXT_PUBLIC_SITE_URL`      | Used as `metadataBase` for absolute OG/canonical URLs.      |
 
 All four have safe defaults in code, so local dev works without `.env.local`.
 

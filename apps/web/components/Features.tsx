@@ -6,7 +6,10 @@ interface Props {
 }
 
 const SCREENS: Array<{ src: string; alt: string }> = [
-  { src: "/screens/practice.jpeg", alt: "Practice screen showing live conversation" },
+  {
+    src: "/screens/practice.jpeg",
+    alt: "Practice screen showing live conversation",
+  },
   { src: "/screens/practice.jpeg", alt: "Correction screen" },
   { src: "/screens/home.jpeg", alt: "Home screen showing daily practice" },
 ];
@@ -35,7 +38,9 @@ export function Features({ messages }: Props) {
                   />
                 )}
                 <h3 className="font-display text-xl text-ink">{card.title}</h3>
-                <p className="font-body text-base text-ink-soft max-w-xs">{card.body}</p>
+                <p className="font-body text-base text-ink-soft max-w-xs">
+                  {card.body}
+                </p>
               </article>
             );
           })}

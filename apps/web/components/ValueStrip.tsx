@@ -16,7 +16,9 @@ export function ValueStrip({ messages }: Props) {
             <span className="text-xl" aria-hidden>
               {ICONS[i]}
             </span>
-            <span className="font-body text-sm font-medium text-ink-soft">{item}</span>
+            <span className="font-body text-sm font-medium text-ink-soft">
+              {item}
+            </span>
           </div>
         ))}
       </div>

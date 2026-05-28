@@ -17,7 +17,9 @@ describe("generateQrSvg", () => {
   });
 
   it("uses a coral accent color for the foreground", async () => {
-    const svg = await generateQrSvg("https://example.com", { color: "#d96b5b" });
+    const svg = await generateQrSvg("https://example.com", {
+      color: "#d96b5b",
+    });
     expect(svg).toContain("#d96b5b");
   });
 });
