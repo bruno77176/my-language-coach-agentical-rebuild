@@ -288,7 +288,7 @@ import { buildAssetLinks } from "@/lib/well-known";
 // "open with…" chooser instead of opening the app directly. Update + redeploy
 // if the production keystore ever rotates.
 const SHA256_FINGERPRINT =
-  "PASTE_SHA256_FROM_TASK_1_HERE";
+  "BC:37:D5:24:28:76:AE:B6:CF:0C:BB:22:F0:C3:9A:59:28:1A:BC:D3:14:84:74:A6:7A:02:D2:9D:C5:61:2D:2E";
 
 export const dynamic = "force-static";
 
@@ -456,34 +456,67 @@ Expected: all tests pass including new `well-known.test.ts`.
 
 ---
 
-## Task 7: Deploy apps/web to production
+## Task 7: Deploy apps/web to production (via PR + merge to main)
 
 **Files:** none — deploy only.
 
-- [ ] **Step 1: Push the branch and check Vercel auto-deploy**
+`apps/web`'s Vercel project auto-deploys on push to `main`. Bruno prefers to land everything via PR review rather than direct push.
+
+- [ ] **Step 1: Push the worktree branch**
 
 ```bash
 cd "C:/Users/bruno.moise/My Language Coach - rebuild/app/.claude/worktrees/debug-chat-usage-recording"
 git push origin worktree-debug-chat-usage-recording
 ```
 
-The `apps/web` Vercel project is configured to auto-deploy from main. **Per Bruno's project memory, apps/web is on its own Vercel project that follows main, not this worktree branch.** So pushing the worktree branch alone will NOT deploy — we need to merge to main first, OR deploy manually:
+- [ ] **Step 2: Open the pull request**
 
 ```bash
-cd "C:/Users/bruno.moise/My Language Coach - rebuild/app"
-npx vercel --prod --scope brunoamoise-1277s-projects --cwd apps/web
+gh pr create --title "feat: Universal Links + App Links for email verification" --body "$(cat <<'EOF'
+## Summary
+- adds AASA + assetlinks well-known files served from `apps/web`
+- adds `/auth/verify` fallback page
+- hardens `supabase-verifier.ts` to reject unconfirmed emails (defense-in-depth)
+- declares `associatedDomains` (iOS) + `intentFilters` (Android) in mobile config
+- bumps versionCode 41→42, buildNumber 7→8
+
+Closes the auth-bypass bug discovered 2026-05-28 where a friend signed up as bruno.moise@gmail.com (an email he doesn't own) because Supabase's "Confirm email" toggle was OFF and the backend verifier didn't check email_confirmed_at.
+
+Spec: docs/superpowers/specs/2026-05-28-universal-links-email-verification-design.md
+Plan: docs/superpowers/plans/2026-05-28-universal-links-email-verification.md
+
+## Test plan
+- [ ] curl `/.well-known/apple-app-site-association` returns AASA JSON
+- [ ] curl `/.well-known/assetlinks.json` returns assetlinks JSON with prod fingerprint
+- [ ] `/auth/verify?token=...` renders the fallback page
+- [ ] On real Android device with new versionCode 42, tap email link → app opens directly
+- [ ] On TestFlight iOS buildNumber 8, same
+- [ ] DB: new test signup has `email_confirmed_at` ~minutes after `created_at` (not ms)
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
 ```
 
-Bruno will need to confirm which Vercel project + scope to use. If `apps/web` has its own `.vercel/` link (check via `ls apps/web/.vercel`), the simpler command is:
+- [ ] **Step 3: Merge the PR**
+
+After review (CI green, Bruno's approval), merge to main. Either:
+- via the GitHub UI ("Squash and merge" or "Create a merge commit" — match the repo's convention), OR
+- `gh pr merge --squash --auto` if you want it to auto-merge once checks pass
+
+- [ ] **Step 4: Wait for Vercel auto-deploy**
+
+Watch the Vercel dashboard or run:
 
 ```bash
-cd "C:/Users/bruno.moise/My Language Coach - rebuild/app/apps/web"
-npx vercel --prod
+npx vercel ls --scope brunoamoise-1277s-projects 2>&1 | head -20
 ```
 
-- [ ] **Step 2: Wait for deploy + verify endpoints**
+Wait for the new deploy to flip to **READY** status. Typically 1-2 min.
 
-After deploy URL is reported, hit it via curl from any terminal:
+- [ ] **Step 5: Verify endpoints from prod**
+
+Hit them via curl from any terminal:
 
 ```bash
 curl -i https://www.mylanguagecoach.app/.well-known/apple-app-site-association
@@ -503,7 +536,7 @@ curl -i "https://www.mylanguagecoach.app/auth/verify?token=test123&type=signup"
 
 Expected: `HTTP/2 200`, HTML body containing "Email confirmed".
 
-- [ ] **Step 3: Verify Apple's cached AASA**
+- [ ] **Step 6: Verify Apple's cached AASA**
 
 Open in a browser:
 
@@ -513,15 +546,9 @@ https://app-site-association.cdn-apple.com/a/v1/www.mylanguagecoach.app
 
 Apple's CDN caches AASA files for ~24h. Initial fetch may return empty / not-found; that's fine. iOS devices fetch directly from your origin on app install, so this CDN is informational only.
 
-- [ ] **Step 4: Verify Google's assetlinks lookup**
+- [ ] **Step 7: Verify Google's assetlinks lookup**
 
-In a browser:
-
-```
-https://developers.google.com/digital-asset-links/tools/generator
-```
-
-Or run:
+Run:
 
 ```bash
 curl -s "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://www.mylanguagecoach.app&relation=delegate_permission/common.handle_all_urls"
@@ -529,7 +556,7 @@ curl -s "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.
 
 Expected: JSON response listing your statement (`com.anonymous.mylanguagecoach` + fingerprint).
 
-- [ ] **Step 5: No commit (no source change)**
+- [ ] **Step 8: No commit (deploy is via the merged PR — no extra change here)**
 
 ---
 
