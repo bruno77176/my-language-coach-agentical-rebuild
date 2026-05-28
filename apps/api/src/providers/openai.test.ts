@@ -165,7 +165,7 @@ describe("openai usage instrumentation", () => {
     expect(onUsage).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "openai",
-        operation: "tts:gpt-4o-mini-tts",
+        operation: "tts:tts-1",
         characters: text.length,
       }),
     );

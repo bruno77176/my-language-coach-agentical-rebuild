@@ -97,23 +97,14 @@ export type TtsResult = {
   contentType: string;
 };
 
-// Product-wide voice persona. gpt-4o-mini-tts is the only model that accepts
-// `instructions`; the default model speed is too slow and a bit flat without
-// nudging, so we bump speed to 1.2 and shape the tone via instructions. Bruno
-// picked this combination after A/B'ing Italian samples.
-const TTS_SPEED = 1.2;
-const TTS_INSTRUCTIONS =
-  "Speak in a warm, friendly, conversational tone at a natural lively pace, like a language teacher having a relaxed chat with a friend.";
-
 export async function synthesizeSpeechOpenAI(
   client: OpenAI,
   input: TtsInput,
 ): Promise<TtsResult> {
-  const model = input.modelId ?? "gpt-4o-mini-tts";
   let arrayBuf: ArrayBuffer;
   try {
-    const args: Parameters<typeof client.audio.speech.create>[0] = {
-      model,
+    const response = await client.audio.speech.create({
+      model: input.modelId ?? "tts-1",
       voice: input.voiceId as
         | "alloy"
         | "echo"
@@ -122,15 +113,8 @@ export async function synthesizeSpeechOpenAI(
         | "nova"
         | "shimmer",
       input: input.text,
-      speed: TTS_SPEED,
       response_format: "mp3",
-    };
-    // `instructions` is rejected by tts-1 / tts-1-hd; only attach for
-    // gpt-4o-mini-tts (and future models that opt in).
-    if (model === "gpt-4o-mini-tts") {
-      (args as { instructions?: string }).instructions = TTS_INSTRUCTIONS;
-    }
-    const response = await client.audio.speech.create(args);
+    });
     arrayBuf = await response.arrayBuffer();
   } catch (err) {
     throw new ProviderError(
@@ -144,7 +128,7 @@ export async function synthesizeSpeechOpenAI(
     void Promise.resolve(
       input.onUsage({
         provider: "openai",
-        operation: `tts:${input.modelId ?? "gpt-4o-mini-tts"}`,
+        operation: `tts:${input.modelId ?? "tts-1"}`,
         characters: input.text.length,
       }),
     ).catch(() => {});
