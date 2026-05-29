@@ -16,6 +16,10 @@ const env = {
   ADMIN_USER_IDS: "",
   ADMIN_ALLOWED_ORIGINS: "",
   INTERNAL_CRON_SECRET: "super-secret-cron-token-1234",
+  ACCOUNT_DELETION_SECRET:
+    "0000000000000000000000000000000000000000000000000000000000000000",
+  RESEND_API_KEY: "re_test_stub",
+  PUBLIC_WEB_BASE_URL: "http://localhost:3002",
 };
 
 // Helper for inspecting Drizzle SQL objects passed to db.execute.

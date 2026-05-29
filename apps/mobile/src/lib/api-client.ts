@@ -66,6 +66,20 @@ export async function endSession(
   return res.json() as Promise<EndSessionResponse>;
 }
 
+export async function selfDeleteAccount(): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/v1/account-deletion/self`, {
+    method: "POST",
+    headers: {
+      authorization: await authHeader(),
+      ...clientPlatformHeader(),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`selfDeleteAccount ${res.status}: ${text}`);
+  }
+}
+
 export type TurnEvent =
   | { type: "transcription"; text: string }
   | {

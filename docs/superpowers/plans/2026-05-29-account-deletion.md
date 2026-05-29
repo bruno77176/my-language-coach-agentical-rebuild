@@ -73,6 +73,7 @@ Every requirement in `docs/superpowers/specs/2026-05-29-account-deletion-design.
 ## Task 1: Add dependencies + env vars
 
 **Files:**
+
 - Modify: `apps/api/package.json`
 - Modify: `apps/api/src/env.ts`
 
@@ -131,6 +132,7 @@ git commit -m "feat(api): add jose + resend deps + deletion env vars"
 ## Task 2: Account-deletion JWT helper
 
 **Files:**
+
 - Create: `apps/api/src/lib/account-deletion-token.ts`
 - Test: `apps/api/src/lib/account-deletion-token.test.ts`
 
@@ -140,7 +142,10 @@ Create `apps/api/src/lib/account-deletion-token.test.ts`:
 
 ```ts
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { signDeletionToken, verifyDeletionToken } from "./account-deletion-token";
+import {
+  signDeletionToken,
+  verifyDeletionToken,
+} from "./account-deletion-token";
 
 const secret = "a".repeat(64); // 32 bytes hex
 const userId = "00000000-0000-0000-0000-000000000001";
@@ -260,6 +265,7 @@ git commit -m "feat(api): account-deletion JWT sign/verify helpers"
 ## Task 3: Email-sender helper
 
 **Files:**
+
 - Create: `apps/api/src/lib/account-deletion-email.ts`
 - Test: `apps/api/src/lib/account-deletion-email.test.ts`
 
@@ -273,14 +279,17 @@ import { sendDeletionConfirmationEmail } from "./account-deletion-email";
 
 describe("sendDeletionConfirmationEmail", () => {
   it("calls Resend with the confirmation link and the user's email", async () => {
-    const send = vi.fn().mockResolvedValue({ data: { id: "msg_1" }, error: null });
+    const send = vi
+      .fn()
+      .mockResolvedValue({ data: { id: "msg_1" }, error: null });
     const resend = { emails: { send } };
 
     await sendDeletionConfirmationEmail({
       resend: resend as never,
       to: "user@example.com",
       displayName: "Alice",
-      confirmUrl: "https://www.mylanguagecoach.app/delete-account/confirm?token=abc",
+      confirmUrl:
+        "https://www.mylanguagecoach.app/delete-account/confirm?token=abc",
     });
 
     expect(send).toHaveBeenCalledTimes(1);
@@ -401,6 +410,7 @@ git commit -m "feat(api): Resend wrapper for deletion confirmation email"
 ## Task 4: Deletion routine
 
 **Files:**
+
 - Create: `apps/api/src/lib/account-deletion.ts`
 - Test: `apps/api/src/lib/account-deletion.test.ts`
 
@@ -546,6 +556,7 @@ git commit -m "feat(api): hard-delete routine for user accounts"
 ## Task 5: Account-deletion route handlers + wire-up
 
 **Files:**
+
 - Create: `apps/api/src/routes/account-deletion.ts`
 - Create: `apps/api/src/routes/account-deletion.test.ts`
 - Modify: `apps/api/src/app.ts`
@@ -845,7 +856,9 @@ const accountDeletionDeps = {
   publicWebBaseUrl: env.PUBLIC_WEB_BASE_URL,
   findUserByEmail: async (email: string) => {
     // Supabase admin listUsers paginated query — small user base, page=1 is fine.
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+      perPage: 1000,
+    });
     if (error) throw error;
     const u = data.users.find(
       (u) => u.email?.toLowerCase() === email.toLowerCase(),
@@ -856,11 +869,7 @@ const accountDeletionDeps = {
     });
     return { id: u.id, displayName: profile?.displayName ?? "" };
   },
-  sendEmail: (input: {
-    to: string;
-    displayName: string;
-    confirmUrl: string;
-  }) =>
+  sendEmail: (input: { to: string; displayName: string; confirmUrl: string }) =>
     sendDeletionConfirmationEmail({
       resend,
       to: input.to,
@@ -908,6 +917,7 @@ git commit -m "feat(api): account deletion endpoints (request, confirm, self)"
 ## Task 6: Web — public request page (EN)
 
 **Files:**
+
 - Create: `apps/web/app/delete-account/page.tsx`
 - Create: `apps/web/app/delete-account/RequestForm.client.tsx`
 - Create: `apps/web/app/delete-account/done/page.tsx`
@@ -1030,7 +1040,10 @@ export function RequestForm({ apiBaseUrl, locale }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="not-prose flex flex-col gap-3 max-w-md">
+    <form
+      onSubmit={onSubmit}
+      className="not-prose flex flex-col gap-3 max-w-md"
+    >
       <label className="font-body text-sm">
         {m.emailLabel}
         <input
@@ -1130,6 +1143,7 @@ git commit -m "feat(web): public account-deletion request page (EN)"
 ## Task 7: Web — confirm page (EN)
 
 **Files:**
+
 - Create: `apps/web/app/delete-account/confirm/page.tsx`
 - Create: `apps/web/app/delete-account/confirm/ConfirmButton.client.tsx`
 
@@ -1153,7 +1167,8 @@ type Props = {
 export function ConfirmButton({ apiBaseUrl, token, locale }: Props) {
   const m = getMessages(locale).deleteAccount;
   const router = useRouter();
-  const donePath = locale === "fr" ? "/fr/delete-account/done" : "/delete-account/done";
+  const donePath =
+    locale === "fr" ? "/fr/delete-account/done" : "/delete-account/done";
   const [state, setState] = useState<"idle" | "deleting" | "error">("idle");
 
   async function onClick() {
@@ -1256,6 +1271,7 @@ git commit -m "feat(web): account-deletion confirm page (EN)"
 ## Task 8: Web — French mirrors
 
 **Files:**
+
 - Create: `apps/web/app/fr/delete-account/page.tsx`
 - Create: `apps/web/app/fr/delete-account/confirm/page.tsx`
 - Create: `apps/web/app/fr/delete-account/done/page.tsx`
@@ -1430,6 +1446,7 @@ git commit -m "feat(web): FR mirrors for account-deletion pages"
 ## Task 9: Footer link + privacy policy update
 
 **Files:**
+
 - Modify: `apps/web/components/Footer.tsx`
 - Modify: `apps/web/content/privacy.en.mdx`
 - Modify: `apps/web/content/privacy.fr.mdx`
@@ -1512,6 +1529,7 @@ git commit -m "feat(web): footer link + privacy policy section for deletion"
 ## Task 10: Mobile — delete-account sheet + hook
 
 **Files:**
+
 - Create: `apps/mobile/src/features/profile/use-delete-account.ts`
 - Create: `apps/mobile/src/features/profile/delete-account-sheet.tsx`
 - Create: `apps/mobile/src/features/profile/delete-account-sheet.test.tsx`
@@ -1738,7 +1756,11 @@ export const DeleteAccountSheet = forwardRef<BottomSheetModal, Props>(
           <View style={styles.titleRow}>
             <EditorialText kind="displayMd">Delete your account</EditorialText>
           </View>
-          <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.body}>
+          <EditorialText
+            kind="bodyMd"
+            color={palette.inkSoft}
+            style={styles.body}
+          >
             This will permanently delete your account and all your practice
             history. This cannot be undone.
           </EditorialText>
@@ -1821,6 +1843,7 @@ git commit -m "feat(mobile): delete account sheet + hook + API call"
 ## Task 11: Mobile — wire into Profile screen
 
 **Files:**
+
 - Modify: `apps/mobile/app/(tabs)/profile.tsx`
 
 - [ ] **Step 1: Import the sheet**
@@ -1914,6 +1937,7 @@ git commit -m "feat(mobile): wire delete-account into Profile screen"
 ## Task 12: Version bump + deploy + Play Console form
 
 **Files:**
+
 - Modify: `apps/mobile/app.config.ts`
 
 - [ ] **Step 1: Bump Android versionCode and iOS buildNumber**

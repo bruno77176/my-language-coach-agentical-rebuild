@@ -17,6 +17,7 @@ import { EditGoalSheet } from "@/src/features/profile/edit-goal-sheet";
 import { EditLanguageSheet } from "@/src/features/profile/edit-language-sheet";
 import { SignInMethodsSheet } from "@/src/features/profile/sign-in-methods-sheet";
 import { ChangePasswordSheet } from "@/src/features/profile/change-password-sheet";
+import { DeleteAccountSheet } from "@/src/features/profile/delete-account-sheet";
 import { useIdentities } from "@/src/features/auth/use-identities";
 import { showToast } from "@/src/lib/toast";
 import {
@@ -56,6 +57,7 @@ export default function ProfileScreen() {
   const goalRef = useRef<BottomSheetModal>(null);
   const signInMethodsRef = useRef<BottomSheetModal>(null);
   const changePasswordRef = useRef<BottomSheetModal>(null);
+  const deleteAccountRef = useRef<BottomSheetModal>(null);
   const identities = useIdentities();
   const hasEmailIdentity = identities.some((i) => i.provider === "email");
 
@@ -205,6 +207,21 @@ export default function ProfileScreen() {
             </EditorialText>
           </Pressable>
 
+          {/* Delete account */}
+          <Pressable
+            onPress={() => deleteAccountRef.current?.present()}
+            style={styles.deleteAccountRow}
+          >
+            <EditorialText
+              kind="bodyMd"
+              color={palette.danger}
+              align="center"
+              style={styles.deleteAccountText}
+            >
+              Delete account
+            </EditorialText>
+          </Pressable>
+
           {/* Version */}
           <EditorialText kind="bodySm" color={palette.inkSoft} align="center">
             v{version} (build {buildNumber})
@@ -244,6 +261,11 @@ export default function ProfileScreen() {
           {hasEmailIdentity ? (
             <ChangePasswordSheet ref={changePasswordRef} email={email} />
           ) : null}
+          <DeleteAccountSheet
+            ref={deleteAccountRef}
+            email={email}
+            hasEmailIdentity={hasEmailIdentity}
+          />
         </ScrollView>
       </Screen>
     </BottomSheetModalProvider>
@@ -297,5 +319,13 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontWeight: "600",
+  },
+  deleteAccountRow: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+  },
+  deleteAccountText: {
+    textDecorationLine: "underline",
   },
 });
