@@ -1,16 +1,14 @@
 import { forwardRef, useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import {
-  BottomSheetFooter,
   BottomSheetModal,
   BottomSheetTextInput,
   BottomSheetView,
-  type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
-import { EditorialText, GlassCard, TAB_BAR_RESERVE } from "@/src/design";
+import { EditorialText, GlassCard } from "@/src/design";
 import {
   palette,
   radius,
@@ -28,12 +26,12 @@ type Props = {
 export const DeleteAccountSheet = forwardRef<BottomSheetModal, Props>(
   function DeleteAccountSheet({ email, hasEmailIdentity }, ref) {
     const insets = useSafeAreaInsets();
-    const footerInset = insets.bottom + TAB_BAR_RESERVE;
     const [password, setPassword] = useState("");
     const [verifying, setVerifying] = useState(false);
     const { deleting, run } = useDeleteAccount();
 
     const handleConfirm = useCallback(async () => {
+      console.log("[DeleteAccountSheet] confirm tapped", { hasEmailIdentity });
       if (hasEmailIdentity) {
         setVerifying(true);
         const { error } = await supabase.auth.signInWithPassword({
@@ -46,8 +44,6 @@ export const DeleteAccountSheet = forwardRef<BottomSheetModal, Props>(
           return;
         }
       }
-      // OAuth-only users: re-confirm via the destructive button alone for v1.
-      // Server still verifies the user's JWT before deleting.
       await run();
       (ref as { current: BottomSheetModal | null }).current?.dismiss();
     }, [email, hasEmailIdentity, password, ref, run]);
@@ -55,36 +51,20 @@ export const DeleteAccountSheet = forwardRef<BottomSheetModal, Props>(
     const busy = verifying || deleting;
     const valid = hasEmailIdentity ? password.length >= 1 : true;
 
-    const renderFooter = useCallback(
-      (props: BottomSheetFooterProps) => (
-        <BottomSheetFooter {...props} bottomInset={footerInset}>
-          <Pressable
-            onPress={handleConfirm}
-            disabled={busy || !valid}
-            style={[styles.deleteButton, (busy || !valid) && styles.disabled]}
-          >
-            <EditorialText
-              kind="bodyLg"
-              color={palette.cream}
-              style={{ fontWeight: "600" }}
-            >
-              {busy ? "Deleting…" : "Delete my account"}
-            </EditorialText>
-          </Pressable>
-        </BottomSheetFooter>
-      ),
-      [busy, valid, handleConfirm, footerInset],
-    );
-
     return (
       <BottomSheetModal
         ref={ref}
         snapPoints={["65%"]}
-        footerComponent={renderFooter}
+        enableDynamicSizing={false}
         backgroundStyle={styles.background}
         handleIndicatorStyle={styles.handle}
       >
-        <BottomSheetView style={styles.content}>
+        <BottomSheetView
+          style={[
+            styles.content,
+            { paddingBottom: insets.bottom + spacing.lg },
+          ]}
+        >
           <View style={styles.titleRow}>
             <EditorialText kind="displayMd">Delete your account</EditorialText>
           </View>
@@ -116,11 +96,34 @@ export const DeleteAccountSheet = forwardRef<BottomSheetModal, Props>(
               />
             </GlassCard>
           ) : (
-            <EditorialText kind="bodySm" color={palette.inkSoft}>
+            <EditorialText
+              kind="bodySm"
+              color={palette.inkSoft}
+              style={styles.body}
+            >
               You'll be signed out and your account removed. Tap "Delete my
               account" below to proceed.
             </EditorialText>
           )}
+          <View style={styles.spacer} />
+          <Pressable
+            onPress={handleConfirm}
+            disabled={busy || !valid}
+            style={({ pressed }) => [
+              styles.deleteButton,
+              (busy || !valid) && styles.disabled,
+              pressed && styles.deleteButtonPressed,
+            ]}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <EditorialText
+              kind="bodyLg"
+              color={palette.cream}
+              style={styles.deleteButtonText}
+            >
+              {busy ? "Deleting…" : "Delete my account"}
+            </EditorialText>
+          </Pressable>
         </BottomSheetView>
       </BottomSheetModal>
     );
@@ -134,20 +137,24 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
   },
   handle: { backgroundColor: palette.glassFaint },
-  content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.base },
+  content: {
+    flex: 1,
+    paddingHorizontal: spacing.xl,
+  },
   titleRow: { paddingTop: spacing.md, paddingBottom: spacing.lg },
   body: { marginBottom: spacing.md },
   field: { marginTop: spacing.sm },
   fieldLabel: { marginBottom: spacing.xs },
   input: { color: palette.ink, padding: 0, minHeight: 28 },
+  spacer: { flex: 1 },
   deleteButton: {
     backgroundColor: palette.danger,
     paddingVertical: spacing.base + 2,
     borderRadius: radius.lg,
     alignItems: "center",
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.md,
     ...shadow.cta,
   },
-  disabled: { opacity: 0.5 },
+  deleteButtonText: { fontWeight: "600" },
+  deleteButtonPressed: { opacity: 0.7 },
+  disabled: { opacity: 0.4 },
 });
