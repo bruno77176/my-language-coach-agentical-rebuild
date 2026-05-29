@@ -111,11 +111,11 @@ eas submit --platform ios --latest
 
 You need three so you can exercise each path without nuking your own:
 
-| Account                       | Sign-in method            | Tests                                      |
-| ----------------------------- | ------------------------- | ------------------------------------------ |
-| `bruno+del-email@gmail.com`   | Email + OTP, set password | In-app email-identity path (password gate) |
-| `bruno+del-google@gmail.com`  | Google sign-in            | In-app OAuth path (no password)            |
-| `bruno+del-web@gmail.com`     | Email + OTP               | Public web URL path                        |
+| Account                      | Sign-in method            | Tests                                      |
+| ---------------------------- | ------------------------- | ------------------------------------------ |
+| `bruno+del-email@gmail.com`  | Email + OTP, set password | In-app email-identity path (password gate) |
+| `bruno+del-google@gmail.com` | Google sign-in            | In-app OAuth path (no password)            |
+| `bruno+del-web@gmail.com`    | Email + OTP               | Public web URL path                        |
 
 For each: sign up in the mobile app, complete onboarding (so the `profiles` row exists), and run one short practice session (so there's chat/streak data to confirm gets deleted).
 
