@@ -150,6 +150,60 @@ export async function getGreetingAudioUrl(
 }
 
 /**
+ * Delete every coach-audio file stored under a user's prefix in the
+ * `user-audio` bucket. Used by the account-deletion routine.
+ *
+ * The Supabase Storage `list()` call is not recursive, so we walk one level:
+ *   {userId}/                    ← list returns conversation folders
+ *     {conversationId}/          ← list returns the .mp3 files
+ *       {messageId}-{idx}.mp3
+ *
+ * Remove takes an array of explicit paths (up to 1000 per call), so we
+ * batch by 500 to leave headroom.
+ *
+ * No-op when the user has no audio files.
+ */
+export async function deleteAllUserAudio(
+  client: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const { data: conversations, error: convListErr } = await client.storage
+    .from("user-audio")
+    .list(userId);
+  if (convListErr) {
+    throw new Error(`Failed to list user folders: ${convListErr.message}`);
+  }
+  if (!conversations || conversations.length === 0) return;
+
+  const allPaths: string[] = [];
+  for (const conv of conversations) {
+    const folder = `${userId}/${conv.name}`;
+    const { data: files, error: filesErr } = await client.storage
+      .from("user-audio")
+      .list(folder);
+    if (filesErr) {
+      throw new Error(`Failed to list files in ${folder}: ${filesErr.message}`);
+    }
+    if (!files) continue;
+    for (const f of files) {
+      allPaths.push(`${folder}/${f.name}`);
+    }
+  }
+  if (allPaths.length === 0) return;
+
+  const batchSize = 500;
+  for (let i = 0; i < allPaths.length; i += batchSize) {
+    const batch = allPaths.slice(i, i + batchSize);
+    const { error: removeErr } = await client.storage
+      .from("user-audio")
+      .remove(batch);
+    if (removeErr) {
+      throw new Error(`Failed to delete audio batch: ${removeErr.message}`);
+    }
+  }
+}
+
+/**
  * Return a signed URL for a cached coach audio chunk if it exists, or null.
  * Used by /v1/messages/:id/audio so repeated taps don't regenerate TTS
  * (which both costs money AND produces slightly different audio each call).
