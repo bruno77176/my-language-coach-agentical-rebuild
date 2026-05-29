@@ -19,6 +19,8 @@ const config: Config = {
         ink: palette.ink,
         "ink-soft": palette.inkSoft,
         cream: palette.cream,
+        danger: palette.danger,
+        "danger-surface": palette.dangerSurface,
       },
       backgroundImage: {
         sunrise: `linear-gradient(135deg, ${palette.peach} 0%, ${palette.coral} 50%, ${palette.mauve} 100%)`,
