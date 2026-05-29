@@ -209,8 +209,15 @@ export default function ProfileScreen() {
 
           {/* Delete account */}
           <Pressable
-            onPress={() => deleteAccountRef.current?.present()}
-            style={styles.deleteAccountRow}
+            onPress={() => {
+              console.log("[Profile] Delete account pressed");
+              deleteAccountRef.current?.present();
+            }}
+            style={({ pressed }) => [
+              styles.deleteAccountRow,
+              pressed && styles.deleteAccountRowPressed,
+            ]}
+            hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}
           >
             <EditorialText
               kind="bodyMd"
@@ -322,8 +329,15 @@ const styles = StyleSheet.create({
   },
   deleteAccountRow: {
     marginTop: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing.xl,
+    alignSelf: "center",
     alignItems: "center",
+    borderRadius: radius.lg,
+  },
+  deleteAccountRowPressed: {
+    opacity: 0.5,
+    backgroundColor: palette.dangerSurface,
   },
   deleteAccountText: {
     textDecorationLine: "underline",

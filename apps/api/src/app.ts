@@ -105,6 +105,28 @@ export function createApp(
     }),
   );
 
+  // CORS for /account-deletion/* (the anonymous public-web routes hit by the
+  // /delete-account page). Mount BEFORE the routes so preflight OPTIONS
+  // passes. Allowed origins are derived from PUBLIC_WEB_BASE_URL + localhost
+  // so we don't need a separate env var; if you serve the web app from
+  // another origin (preview deploys, alt domains), add them here.
+  const publicWebOrigin = new URL(env.PUBLIC_WEB_BASE_URL).origin;
+  const accountDeletionAllowedOrigins = [
+    publicWebOrigin,
+    "http://localhost:3002",
+  ];
+  app.use(
+    "/account-deletion/*",
+    cors({
+      origin: (origin) =>
+        origin && accountDeletionAllowedOrigins.includes(origin)
+          ? origin
+          : null,
+      allowMethods: ["POST", "OPTIONS"],
+      allowHeaders: ["Content-Type"],
+    }),
+  );
+
   // Account deletion: shared deps used by both anonymous (web) and
   // authenticated (in-app) routes. Mount the anonymous routes BEFORE the
   // /v1/* auth middleware so /account-deletion/request + /confirm don't
