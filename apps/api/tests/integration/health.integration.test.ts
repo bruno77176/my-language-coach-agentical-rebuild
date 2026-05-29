@@ -32,6 +32,10 @@ const baseEnv = {
   OPENAI_API_KEY: "openai-stub",
   DEEPGRAM_API_KEY: "deepgram-stub",
   ELEVENLABS_API_KEY: "elevenlabs-stub",
+  ACCOUNT_DELETION_SECRET:
+    "0000000000000000000000000000000000000000000000000000000000000000",
+  RESEND_API_KEY: "re_test_stub",
+  PUBLIC_WEB_BASE_URL: "http://localhost:3002",
 };
 
 describe.skipIf(!TEST_DB_URL)(

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { deleteUserAccount } from "./account-deletion";
+import { profiles } from "../db/schema/profiles";
+import { topics } from "../db/schema/topics";
 
 const userId = "00000000-0000-0000-0000-000000000001";
 
@@ -17,8 +19,9 @@ describe("deleteUserAccount", () => {
     const { db, supabaseAdmin, dbDelete, deleteUser } = makeDeps();
     const order: string[] = [];
     dbDelete.mockImplementation((table) => {
-      const t = table as { _: { name: string } };
-      order.push(t._.name);
+      if (table === topics) order.push("topics");
+      else if (table === profiles) order.push("profiles");
+      else order.push("unknown");
       return { where: vi.fn().mockResolvedValue(undefined) };
     });
     deleteUser.mockImplementation(async () => {
