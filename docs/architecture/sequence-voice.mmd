@@ -1,0 +1,62 @@
+---
+title: Voice conversation — single turn
+---
+%% Last updated: 2026-05-29
+%% Scope: One full conversational turn — user speaks, coach replies — annotated with realistic
+%%        latencies for an EU user (Lausanne) against the production stack.
+%% Total wall-clock from "user stops speaking" to "first coach audio plays": ~1.8 s.
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as Mobile app
+    participant Fly as Fly API (Stockholm)
+    participant DB as Supabase Postgres
+    participant DG as Deepgram (us-east)
+    participant AI as OpenAI (us-east)
+    participant TTS as OpenAI TTS (us-east)
+    participant Store as Supabase Storage
+
+    User->>App: Tap mic, speak
+    App->>App: expo-audio captures PCM 16 kHz mono
+
+    App->>Fly: Open WebSocket /voice/turn<br/>Authorization: Bearer access_token
+    Fly->>Fly: Verify JWT (cached JWKS)
+    Fly->>DG: Open Deepgram streaming socket
+
+    loop While user speaks
+        App->>Fly: Audio chunk (binary frame)
+        Fly->>DG: Forward chunk
+        DG-->>Fly: Partial transcript (every ~300 ms)
+    end
+
+    User->>App: Stops speaking
+    DG-->>Fly: Final transcript (~400 ms after silence)
+
+    Fly->>DB: SELECT conversation history WHERE user_id = ...
+    DB-->>Fly: messages[] (~5 ms — same DC)
+
+    Note over Fly,AI: Build chat request: system prompt + history + new user message.
+
+    Fly->>AI: POST /chat/completions (SSE, streaming)<br/>~100 ms RTT
+    AI-->>Fly: First token (~500-800 ms)
+
+    rect rgb(253, 231, 209)
+        Note over Fly: Sentence buffer:<br/>accumulate tokens until punctuation,<br/>then ship sentence to TTS in parallel<br/>with continuing to stream more tokens.
+    end
+
+    par Stream more tokens
+        loop Until LLM done
+            AI-->>Fly: Token chunk
+        end
+    and Synthesize earlier sentences
+        Fly->>TTS: POST /audio/speech (sentence N)
+        TTS-->>Fly: MP3 bytes (~400 ms first chunk)
+    end
+
+    Fly->>Store: Upload audio chunk for cache
+    Fly-->>App: WebSocket binary frame: audio chunk
+    App->>App: expo-audio decodes + plays
+    App->>User: Coach voice (first sound ~1.8 s after silence)
+
+    Note over Fly,DB: After turn ends:<br/>Fly persists user + coach messages,<br/>bumps conversations.updated_at,<br/>records usage_events for billing.
