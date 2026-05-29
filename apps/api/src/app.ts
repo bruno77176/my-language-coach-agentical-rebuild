@@ -30,6 +30,11 @@ import {
   getGreetingAudioUrl,
   getCachedCoachAudioUrl,
 } from "./lib/storage";
+import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+import { createAccountDeletionRoutes } from "./routes/account-deletion";
+import { deleteUserAccount } from "./lib/account-deletion";
+import { sendDeletionConfirmationEmail } from "./lib/account-deletion-email";
 
 export type AppEnv = {
   Variables: {
@@ -100,9 +105,56 @@ export function createApp(
     }),
   );
 
+  // Account deletion: shared deps used by both anonymous (web) and
+  // authenticated (in-app) routes. Mount the anonymous routes BEFORE the
+  // /v1/* auth middleware so /account-deletion/request + /confirm don't
+  // require a JWT.
+  const supabaseAdmin = createClient(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY);
+  const resend = new Resend(env.RESEND_API_KEY);
+  const accountDeletionDeps = {
+    secret: env.ACCOUNT_DELETION_SECRET,
+    publicWebBaseUrl: env.PUBLIC_WEB_BASE_URL,
+    findUserByEmail: async (email: string) => {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+        perPage: 1000,
+      });
+      if (error) throw error;
+      const u = data.users.find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase(),
+      );
+      if (!u) return null;
+      const profile = await db.query.profiles.findFirst({
+        where: (p, { eq }) => eq(p.userId, u.id),
+      });
+      return { id: u.id, displayName: profile?.displayName ?? "" };
+    },
+    sendEmail: (input: {
+      to: string;
+      displayName: string;
+      confirmUrl: string;
+    }) =>
+      sendDeletionConfirmationEmail({
+        resend,
+        to: input.to,
+        displayName: input.displayName,
+        confirmUrl: input.confirmUrl,
+      }),
+    deleteUser: (userId: string) =>
+      deleteUserAccount({ db, supabaseAdmin, userId }),
+  };
+  app.route(
+    "/account-deletion",
+    createAccountDeletionRoutes(accountDeletionDeps),
+  );
+
   // Auth-required routes: /v1/* requires a valid Supabase JWT.
   const auth = createAuthMiddleware(verifier);
   app.use("/v1/*", auth);
+
+  app.route(
+    "/v1/account-deletion",
+    createAccountDeletionRoutes(accountDeletionDeps),
+  );
 
   const deepgram = createDeepgram(env);
   const openai = createOpenAI(env);
