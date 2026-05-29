@@ -12,7 +12,8 @@ describe("sendDeletionConfirmationEmail", () => {
       resend: resend as never,
       to: "user@example.com",
       displayName: "Alice",
-      confirmUrl: "https://www.mylanguagecoach.app/delete-account/confirm?token=abc",
+      confirmUrl:
+        "https://www.mylanguagecoach.app/delete-account/confirm?token=abc",
     });
 
     expect(send).toHaveBeenCalledTimes(1);

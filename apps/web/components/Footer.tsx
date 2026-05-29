@@ -26,10 +26,7 @@ export function Footer({ messages, locale }: FooterProps) {
           <Link href={`${prefix}/terms`} className="hover:text-ink">
             {messages.links.terms}
           </Link>
-          <Link
-            href={`${prefix}/delete-account`}
-            className="hover:text-ink"
-          >
+          <Link href={`${prefix}/delete-account`} className="hover:text-ink">
             {messages.links.deleteAccount}
           </Link>
           <a href={`mailto:${contactEmail}`} className="hover:text-ink">

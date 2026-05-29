@@ -109,6 +109,7 @@ Errors mid-routine: any failure aborts and returns 500. Partial-state recovery i
 ### What is deleted vs retained
 
 **Deleted within 24 hours of confirmation:**
+
 - Email, name, profile picture URL
 - All chat messages and conversation threads
 - Practice session history, streaks, daily-goal records
@@ -118,6 +119,7 @@ Errors mid-routine: any failure aborts and returns 500. Partial-state recovery i
 - Per-user analytics events stored in our DB
 
 **Retained:**
+
 - `revenue_events` — purchase / refund history. Required for tax reporting and platform-fee reconciliation; retained 7 years per standard financial-records guidance. User_id is kept on these rows because the platform receipt IDs (Apple/Google) tie back to it. This is disclosed on the deletion page and in the privacy policy.
 - Anonymized aggregate metrics (e.g. "N sessions today"). No row-level link to the deleted user remains.
 - Sentry crash logs — auto-expire after 90 days; not on us to delete proactively.
@@ -168,16 +170,16 @@ To resolve in the plan, not here. See Open Questions.
 
 ## Error handling
 
-| Scenario | Behavior |
-|---|---|
-| `/request` with unknown email | 200, no email sent. Don't leak existence. |
-| `/request` rate-limit exceeded | 429 with retry-after; the web page shows "Too many attempts, try again in an hour" |
-| `/confirm` with expired token | 410 Gone; web page shows "Link expired" + button to restart at `/delete-account` |
-| `/confirm` with invalid signature | 400; web page shows generic "Link invalid" |
-| `/confirm` with already-deleted user | 404; web page shows "Account already deleted" (treated as success-ish) |
-| `/self` with stale JWT | 401; mobile signs out and routes to Welcome with a generic toast |
-| DB transaction failure mid-routine | 500; user sees error, can retry. Auth user not deleted, so the data may be partially gone. Acceptable per v1 risk note above; surface in Sentry. |
-| Supabase Auth delete fails after DB commit | Log to Sentry as a critical alert. Auth row will still exist with no associated profile; admin manually retries. Rare. |
+| Scenario                                   | Behavior                                                                                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/request` with unknown email              | 200, no email sent. Don't leak existence.                                                                                                        |
+| `/request` rate-limit exceeded             | 429 with retry-after; the web page shows "Too many attempts, try again in an hour"                                                               |
+| `/confirm` with expired token              | 410 Gone; web page shows "Link expired" + button to restart at `/delete-account`                                                                 |
+| `/confirm` with invalid signature          | 400; web page shows generic "Link invalid"                                                                                                       |
+| `/confirm` with already-deleted user       | 404; web page shows "Account already deleted" (treated as success-ish)                                                                           |
+| `/self` with stale JWT                     | 401; mobile signs out and routes to Welcome with a generic toast                                                                                 |
+| DB transaction failure mid-routine         | 500; user sees error, can retry. Auth user not deleted, so the data may be partially gone. Acceptable per v1 risk note above; surface in Sentry. |
+| Supabase Auth delete fails after DB commit | Log to Sentry as a critical alert. Auth row will still exist with no associated profile; admin manually retries. Rare.                           |
 
 ## Testing
 
@@ -201,5 +203,5 @@ No staged rollout — the deletion flow is gated behind a confirmation, and an e
 ## Open questions to resolve in the plan
 
 1. **Email provider**: does `apps/api` already have a transactional email helper, or do we add one? Supabase's built-in email is rate-limited at 4 per hour per project on the free tier, which is fine for v1 deletion volumes but worth confirming.
-2. **Storage cleanup**: are there any per-user files in Supabase Storage today (e.g. avatar uploads)? The Plan 7 follow-up notes "Avatar upload on Profile" was *deferred*, so probably no — but verify before merging the deletion routine.
+2. **Storage cleanup**: are there any per-user files in Supabase Storage today (e.g. avatar uploads)? The Plan 7 follow-up notes "Avatar upload on Profile" was _deferred_, so probably no — but verify before merging the deletion routine.
 3. **revenue_events FK**: confirm that `revenue_events.user_id` is nullable or that the FK is `ON DELETE SET NULL` if we want to keep it after the profile row is gone. If it's `ON DELETE CASCADE`, we have to either change the FK or anonymize the column before the profile delete.
