@@ -67,9 +67,31 @@
     "links": {
       "privacy": "Confidentialité",
       "terms": "Conditions",
+      "deleteAccount": "Supprimer le compte",
       "contact": "Contact"
     },
     "switchLanguage": "English",
     "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "Supprimer votre compte My Language Coach",
+    "intro": "Entrez l'adresse e-mail utilisée à l'inscription. Nous vous enverrons un lien de confirmation à usage unique. Cliquez dessus pour supprimer définitivement votre compte et toutes les données associées.",
+    "emailLabel": "E-mail",
+    "submit": "Envoyer le lien de confirmation",
+    "submitting": "Envoi…",
+    "sent": "Si un compte associé à cet e-mail existe, nous avons envoyé un lien de confirmation. Vérifiez votre boîte de réception (et les spams). Le lien expire dans 24 heures.",
+    "errorGeneric": "Une erreur est survenue. Réessayez dans quelques minutes.",
+    "whatIsDeleted": "Ce qui est supprimé",
+    "whatIsDeletedList": "Votre e-mail, nom, photo de profil, messages, historique de conversations, séries, vocabulaire enregistré, jetons de notifications et droits d'abonnement.",
+    "whatIsKept": "Ce que nous gardons",
+    "whatIsKeptList": "Les enregistrements financiers anonymisés des achats (non rattachés à vous, conservés pour les obligations fiscales), et les statistiques d'usage anonymisées.",
+    "confirmTitle": "Confirmer la suppression définitive",
+    "confirmIntro": "Cela supprimera définitivement votre compte et tout votre historique de pratique. Cette action est irréversible.",
+    "confirmButton": "Supprimer mon compte",
+    "confirmInvalid": "Ce lien de suppression est invalide ou a déjà été utilisé.",
+    "confirmExpired": "Ce lien de suppression a expiré. Demandez-en un nouveau.",
+    "confirmFailed": "Nous n'avons pas pu finaliser la suppression. Réessayez, ou contactez le support.",
+    "doneTitle": "Compte supprimé",
+    "doneBody": "Votre compte et toutes les données associées ont été supprimés. Nous sommes désolés de vous voir partir."
   }
 }
