@@ -16,6 +16,9 @@ const EnvSchema = z.object({
   ADMIN_USER_IDS: z.string().default(""), // comma-separated Supabase user IDs
   ADMIN_ALLOWED_ORIGINS: z.string().default(""), // comma-separated origins allowed to call /admin/* (CORS)
   INTERNAL_CRON_SECRET: z.string().min(16),
+  ACCOUNT_DELETION_SECRET: z.string().min(32), // 32+ random bytes hex for JWT HMAC
+  RESEND_API_KEY: z.string().min(1),
+  PUBLIC_WEB_BASE_URL: z.string().url(), // e.g. https://www.mylanguagecoach.app
 });
 
 export type Env = z.infer<typeof EnvSchema>;

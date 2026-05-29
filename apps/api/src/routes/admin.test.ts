@@ -17,6 +17,10 @@ const baseEnv = {
   ADMIN_USER_IDS: "admin-1",
   ADMIN_ALLOWED_ORIGINS: "",
   INTERNAL_CRON_SECRET: "test-cron-secret-1234567890",
+  ACCOUNT_DELETION_SECRET:
+    "0000000000000000000000000000000000000000000000000000000000000000",
+  RESEND_API_KEY: "re_test_stub",
+  PUBLIC_WEB_BASE_URL: "http://localhost:3002",
 };
 
 describe("GET /admin/overview", () => {
