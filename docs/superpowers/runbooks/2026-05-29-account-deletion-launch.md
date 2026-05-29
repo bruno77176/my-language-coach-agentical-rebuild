@@ -14,53 +14,70 @@ The code is on `main`. This runbook is the launch sequence — Resend setup, Fly
 
 ## 1. Resend setup
 
-Status: domain verified, API key pending.
-
 - [x] Sign up at [resend.com](https://resend.com) with `bruno.a.moise@gmail.com`.
 - [x] Add domain `mylanguagecoach.app`. DNS records (SPF, DKIM, optional DMARC) added in **Porkbun** (DNS-powered by Cloudflare).
 - [x] Wait for verification — Resend shows the domain as **Verified**.
-- [ ] **API Keys → Create API key** → name `prod`, scope `Full access`. Copy the `re_…` value. Save it somewhere safe; you'll paste it in step 2.
+- [x] **API Keys → Create API key** → name `api-prod`, scope `Sending access` (not Full access — backend only sends, doesn't manage). Use a **dedicated** key, not the `supabase-smtp` one Supabase uses for auth emails: independent blast radius means rotating one doesn't break the other.
 
 **Why no Vercel DNS step:** Vercel only manages routing for the web app's domain attachment. Email DNS lives in Porkbun (the registrar), proxied through Cloudflare. The four Resend records are already there: A, CNAME, MX (two), TXT (three for DKIM + SPF + DMARC).
+
+**Rotation reminder:** if the `re_…` key ever lands in plaintext anywhere (chat, log, screenshot), rotate it in Resend and re-set the Fly secret. Sending-access keys can only send emails so the worst-case is impersonation spam, but rotation is cheap.
 
 ---
 
 ## 2. Set the Fly secrets
 
-From the **main repo** (not the worktree), in `apps/api/`:
+From `apps/api/` (so fly picks up the local fly.toml — or pass `-a my-language-coach-agentical-rebuild` from anywhere).
+
+**Do not** try to inline `$(node -e ...)` substitution. It tends to silently capture an empty string when the full one-liner is long, and zod will reject `ACCOUNT_DELETION_SECRET` for being too short — the app then crash-loops until Fly hits its max-restart limit. Generate the secret separately, paste it.
 
 ```bash
+# 1. Generate the secret. Copy the 64-character hex output.
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 2. Set all three secrets (one fly secrets set triggers ONE redeploy).
+cd "C:/Users/bruno.moise/My Language Coach - rebuild/app/apps/api"
 fly secrets set \
-  ACCOUNT_DELETION_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))") \
+  ACCOUNT_DELETION_SECRET=<paste-64-char-hex-here> \
   RESEND_API_KEY=re_paste_yours_here \
   PUBLIC_WEB_BASE_URL=https://www.mylanguagecoach.app
 ```
 
+**Watch out:** Resend keys (`re_…`) and the `PUBLIC_WEB_BASE_URL` must include their full value. If your terminal wraps the line and chops a character, the app boots but emails will fail (Resend rejects the key) or links will point at a wrong domain. Verify with `fly secrets list` (values are masked but the timestamps show what got updated when).
+
 Fly auto-redeploys. Watch:
 
 ```bash
-fly logs --app my-language-coach-agentical-rebuild
+fly logs --app my-language-coach-agentical-rebuild --no-tail
 ```
 
-Confirm the API boots without env-validation errors. Look for the usual `Listening on :8080` line and no zod errors.
+Use `--no-tail` — without it, `fly logs` only follows new lines and a crash-looping app may look quiet between attempts. The boot error appears every restart cycle until secrets are right.
 
 ---
 
 ## 3. Backend smoke test (~2 min)
 
 ```bash
+# Should return {"status":"ok","dbOk":true,...}
+curl -s https://my-language-coach-agentical-rebuild.fly.dev/health
+
 # Should return {"ok":true} regardless of whether the email exists:
-curl -X POST https://my-language-coach-agentical-rebuild.fly.dev/account-deletion/request \
+curl -s -X POST https://my-language-coach-agentical-rebuild.fly.dev/account-deletion/request \
   -H 'content-type: application/json' \
   -d '{"email":"nobody@example.com"}'
 
-# Should return 400:
-curl -X POST https://my-language-coach-agentical-rebuild.fly.dev/account-deletion/request \
+# Should return {"error":{"code":"INVALID_INPUT"}} with HTTP 400:
+curl -s -X POST https://my-language-coach-agentical-rebuild.fly.dev/account-deletion/request \
   -H 'content-type: application/json' \
   -d '{"email":"not-an-email"}'
+
+# Should return {"error":{"code":"INVALID_TOKEN"}} with HTTP 400:
+curl -s -X POST https://my-language-coach-agentical-rebuild.fly.dev/account-deletion/confirm \
+  -H 'content-type: application/json' \
+  -d '{"token":"not.a.real.token"}'
 ```
 
-If the first call fails → check `fly logs` for env or Resend errors.
+If `/health` returns 503 → the app is crash-looping. Always check `fly logs --no-tail` for the boot error.
 If the second call returns 200 → the zod email validator isn't firing; check `apps/api/src/routes/account-deletion.ts`.
 
 ---
@@ -207,10 +224,10 @@ Only after steps 7–9 pass.
 
 ## Status checklist (tick as you go)
 
-- [ ] Resend API key created
-- [ ] Fly secrets set
-- [ ] Backend smoke (curl) passes
-- [ ] Web pages render in prod
+- [x] Resend API key created (`api-prod`, Sending access)
+- [x] Fly secrets set (after one stumble with empty-substitution)
+- [x] Backend smoke (curl) passes — `/health`, `/account-deletion/request` (200 + 400), `/confirm` (400 on bad token)
+- [x] Web pages render in prod
 - [ ] Android build + internal-track install
 - [ ] iOS build + TestFlight install (friend's iPad)
 - [ ] Throwaway accounts created
