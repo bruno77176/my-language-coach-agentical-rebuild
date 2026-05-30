@@ -27,6 +27,7 @@ export default function MemoryConsentScreen() {
       router.replace("/(tabs)/home");
     } catch (e) {
       Alert.alert("Couldn't save your choice", String(e));
+      router.replace("/(tabs)/home");
     } finally {
       setBusy(false);
     }
@@ -42,6 +43,7 @@ export default function MemoryConsentScreen() {
       router.replace("/(tabs)/home");
     } catch (e) {
       Alert.alert("Couldn't save your choice", String(e));
+      router.replace("/(tabs)/home");
     } finally {
       setBusy(false);
     }

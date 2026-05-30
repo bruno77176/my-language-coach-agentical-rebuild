@@ -177,6 +177,23 @@ export default function ProfileScreen() {
             />
           </GlassCard>
 
+          {/* COACH section */}
+          <EditorialText
+            kind="caps"
+            color={palette.inkSoft}
+            style={styles.sectionLabel}
+          >
+            Coach
+          </EditorialText>
+          <GlassCard padding="sm" radiusToken="lg" style={styles.sectionCard}>
+            <ProfileRow
+              label="Coach's Memory"
+              value="View & edit"
+              onPress={() => router.push("/(tabs)/profile/memory")}
+              isLast
+            />
+          </GlassCard>
+
           {/* PLAN section */}
           <EditorialText
             kind="caps"

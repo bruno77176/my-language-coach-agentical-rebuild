@@ -22,6 +22,7 @@ import {
   translateMessage,
 } from "./providers/openai";
 import { createMessagesRoutes } from "./routes/messages";
+import { createMemoryRoutes } from "./routes/memory";
 import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
 import {
   createStorageClient,
@@ -219,6 +220,8 @@ export function createApp(
       getCachedGreetingUrl: (input) => getGreetingAudioUrl(storage, input),
     }),
   );
+
+  app.route("/v1/memory", createMemoryRoutes({ db }));
 
   return app;
 }
