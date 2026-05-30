@@ -20,6 +20,7 @@ export const conversations = pgTable(
     topicId: uuid("topic_id").references(() => topics.id, {
       onDelete: "set null",
     }),
+    scenarioId: text("scenario_id"),
     startedAt: timestamp("started_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

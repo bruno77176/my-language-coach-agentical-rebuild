@@ -24,6 +24,7 @@ import {
   buildCoachSystemPrompt,
   parseCoachMemoryRow,
   emptyCoachMemory,
+  ROLE_PLAY_SCENARIOS,
 } from "@language-coach/shared";
 import type { CoachMemory, SessionFeedback } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
@@ -70,6 +71,9 @@ export type VoiceDeps = {
 const StartSessionBody = z.object({
   language: z.string().min(2).max(8),
   topic_id: z.string().uuid().optional(),
+  scenario_id: z
+    .enum(ROLE_PLAY_SCENARIOS.map((s) => s.id) as [string, ...string[]])
+    .optional(),
 });
 
 // Quick byte-size guards before we even hit the STT provider. These are loose
@@ -99,6 +103,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         userId,
         language: parsed.data.language,
         topicId: parsed.data.topic_id ?? null,
+        scenarioId: parsed.data.scenario_id ?? null,
       })
       .returning({ id: conversations.id });
 
@@ -253,11 +258,22 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           where: (t, { eq: e }) => e(t.conversationId, conversationId),
           orderBy: (t, { asc: a }) => [a(t.createdAt)],
         });
+        const scenario = conversation.scenarioId
+          ? ROLE_PLAY_SCENARIOS.find((s) => s.id === conversation.scenarioId) ??
+            null
+          : null;
+        const scenarioFragment = scenario
+          ? {
+              id: scenario.id,
+              systemPromptFragment: scenario.systemPromptFragment,
+            }
+          : null;
         const sysPrompt = buildCoachSystemPrompt({
           targetLanguage: conversation.language,
           userDisplayName: profile.displayName,
           memory,
           memoryDepth,
+          scenario: scenarioFragment,
         });
         const promptMessages: ChatMessage[] = [
           { role: "system" as const, content: sysPrompt },
