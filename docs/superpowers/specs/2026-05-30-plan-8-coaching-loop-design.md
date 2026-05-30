@@ -82,7 +82,7 @@ Cost: ~200 input + 300 output tokens × ($0.15 + $0.60)/M = **~$0.0002/session**
 function buildCoachSystemPrompt(input: {
   targetLanguage: string;
   userDisplayName: string;
-  memory?: CoachMemory | null;     // NEW
+  memory?: CoachMemory | null; // NEW
   scenario?: RolePlayScenario | null; // NEW
 }): string {
   // existing base prompt...
@@ -95,7 +95,7 @@ Reference these naturally when relevant. Do not list them robotically.
   if (input.scenario) {
     parts.push(`<scenario>${input.scenario.systemPromptFragment}</scenario>`);
   }
-  return parts.join('\n\n');
+  return parts.join("\n\n");
 }
 ```
 
@@ -103,13 +103,13 @@ Reference these naturally when relevant. Do not list them robotically.
 
 **Free vs Pro split for memory (Bruno's confirmed decision):**
 
-| Field                  | Free | Pro |
-| ---------------------- | :--: | :-: |
-| `proficiency_level`    | ✓    | ✓   |
+| Field                  |    Free    |     Pro     |
+| ---------------------- | :--------: | :---------: |
+| `proficiency_level`    |     ✓      |      ✓      |
 | `recent_topics`        | ✓ (last 5) | ✓ (last 20) |
-| `last_session_summary` | ✓    | ✓   |
-| `weak_areas`           |      | ✓   |
-| `personal_context`     |      | ✓   |
+| `last_session_summary` |     ✓      |      ✓      |
+| `weak_areas`           |            |      ✓      |
+| `personal_context`     |            |      ✓      |
 
 The free block is enough to make the coach feel "knows me." The Pro block is the "knows me deeply" upgrade. Bruno's vote rules: locking memory entirely behind Pro kills the funnel because the free experience would be worse than ChatGPT Voice (which at least has session-internal memory).
 
@@ -119,7 +119,7 @@ The free block is enough to make the coach feel "knows me." The Pro block is the
 >
 > To make your conversations feel like real coaching, we save a short profile of what you've talked about, your level, and topics you want to practice. You can view, edit, and delete this memory anytime under Profile → Coach's Memory.
 >
-> [Continue]  [Skip — I don't want my coach to remember me]
+> [Continue] [Skip — I don't want my coach to remember me]
 
 Skipping sets `coach_memory.opted_out = true` (need a column for this — added to migration `0010`) and prevents both write and read paths from running for that user. Pro can re-enable from Profile.
 
@@ -158,11 +158,13 @@ mobile: renders 3-panel UI when ready
 **Feedback job:** one `gpt-4o` call (not gpt-4o-mini — quality matters for pedagogy; cost ~$0.01/session is fine at $1k MRR target). Prompt summarized:
 
 > Given a language-learning conversation transcript, produce structured JSON with three lists:
+>
 > - **highlights** (1–3 items): things the student said well. For each: `phrase` (target language) + `why` (why it works, in the student's native language).
 > - **corrections** (1–3 items): clear mistakes worth fixing. For each: `you_said` + `better` + `explanation` (1 sentence, in native language).
 > - **vocab** (3–8 items): new words and expressions worth remembering. For each: `term` (target language) + `translation` (native language) + `source_phrase` (the exact sentence from the conversation).
 >
 > Rules:
+>
 > - If uncertain about a grammar rule, omit rather than fabricate.
 > - Prefer items that came from THE STUDENT'S speech over the coach's.
 > - All counts are upper bounds — if there's nothing of substance to say, return fewer items.
@@ -171,12 +173,12 @@ Validated against `SessionFeedbackSchema` (Zod) before save. On parse failure, l
 
 **Free vs Pro split for feedback:**
 
-| | Free | Pro |
-| --- | --- | --- |
-| Generate feedback for the just-ended session | ✓ | ✓ |
-| View feedback for sessions older than the last 3 | | ✓ |
-| Audio playback of correction phrases (re-renders the `better` field via TTS) |  | ✓ |
-| Weekly progress email digest (gpt-4o-mini summarizer + Resend) |  | ✓ |
+|                                                                              | Free | Pro |
+| ---------------------------------------------------------------------------- | ---- | --- |
+| Generate feedback for the just-ended session                                 | ✓    | ✓   |
+| View feedback for sessions older than the last 3                             |      | ✓   |
+| Audio playback of correction phrases (re-renders the `better` field via TTS) |      | ✓   |
+| Weekly progress email digest (gpt-4o-mini summarizer + Resend)               |      | ✓   |
 
 Every free user sees the coaching payoff once per session — that's the funnel hook. History past 3 sessions is Pro; audio of corrections is Pro (incremental TTS cost of ~$0.003/correction × ~3 corrections × N reviews per session = pennies/Pro user/mo).
 
@@ -213,30 +215,30 @@ Styling: matches existing Sunrise palette (peach/cream/coral); inline `StyleShee
 
 **Catalog:** static, in `packages/shared/src/role-play-scenarios.ts`. Bruno's confirmed 10:
 
-| ID | Title | Locale flavor | Free? |
-| --- | --- | --- | :---: |
-| `coffee` | Ordering coffee or food at a café | Casual | ✓ |
-| `hotel` | Checking into a hotel | Polite formal | |
-| `directions` | Asking for directions in a city | Stranger small-talk | ✓ |
-| `doctor` | Doctor visit — symptoms and medications | Polite | |
-| `interview` | Job interview | Formal, register tested | |
-| `party` | Small talk at a party | Casual, with twists | ✓ |
-| `complaint` | Customer-service complaint | Assertive | |
-| `phone-friend` | Phone call with a friend | Casual, fast | |
-| `meeting` | Workplace meeting introduction | Polite professional | |
-| `emergency` | Lost passport / wallet — police or embassy | Stressed formal | |
+| ID             | Title                                      | Locale flavor           | Free? |
+| -------------- | ------------------------------------------ | ----------------------- | :---: |
+| `coffee`       | Ordering coffee or food at a café          | Casual                  |   ✓   |
+| `hotel`        | Checking into a hotel                      | Polite formal           |       |
+| `directions`   | Asking for directions in a city            | Stranger small-talk     |   ✓   |
+| `doctor`       | Doctor visit — symptoms and medications    | Polite                  |       |
+| `interview`    | Job interview                              | Formal, register tested |       |
+| `party`        | Small talk at a party                      | Casual, with twists     |   ✓   |
+| `complaint`    | Customer-service complaint                 | Assertive               |       |
+| `phone-friend` | Phone call with a friend                   | Casual, fast            |       |
+| `meeting`      | Workplace meeting introduction             | Polite professional     |       |
+| `emergency`    | Lost passport / wallet — police or embassy | Stressed formal         |       |
 
 Each scenario object:
 
 ```ts
 type RolePlayScenario = {
   id: string;
-  title: { en: string; fr: string; /* ... all 12 supported native langs */ };
-  description: { en: string; fr: string; /* ... */ };
-  systemPromptFragment: string;       // appended to coach prompt
-  coachOpeningLine: (lang: TargetLang) => string;  // first line per target lang
-  twists: string[];                   // 2-3 mid-conversation pivots the coach can trigger
-  pro: boolean;                       // false for the 3 free scenarios
+  title: { en: string; fr: string /* ... all 12 supported native langs */ };
+  description: { en: string; fr: string /* ... */ };
+  systemPromptFragment: string; // appended to coach prompt
+  coachOpeningLine: (lang: TargetLang) => string; // first line per target lang
+  twists: string[]; // 2-3 mid-conversation pivots the coach can trigger
+  pro: boolean; // false for the 3 free scenarios
 };
 ```
 
@@ -257,20 +259,21 @@ type RolePlayScenario = {
 
 ```ts
 export const FEATURES = {
-  COACH_MEMORY_DEEP: 'coach_memory_deep',           // weak_areas + personal_context
-  FEEDBACK_HISTORY: 'feedback_history',             // sessions older than last 3
-  FEEDBACK_AUDIO: 'feedback_audio',                 // TTS playback of correction phrases
-  ROLEPLAY_PREMIUM: 'roleplay_premium',             // 7 of the 10 scenarios
-  WEEKLY_DIGEST_EMAIL: 'weekly_digest_email',
+  COACH_MEMORY_DEEP: "coach_memory_deep", // weak_areas + personal_context
+  FEEDBACK_HISTORY: "feedback_history", // sessions older than last 3
+  FEEDBACK_AUDIO: "feedback_audio", // TTS playback of correction phrases
+  ROLEPLAY_PREMIUM: "roleplay_premium", // 7 of the 10 scenarios
+  WEEKLY_DIGEST_EMAIL: "weekly_digest_email",
 } as const;
 
 export async function canUseFeature(
   userId: string,
   feature: keyof typeof FEATURES,
-  deps: { db: Db }
+  deps: { db: Db },
 ): Promise<boolean> {
   const ent = await getEntitlement(userId, deps.db);
-  if (ent.plan === 'pro' && (!ent.proUntil || ent.proUntil > new Date())) return true;
+  if (ent.plan === "pro" && (!ent.proUntil || ent.proUntil > new Date()))
+    return true;
   return false; // all listed features are Pro-only
 }
 ```
@@ -335,15 +338,18 @@ Existing `lib/quota.ts` extended with `canUseSecondsDaily`:
 ## Data model summary
 
 New tables:
+
 - `coach_memory(user_id, language_code, ...)` — Plan 8
 - `session_feedback(conversation_id, ...)` — Plan 8
 - `push_schedule(id, user_id, kind, send_at, sent_at, cancelled_at)` — Plan 8
 
 Modified tables:
+
 - `entitlements` — add `daily_voice_seconds_used`, `daily_reset_at`
 - `coach_memory` — add `opted_out boolean` for users who skipped consent
 
 Migrations:
+
 - `0010_coach_memory.sql`
 - `0011_session_feedback.sql`
 - `0012_entitlements_daily_quota.sql`
@@ -353,30 +359,30 @@ All RLS policies follow the convention from `0001`: `FOR ALL USING (auth.uid() =
 
 ## Free vs Pro summary (the funnel matrix)
 
-| Capability | Free | Pro |
-| --- | :--: | :--: |
-| Voice conversation | 10 min/day | 60 min/day soft cap |
-| Sessions in history | last 3 | all |
-| End-of-session feedback (current session) | ✓ | ✓ |
-| End-of-session feedback (history >3 sessions) | | ✓ |
-| Audio playback of correction phrases | | ✓ |
-| Coach memory — basic (name, level, recent topics, summary) | ✓ | ✓ |
-| Coach memory — deep (weak areas, personal context) | | ✓ |
-| Role-play scenarios | 3 of 10 (coffee/directions/party) | all 10 |
-| Push notifications | ✓ | ✓ |
-| Weekly progress email digest | | ✓ |
+| Capability                                                 |               Free                |         Pro         |
+| ---------------------------------------------------------- | :-------------------------------: | :-----------------: |
+| Voice conversation                                         |            10 min/day             | 60 min/day soft cap |
+| Sessions in history                                        |              last 3               |         all         |
+| End-of-session feedback (current session)                  |                 ✓                 |          ✓          |
+| End-of-session feedback (history >3 sessions)              |                                   |          ✓          |
+| Audio playback of correction phrases                       |                                   |          ✓          |
+| Coach memory — basic (name, level, recent topics, summary) |                 ✓                 |          ✓          |
+| Coach memory — deep (weak areas, personal context)         |                                   |          ✓          |
+| Role-play scenarios                                        | 3 of 10 (coffee/directions/party) |       all 10        |
+| Push notifications                                         |                 ✓                 |          ✓          |
+| Weekly progress email digest                               |                                   |          ✓          |
 
 ## Sequencing — 5 milestones, ~2 days
 
 Each milestone produces an APK Bruno installs and uses on his Android device before the next milestone starts. Test feedback drives any course corrections.
 
-| Milestone | Scope | Bruno tests |
-| --- | --- | --- |
-| **M1** | `coach_memory` schema + RLS, memory extraction at `/end`, memory injection in `buildCoachSystemPrompt`. No new UI yet. | Have a conversation. End. Start a new one. Coach mentions something from previous session. |
-| **M2** | Memory consent screen in onboarding. Memory editor under Profile. `session_feedback` schema + generation job + `/sessions/:id/feedback` endpoint. No end-of-session UI yet. | View + edit memory in Profile. Hit `/feedback` endpoint manually (curl or in-app debug button) to see structured feedback JSON. |
-| **M3** | End-of-session sheet UI (3 panels). Role-play scenarios catalog + picker modal + session-start with scenario. | Pick "ordering coffee". Do the conversation. See the feedback sheet with real highlights/corrections/vocab. Full coaching loop visible. |
-| **M4** | `features.ts` module, daily quota in `quota.ts`, `react-native-purchases` integration, paywall modal, RevenueCat dashboard config (manual), webhook endpoint. | Switch sandbox between free / Pro. Hit quota → paywall. Tap subscribe (sandbox) → Pro flag flips → previously-locked features unlock. |
-| **M5** | Push scheduler + Day 1/2/7 jobs, AI disclaimer in onboarding, GDPR consent text update, Play Console screenshots + description, internal-track build submitted. | Day 1 push arrives next day. Internal-track APK installs from Play. App passes Google's app-review checks. |
+| Milestone | Scope                                                                                                                                                                       | Bruno tests                                                                                                                             |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **M1**    | `coach_memory` schema + RLS, memory extraction at `/end`, memory injection in `buildCoachSystemPrompt`. No new UI yet.                                                      | Have a conversation. End. Start a new one. Coach mentions something from previous session.                                              |
+| **M2**    | Memory consent screen in onboarding. Memory editor under Profile. `session_feedback` schema + generation job + `/sessions/:id/feedback` endpoint. No end-of-session UI yet. | View + edit memory in Profile. Hit `/feedback` endpoint manually (curl or in-app debug button) to see structured feedback JSON.         |
+| **M3**    | End-of-session sheet UI (3 panels). Role-play scenarios catalog + picker modal + session-start with scenario.                                                               | Pick "ordering coffee". Do the conversation. See the feedback sheet with real highlights/corrections/vocab. Full coaching loop visible. |
+| **M4**    | `features.ts` module, daily quota in `quota.ts`, `react-native-purchases` integration, paywall modal, RevenueCat dashboard config (manual), webhook endpoint.               | Switch sandbox between free / Pro. Hit quota → paywall. Tap subscribe (sandbox) → Pro flag flips → previously-locked features unlock.   |
+| **M5**    | Push scheduler + Day 1/2/7 jobs, AI disclaimer in onboarding, GDPR consent text update, Play Console screenshots + description, internal-track build submitted.             | Day 1 push arrives next day. Internal-track APK installs from Play. App passes Google's app-review checks.                              |
 
 ## Confirmed decisions (Bruno, 2026-05-30)
 

@@ -46,10 +46,7 @@ export default function WeeklySummary() {
         {data ? (
           <View style={styles.statsRow}>
             <Stat label="Sessions" value={data.session_count} />
-            <Stat
-              label="Minutes"
-              value={Math.floor(data.total_seconds / 60)}
-            />
+            <Stat label="Minutes" value={Math.floor(data.total_seconds / 60)} />
             <Stat label="Languages" value={data.languages_practiced} />
           </View>
         ) : (

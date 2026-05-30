@@ -328,9 +328,7 @@ describe("CoachMemorySchema", () => {
   });
 
   it("RecentTopicSchema requires topic + last_practiced_at", () => {
-    expect(() =>
-      RecentTopicSchema.parse({ topic: "x" }),
-    ).toThrow();
+    expect(() => RecentTopicSchema.parse({ topic: "x" })).toThrow();
   });
 });
 ```
@@ -454,7 +452,10 @@ const okClient = {
               content: JSON.stringify({
                 proficiency_level: "B1",
                 recent_topics: [
-                  { topic: "trip to Italy", last_practiced_at: "2026-05-30T10:00:00.000Z" },
+                  {
+                    topic: "trip to Italy",
+                    last_practiced_at: "2026-05-30T10:00:00.000Z",
+                  },
                 ],
                 weak_areas: ["past tense irregulars"],
                 personal_context: { job: "engineer" },
@@ -705,7 +706,10 @@ describe("buildCoachSystemPrompt", () => {
       ...emptyCoachMemory(),
       proficiency_level: "B1",
       recent_topics: [
-        { topic: "trip to Italy", last_practiced_at: "2026-05-30T10:00:00.000Z" },
+        {
+          topic: "trip to Italy",
+          last_practiced_at: "2026-05-30T10:00:00.000Z",
+        },
       ],
       last_session_summary: "Talked about food.",
     };
@@ -873,68 +877,73 @@ Expected: 4 tests pass.
 Modify `apps/api/src/routes/voice.ts`. In the `/sessions/:id/turns` handler, after loading `profile` and before building `sysPrompt`, add:
 
 ```ts
-    // Load coach memory for this user × language (Plan 8 M1).
-    // If user opted out of memory, treat as no memory.
-    const memoryRow = await deps.db.query.coachMemory.findFirst({
-      where: (t, { eq: e, and: a }) =>
-        a(e(t.userId, userId), e(t.languageCode, conversation.language)),
-    });
-    const entitlementForMemory = entitlement; // already loaded above
-    const memoryDepth =
-      entitlementForMemory.plan === "pro" &&
-      entitlementForMemory.proUntil &&
-      entitlementForMemory.proUntil > new Date()
-        ? ("deep" as const)
-        : ("basic" as const);
-    const memory =
-      memoryRow && !memoryRow.optedOut
-        ? {
-            proficiency_level:
-              (memoryRow.proficiencyLevel as
-                | "A1"
-                | "A2"
-                | "B1"
-                | "B2"
-                | "C1"
-                | "C2"
-                | null) ?? null,
-            recent_topics:
-              (memoryRow.recentTopics as Array<{
-                topic: string;
-                last_practiced_at: string;
-              }>) ?? [],
-            weak_areas: (memoryRow.weakAreas as string[]) ?? [],
-            personal_context:
-              (memoryRow.personalContext as Record<string, unknown>) ?? {},
-            last_session_summary: memoryRow.lastSessionSummary,
-          }
-        : null;
+// Load coach memory for this user × language (Plan 8 M1).
+// If user opted out of memory, treat as no memory.
+const memoryRow = await deps.db.query.coachMemory.findFirst({
+  where: (t, { eq: e, and: a }) =>
+    a(e(t.userId, userId), e(t.languageCode, conversation.language)),
+});
+const entitlementForMemory = entitlement; // already loaded above
+const memoryDepth =
+  entitlementForMemory.plan === "pro" &&
+  entitlementForMemory.proUntil &&
+  entitlementForMemory.proUntil > new Date()
+    ? ("deep" as const)
+    : ("basic" as const);
+const memory =
+  memoryRow && !memoryRow.optedOut
+    ? {
+        proficiency_level:
+          (memoryRow.proficiencyLevel as
+            | "A1"
+            | "A2"
+            | "B1"
+            | "B2"
+            | "C1"
+            | "C2"
+            | null) ?? null,
+        recent_topics:
+          (memoryRow.recentTopics as Array<{
+            topic: string;
+            last_practiced_at: string;
+          }>) ?? [],
+        weak_areas: (memoryRow.weakAreas as string[]) ?? [],
+        personal_context:
+          (memoryRow.personalContext as Record<string, unknown>) ?? {},
+        last_session_summary: memoryRow.lastSessionSummary,
+      }
+    : null;
 ```
 
 Then change the `sysPrompt` line from:
 
 ```ts
-        const sysPrompt = buildCoachSystemPrompt({
-          targetLanguage: conversation.language,
-          userDisplayName: profile.displayName,
-        });
+const sysPrompt = buildCoachSystemPrompt({
+  targetLanguage: conversation.language,
+  userDisplayName: profile.displayName,
+});
 ```
 
 to:
 
 ```ts
-        const sysPrompt = buildCoachSystemPrompt({
-          targetLanguage: conversation.language,
-          userDisplayName: profile.displayName,
-          memory,
-          memoryDepth,
-        });
+const sysPrompt = buildCoachSystemPrompt({
+  targetLanguage: conversation.language,
+  userDisplayName: profile.displayName,
+  memory,
+  memoryDepth,
+});
 ```
 
 Also add the `coachMemory` import at the top of voice.ts:
 
 ```ts
-import { conversations, messages, entitlements, coachMemory } from "../db/schema";
+import {
+  conversations,
+  messages,
+  entitlements,
+  coachMemory,
+} from "../db/schema";
 ```
 
 (replace the existing schema import line).
@@ -944,81 +953,82 @@ import { conversations, messages, entitlements, coachMemory } from "../db/schema
 In the `/sessions/:id/end` handler (the one at `voice.ts:345-418`), AFTER the streak upsert and BEFORE the `return c.json(...)`, add the fire-and-forget extraction call:
 
 ```ts
-    // Plan 8 M1: fire-and-forget memory extraction. Never block the response.
-    void (async () => {
-      try {
-        const memoryRow = await deps.db.query.coachMemory.findFirst({
-          where: (t, { eq: e, and: a }) =>
-            a(e(t.userId, userId), e(t.languageCode, conversation.language)),
-        });
-        if (memoryRow?.optedOut) return;
-        const existingMemory = memoryRow
-          ? {
-              proficiency_level: memoryRow.proficiencyLevel as
-                | "A1"
-                | "A2"
-                | "B1"
-                | "B2"
-                | "C1"
-                | "C2"
-                | null,
-              recent_topics: (memoryRow.recentTopics as Array<{
-                topic: string;
-                last_practiced_at: string;
-              }>) ?? [],
-              weak_areas: (memoryRow.weakAreas as string[]) ?? [],
-              personal_context:
-                (memoryRow.personalContext as Record<string, unknown>) ?? {},
-              last_session_summary: memoryRow.lastSessionSummary,
-            }
-          : emptyCoachMemory();
-        const transcript = await deps.db.query.messages.findMany({
-          where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
-        });
-        const ttranscript = transcript.map((m) => ({
-          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
-          text: m.text,
-        }));
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-          conversationId,
-        });
-        const updated = await deps.extractMemory({
-          existingMemory,
-          transcript: ttranscript,
-          languageCode: conversation.language,
-          onUsage,
-        });
-        if (!updated) return; // parse failure already swallowed inside extractMemory
-        await deps.db
-          .insert(coachMemory)
-          .values({
-            userId,
-            languageCode: conversation.language,
-            proficiencyLevel: updated.proficiency_level ?? null,
-            recentTopics: updated.recent_topics,
-            weakAreas: updated.weak_areas,
-            personalContext: updated.personal_context,
-            lastSessionSummary: updated.last_session_summary ?? null,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [coachMemory.userId, coachMemory.languageCode],
-            set: {
-              proficiencyLevel: updated.proficiency_level ?? null,
-              recentTopics: updated.recent_topics,
-              weakAreas: updated.weak_areas,
-              personalContext: updated.personal_context,
-              lastSessionSummary: updated.last_session_summary ?? null,
-              updatedAt: new Date(),
-            },
-          });
-      } catch {
-        // Memory extraction never breaks the user-visible flow.
-      }
-    })();
+// Plan 8 M1: fire-and-forget memory extraction. Never block the response.
+void (async () => {
+  try {
+    const memoryRow = await deps.db.query.coachMemory.findFirst({
+      where: (t, { eq: e, and: a }) =>
+        a(e(t.userId, userId), e(t.languageCode, conversation.language)),
+    });
+    if (memoryRow?.optedOut) return;
+    const existingMemory = memoryRow
+      ? {
+          proficiency_level: memoryRow.proficiencyLevel as
+            | "A1"
+            | "A2"
+            | "B1"
+            | "B2"
+            | "C1"
+            | "C2"
+            | null,
+          recent_topics:
+            (memoryRow.recentTopics as Array<{
+              topic: string;
+              last_practiced_at: string;
+            }>) ?? [],
+          weak_areas: (memoryRow.weakAreas as string[]) ?? [],
+          personal_context:
+            (memoryRow.personalContext as Record<string, unknown>) ?? {},
+          last_session_summary: memoryRow.lastSessionSummary,
+        }
+      : emptyCoachMemory();
+    const transcript = await deps.db.query.messages.findMany({
+      where: (t, { eq: e }) => e(t.conversationId, conversationId),
+      orderBy: (t, { asc: a }) => [a(t.createdAt)],
+    });
+    const ttranscript = transcript.map((m) => ({
+      role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
+      text: m.text,
+    }));
+    const onUsage = makeOnUsage(deps.db, {
+      userId,
+      platform: platformFromHeader(c.req.header("X-Client-Platform")),
+      conversationId,
+    });
+    const updated = await deps.extractMemory({
+      existingMemory,
+      transcript: ttranscript,
+      languageCode: conversation.language,
+      onUsage,
+    });
+    if (!updated) return; // parse failure already swallowed inside extractMemory
+    await deps.db
+      .insert(coachMemory)
+      .values({
+        userId,
+        languageCode: conversation.language,
+        proficiencyLevel: updated.proficiency_level ?? null,
+        recentTopics: updated.recent_topics,
+        weakAreas: updated.weak_areas,
+        personalContext: updated.personal_context,
+        lastSessionSummary: updated.last_session_summary ?? null,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [coachMemory.userId, coachMemory.languageCode],
+        set: {
+          proficiencyLevel: updated.proficiency_level ?? null,
+          recentTopics: updated.recent_topics,
+          weakAreas: updated.weak_areas,
+          personalContext: updated.personal_context,
+          lastSessionSummary: updated.last_session_summary ?? null,
+          updatedAt: new Date(),
+        },
+      });
+  } catch {
+    // Memory extraction never breaks the user-visible flow.
+  }
+})();
 ```
 
 Add to the imports at the top of voice.ts:
@@ -1191,12 +1201,20 @@ export default function MemoryConsentScreen() {
         <EditorialText kind="displayMd" italic style={styles.title}>
           Your coach remembers you
         </EditorialText>
-        <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.body}>
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.body}
+        >
           To make conversations feel like real coaching, we save a short profile
           of what you've talked about, your level, and topics you'd like to
           practice.
         </EditorialText>
-        <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.body}>
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.body}
+        >
           You can view, edit, or delete this memory anytime under Profile →
           Coach's Memory.
         </EditorialText>
@@ -1520,7 +1538,7 @@ Modify `apps/api/src/app.ts` to add (alongside other `/v1/*` routes):
 ```ts
 import { createMemoryRoutes } from "./routes/memory";
 // ...
-  app.route("/v1/memory", createMemoryRoutes({ db }));
+app.route("/v1/memory", createMemoryRoutes({ db }));
 ```
 
 - [ ] **Step 5: Run test to verify it passes**
@@ -1586,7 +1604,14 @@ export function useDeleteMemory() {
 `apps/mobile/app/(tabs)/profile/memory.tsx`:
 
 ```tsx
-import { ScrollView, StyleSheet, View, TextInput, Pressable, Alert } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  TextInput,
+  Pressable,
+  Alert,
+} from "react-native";
 import { Stack } from "expo-router";
 import { useState, useEffect } from "react";
 import { EditorialText, Screen } from "@/src/design";
@@ -1607,8 +1632,13 @@ export default function MemoryEditorScreen() {
     <Screen variant="gradient">
       <Stack.Screen options={{ title: "Coach's Memory" }} />
       <ScrollView contentContainerStyle={styles.container}>
-        <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.intro}>
-          What your coach remembers about you. Edit freely — your changes apply on your next session.
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.intro}
+        >
+          What your coach remembers about you. Edit freely — your changes apply
+          on your next session.
         </EditorialText>
         {isLoading && (
           <EditorialText kind="bodyMd" color={palette.inkSoft}>
@@ -1617,7 +1647,8 @@ export default function MemoryEditorScreen() {
         )}
         {data?.memories.length === 0 && (
           <EditorialText kind="bodyMd" color={palette.inkSoft}>
-            Your coach hasn't gathered any memory yet. Have a conversation first.
+            Your coach hasn't gathered any memory yet. Have a conversation
+            first.
           </EditorialText>
         )}
         {data?.memories.map((entry) => (
@@ -1632,11 +1663,15 @@ function MemoryCard({ entry }: { entry: CoachMemoryEntry }) {
   const update = useUpdateMemory();
   const del = useDeleteMemory();
   const lang = LANGUAGES.find((l) => l.code === entry.language_code);
-  const [summary, setSummary] = useState(entry.memory.last_session_summary ?? "");
+  const [summary, setSummary] = useState(
+    entry.memory.last_session_summary ?? "",
+  );
   const [topics, setTopics] = useState(
     entry.memory.recent_topics.map((t) => t.topic).join("\n"),
   );
-  const [weakAreas, setWeakAreas] = useState(entry.memory.weak_areas.join("\n"));
+  const [weakAreas, setWeakAreas] = useState(
+    entry.memory.weak_areas.join("\n"),
+  );
 
   useEffect(() => {
     setSummary(entry.memory.last_session_summary ?? "");
@@ -1746,7 +1781,11 @@ const styles = StyleSheet.create({
     padding: spacing.base,
     gap: spacing.sm,
   },
-  langTitle: { color: palette.ink, marginBottom: spacing.sm, fontWeight: "600" },
+  langTitle: {
+    color: palette.ink,
+    marginBottom: spacing.sm,
+    fontWeight: "600",
+  },
   input: {
     backgroundColor: palette.cream,
     borderRadius: radius.md,
@@ -1912,7 +1951,11 @@ import { SessionFeedbackSchema } from "./feedback-schema";
 describe("SessionFeedbackSchema", () => {
   it("accepts the empty shape", () => {
     expect(() =>
-      SessionFeedbackSchema.parse({ highlights: [], corrections: [], vocab: [] }),
+      SessionFeedbackSchema.parse({
+        highlights: [],
+        corrections: [],
+        vocab: [],
+      }),
     ).not.toThrow();
   });
   it("rejects extra root keys", () => {
@@ -2146,59 +2189,59 @@ cd apps/api && pnpm test src/lib/generate-feedback.test.ts
 In `voice.ts /end` handler, ADD ANOTHER fire-and-forget block alongside the memory extraction block (Task 4 added). First, insert a pending row, then fire the gen job.
 
 ```ts
-    // Plan 8 M2: insert pending feedback row, then fire gen job.
-    void (async () => {
-      try {
-        await deps.db
-          .insert(sessionFeedback)
-          .values({
-            conversationId,
-            status: "pending",
-            highlights: [],
-            corrections: [],
-            vocab: [],
-          })
-          .onConflictDoNothing();
+// Plan 8 M2: insert pending feedback row, then fire gen job.
+void (async () => {
+  try {
+    await deps.db
+      .insert(sessionFeedback)
+      .values({
+        conversationId,
+        status: "pending",
+        highlights: [],
+        corrections: [],
+        vocab: [],
+      })
+      .onConflictDoNothing();
 
-        const transcript = await deps.db.query.messages.findMany({
-          where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
-        });
-        const ttranscript = transcript.map((m) => ({
-          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
-          text: m.text,
-        }));
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-          conversationId,
-        });
-        const fb = await deps.generateFeedback({
-          transcript: ttranscript,
-          languageCode: conversation.language,
-          nativeLanguageCode: profile.nativeLang,
-          onUsage,
-        });
-        if (!fb) {
-          await deps.db
-            .update(sessionFeedback)
-            .set({ status: "failed" })
-            .where(eq(sessionFeedback.conversationId, conversationId));
-          return;
-        }
-        await deps.db
-          .update(sessionFeedback)
-          .set({
-            status: "ready",
-            highlights: fb.highlights,
-            corrections: fb.corrections,
-            vocab: fb.vocab,
-          })
-          .where(eq(sessionFeedback.conversationId, conversationId));
-      } catch {
-        // already logged via Sentry through caught errors
-      }
-    })();
+    const transcript = await deps.db.query.messages.findMany({
+      where: (t, { eq: e }) => e(t.conversationId, conversationId),
+      orderBy: (t, { asc: a }) => [a(t.createdAt)],
+    });
+    const ttranscript = transcript.map((m) => ({
+      role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
+      text: m.text,
+    }));
+    const onUsage = makeOnUsage(deps.db, {
+      userId,
+      platform: platformFromHeader(c.req.header("X-Client-Platform")),
+      conversationId,
+    });
+    const fb = await deps.generateFeedback({
+      transcript: ttranscript,
+      languageCode: conversation.language,
+      nativeLanguageCode: profile.nativeLang,
+      onUsage,
+    });
+    if (!fb) {
+      await deps.db
+        .update(sessionFeedback)
+        .set({ status: "failed" })
+        .where(eq(sessionFeedback.conversationId, conversationId));
+      return;
+    }
+    await deps.db
+      .update(sessionFeedback)
+      .set({
+        status: "ready",
+        highlights: fb.highlights,
+        corrections: fb.corrections,
+        vocab: fb.vocab,
+      })
+      .where(eq(sessionFeedback.conversationId, conversationId));
+  } catch {
+    // already logged via Sentry through caught errors
+  }
+})();
 ```
 
 Add to imports:
@@ -2343,7 +2386,9 @@ describe("feedback routes", () => {
       await next();
     });
     app.route("/v1", createFeedbackRoutes(deps));
-    const res = await app.fetch(new Request("http://x/v1/sessions/c1/feedback"));
+    const res = await app.fetch(
+      new Request("http://x/v1/sessions/c1/feedback"),
+    );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { status: string };
     expect(body.status).toBe("ready");
@@ -2364,7 +2409,9 @@ describe("feedback routes", () => {
       await next();
     });
     app.route("/v1", createFeedbackRoutes(deps));
-    const res = await app.fetch(new Request("http://x/v1/sessions/c1/feedback"));
+    const res = await app.fetch(
+      new Request("http://x/v1/sessions/c1/feedback"),
+    );
     expect(res.status).toBe(404);
   });
 });
@@ -2375,7 +2422,7 @@ describe("feedback routes", () => {
 ```ts
 import { createFeedbackRoutes } from "./routes/feedback";
 // in createApp(), under /v1/* middleware:
-  app.route("/v1", createFeedbackRoutes({ db }));
+app.route("/v1", createFeedbackRoutes({ db }));
 ```
 
 - [ ] **Step 3: Run tests, then commit**
@@ -2462,10 +2509,21 @@ export function useSessionFeedback(conversationId: string | null) {
 `apps/mobile/app/(modals)/end-of-session.tsx`:
 
 ```tsx
-import { ScrollView, StyleSheet, View, Pressable, ActivityIndicator } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { EditorialText, Screen } from "@/src/design";
-import { palette, radius, shadow, spacing } from "@language-coach/design-tokens";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+} from "@language-coach/design-tokens";
 import { useSessionFeedback } from "@/src/features/practice/use-session-feedback";
 
 export default function EndOfSessionScreen() {
@@ -2488,7 +2546,11 @@ export default function EndOfSessionScreen() {
         <EditorialText kind="displayMd" italic style={styles.title}>
           Great job!
         </EditorialText>
-        <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.subtitle}>
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.subtitle}
+        >
           You spoke for {min} min {sec} sec
         </EditorialText>
 
@@ -2502,8 +2564,13 @@ export default function EndOfSessionScreen() {
         )}
 
         {data?.status === "failed" && (
-          <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.failed}>
-            Couldn't generate feedback this session. No worries — try another conversation.
+          <EditorialText
+            kind="bodyMd"
+            color={palette.inkSoft}
+            style={styles.failed}
+          >
+            Couldn't generate feedback this session. No worries — try another
+            conversation.
           </EditorialText>
         )}
 
@@ -2543,7 +2610,11 @@ export default function EndOfSessionScreen() {
                 </EditorialText>
               ) : (
                 data.vocab.map((v, i) => (
-                  <Item key={i} top={`${v.term}  →  ${v.translation}`} bottom={v.source_phrase ?? ""} />
+                  <Item
+                    key={i}
+                    top={`${v.term}  →  ${v.translation}`}
+                    bottom={v.source_phrase ?? ""}
+                  />
                 ))
               )}
             </Section>
@@ -2567,7 +2638,13 @@ export default function EndOfSessionScreen() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.section}>
       <EditorialText kind="bodyMd" style={styles.sectionTitle}>
@@ -2578,7 +2655,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Item({ top, middle, bottom }: { top: string; middle?: string; bottom?: string }) {
+function Item({
+  top,
+  middle,
+  bottom,
+}: {
+  top: string;
+  middle?: string;
+  bottom?: string;
+}) {
   return (
     <View style={styles.item}>
       <EditorialText kind="bodyMd" style={styles.itemTop}>
@@ -2605,7 +2690,11 @@ const styles = StyleSheet.create({
   loading: { gap: spacing.md, alignItems: "center", marginTop: spacing.xl },
   failed: { marginTop: spacing.xl },
   section: { marginTop: spacing.xl },
-  sectionTitle: { fontWeight: "600", color: palette.ink, marginBottom: spacing.sm },
+  sectionTitle: {
+    fontWeight: "600",
+    color: palette.ink,
+    marginBottom: spacing.sm,
+  },
   sectionBody: { gap: spacing.md },
   item: {
     backgroundColor: palette.glassStrong,
@@ -2664,43 +2753,46 @@ Read `apps/mobile/src/features/practice/use-conversation.ts` and verify it store
 Replace the `onExit` handler (currently lines ~135-165) with:
 
 ```tsx
-  const onExit = () => {
-    Alert.alert("End conversation?", undefined, [
-      { text: "Keep talking", style: "cancel" },
-      {
-        text: "End",
-        style: "destructive",
-        onPress: () => {
-          void (async () => {
-            let endResult: { conversationId: string | null; secondsSpoken: number } | null = null;
-            try {
-              endResult = await end();
-            } catch {
-              /* best-effort */
-            }
-            resetSessionTimer();
-            todaySecondsAtStartRef.current = 0;
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
-              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
-            ]);
-            if (endResult?.conversationId) {
-              router.replace({
-                pathname: "/(modals)/end-of-session",
-                params: {
-                  conversationId: endResult.conversationId,
-                  secondsSpoken: String(endResult.secondsSpoken),
-                },
-              });
-            } else {
-              router.replace("/(tabs)/home");
-            }
-          })();
-        },
+const onExit = () => {
+  Alert.alert("End conversation?", undefined, [
+    { text: "Keep talking", style: "cancel" },
+    {
+      text: "End",
+      style: "destructive",
+      onPress: () => {
+        void (async () => {
+          let endResult: {
+            conversationId: string | null;
+            secondsSpoken: number;
+          } | null = null;
+          try {
+            endResult = await end();
+          } catch {
+            /* best-effort */
+          }
+          resetSessionTimer();
+          todaySecondsAtStartRef.current = 0;
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+            queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
+            queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+          ]);
+          if (endResult?.conversationId) {
+            router.replace({
+              pathname: "/(modals)/end-of-session",
+              params: {
+                conversationId: endResult.conversationId,
+                secondsSpoken: String(endResult.secondsSpoken),
+              },
+            });
+          } else {
+            router.replace("/(tabs)/home");
+          }
+        })();
       },
-    ]);
-  };
+    },
+  ]);
+};
 ```
 
 - [ ] **Step 3: Commit**
@@ -2770,7 +2862,10 @@ export type RolePlayScenario = {
 export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   {
     id: "coffee",
-    title: { en: "Ordering coffee or food", fr: "Commander un café ou à manger" },
+    title: {
+      en: "Ordering coffee or food",
+      fr: "Commander un café ou à manger",
+    },
     description: {
       en: "At a small local café. Casual register.",
       fr: "Dans un petit café local. Registre familier.",
@@ -2836,7 +2931,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "complaint",
-    title: { en: "Customer-service complaint", fr: "Réclamation au service client" },
+    title: {
+      en: "Customer-service complaint",
+      fr: "Réclamation au service client",
+    },
     description: {
       en: "Assertive register without being rude.",
       fr: "Registre assertif sans être impoli.",
@@ -2847,7 +2945,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "phone-friend",
-    title: { en: "Phone call with a friend", fr: "Appel téléphonique avec un ami" },
+    title: {
+      en: "Phone call with a friend",
+      fr: "Appel téléphonique avec un ami",
+    },
     description: {
       en: "Casual, fast, contractions allowed.",
       fr: "Décontracté, rapide, contractions permises.",
@@ -2858,7 +2959,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "meeting",
-    title: { en: "Workplace meeting intro", fr: "Présentation en réunion au travail" },
+    title: {
+      en: "Workplace meeting intro",
+      fr: "Présentation en réunion au travail",
+    },
     description: {
       en: "Polite professional; the student introduces themselves to a new team.",
       fr: "Professionnel poli; l'étudiant se présente à une nouvelle équipe.",
@@ -2869,7 +2973,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "emergency",
-    title: { en: "Lost passport — police station", fr: "Passeport perdu — au commissariat" },
+    title: {
+      en: "Lost passport — police station",
+      fr: "Passeport perdu — au commissariat",
+    },
     description: {
       en: "Stressed formal register; following instructions under pressure.",
       fr: "Registre formel et stressé; suivre des instructions sous pression.",
@@ -2932,7 +3039,10 @@ export default function RolePlayPicker() {
       router.push("/(modals)/paywall");
       return;
     }
-    router.replace({ pathname: "/(tabs)/practice", params: { scenarioId: id } });
+    router.replace({
+      pathname: "/(tabs)/practice",
+      params: { scenarioId: id },
+    });
   };
 
   return (
@@ -2941,8 +3051,13 @@ export default function RolePlayPicker() {
         <EditorialText kind="displayMd" italic style={styles.title}>
           Practice a scenario
         </EditorialText>
-        <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.subtitle}>
-          Pick a real-world situation. Your coach will play their role and throw in a twist.
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.subtitle}
+        >
+          Pick a real-world situation. Your coach will play their role and throw
+          in a twist.
         </EditorialText>
         {ROLE_PLAY_SCENARIOS.map((s) => {
           const locked = s.pro && !isPro;
@@ -3058,23 +3173,22 @@ In `/sessions/:id/turns`, AFTER loading `conversation`, look up the scenario:
 ```ts
 import { ROLE_PLAY_SCENARIOS } from "@language-coach/shared";
 // ...
-        const scenario = conversation.scenarioId
-          ? ROLE_PLAY_SCENARIOS.find((s) => s.id === conversation.scenarioId) ??
-            null
-          : null;
-        const scenarioFragment = scenario
-          ? {
-              id: scenario.id,
-              systemPromptFragment: scenario.systemPromptFragment,
-            }
-          : null;
-        const sysPrompt = buildCoachSystemPrompt({
-          targetLanguage: conversation.language,
-          userDisplayName: profile.displayName,
-          memory,
-          memoryDepth,
-          scenario: scenarioFragment,
-        });
+const scenario = conversation.scenarioId
+  ? (ROLE_PLAY_SCENARIOS.find((s) => s.id === conversation.scenarioId) ?? null)
+  : null;
+const scenarioFragment = scenario
+  ? {
+      id: scenario.id,
+      systemPromptFragment: scenario.systemPromptFragment,
+    }
+  : null;
+const sysPrompt = buildCoachSystemPrompt({
+  targetLanguage: conversation.language,
+  userDisplayName: profile.displayName,
+  memory,
+  memoryDepth,
+  scenario: scenarioFragment,
+});
 ```
 
 - [ ] **Step 4: Run all api tests, commit**
@@ -3136,21 +3250,29 @@ const mkDb = (entitlement: any) =>
 describe("canUseFeature", () => {
   it("returns false for free plan on Pro feature", async () => {
     const db = mkDb({ plan: "free", proUntil: null });
-    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(false);
+    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(
+      false,
+    );
   });
   it("returns true for active Pro plan", async () => {
     const future = new Date(Date.now() + 7 * 86400 * 1000);
     const db = mkDb({ plan: "pro", proUntil: future });
-    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(true);
+    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(
+      true,
+    );
   });
   it("returns false when Pro plan is expired", async () => {
     const past = new Date(Date.now() - 86400 * 1000);
     const db = mkDb({ plan: "pro", proUntil: past });
-    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(false);
+    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(
+      false,
+    );
   });
   it("returns false when no entitlement row exists", async () => {
     const db = mkDb(null);
-    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(false);
+    expect(await canUseFeature("u1", FEATURES.COACH_MEMORY_DEEP, { db })).toBe(
+      false,
+    );
   });
 });
 ```
@@ -3296,47 +3418,47 @@ PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP: 3600, // 60 min
 In `/sessions/:id/turns`, REPLACE the existing `canUseSeconds(...)` block with:
 
 ```ts
-    const dailyCheck = canUseSecondsDaily(
-      {
-        plan: entitlement.plan as "free" | "pro",
-        proUntil: entitlement.proUntil,
-        dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
-        dailyResetAt: entitlement.dailyResetAt,
+const dailyCheck = canUseSecondsDaily(
+  {
+    plan: entitlement.plan as "free" | "pro",
+    proUntil: entitlement.proUntil,
+    dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
+    dailyResetAt: entitlement.dailyResetAt,
+  },
+  estimateSeconds,
+);
+if (!dailyCheck.allowed) {
+  return c.json(
+    {
+      error: {
+        code: "DAILY_QUOTA_EXCEEDED",
+        message: "Free tier daily limit reached",
+        resetAt: dailyCheck.resetAt.toISOString(),
       },
-      estimateSeconds,
-    );
-    if (!dailyCheck.allowed) {
-      return c.json(
-        {
-          error: {
-            code: "DAILY_QUOTA_EXCEEDED",
-            message: "Free tier daily limit reached",
-            resetAt: dailyCheck.resetAt.toISOString(),
-          },
-        },
-        429,
-      );
-    }
+    },
+    429,
+  );
+}
 ```
 
 And ALSO update the entitlement increment at the end of the handler:
 
 ```ts
-        await deps.db
-          .update(entitlements)
-          .set({
-            monthlyVoiceSecondsUsed:
-              entitlement.monthlyVoiceSecondsUsed + secondsThisTurn,
-            dailyVoiceSecondsUsed:
-              (entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
-                ? 0
-                : entitlement.dailyVoiceSecondsUsed) + secondsThisTurn,
-            dailyResetAt:
-              entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
-                ? new Date()
-                : entitlement.dailyResetAt,
-          })
-          .where(eq(entitlements.userId, userId));
+await deps.db
+  .update(entitlements)
+  .set({
+    monthlyVoiceSecondsUsed:
+      entitlement.monthlyVoiceSecondsUsed + secondsThisTurn,
+    dailyVoiceSecondsUsed:
+      (entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
+        ? 0
+        : entitlement.dailyVoiceSecondsUsed) + secondsThisTurn,
+    dailyResetAt:
+      entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
+        ? new Date()
+        : entitlement.dailyResetAt,
+  })
+  .where(eq(entitlements.userId, userId));
 ```
 
 - [ ] **Step 5: Run migrations + tests, commit**
@@ -3484,16 +3606,17 @@ export function usePurchases() {
 
   const isPro = !!info?.entitlements.active.pro;
 
-  const purchase = useCallback(async (packageId: "monthly" | "annual") => {
-    if (!offerings) throw new Error("no_offerings");
-    const pkg =
-      packageId === "monthly"
-        ? offerings.monthly
-        : offerings.annual;
-    if (!pkg) throw new Error("package_not_found");
-    const { customerInfo } = await Purchases.purchasePackage(pkg);
-    setInfo(customerInfo);
-  }, [offerings]);
+  const purchase = useCallback(
+    async (packageId: "monthly" | "annual") => {
+      if (!offerings) throw new Error("no_offerings");
+      const pkg =
+        packageId === "monthly" ? offerings.monthly : offerings.annual;
+      if (!pkg) throw new Error("package_not_found");
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      setInfo(customerInfo);
+    },
+    [offerings],
+  );
 
   const restore = useCallback(async () => {
     const ci = await Purchases.restorePurchases();
@@ -3513,7 +3636,12 @@ import { useState } from "react";
 import { StyleSheet, View, Pressable, Alert } from "react-native";
 import { router } from "expo-router";
 import { EditorialText, Screen } from "@/src/design";
-import { palette, radius, shadow, spacing } from "@language-coach/design-tokens";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+} from "@language-coach/design-tokens";
 import { usePurchases } from "@/src/features/paywall/use-purchases";
 
 const FEATURES_LIST = [
@@ -3564,7 +3692,12 @@ export default function PaywallModal() {
         </EditorialText>
         <View style={styles.bullets}>
           {FEATURES_LIST.map((f) => (
-            <EditorialText key={f} kind="bodyMd" color={palette.ink} style={styles.bullet}>
+            <EditorialText
+              key={f}
+              kind="bodyMd"
+              color={palette.ink}
+              style={styles.bullet}
+            >
               • {f}
             </EditorialText>
           ))}
@@ -3587,7 +3720,11 @@ export default function PaywallModal() {
             Monthly {monthly ? `— ${monthly.priceString}/mo` : ""}
           </EditorialText>
         </Pressable>
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.fineprint}>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.fineprint}
+        >
           7-day free trial. Cancel anytime in Google Play settings.
         </EditorialText>
         <Pressable onPress={onRestore} style={styles.restore}>
@@ -3771,10 +3908,10 @@ export function createBillingRoutes(deps: BillingDeps) {
 ```ts
 import { createBillingRoutes } from "./routes/billing";
 // outside the /v1/* auth middleware (RevenueCat is unauthenticated; uses the bearer secret)
-  app.route(
-    "/v1/billing",
-    createBillingRoutes({ db, webhookSecret: env.REVENUECAT_WEBHOOK_SECRET }),
-  );
+app.route(
+  "/v1/billing",
+  createBillingRoutes({ db, webhookSecret: env.REVENUECAT_WEBHOOK_SECRET }),
+);
 ```
 
 Add `REVENUECAT_WEBHOOK_SECRET: z.string().min(20)` to env zod schema.
@@ -3876,7 +4013,14 @@ CREATE POLICY "push_schedule_select_own" ON push_schedule
 
 ```ts
 // push-schedule.ts
-import { pgTable, uuid, text, timestamp, jsonb, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  jsonb,
+  index,
+} from "drizzle-orm/pg-core";
 import { profiles } from "./profiles";
 
 export const pushSchedule = pgTable(
@@ -3974,7 +4118,9 @@ export function computeDay1At(now: Date, tz: string): Date {
   const m = +local.find((p) => p.type === "month")!.value;
   const d = +local.find((p) => p.type === "day")!.value;
   // 09:00 local — naive UTC conversion via toLocaleString trick
-  const localDate = new Date(`${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T09:00:00`);
+  const localDate = new Date(
+    `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T09:00:00`,
+  );
   return localDate;
 }
 
@@ -4033,7 +4179,11 @@ export async function markSent(db: Database, id: string): Promise<void> {
     .where(eq(pushSchedule.id, id));
 }
 
-export function bodyFor(kind: PushKind): { title: string; body: string; data?: any } {
+export function bodyFor(kind: PushKind): {
+  title: string;
+  body: string;
+  data?: any;
+} {
   switch (kind) {
     case "day-1-feedback":
       return {
@@ -4066,7 +4216,12 @@ Wherever `complete_onboarding` happens (RPC or backend insert), after the row is
 `apps/api/src/jobs/push-runner.ts`:
 
 ```ts
-import { pickDuePushes, markSent, bodyFor, type DuePush } from "../lib/push-scheduler";
+import {
+  pickDuePushes,
+  markSent,
+  bodyFor,
+  type DuePush,
+} from "../lib/push-scheduler";
 import { pushTokens } from "../db/schema";
 import { eq } from "drizzle-orm";
 import type { Database } from "../db";
@@ -4214,10 +4369,7 @@ export default function WeeklySummary() {
         {data ? (
           <View style={styles.statsRow}>
             <Stat label="Sessions" value={data.session_count} />
-            <Stat
-              label="Minutes"
-              value={Math.floor(data.total_seconds / 60)}
-            />
+            <Stat label="Minutes" value={Math.floor(data.total_seconds / 60)} />
             <Stat label="Languages" value={data.languages_practiced} />
           </View>
         ) : (
@@ -4226,7 +4378,10 @@ export default function WeeklySummary() {
           </EditorialText>
         )}
         {!isPro && (
-          <Pressable onPress={() => router.push("/(modals)/paywall")} style={styles.upgrade}>
+          <Pressable
+            onPress={() => router.push("/(modals)/paywall")}
+            style={styles.upgrade}
+          >
             <EditorialText kind="bodyMd" color={palette.peach}>
               Unlock full feedback history with Pro
             </EditorialText>
@@ -4253,7 +4408,11 @@ function Stat({ label, value }: { label: string; value: number }) {
 const styles = StyleSheet.create({
   container: { padding: spacing.xl, gap: spacing.xl },
   title: { color: palette.ink },
-  statsRow: { flexDirection: "row", gap: spacing.lg, justifyContent: "space-around" },
+  statsRow: {
+    flexDirection: "row",
+    gap: spacing.lg,
+    justifyContent: "space-around",
+  },
   stat: { alignItems: "center" },
   statValue: { color: palette.ink },
   upgrade: {
@@ -4327,12 +4486,14 @@ Wait ~15-25 min. AAB downloaded.
 - [ ] **Step 4: Upload to internal track**
 
 Either:
+
 - `eas submit --profile production --platform android --non-interactive` (requires service-account from existing eas.json)
 - Manual upload at https://play.google.com/console → My Language Coach → Testing → Internal testing → Create new release
 
 - [ ] **Step 5: Update Play Console Data Safety**
 
 Confirm the following are declared (account-deletion submission already covered these; verify):
+
 - Personal info: email, name
 - Audio: yes, used for app functionality
 - "AI content" disclaimer (newer Play requirement) — describe LLM use
@@ -4352,6 +4513,7 @@ When the build passes the internal-track install + smoke test, Plan 8 ships.
 Before handing off to executing-plans/subagent-driven-development, verify:
 
 **Spec coverage:**
+
 - [x] Memory (per-language, basic-free / deep-Pro) — Tasks 1-4 + 6
 - [x] Feedback (async, 3 panels, gpt-4o) — Tasks 7-9 + 10-11
 - [x] Role-play (10 scenarios, 3 free / 7 Pro) — Tasks 12-14
@@ -4365,11 +4527,13 @@ Before handing off to executing-plans/subagent-driven-development, verify:
 **Placeholder scan:** No `TODO` / `TBD` / "implement later" in steps. Code blocks are complete enough for an engineer to copy + adapt to local imports.
 
 **Type consistency:**
+
 - `CoachMemory` type used identically across `coach-memory-schema.ts`, `extract-memory.ts`, `prompts.ts`, mobile hook.
 - `SessionFeedback` type used identically across `feedback-schema.ts`, `generate-feedback.ts`, `feedback.ts`, mobile hook.
 - `RolePlayScenario` type same in `role-play-scenarios.ts`, `prompts.ts`, mobile picker.
 
 **Known not-shown details (engineer resolves at task time):**
+
 - Exact existing onboarding final-step file path (Task 5 Step 1 prompts the engineer to find it)
 - Exact `use-conversation` hook internals for surfacing `conversationId` (Task 11 Step 1)
 - Existing api-client error-handler shape (Task 18 Step 5)

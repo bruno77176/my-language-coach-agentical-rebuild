@@ -220,7 +220,11 @@ export function streamTurn(
           const flat =
             "error" in raw && raw.error
               ? raw.error
-              : (raw as { code?: string; message?: string; retryable?: boolean });
+              : (raw as {
+                  code?: string;
+                  message?: string;
+                  retryable?: boolean;
+                });
           push({
             type: "error",
             code: flat.code ?? "INTERNAL",

@@ -9,7 +9,10 @@ export type RolePlayScenario = {
 export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   {
     id: "coffee",
-    title: { en: "Ordering coffee or food", fr: "Commander un café ou à manger" },
+    title: {
+      en: "Ordering coffee or food",
+      fr: "Commander un café ou à manger",
+    },
     description: {
       en: "At a small local café. Casual register.",
       fr: "Dans un petit café local. Registre familier.",
@@ -75,7 +78,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "complaint",
-    title: { en: "Customer-service complaint", fr: "Réclamation au service client" },
+    title: {
+      en: "Customer-service complaint",
+      fr: "Réclamation au service client",
+    },
     description: {
       en: "Assertive register without being rude.",
       fr: "Registre assertif sans être impoli.",
@@ -86,7 +92,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "phone-friend",
-    title: { en: "Phone call with a friend", fr: "Appel téléphonique avec un ami" },
+    title: {
+      en: "Phone call with a friend",
+      fr: "Appel téléphonique avec un ami",
+    },
     description: {
       en: "Casual, fast, contractions allowed.",
       fr: "Décontracté, rapide, contractions permises.",
@@ -97,7 +106,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "meeting",
-    title: { en: "Workplace meeting intro", fr: "Présentation en réunion au travail" },
+    title: {
+      en: "Workplace meeting intro",
+      fr: "Présentation en réunion au travail",
+    },
     description: {
       en: "Polite professional; the student introduces themselves to a new team.",
       fr: "Professionnel poli; l'étudiant se présente à une nouvelle équipe.",
@@ -108,7 +120,10 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
   },
   {
     id: "emergency",
-    title: { en: "Lost passport — police station", fr: "Passeport perdu — au commissariat" },
+    title: {
+      en: "Lost passport — police station",
+      fr: "Passeport perdu — au commissariat",
+    },
     description: {
       en: "Stressed formal register; following instructions under pressure.",
       fr: "Registre formel et stressé; suivre des instructions sous pression.",

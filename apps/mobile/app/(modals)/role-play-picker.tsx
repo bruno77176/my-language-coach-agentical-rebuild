@@ -17,7 +17,10 @@ export default function RolePlayPicker() {
       router.push("/(modals)/paywall");
       return;
     }
-    router.replace({ pathname: "/(tabs)/practice", params: { scenarioId: id } });
+    router.replace({
+      pathname: "/(tabs)/practice",
+      params: { scenarioId: id },
+    });
   };
 
   return (
@@ -26,8 +29,13 @@ export default function RolePlayPicker() {
         <EditorialText kind="displayMd" italic style={styles.title}>
           Practice a scenario
         </EditorialText>
-        <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.subtitle}>
-          Pick a real-world situation. Your coach will play their role and throw in a twist.
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.subtitle}
+        >
+          Pick a real-world situation. Your coach will play their role and throw
+          in a twist.
         </EditorialText>
         {ROLE_PLAY_SCENARIOS.map((s) => {
           const locked = s.pro && !isPro;

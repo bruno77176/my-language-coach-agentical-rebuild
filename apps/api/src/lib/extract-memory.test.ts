@@ -14,7 +14,10 @@ const okClient = {
               content: JSON.stringify({
                 proficiency_level: "B1",
                 recent_topics: [
-                  { topic: "trip to Italy", last_practiced_at: "2026-05-30T10:00:00.000Z" },
+                  {
+                    topic: "trip to Italy",
+                    last_practiced_at: "2026-05-30T10:00:00.000Z",
+                  },
                 ],
                 weak_areas: ["past tense irregulars"],
                 personal_context: { job: "engineer" },

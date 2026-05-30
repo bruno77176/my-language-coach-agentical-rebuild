@@ -217,7 +217,11 @@ const styles = StyleSheet.create({
     padding: spacing.base,
     gap: spacing.sm,
   },
-  langTitle: { color: palette.ink, marginBottom: spacing.sm, fontWeight: "600" },
+  langTitle: {
+    color: palette.ink,
+    marginBottom: spacing.sm,
+    fontWeight: "600",
+  },
   input: {
     backgroundColor: palette.cream,
     borderRadius: radius.md,

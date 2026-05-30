@@ -44,9 +44,8 @@ export function createWeeklySummaryRoutes(deps: WeeklySummaryDeps) {
     // postgres-js drizzle adapter returns rows as an array directly, but
     // other adapters may return `{ rows: [...] }`. Handle both.
     const row =
-      ("rows" in result
-        ? result.rows?.[0]
-        : (result as Array<unknown>)[0]) ?? {};
+      ("rows" in result ? result.rows?.[0] : (result as Array<unknown>)[0]) ??
+      {};
     const r = row as {
       session_count?: string | number;
       total_seconds?: string | number;

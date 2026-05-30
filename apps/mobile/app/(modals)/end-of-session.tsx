@@ -112,10 +112,7 @@ export default function EndOfSessionScreen() {
         )}
 
         <View style={styles.actions}>
-          <Pressable
-            onPress={again}
-            style={[styles.btn, styles.btnSecondary]}
-          >
+          <Pressable onPress={again} style={[styles.btn, styles.btnSecondary]}>
             <EditorialText kind="bodyMd" color={palette.inkSoft}>
               Try another
             </EditorialText>

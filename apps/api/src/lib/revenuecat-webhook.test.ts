@@ -13,9 +13,7 @@ describe("applyRevenueCatEvent", () => {
       expiration_at_ms: Date.now() + 86400000,
     });
     expect(update).toHaveBeenCalled();
-    expect(set).toHaveBeenCalledWith(
-      expect.objectContaining({ plan: "pro" }),
-    );
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ plan: "pro" }));
   });
 
   it("downgrades on CANCELLATION", async () => {

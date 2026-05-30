@@ -2,7 +2,12 @@ import { useState } from "react";
 import { StyleSheet, View, Pressable, Alert } from "react-native";
 import { router } from "expo-router";
 import { EditorialText, Screen } from "@/src/design";
-import { palette, radius, shadow, spacing } from "@language-coach/design-tokens";
+import {
+  palette,
+  radius,
+  shadow,
+  spacing,
+} from "@language-coach/design-tokens";
 import { usePurchases } from "@/src/features/paywall/use-purchases";
 
 const FEATURES_LIST = [

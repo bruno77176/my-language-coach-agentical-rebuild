@@ -4,7 +4,11 @@ import { SessionFeedbackSchema } from "./feedback-schema";
 describe("SessionFeedbackSchema", () => {
   it("accepts the empty shape", () => {
     expect(() =>
-      SessionFeedbackSchema.parse({ highlights: [], corrections: [], vocab: [] }),
+      SessionFeedbackSchema.parse({
+        highlights: [],
+        corrections: [],
+        vocab: [],
+      }),
     ).not.toThrow();
   });
   it("rejects extra root keys", () => {

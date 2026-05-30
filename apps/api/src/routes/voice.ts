@@ -266,8 +266,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           orderBy: (t, { asc: a }) => [a(t.createdAt)],
         });
         const scenario = conversation.scenarioId
-          ? ROLE_PLAY_SCENARIOS.find((s) => s.id === conversation.scenarioId) ??
-            null
+          ? (ROLE_PLAY_SCENARIOS.find(
+              (s) => s.id === conversation.scenarioId,
+            ) ?? null)
           : null;
         const scenarioFragment = scenario
           ? {
@@ -493,9 +494,8 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     // already exists for this user, so this is safe to run on every /end call.
     void (async () => {
       try {
-        const { scheduleOnboardingPushes } = await import(
-          "../lib/push-scheduler"
-        );
+        const { scheduleOnboardingPushes } =
+          await import("../lib/push-scheduler");
         await scheduleOnboardingPushes(deps.db, userId, profile.timezone);
       } catch {
         // Idempotent + isolated; failures swallowed
