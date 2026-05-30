@@ -13,6 +13,12 @@ export const entitlements = pgTable("entitlements", {
   monthlyVoiceSecondsResetAt: timestamp("monthly_voice_seconds_reset_at", {
     withTimezone: true,
   }).notNull(),
+  dailyVoiceSecondsUsed: integer("daily_voice_seconds_used")
+    .notNull()
+    .default(0),
+  dailyResetAt: timestamp("daily_reset_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export type Entitlement = typeof entitlements.$inferSelect;

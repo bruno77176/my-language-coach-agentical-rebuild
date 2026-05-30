@@ -28,6 +28,8 @@ type EntitlementRow = {
   proUntil: Date | null;
   monthlyVoiceSecondsUsed: number;
   monthlyVoiceSecondsResetAt: Date;
+  dailyVoiceSecondsUsed: number;
+  dailyResetAt: Date;
 };
 
 type ProfileRow = {
@@ -70,6 +72,8 @@ function defaultEntitlement(): EntitlementRow {
     proUntil: null,
     monthlyVoiceSecondsUsed: 0,
     monthlyVoiceSecondsResetAt: new Date(Date.now() + 86_400_000),
+    dailyVoiceSecondsUsed: 0,
+    dailyResetAt: new Date(),
   };
 }
 
@@ -355,16 +359,18 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
     expect(body.error.code).toBe("AUDIO_TOO_LONG");
   });
 
-  it("returns 429 QUOTA_EXCEEDED when entitlement near cap", async () => {
-    // Free tier is 30*60 = 1800 seconds. Using 1799 + an estimated few seconds
-    // (50KB audio / 16KB/s = ~4s) exceeds.
+  it("returns 429 DAILY_QUOTA_EXCEEDED when free user is at the daily cap", async () => {
+    // Free tier daily cap is 600 seconds (10 min). Using 599 + an estimated
+    // few seconds (50KB audio / 16KB/s = ~4s) exceeds.
     const { app } = setupRoute({
       entitlement: {
         userId,
         plan: "free",
         proUntil: null,
-        monthlyVoiceSecondsUsed: 1799,
+        monthlyVoiceSecondsUsed: 0,
         monthlyVoiceSecondsResetAt: new Date(Date.now() + 86_400_000),
+        dailyVoiceSecondsUsed: 599,
+        dailyResetAt: new Date(), // fresh window so the 24h reset doesn't kick in
       },
     });
     const res = await app.request(
@@ -375,8 +381,12 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
       },
     );
     expect(res.status).toBe(429);
-    const body = (await res.json()) as { error: { code: string } };
-    expect(body.error.code).toBe("QUOTA_EXCEEDED");
+    const body = (await res.json()) as {
+      error: { code: string; resetAt: string };
+    };
+    expect(body.error.code).toBe("DAILY_QUOTA_EXCEEDED");
+    expect(typeof body.error.resetAt).toBe("string");
+    expect(Number.isFinite(Date.parse(body.error.resetAt))).toBe(true);
   });
 
   it("emits SSE error event when STT provider fails", async () => {

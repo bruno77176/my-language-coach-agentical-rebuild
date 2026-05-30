@@ -11,7 +11,7 @@ import {
 } from "../db/schema";
 import type { Database } from "../db";
 import { MAX_TURN_AUDIO_SECONDS, MIN_TURN_AUDIO_SECONDS } from "../env";
-import { canUseSeconds } from "../lib/quota";
+import { canUseSecondsDaily } from "../lib/quota";
 import { ProviderError } from "../providers/deepgram";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
 import type { StreamInput, ChatMessage } from "../providers/openai";
@@ -168,17 +168,24 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
     const estimateSeconds = Math.ceil(audioBuffer.byteLength / 16_000);
-    const quotaCheck = canUseSeconds(
+    const dailyCheck = canUseSecondsDaily(
       {
         plan: entitlement.plan as "free" | "pro",
         proUntil: entitlement.proUntil,
-        monthlyVoiceSecondsUsed: entitlement.monthlyVoiceSecondsUsed,
+        dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
+        dailyResetAt: entitlement.dailyResetAt,
       },
       estimateSeconds,
     );
-    if (!quotaCheck.allowed) {
+    if (!dailyCheck.allowed) {
       return c.json(
-        { error: { code: "QUOTA_EXCEEDED", message: "Free tier exhausted" } },
+        {
+          error: {
+            code: "DAILY_QUOTA_EXCEEDED",
+            message: "Free tier daily limit reached",
+            resetAt: dailyCheck.resetAt.toISOString(),
+          },
+        },
         429,
       );
     }
@@ -378,6 +385,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           .set({
             monthlyVoiceSecondsUsed:
               entitlement.monthlyVoiceSecondsUsed + secondsThisTurn,
+            dailyVoiceSecondsUsed:
+              (entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
+                ? 0
+                : entitlement.dailyVoiceSecondsUsed) + secondsThisTurn,
+            dailyResetAt:
+              entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
+                ? new Date()
+                : entitlement.dailyResetAt,
           })
           .where(eq(entitlements.userId, userId));
 

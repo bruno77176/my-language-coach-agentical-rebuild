@@ -25,6 +25,8 @@ export type Env = z.infer<typeof EnvSchema>;
 
 // Voice loop tuning constants — consumed by quota helper (Task 8) and turn route (Task 9).
 export const FREE_TIER_VOICE_SECONDS_PER_MONTH = 30 * 60; // 30 minutes
+export const FREE_TIER_VOICE_SECONDS_PER_DAY = 600; // 10 minutes — Plan 8 M4 daily cap
+export const PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP = 3600; // 60 minutes — Plan 8 M4 Pro soft cap
 export const MAX_TURN_AUDIO_SECONDS = 60;
 export const MIN_TURN_AUDIO_SECONDS = 1;
 
