@@ -264,6 +264,14 @@ export default function PracticeScreen() {
             >
               Your coach is listening — just talk like you would to a friend.
             </EditorialText>
+            <Pressable
+              onPress={() => router.push("/(modals)/role-play-picker")}
+              style={styles.scenarioLink}
+            >
+              <EditorialText kind="bodySm" color={palette.inkSoft}>
+                Try a scenario
+              </EditorialText>
+            </Pressable>
           </View>
         }
       />
@@ -326,6 +334,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: spacing["3xl"] * 2,
     paddingHorizontal: spacing.xl,
+  },
+  scenarioLink: {
+    padding: spacing.sm,
+    alignSelf: "center",
+    marginTop: spacing.md,
   },
   micBar: {
     position: "absolute",
