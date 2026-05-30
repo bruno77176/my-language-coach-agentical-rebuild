@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 import { createFeedbackRoutes } from "./feedback";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 describe("feedback routes", () => {
   it("returns the feedback row when present", async () => {
     const deps = {

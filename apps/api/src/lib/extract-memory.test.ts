@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { extractMemory } from "./extract-memory";
 import { emptyCoachMemory } from "@language-coach/shared";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const okClient = {
   chat: {
     completions: {

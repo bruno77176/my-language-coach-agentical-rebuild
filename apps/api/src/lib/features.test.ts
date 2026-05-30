@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { canUseFeature, FEATURES } from "./features";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const mkDb = (entitlement: any) =>
   ({
     query: {

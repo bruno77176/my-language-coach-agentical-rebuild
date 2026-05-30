@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { generateFeedback } from "./generate-feedback";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const okClient = {
   chat: {
     completions: {

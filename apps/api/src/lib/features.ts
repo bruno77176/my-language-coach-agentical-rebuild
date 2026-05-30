@@ -18,7 +18,7 @@ export async function canUseFeature(
   deps: FeatureDeps,
 ): Promise<boolean> {
   const ent = await deps.db.query.entitlements.findFirst({
-    where: (t: any, { eq: e }: any) => e(t.userId, userId),
+    where: (t, { eq: e }) => e(t.userId, userId),
   });
   if (!ent) return false;
   if (ent.plan !== "pro") return false;

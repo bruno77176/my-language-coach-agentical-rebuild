@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 import { createWeeklySummaryRoutes } from "./weekly-summary";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 describe("weekly-summary route", () => {
   it("returns numeric aggregates", async () => {
     const deps = {
