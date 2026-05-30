@@ -140,8 +140,12 @@ export default function PracticeScreen() {
         style: "destructive",
         onPress: () => {
           void (async () => {
+            let endResult: {
+              conversationId: string | null;
+              secondsSpoken: number;
+            } | null = null;
             try {
-              await end();
+              endResult = await end();
             } catch {
               /* best-effort */
             }
@@ -157,7 +161,17 @@ export default function PracticeScreen() {
               queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
               queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
             ]);
-            router.replace("/(tabs)/home");
+            if (endResult?.conversationId) {
+              router.replace({
+                pathname: "/(modals)/end-of-session",
+                params: {
+                  conversationId: endResult.conversationId,
+                  secondsSpoken: String(endResult.secondsSpoken),
+                },
+              });
+            } else {
+              router.replace("/(tabs)/home");
+            }
           })();
         },
       },

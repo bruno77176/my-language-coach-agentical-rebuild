@@ -300,10 +300,17 @@ export function useConversation(
     }
   }
 
-  async function end() {
+  async function end(): Promise<{
+    conversationId: string | null;
+    secondsSpoken: number;
+  }> {
     const conversationId = conversationIdRef.current;
-    if (!conversationId) return null;
-    return endSession(conversationId);
+    if (!conversationId) return { conversationId: null, secondsSpoken: 0 };
+    const result = await endSession(conversationId);
+    return {
+      conversationId,
+      secondsSpoken: result.seconds_spoken ?? 0,
+    };
   }
 
   function dismissError() {
