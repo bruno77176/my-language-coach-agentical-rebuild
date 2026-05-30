@@ -201,15 +201,32 @@ export function streamTurn(
       // Built-in error event: type "error" | "exception" | "timeout".
       // The backend may also emit a custom-named "error" event with a
       // JSON payload; react-native-sse merges those into the same handler.
+      // Body shapes we accept:
+      //   - SSE custom error event: `{ code, message, retryable }`
+      //   - Hono error response (e.g. 429 before stream open):
+      //     `{ error: { code, message, resetAt? } }`
       const maybeData = (e as { data?: string | null }).data;
       if (maybeData) {
         try {
-          const data = JSON.parse(maybeData) as {
-            code: string;
-            message: string;
-            retryable: boolean;
-          };
-          push({ type: "error", ...data });
+          const raw = JSON.parse(maybeData) as
+            | { code?: string; message?: string; retryable?: boolean }
+            | {
+                error?: {
+                  code?: string;
+                  message?: string;
+                  retryable?: boolean;
+                };
+              };
+          const flat =
+            "error" in raw && raw.error
+              ? raw.error
+              : (raw as { code?: string; message?: string; retryable?: boolean });
+          push({
+            type: "error",
+            code: flat.code ?? "INTERNAL",
+            message: flat.message ?? "Stream error",
+            retryable: flat.retryable ?? false,
+          });
         } catch {
           push({
             type: "error",

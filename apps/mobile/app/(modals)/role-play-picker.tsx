@@ -4,17 +4,10 @@ import { ROLE_PLAY_SCENARIOS } from "@language-coach/shared";
 import { EditorialText, Screen } from "@/src/design";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 import { useProfile } from "@/src/features/auth/use-profile";
-
-// Pro check is a placeholder until Milestone 4 ships RevenueCat.
-// For now, treat everyone as free so the locked scenarios show the
-// lock icon and route to the paywall (which doesn't exist yet either).
-// Task 18 will replace this with the real usePurchases().isPro.
-function useIsProPlaceholder() {
-  return false;
-}
+import { usePurchases } from "@/src/features/paywall/use-purchases";
 
 export default function RolePlayPicker() {
-  const isPro = useIsProPlaceholder();
+  const { isPro } = usePurchases();
   const { data: profile } = useProfile();
   const nativeLang = (profile?.native_lang ?? "en") as "en" | "fr";
 
