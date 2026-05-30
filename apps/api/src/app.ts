@@ -23,6 +23,7 @@ import {
 } from "./providers/openai";
 import { createMessagesRoutes } from "./routes/messages";
 import { createMemoryRoutes } from "./routes/memory";
+import { createFeedbackRoutes } from "./routes/feedback";
 import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
 import {
   createStorageClient,
@@ -224,6 +225,8 @@ export function createApp(
   );
 
   app.route("/v1/memory", createMemoryRoutes({ db }));
+
+  app.route("/v1", createFeedbackRoutes({ db }));
 
   return app;
 }
