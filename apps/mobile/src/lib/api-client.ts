@@ -24,6 +24,7 @@ export type StartSessionResponse = { conversation_id: string };
 
 export async function startSession(
   language: string,
+  scenarioId?: string,
 ): Promise<StartSessionResponse> {
   const res = await fetch(`${API_BASE_URL}/v1/voice/sessions`, {
     method: "POST",
@@ -32,7 +33,10 @@ export async function startSession(
       "content-type": "application/json",
       ...clientPlatformHeader(),
     },
-    body: JSON.stringify({ language }),
+    body: JSON.stringify({
+      language,
+      ...(scenarioId ? { scenario_id: scenarioId } : {}),
+    }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");

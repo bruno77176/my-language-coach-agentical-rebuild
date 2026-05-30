@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -57,6 +57,7 @@ export default function PracticeScreen() {
   const displayName = profile?.display_name ?? "there";
   const nativeLang = profile?.native_lang ?? "en";
   const goalMinutes = profile?.daily_goal_minutes ?? 10;
+  const { scenarioId } = useLocalSearchParams<{ scenarioId?: string }>();
 
   const [startedAt] = useState<Date>(() => new Date());
 
@@ -71,7 +72,7 @@ export default function PracticeScreen() {
     dismissError,
     toggleListeningMode,
     revealMessage,
-  } = useConversation(targetLang, displayName, nativeLang);
+  } = useConversation(targetLang, displayName, nativeLang, scenarioId);
 
   const { data: todayStats } = useTodayStats();
   const { data: streak } = useCurrentStreak();

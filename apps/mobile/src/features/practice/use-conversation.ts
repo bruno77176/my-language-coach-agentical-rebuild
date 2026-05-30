@@ -77,6 +77,7 @@ export function useConversation(
   targetLang: string,
   displayName: string,
   nativeLang: string,
+  scenarioId?: string,
 ) {
   const [state, setState] = useState<ConversationState>({
     phase: "loading-session",
@@ -104,7 +105,7 @@ export function useConversation(
     let cancelled = false;
     void (async () => {
       try {
-        const { conversation_id } = await startSession(targetLang);
+        const { conversation_id } = await startSession(targetLang, scenarioId);
         if (cancelled) return;
         conversationIdRef.current = conversation_id;
 
@@ -162,7 +163,7 @@ export function useConversation(
     return () => {
       cancelled = true;
     };
-  }, [targetLang, displayName, nativeLang]);
+  }, [targetLang, displayName, nativeLang, scenarioId]);
 
   async function start() {
     if (state.phase !== "idle") return;
@@ -342,7 +343,7 @@ export function useConversation(
       setState({ phase: "loading-session" });
       void (async () => {
         try {
-          const { conversation_id } = await startSession(targetLang);
+          const { conversation_id } = await startSession(targetLang, scenarioId);
           conversationIdRef.current = conversation_id;
           setState({ phase: "idle", conversationId: conversation_id });
         } catch (err) {
