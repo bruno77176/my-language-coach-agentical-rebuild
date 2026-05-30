@@ -12,3 +12,4 @@ export * from "./rate-cards";
 export * from "./fixed-costs";
 export * from "./upfront-costs";
 export * from "./revenue-events";
+export * from "./coach-memory";
