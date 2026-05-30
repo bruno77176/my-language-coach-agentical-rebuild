@@ -6,18 +6,21 @@ import { coachMemory } from "../db/schema";
 import {
   CoachMemorySchema,
   emptyCoachMemory,
+  LANGUAGES,
   type CoachMemory,
 } from "@language-coach/shared";
 
 export type MemoryDeps = { db: Database };
 
+const LANGUAGE_CODES = LANGUAGES.map((l) => l.code) as [string, ...string[]];
+
 const ConsentBody = z.object({
-  language_code: z.string().min(2).max(8),
+  language_code: z.enum(LANGUAGE_CODES),
   opted_out: z.boolean(),
 });
 
 const UpdateBody = z.object({
-  language_code: z.string().min(2).max(8),
+  language_code: z.enum(LANGUAGE_CODES),
   memory: CoachMemorySchema,
 });
 
@@ -90,6 +93,23 @@ export function createMemoryRoutes(deps: MemoryDeps) {
         400,
       );
     }
+    // Reject writes to opted-out rows — the editor must re-enable consent first.
+    const existing = await deps.db.query.coachMemory.findFirst({
+      where: (t, { eq: e, and: a }) =>
+        a(e(t.userId, userId), e(t.languageCode, parsed.data.language_code)),
+    });
+    if (existing?.optedOut) {
+      return c.json(
+        {
+          error: {
+            code: "OPTED_OUT",
+            message:
+              "Memory is disabled for this language. Re-enable it before editing.",
+          },
+        },
+        409,
+      );
+    }
     const m = parsed.data.memory;
     await deps.db
       .insert(coachMemory)
@@ -121,6 +141,12 @@ export function createMemoryRoutes(deps: MemoryDeps) {
   routes.delete("/:languageCode", async (c) => {
     const userId = c.get("userId");
     const languageCode = c.req.param("languageCode");
+    if (!LANGUAGE_CODES.includes(languageCode)) {
+      return c.json(
+        { error: { code: "BAD_REQUEST", message: "Unknown language" } },
+        400,
+      );
+    }
     await deps.db
       .delete(coachMemory)
       .where(

@@ -19,6 +19,7 @@ import {
   useDeleteMemory,
   useUpdateMemory,
 } from "@/src/features/coach-memory/use-update-memory";
+import { useUpdateMemoryConsent } from "@/src/features/coach-memory/use-update-memory-consent";
 
 export default function MemoryEditorScreen() {
   const { data, isLoading } = useCoachMemory();
@@ -54,6 +55,47 @@ export default function MemoryEditorScreen() {
 }
 
 function MemoryCard({ entry }: { entry: CoachMemoryEntry }) {
+  // Opted-out entries get a dedicated "off" card with a re-enable CTA.
+  // Splitting components keeps the rules-of-hooks happy (the editable
+  // card uses local state that we don't want to mount for opted-out rows).
+  if (entry.opted_out) {
+    return <OptedOutCard entry={entry} />;
+  }
+  return <EditableMemoryCard entry={entry} />;
+}
+
+function OptedOutCard({ entry }: { entry: CoachMemoryEntry }) {
+  const consent = useUpdateMemoryConsent();
+  const lang = LANGUAGES.find((l) => l.code === entry.language_code);
+
+  return (
+    <View style={styles.card}>
+      <EditorialText kind="bodyMd" style={styles.langTitle}>
+        {lang?.englishName ?? entry.language_code}
+      </EditorialText>
+      <EditorialText kind="bodySm" color={palette.inkSoft}>
+        Memory is off for this language. Turn it on to start collecting your
+        topics.
+      </EditorialText>
+      <Pressable
+        onPress={() =>
+          consent.mutate({
+            languageCode: entry.language_code,
+            optedOut: false,
+          })
+        }
+        style={[styles.btn, styles.btnSave, { marginTop: spacing.md }]}
+        disabled={consent.isPending}
+      >
+        <EditorialText kind="bodyMd" color={palette.peach}>
+          {consent.isPending ? "Turning on…" : "Turn on memory"}
+        </EditorialText>
+      </Pressable>
+    </View>
+  );
+}
+
+function EditableMemoryCard({ entry }: { entry: CoachMemoryEntry }) {
   const update = useUpdateMemory();
   const del = useDeleteMemory();
   const lang = LANGUAGES.find((l) => l.code === entry.language_code);

@@ -38,6 +38,12 @@ function makeFakeDb(initial: MemoryRow[] = []) {
           const _ = opts;
           return rows.filter((r) => r.userId === userId);
         }),
+        findFirst: vi.fn(async (_opts: { where?: unknown }) => {
+          // The PUT / handler calls findFirst to detect opted-out rows.
+          // Tests scope at most one row per (userId, languageCode), so
+          // returning the first matching row by userId is sufficient.
+          return rows.find((r) => r.userId === userId);
+        }),
       },
     },
     insert: vi.fn(() => ({
@@ -116,6 +122,19 @@ describe("memory routes", () => {
 
       expect(res.status).toBe(400);
     });
+
+    it("rejects unknown language_code with 400", async () => {
+      const db = makeFakeDb();
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/consent", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ language_code: "xx", opted_out: true }),
+      });
+
+      expect(res.status).toBe(400);
+    });
   });
 
   describe("PUT /v1/memory", () => {
@@ -162,6 +181,47 @@ describe("memory routes", () => {
       });
 
       expect(res.status).toBe(400);
+    });
+
+    it("returns 409 when the existing row is opted out", async () => {
+      const db = makeFakeDb([
+        {
+          userId,
+          languageCode: "fr",
+          proficiencyLevel: null,
+          recentTopics: [],
+          weakAreas: [],
+          personalContext: {},
+          lastSessionSummary: null,
+          optedOut: true,
+          updatedAt: new Date(),
+        },
+      ]);
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          language_code: "fr",
+          memory: {
+            proficiency_level: "B1",
+            recent_topics: [],
+            weak_areas: ["agreement"],
+            personal_context: {},
+            last_session_summary: null,
+          },
+        }),
+      });
+
+      expect(res.status).toBe(409);
+      const body = (await res.json()) as {
+        error: { code: string; message: string };
+      };
+      expect(body.error.code).toBe("OPTED_OUT");
+      // Existing row should still be opted out & unchanged
+      expect(db._rows[0]?.optedOut).toBe(true);
+      expect(db._rows[0]?.weakAreas).toEqual([]);
     });
   });
 
