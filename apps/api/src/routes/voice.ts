@@ -7,6 +7,7 @@ import {
   messages,
   entitlements,
   coachMemory,
+  sessionFeedback,
 } from "../db/schema";
 import type { Database } from "../db";
 import { MAX_TURN_AUDIO_SECONDS, MIN_TURN_AUDIO_SECONDS } from "../env";
@@ -24,7 +25,7 @@ import {
   parseCoachMemoryRow,
   emptyCoachMemory,
 } from "@language-coach/shared";
-import type { CoachMemory } from "@language-coach/shared";
+import type { CoachMemory, SessionFeedback } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
@@ -49,6 +50,13 @@ export type ExtractMemoryFn = (input: {
   onUsage?: OnUsage;
 }) => Promise<CoachMemory | null>;
 
+export type GenerateFeedbackFn = (input: {
+  transcript: Array<{ role: "user" | "coach"; text: string }>;
+  languageCode: string;
+  nativeLanguageCode: string;
+  onUsage?: OnUsage;
+}) => Promise<SessionFeedback | null>;
+
 export type VoiceDeps = {
   db: Database;
   transcribeAudio: (input: TranscribeInput) => Promise<TranscribeResult>;
@@ -56,6 +64,7 @@ export type VoiceDeps = {
   synthesizeSpeech: SynthesizeSpeechFn;
   uploadCoachAudioChunk: UploadCoachAudioChunkFn;
   extractMemory: ExtractMemoryFn;
+  generateFeedback: GenerateFeedbackFn;
 };
 
 const StartSessionBody = z.object({
@@ -503,6 +512,61 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           });
       } catch {
         // Memory extraction never breaks the user-visible flow.
+      }
+    })();
+
+    // Plan 8 M2: insert pending feedback row, then fire gen job. Fire-and-forget.
+    void (async () => {
+      try {
+        await deps.db
+          .insert(sessionFeedback)
+          .values({
+            conversationId,
+            status: "pending",
+            highlights: [],
+            corrections: [],
+            vocab: [],
+          })
+          .onConflictDoNothing();
+
+        const transcript = await deps.db.query.messages.findMany({
+          where: (t, { eq: e }) => e(t.conversationId, conversationId),
+          orderBy: (t, { asc: a }) => [a(t.createdAt)],
+        });
+        const ttranscript = transcript.map((m) => ({
+          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
+          text: m.text,
+        }));
+        const onUsage = makeOnUsage(deps.db, {
+          userId,
+          platform: platformFromHeader(c.req.header("X-Client-Platform")),
+          conversationId,
+        });
+        const fb = await deps.generateFeedback({
+          transcript: ttranscript,
+          languageCode: conversation.language,
+          nativeLanguageCode: profile.nativeLang,
+          onUsage,
+        });
+        if (!fb) {
+          await deps.db
+            .update(sessionFeedback)
+            .set({ status: "failed" })
+            .where(eq(sessionFeedback.conversationId, conversationId));
+          return;
+        }
+        await deps.db
+          .update(sessionFeedback)
+          .set({
+            status: "ready",
+            highlights: fb.highlights,
+            corrections: fb.corrections,
+            vocab: fb.vocab,
+          })
+          .where(eq(sessionFeedback.conversationId, conversationId));
+      } catch {
+        // Already reported via reportError inside generate-feedback;
+        // outer catch swallows DB errors so /end response isn't blocked.
       }
     })();
 

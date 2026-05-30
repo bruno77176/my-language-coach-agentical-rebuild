@@ -185,6 +185,7 @@ function setupRoute(overrides: SetupOverrides = {}) {
     synthesizeSpeech,
     uploadCoachAudioChunk,
     extractMemory: async () => null,
+    generateFeedback: async () => null,
   });
 
   const app = new Hono<{ Variables: { userId: string } }>();

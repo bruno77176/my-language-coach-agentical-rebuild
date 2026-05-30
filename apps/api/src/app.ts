@@ -37,6 +37,7 @@ import { createAccountDeletionRoutes } from "./routes/account-deletion";
 import { deleteUserAccount } from "./lib/account-deletion";
 import { sendDeletionConfirmationEmail } from "./lib/account-deletion-email";
 import { extractMemory } from "./lib/extract-memory";
+import { generateFeedback } from "./lib/generate-feedback";
 
 export type AppEnv = {
   Variables: {
@@ -197,6 +198,7 @@ export function createApp(
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
       extractMemory: (input) => extractMemory(openai, input),
+      generateFeedback: (input) => generateFeedback(openai, input),
     }),
   );
 

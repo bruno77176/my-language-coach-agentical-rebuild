@@ -13,6 +13,7 @@ const noopProviderDeps: Omit<VoiceDeps, "db"> = {
   synthesizeSpeech: vi.fn(),
   uploadCoachAudioChunk: vi.fn(),
   extractMemory: async () => null,
+  generateFeedback: async () => null,
 };
 
 function appWithVoice(routes: ReturnType<typeof createVoiceRoutes>) {
@@ -88,7 +89,13 @@ describe("POST /v1/voice/sessions/:id/end", () => {
         },
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
         messages: { findMany: vi.fn().mockResolvedValue([]) },
+        sessionFeedback: { findFirst: vi.fn().mockResolvedValue(undefined) },
       },
+      insert: vi.fn(() => ({
+        values: vi.fn(() => ({
+          onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+        })),
+      })),
       update: vi.fn(() => ({
         set: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
       })),
