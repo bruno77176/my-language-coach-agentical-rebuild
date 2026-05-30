@@ -22,6 +22,9 @@ describe("buildCoachSystemPrompt", () => {
       recent_topics: [
         { topic: "trip to Italy", last_practiced_at: "2026-05-30T10:00:00.000Z" },
       ],
+      // Populate deep-memory fields to verify basic depth does NOT leak them
+      weak_areas: ["past tense irregulars"],
+      personal_context: { job: "software engineer" },
       last_session_summary: "Talked about food.",
     };
     const out = buildCoachSystemPrompt({
@@ -33,7 +36,10 @@ describe("buildCoachSystemPrompt", () => {
     expect(out).toContain("<context>");
     expect(out).toContain("trip to Italy");
     expect(out).toContain("Talked about food.");
-    // basic depth must NOT leak personal_context / weak_areas
+    // Basic depth MUST NOT leak deep-memory values
+    expect(out).not.toContain("past tense irregulars");
+    expect(out).not.toContain("software engineer");
+    // The literal-string check is also kept as a backstop
     expect(out).not.toContain("personal_context");
   });
 

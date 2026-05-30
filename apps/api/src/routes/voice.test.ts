@@ -86,6 +86,8 @@ describe("POST /v1/voice/sessions/:id/end", () => {
         profiles: {
           findFirst: vi.fn().mockResolvedValue(opts.profile),
         },
+        coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        messages: { findMany: vi.fn().mockResolvedValue([]) },
       },
       update: vi.fn(() => ({
         set: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
