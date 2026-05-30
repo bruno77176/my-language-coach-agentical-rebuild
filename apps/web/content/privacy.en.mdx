@@ -1,4 +1,4 @@
-**Last updated: 2026-05-27**
+**Last updated: 2026-05-30**
 
 > This document is a draft. Final legal review pending before production app submission.
 
@@ -11,6 +11,7 @@ My Language Coach ("we", "the app") is operated by Bruno Moïse as a personal pr
 - **Account data:** email address (required for sign-in via Supabase).
 - **Practice activity:** session start/end times, language practiced, duration, conversation transcripts.
 - **Voice audio:** when you speak in the app, audio is transmitted to OpenAI for transcription. Audio is not retained on our servers after transcription.
+- **Coach memory:** a short structured profile of what you've discussed with your coach — recent topics, approximate proficiency level, weak areas, optional personal context. Per-language, used only to inform what your coach says.
 - **Device identifiers:** a generated device ID stored locally on your device for cross-session continuity.
 
 ## Third parties
@@ -38,6 +39,16 @@ You can delete your account and all associated data at any time. There are two w
 Either path performs the same hard delete within 24 hours: your email, name, profile picture, chat messages, conversation history, streaks, saved vocabulary, push notification tokens, and subscription entitlements are removed.
 
 We retain anonymized records of any past purchases (no longer linked to you) for tax-reporting purposes, and anonymized aggregate analytics (no longer linked to you).
+
+## Coach memory
+
+To make conversations feel personalized, we save a short profile of what you've discussed with your coach. This information is per-language and only used to inform what your coach says.
+
+You can view, edit, or delete this memory anytime under Profile → Coach's Memory, and you can opt out entirely during onboarding (or by deleting all memory entries). Deleting your account removes all coach memory permanently.
+
+## AI-generated content
+
+Conversations and end-of-session feedback are produced by AI language models (currently OpenAI's GPT-4o family). The AI may occasionally make mistakes; flagged corrections should be checked against an authoritative grammar reference for important uses.
 
 ## Contact
 

@@ -1,4 +1,4 @@
-**Dernière mise à jour : 2026-05-27**
+**Dernière mise à jour : 2026-05-30**
 
 > Ce document est une ébauche. Révision juridique finale en attente avant la soumission de l'application en production.
 
@@ -11,6 +11,7 @@ My Language Coach (« nous », « l'application ») est exploitée par Bruno Mo�
 - **Données de compte :** adresse e-mail (requise pour la connexion via Supabase).
 - **Activité de pratique :** horodatages de début/fin de session, langue pratiquée, durée, transcriptions de conversation.
 - **Audio vocal :** lorsque vous parlez dans l'application, l'audio est transmis à OpenAI pour transcription. L'audio n'est pas conservé sur nos serveurs après transcription.
+- **Mémoire du coach :** un court profil structuré de ce que vous avez discuté avec votre coach — sujets récents, niveau approximatif, points faibles, contexte personnel optionnel. Par langue, utilisé uniquement pour informer ce que votre coach dit.
 - **Identifiants d'appareil :** un identifiant généré, stocké localement sur votre appareil pour la continuité entre sessions.
 
 ## Tiers
@@ -38,6 +39,16 @@ Vous pouvez supprimer votre compte et toutes les données associées à tout mom
 Les deux parcours effectuent la même suppression définitive sous 24 heures : votre e-mail, nom, photo de profil, messages, historique de conversations, séries, vocabulaire enregistré, jetons de notifications et droits d'abonnement.
 
 Nous conservons des enregistrements anonymisés des achats passés (non rattachés à vous) pour les obligations fiscales, et des statistiques d'usage anonymisées (non rattachées à vous).
+
+## Mémoire du coach
+
+Pour rendre les conversations personnalisées, nous enregistrons un court profil de ce que vous avez discuté avec votre coach. Ces informations sont par langue et utilisées uniquement pour informer ce que votre coach dit.
+
+Vous pouvez consulter, modifier ou supprimer cette mémoire à tout moment depuis Profil → Mémoire du coach, et vous pouvez vous y opposer entièrement lors de l'onboarding (ou en supprimant toutes les entrées de mémoire). La suppression de votre compte efface toute la mémoire du coach définitivement.
+
+## Contenu généré par IA
+
+Les conversations et le feedback de fin de session sont produits par des modèles de langage IA (actuellement la famille GPT-4o d'OpenAI). L'IA peut occasionnellement faire des erreurs ; les corrections signalées doivent être vérifiées par rapport à une référence grammaticale faisant autorité pour les usages importants.
 
 ## Contact
 

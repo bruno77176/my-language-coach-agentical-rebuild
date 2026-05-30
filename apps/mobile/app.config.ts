@@ -43,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "11",
+      buildNumber: "12",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -54,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 45,
+      versionCode: 46,
       permissions: ["RECORD_AUDIO"],
       intentFilters: [
         {
