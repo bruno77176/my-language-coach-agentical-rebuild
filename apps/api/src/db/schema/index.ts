@@ -13,3 +13,4 @@ export * from "./fixed-costs";
 export * from "./upfront-costs";
 export * from "./revenue-events";
 export * from "./coach-memory";
+export * from "./session-feedback";
