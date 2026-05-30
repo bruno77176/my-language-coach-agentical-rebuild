@@ -90,6 +90,12 @@ describe("POST /v1/voice/sessions/:id/end", () => {
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
         messages: { findMany: vi.fn().mockResolvedValue([]) },
         sessionFeedback: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        // Plan 8 M5: voice.ts /end fire-and-forgets scheduleOnboardingPushes
+        // which calls pushSchedule.findFirst for idempotency. Stub returns
+        // a row so the scheduler short-circuits and doesn't try to insert.
+        pushSchedule: {
+          findFirst: vi.fn().mockResolvedValue({ id: "existing" }),
+        },
       },
       insert: vi.fn(() => ({
         values: vi.fn(() => ({

@@ -488,6 +488,20 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         goal_reached = streak_days.goal_reached OR (streak_days.seconds_spoken + ${sessionDurationSec} >= ${dailyGoalSeconds})
     `);
 
+    // Plan 8 M5: schedule Day 1/2/7 push notifications on the first session end.
+    // scheduleOnboardingPushes is idempotent: it skips if a day-1-feedback row
+    // already exists for this user, so this is safe to run on every /end call.
+    void (async () => {
+      try {
+        const { scheduleOnboardingPushes } = await import(
+          "../lib/push-scheduler"
+        );
+        await scheduleOnboardingPushes(deps.db, userId, profile.timezone);
+      } catch {
+        // Idempotent + isolated; failures swallowed
+      }
+    })();
+
     // Plan 8 M1: fire-and-forget memory extraction. Never block the response.
     void (async () => {
       try {
