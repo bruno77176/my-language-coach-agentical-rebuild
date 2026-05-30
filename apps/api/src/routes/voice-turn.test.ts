@@ -129,6 +129,12 @@ function setupRoute(overrides: SetupOverrides = {}) {
       messages: {
         findMany: vi.fn().mockResolvedValue(history),
       },
+      // Plan 8 M1: voice.ts /turns reads coach memory before building the
+      // system prompt. Tests default to "no memory row" so the prompt builder
+      // behaves as if memory is empty (backwards-compat path).
+      coachMemory: {
+        findFirst: vi.fn().mockResolvedValue(undefined),
+      },
     },
     insert: vi.fn(() => ({
       values: vi.fn(() => ({ returning: insertReturning })),
@@ -178,6 +184,7 @@ function setupRoute(overrides: SetupOverrides = {}) {
     streamChatCompletion,
     synthesizeSpeech,
     uploadCoachAudioChunk,
+    extractMemory: async () => null,
   });
 
   const app = new Hono<{ Variables: { userId: string } }>();

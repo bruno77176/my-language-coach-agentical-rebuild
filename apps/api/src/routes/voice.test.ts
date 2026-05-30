@@ -12,6 +12,7 @@ const noopProviderDeps: Omit<VoiceDeps, "db"> = {
   streamChatCompletion: vi.fn() as unknown as VoiceDeps["streamChatCompletion"],
   synthesizeSpeech: vi.fn(),
   uploadCoachAudioChunk: vi.fn(),
+  extractMemory: async () => null,
 };
 
 function appWithVoice(routes: ReturnType<typeof createVoiceRoutes>) {

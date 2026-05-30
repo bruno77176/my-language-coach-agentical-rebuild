@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CoachMemorySchema, RecentTopicSchema } from "./coach-memory-schema";
+import {
+  CoachMemorySchema,
+  RecentTopicSchema,
+  parseCoachMemoryRow,
+} from "./coach-memory-schema";
 
 describe("CoachMemorySchema", () => {
   it("accepts an empty memory shape", () => {
@@ -38,5 +42,49 @@ describe("CoachMemorySchema", () => {
 
   it("RecentTopicSchema requires topic + last_practiced_at", () => {
     expect(() => RecentTopicSchema.parse({ topic: "x" })).toThrow();
+  });
+});
+
+describe("parseCoachMemoryRow", () => {
+  it("returns null for a null/undefined row", () => {
+    expect(parseCoachMemoryRow(null)).toBeNull();
+    expect(parseCoachMemoryRow(undefined)).toBeNull();
+  });
+
+  it("returns a valid CoachMemory for a well-shaped row", () => {
+    const parsed = parseCoachMemoryRow({
+      proficiencyLevel: "B1",
+      recentTopics: [
+        { topic: "x", last_practiced_at: "2026-05-30T10:00:00.000Z" },
+      ],
+      weakAreas: ["past tense"],
+      personalContext: { job: "engineer" },
+      lastSessionSummary: "ok",
+    });
+    expect(parsed).not.toBeNull();
+    expect(parsed!.proficiency_level).toBe("B1");
+    expect(parsed!.recent_topics[0]!.topic).toBe("x");
+  });
+
+  it("returns null for a row with a corrupt jsonb shape", () => {
+    expect(
+      parseCoachMemoryRow({
+        proficiencyLevel: "X1", // invalid enum
+        recentTopics: [],
+        weakAreas: [],
+        personalContext: {},
+      }),
+    ).toBeNull();
+  });
+
+  it("returns null when recent_topics contains a non-ISO-strict datetime", () => {
+    expect(
+      parseCoachMemoryRow({
+        proficiencyLevel: "B1",
+        recentTopics: [{ topic: "x", last_practiced_at: "2026-05-30 10:00" }],
+        weakAreas: [],
+        personalContext: {},
+      }),
+    ).toBeNull();
   });
 });

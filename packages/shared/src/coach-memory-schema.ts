@@ -43,3 +43,36 @@ export function emptyCoachMemory(): CoachMemory {
     last_session_summary: null,
   };
 }
+
+/**
+ * Defensive parser for a Drizzle `coach_memory` row. Maps snake_case JSONB
+ * columns to the Zod-validated CoachMemory shape. Returns `null` if the row
+ * fails validation (corrupt or out-of-date data) — caller degrades to "no
+ * memory" rather than crashing or passing bad data to the prompt.
+ *
+ * Use this on the READ path in voice.ts /turns. The WRITE path validates via
+ * extractMemory (which returns CoachMemorySchema-parsed output already).
+ */
+export function parseCoachMemoryRow(
+  row:
+    | {
+        proficiencyLevel?: string | null;
+        recentTopics?: unknown;
+        weakAreas?: unknown;
+        personalContext?: unknown;
+        lastSessionSummary?: string | null;
+      }
+    | null
+    | undefined,
+): CoachMemory | null {
+  if (!row) return null;
+  const candidate = {
+    proficiency_level: row.proficiencyLevel ?? null,
+    recent_topics: row.recentTopics ?? [],
+    weak_areas: row.weakAreas ?? [],
+    personal_context: row.personalContext ?? {},
+    last_session_summary: row.lastSessionSummary ?? null,
+  };
+  const result = CoachMemorySchema.safeParse(candidate);
+  return result.success ? result.data : null;
+}
