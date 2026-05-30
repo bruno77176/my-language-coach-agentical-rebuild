@@ -113,19 +113,19 @@ export function bodyFor(kind: PushKind): {
       return {
         title: "Your first feedback report is ready",
         body: "Your coach has notes from yesterday's session. Take a look.",
-        data: { url: "mylanguagecoach://practice" },
+        data: { url: "mylanguagecoach:///(tabs)/practice" },
       };
     case "day-2-warmup":
       return {
         title: "5 minutes with your coach?",
         body: "A quick warmup keeps the streak alive.",
-        data: { url: "mylanguagecoach://practice" },
+        data: { url: "mylanguagecoach:///(tabs)/practice" },
       };
     case "day-7-summary":
       return {
         title: "Your first week with your coach",
         body: "See your progress so far.",
-        data: { url: "mylanguagecoach://weekly-summary" },
+        data: { url: "mylanguagecoach:///(tabs)/progress/weekly-summary" },
       };
   }
 }

@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import Purchases from "react-native-purchases";
@@ -62,6 +63,24 @@ export default function RootLayout() {
     });
     return () => data.subscription.unsubscribe();
   }, [setSession]);
+
+  // Route to the right screen when the user taps a push notification.
+  // Payload URLs look like `mylanguagecoach:///(tabs)/practice` —
+  // strip the scheme and hand the path to expo-router.
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data;
+        const url = (data as { url?: string })?.url;
+        if (!url) return;
+        const match = url.match(/^mylanguagecoach:\/\/\/?(.+)$/);
+        if (!match || !match[1]) return;
+        const path = match[1].startsWith("/") ? match[1] : "/" + match[1];
+        router.push(path as never);
+      },
+    );
+    return () => sub.remove();
+  }, [router]);
 
   // RevenueCat SDK init (Android-only for v2). The public SDK key is
   // namespaced EXPO_PUBLIC_ so it ships in the client bundle — that's

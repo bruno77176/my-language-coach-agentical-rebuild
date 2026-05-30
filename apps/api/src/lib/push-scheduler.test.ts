@@ -16,11 +16,14 @@ describe("bodyFor", () => {
   it("returns title + body + deep-link for each kind", () => {
     expect(bodyFor("day-1-feedback").title).toContain("first feedback");
     expect(bodyFor("day-1-feedback").data!.url).toBe(
-      "mylanguagecoach://practice",
+      "mylanguagecoach:///(tabs)/practice",
     );
     expect(bodyFor("day-2-warmup").body).toContain("warmup");
+    expect(bodyFor("day-2-warmup").data!.url).toBe(
+      "mylanguagecoach:///(tabs)/practice",
+    );
     expect(bodyFor("day-7-summary").data!.url).toBe(
-      "mylanguagecoach://weekly-summary",
+      "mylanguagecoach:///(tabs)/progress/weekly-summary",
     );
   });
 });
