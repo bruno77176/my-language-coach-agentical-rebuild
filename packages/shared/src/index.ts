@@ -6,3 +6,4 @@ export * from "./greetings";
 export * from "./coach-fallbacks";
 export * from "./coach-memory-schema";
 export * from "./feedback-schema";
+export * from "./role-play-scenarios";
