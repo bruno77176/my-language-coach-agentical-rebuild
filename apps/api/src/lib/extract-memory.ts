@@ -5,6 +5,7 @@ import {
   LANGUAGES,
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
+import { reportError } from "./sentry";
 
 export type TranscriptTurn = {
   role: "user" | "coach";
@@ -64,7 +65,8 @@ Return the updated memory JSON:`;
         { role: "user", content: userPrompt },
       ],
     });
-  } catch {
+  } catch (err) {
+    reportError(err, { where: "extract-memory.api" });
     return null;
   }
 
@@ -72,7 +74,7 @@ Return the updated memory JSON:`;
     void Promise.resolve(
       input.onUsage({
         provider: "openai",
-        operation: `extract-memory:${input.model ?? "gpt-4o-mini"}`,
+        operation: `chat:${input.model ?? "gpt-4o-mini"}`,
         inputTokens: completion.usage.prompt_tokens,
         outputTokens: completion.usage.completion_tokens,
       }),
@@ -85,7 +87,8 @@ Return the updated memory JSON:`;
     const parsed = JSON.parse(raw);
     const validated = CoachMemorySchema.parse(parsed);
     return validated;
-  } catch {
+  } catch (err) {
+    reportError(err, { where: "extract-memory.parse" });
     return null;
   }
 }

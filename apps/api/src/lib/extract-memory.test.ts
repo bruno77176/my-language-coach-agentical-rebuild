@@ -92,4 +92,68 @@ describe("extractMemory", () => {
     });
     expect(out).toBeNull();
   });
+
+  it("returns null when last_practiced_at is not strict ISO 8601", async () => {
+    const looseClient = {
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    proficiency_level: "B1",
+                    recent_topics: [
+                      { topic: "x", last_practiced_at: "2026-05-30 10:00" },
+                    ],
+                    weak_areas: [],
+                    personal_context: {},
+                    last_session_summary: null,
+                  }),
+                },
+              },
+            ],
+            usage: { prompt_tokens: 50, completion_tokens: 20 },
+          }),
+        },
+      },
+    };
+    const out = await extractMemory(looseClient as any, {
+      existingMemory: emptyCoachMemory(),
+      transcript: [{ role: "user", text: "hi" }],
+      languageCode: "it",
+    });
+    expect(out).toBeNull();
+  });
+
+  it("returns null when proficiency_level is an unknown enum value", async () => {
+    const badEnumClient = {
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    proficiency_level: "X1",
+                    recent_topics: [],
+                    weak_areas: [],
+                    personal_context: {},
+                    last_session_summary: null,
+                  }),
+                },
+              },
+            ],
+            usage: { prompt_tokens: 50, completion_tokens: 10 },
+          }),
+        },
+      },
+    };
+    const out = await extractMemory(badEnumClient as any, {
+      existingMemory: emptyCoachMemory(),
+      transcript: [{ role: "user", text: "hi" }],
+      languageCode: "it",
+    });
+    expect(out).toBeNull();
+  });
 });
