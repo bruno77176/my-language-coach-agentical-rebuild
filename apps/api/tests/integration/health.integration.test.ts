@@ -36,6 +36,7 @@ const baseEnv = {
     "0000000000000000000000000000000000000000000000000000000000000000",
   RESEND_API_KEY: "re_test_stub",
   PUBLIC_WEB_BASE_URL: "http://localhost:3002",
+  REVENUECAT_WEBHOOK_SECRET: "test-revenuecat-webhook-secret-1234567890",
 };
 
 describe.skipIf(!TEST_DB_URL)(

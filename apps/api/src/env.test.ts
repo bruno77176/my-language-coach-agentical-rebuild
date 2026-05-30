@@ -16,6 +16,7 @@ describe("env", () => {
     delete process.env.ACCOUNT_DELETION_SECRET;
     delete process.env.RESEND_API_KEY;
     delete process.env.PUBLIC_WEB_BASE_URL;
+    delete process.env.REVENUECAT_WEBHOOK_SECRET;
   });
 
   it("throws a clear error when required vars are missing", async () => {
@@ -39,6 +40,8 @@ describe("env", () => {
     process.env.ACCOUNT_DELETION_SECRET = "0".repeat(64);
     process.env.RESEND_API_KEY = "re_test_stub";
     process.env.PUBLIC_WEB_BASE_URL = "http://localhost:3002";
+    process.env.REVENUECAT_WEBHOOK_SECRET =
+      "test-revenuecat-webhook-secret-1234567890";
 
     const { loadEnv } = await import("./env");
     const env = loadEnv();
@@ -59,6 +62,8 @@ describe("env", () => {
     process.env.ACCOUNT_DELETION_SECRET = "0".repeat(64);
     process.env.RESEND_API_KEY = "re_test_stub";
     process.env.PUBLIC_WEB_BASE_URL = "http://localhost:3002";
+    process.env.REVENUECAT_WEBHOOK_SECRET =
+      "test-revenuecat-webhook-secret-1234567890";
 
     const { loadEnv } = await import("./env");
     const env = loadEnv();

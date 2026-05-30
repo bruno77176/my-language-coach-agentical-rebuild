@@ -19,6 +19,7 @@ const EnvSchema = z.object({
   ACCOUNT_DELETION_SECRET: z.string().min(32), // 32+ random bytes hex for JWT HMAC
   RESEND_API_KEY: z.string().min(1),
   PUBLIC_WEB_BASE_URL: z.string().url(), // e.g. https://www.mylanguagecoach.app
+  REVENUECAT_WEBHOOK_SECRET: z.string().min(20),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
