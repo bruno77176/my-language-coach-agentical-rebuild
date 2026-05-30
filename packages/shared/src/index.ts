@@ -4,3 +4,4 @@ export * from "./prompts";
 export * from "./daily-quotes";
 export * from "./greetings";
 export * from "./coach-fallbacks";
+export * from "./coach-memory-schema";
