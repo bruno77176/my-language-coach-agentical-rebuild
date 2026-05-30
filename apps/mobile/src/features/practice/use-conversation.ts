@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { router } from "expo-router";
 import {
   useAudioRecorder,
   RecordingPresets,
@@ -87,6 +88,11 @@ export function useConversation(
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const conversationIdRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
+  // Guard against double-firing the paywall navigation if the SSE error
+  // event arrives more than once or a follow-up turn also 429s. Reset on
+  // successful turn (in the for-await success path below) so a user who
+  // upgrades and starts a new day can be re-prompted next time.
+  const paywallShownRef = useRef(false);
 
   // Reset reveals when listening mode toggles
   useEffect(() => {
@@ -282,6 +288,19 @@ export function useConversation(
             );
           }
         } else if (event.type === "error") {
+          // Plan 8 M4: free-tier daily cap — open paywall instead of the
+          // generic error screen. The backend returns HTTP 429 with
+          // `{ error: { code: "DAILY_QUOTA_EXCEEDED" } }` which api-client
+          // normalizes into this event shape.
+          if (event.code === "DAILY_QUOTA_EXCEEDED") {
+            await audioQueue.waitForDrain();
+            if (!paywallShownRef.current) {
+              paywallShownRef.current = true;
+              router.push("/(modals)/paywall");
+            }
+            setState({ phase: "idle", conversationId });
+            return;
+          }
           const code = event.code as SoftErrorCode;
           if (SOFT_ERROR_CODES.has(code)) {
             pushSoftErrorAsCoachMessage(code);
@@ -294,16 +313,24 @@ export function useConversation(
       }
 
       await audioQueue.waitForDrain();
+      paywallShownRef.current = false;
       setState({ phase: "idle", conversationId });
     } catch (err) {
       setState({ phase: "error", message: (err as Error).message });
     }
   }
 
-  async function end() {
+  async function end(): Promise<{
+    conversationId: string | null;
+    secondsSpoken: number;
+  }> {
     const conversationId = conversationIdRef.current;
-    if (!conversationId) return null;
-    return endSession(conversationId);
+    if (!conversationId) return { conversationId: null, secondsSpoken: 0 };
+    const result = await endSession(conversationId);
+    return {
+      conversationId,
+      secondsSpoken: result.seconds_spoken ?? 0,
+    };
   }
 
   function dismissError() {

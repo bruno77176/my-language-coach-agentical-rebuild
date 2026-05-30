@@ -2,10 +2,16 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { conversations, messages, entitlements } from "../db/schema";
+import {
+  conversations,
+  messages,
+  entitlements,
+  coachMemory,
+  sessionFeedback,
+} from "../db/schema";
 import type { Database } from "../db";
 import { MAX_TURN_AUDIO_SECONDS, MIN_TURN_AUDIO_SECONDS } from "../env";
-import { canUseSeconds } from "../lib/quota";
+import { canUseSecondsDaily } from "../lib/quota";
 import { ProviderError } from "../providers/deepgram";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
 import type { StreamInput, ChatMessage } from "../providers/openai";
@@ -14,7 +20,14 @@ import type {
   SynthesizeResult,
 } from "../providers/elevenlabs";
 import { voiceIdForLanguage } from "../providers/voice-map";
-import { buildCoachSystemPrompt } from "@language-coach/shared";
+import {
+  buildCoachSystemPrompt,
+  parseCoachMemoryRow,
+  emptyCoachMemory,
+  ROLE_PLAY_SCENARIOS,
+} from "@language-coach/shared";
+import type { CoachMemory, SessionFeedback } from "@language-coach/shared";
+import type { OnUsage } from "../providers/usage";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
@@ -31,17 +44,36 @@ export type UploadCoachAudioChunkFn = (input: {
   contentType: string;
 }) => Promise<{ audioUrl: string }>;
 
+export type ExtractMemoryFn = (input: {
+  existingMemory: CoachMemory;
+  transcript: Array<{ role: "user" | "coach"; text: string }>;
+  languageCode: string;
+  onUsage?: OnUsage;
+}) => Promise<CoachMemory | null>;
+
+export type GenerateFeedbackFn = (input: {
+  transcript: Array<{ role: "user" | "coach"; text: string }>;
+  languageCode: string;
+  nativeLanguageCode: string;
+  onUsage?: OnUsage;
+}) => Promise<SessionFeedback | null>;
+
 export type VoiceDeps = {
   db: Database;
   transcribeAudio: (input: TranscribeInput) => Promise<TranscribeResult>;
   streamChatCompletion: (input: StreamInput) => AsyncGenerator<string>;
   synthesizeSpeech: SynthesizeSpeechFn;
   uploadCoachAudioChunk: UploadCoachAudioChunkFn;
+  extractMemory: ExtractMemoryFn;
+  generateFeedback: GenerateFeedbackFn;
 };
 
 const StartSessionBody = z.object({
   language: z.string().min(2).max(8),
   topic_id: z.string().uuid().optional(),
+  scenario_id: z
+    .enum(ROLE_PLAY_SCENARIOS.map((s) => s.id) as [string, ...string[]])
+    .optional(),
 });
 
 // Quick byte-size guards before we even hit the STT provider. These are loose
@@ -71,6 +103,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         userId,
         language: parsed.data.language,
         topicId: parsed.data.topic_id ?? null,
+        scenarioId: parsed.data.scenario_id ?? null,
       })
       .returning({ id: conversations.id });
 
@@ -135,17 +168,24 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
     const estimateSeconds = Math.ceil(audioBuffer.byteLength / 16_000);
-    const quotaCheck = canUseSeconds(
+    const dailyCheck = canUseSecondsDaily(
       {
         plan: entitlement.plan as "free" | "pro",
         proUntil: entitlement.proUntil,
-        monthlyVoiceSecondsUsed: entitlement.monthlyVoiceSecondsUsed,
+        dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
+        dailyResetAt: entitlement.dailyResetAt,
       },
       estimateSeconds,
     );
-    if (!quotaCheck.allowed) {
+    if (!dailyCheck.allowed) {
       return c.json(
-        { error: { code: "QUOTA_EXCEEDED", message: "Free tier exhausted" } },
+        {
+          error: {
+            code: "DAILY_QUOTA_EXCEEDED",
+            message: "Free tier daily limit reached",
+            resetAt: dailyCheck.resetAt.toISOString(),
+          },
+        },
         429,
       );
     }
@@ -159,6 +199,22 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         500,
       );
     }
+
+    // Load coach memory for this user × language (Plan 8 M1).
+    // parseCoachMemoryRow defensively returns null on corrupt data so we
+    // degrade to "no memory" rather than crashing or passing junk to the model.
+    const memoryRow = await deps.db.query.coachMemory.findFirst({
+      where: (t, { eq: e, and: a }) =>
+        a(e(t.userId, userId), e(t.languageCode, conversation.language)),
+    });
+    const memory =
+      memoryRow && !memoryRow.optedOut ? parseCoachMemoryRow(memoryRow) : null;
+    const memoryDepth =
+      entitlement.plan === "pro" &&
+      entitlement.proUntil &&
+      entitlement.proUntil > new Date()
+        ? ("deep" as const)
+        : ("basic" as const);
 
     return streamSSE(c, async (stream) => {
       try {
@@ -209,9 +265,23 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           where: (t, { eq: e }) => e(t.conversationId, conversationId),
           orderBy: (t, { asc: a }) => [a(t.createdAt)],
         });
+        const scenario = conversation.scenarioId
+          ? (ROLE_PLAY_SCENARIOS.find(
+              (s) => s.id === conversation.scenarioId,
+            ) ?? null)
+          : null;
+        const scenarioFragment = scenario
+          ? {
+              id: scenario.id,
+              systemPromptFragment: scenario.systemPromptFragment,
+            }
+          : null;
         const sysPrompt = buildCoachSystemPrompt({
           targetLanguage: conversation.language,
           userDisplayName: profile.displayName,
+          memory,
+          memoryDepth,
+          scenario: scenarioFragment,
         });
         const promptMessages: ChatMessage[] = [
           { role: "system" as const, content: sysPrompt },
@@ -316,6 +386,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           .set({
             monthlyVoiceSecondsUsed:
               entitlement.monthlyVoiceSecondsUsed + secondsThisTurn,
+            dailyVoiceSecondsUsed:
+              (entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
+                ? 0
+                : entitlement.dailyVoiceSecondsUsed) + secondsThisTurn,
+            dailyResetAt:
+              entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
+                ? new Date()
+                : entitlement.dailyResetAt,
           })
           .where(eq(entitlements.userId, userId));
 
@@ -410,6 +488,132 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         seconds_spoken = streak_days.seconds_spoken + ${sessionDurationSec},
         goal_reached = streak_days.goal_reached OR (streak_days.seconds_spoken + ${sessionDurationSec} >= ${dailyGoalSeconds})
     `);
+
+    // Plan 8 M5: schedule Day 1/2/7 push notifications on the first session end.
+    // scheduleOnboardingPushes is idempotent: it skips if a day-1-feedback row
+    // already exists for this user, so this is safe to run on every /end call.
+    void (async () => {
+      try {
+        const { scheduleOnboardingPushes } =
+          await import("../lib/push-scheduler");
+        await scheduleOnboardingPushes(deps.db, userId, profile.timezone);
+      } catch {
+        // Idempotent + isolated; failures swallowed
+      }
+    })();
+
+    // Plan 8 M1: fire-and-forget memory extraction. Never block the response.
+    void (async () => {
+      try {
+        const memoryRow = await deps.db.query.coachMemory.findFirst({
+          where: (t, { eq: e, and: a }) =>
+            a(e(t.userId, userId), e(t.languageCode, conversation.language)),
+        });
+        if (memoryRow?.optedOut) return;
+        const existingMemory =
+          parseCoachMemoryRow(memoryRow) ?? emptyCoachMemory();
+        const transcript = await deps.db.query.messages.findMany({
+          where: (t, { eq: e }) => e(t.conversationId, conversationId),
+          orderBy: (t, { asc: a }) => [a(t.createdAt)],
+        });
+        const ttranscript = transcript.map((m) => ({
+          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
+          text: m.text,
+        }));
+        const onUsage = makeOnUsage(deps.db, {
+          userId,
+          platform: platformFromHeader(c.req.header("X-Client-Platform")),
+          conversationId,
+        });
+        const updated = await deps.extractMemory({
+          existingMemory,
+          transcript: ttranscript,
+          languageCode: conversation.language,
+          onUsage,
+        });
+        if (!updated) return; // parse failure already handled inside extractMemory
+        await deps.db
+          .insert(coachMemory)
+          .values({
+            userId,
+            languageCode: conversation.language,
+            proficiencyLevel: updated.proficiency_level ?? null,
+            recentTopics: updated.recent_topics,
+            weakAreas: updated.weak_areas,
+            personalContext: updated.personal_context,
+            lastSessionSummary: updated.last_session_summary ?? null,
+            updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: [coachMemory.userId, coachMemory.languageCode],
+            set: {
+              proficiencyLevel: updated.proficiency_level ?? null,
+              recentTopics: updated.recent_topics,
+              weakAreas: updated.weak_areas,
+              personalContext: updated.personal_context,
+              lastSessionSummary: updated.last_session_summary ?? null,
+              updatedAt: new Date(),
+            },
+          });
+      } catch {
+        // Memory extraction never breaks the user-visible flow.
+      }
+    })();
+
+    // Plan 8 M2: insert pending feedback row, then fire gen job. Fire-and-forget.
+    void (async () => {
+      try {
+        await deps.db
+          .insert(sessionFeedback)
+          .values({
+            conversationId,
+            status: "pending",
+            highlights: [],
+            corrections: [],
+            vocab: [],
+          })
+          .onConflictDoNothing();
+
+        const transcript = await deps.db.query.messages.findMany({
+          where: (t, { eq: e }) => e(t.conversationId, conversationId),
+          orderBy: (t, { asc: a }) => [a(t.createdAt)],
+        });
+        const ttranscript = transcript.map((m) => ({
+          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
+          text: m.text,
+        }));
+        const onUsage = makeOnUsage(deps.db, {
+          userId,
+          platform: platformFromHeader(c.req.header("X-Client-Platform")),
+          conversationId,
+        });
+        const fb = await deps.generateFeedback({
+          transcript: ttranscript,
+          languageCode: conversation.language,
+          nativeLanguageCode: profile.nativeLang,
+          onUsage,
+        });
+        if (!fb) {
+          await deps.db
+            .update(sessionFeedback)
+            .set({ status: "failed" })
+            .where(eq(sessionFeedback.conversationId, conversationId));
+          return;
+        }
+        await deps.db
+          .update(sessionFeedback)
+          .set({
+            status: "ready",
+            highlights: fb.highlights,
+            corrections: fb.corrections,
+            vocab: fb.vocab,
+          })
+          .where(eq(sessionFeedback.conversationId, conversationId));
+      } catch {
+        // Already reported via reportError inside generate-feedback;
+        // outer catch swallows DB errors so /end response isn't blocked.
+      }
+    })();
 
     return c.json({
       seconds_spoken: sessionDurationSec,

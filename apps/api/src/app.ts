@@ -22,6 +22,9 @@ import {
   translateMessage,
 } from "./providers/openai";
 import { createMessagesRoutes } from "./routes/messages";
+import { createMemoryRoutes } from "./routes/memory";
+import { createFeedbackRoutes } from "./routes/feedback";
+import { createWeeklySummaryRoutes } from "./routes/weekly-summary";
 import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
 import {
   createStorageClient,
@@ -33,8 +36,11 @@ import {
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { createAccountDeletionRoutes } from "./routes/account-deletion";
+import { createBillingRoutes } from "./routes/billing";
 import { deleteUserAccount } from "./lib/account-deletion";
 import { sendDeletionConfirmationEmail } from "./lib/account-deletion-email";
+import { extractMemory } from "./lib/extract-memory";
+import { generateFeedback } from "./lib/generate-feedback";
 
 export type AppEnv = {
   Variables: {
@@ -169,6 +175,18 @@ export function createApp(
     createAccountDeletionRoutes(accountDeletionDeps),
   );
 
+  // RevenueCat webhook: gated by a bearer secret in the Authorization header,
+  // NOT a Supabase JWT, so it MUST be mounted BEFORE the /v1/* auth middleware
+  // (same pattern as /admin/internal/*). RevenueCat hits this server-to-server
+  // with the secret configured in their dashboard.
+  app.route(
+    "/v1/billing",
+    createBillingRoutes({
+      db,
+      webhookSecret: env.REVENUECAT_WEBHOOK_SECRET,
+    }),
+  );
+
   // Auth-required routes: /v1/* requires a valid Supabase JWT.
   const auth = createAuthMiddleware(verifier);
   app.use("/v1/*", auth);
@@ -194,6 +212,8 @@ export function createApp(
       // once we're on a paid subscription.
       synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
       uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
+      extractMemory: (input) => extractMemory(openai, input),
+      generateFeedback: (input) => generateFeedback(openai, input),
     }),
   );
 
@@ -217,6 +237,12 @@ export function createApp(
       getCachedGreetingUrl: (input) => getGreetingAudioUrl(storage, input),
     }),
   );
+
+  app.route("/v1/memory", createMemoryRoutes({ db }));
+
+  app.route("/v1", createFeedbackRoutes({ db }));
+
+  app.route("/v1/progress", createWeeklySummaryRoutes({ db }));
 
   return app;
 }

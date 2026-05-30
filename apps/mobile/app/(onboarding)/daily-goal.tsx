@@ -43,10 +43,9 @@ export default function DailyGoalStep() {
     setDailyGoalMinutes(selected);
     try {
       await mutation.mutateAsync();
-      // Navigate directly to /(tabs)/home — the mutation's onSuccess awaited
-      // the profile refetch, so going through the index gate would also work,
-      // but going direct skips an extra render cycle.
-      router.replace("/(tabs)/home");
+      // Onboarding is complete; surface the coach-memory consent prompt before
+      // dropping the user into Home. The consent screen itself navigates on.
+      router.replace("/(onboarding)/memory-consent");
     } catch (err) {
       Alert.alert("Couldn't complete onboarding", String(err));
     }

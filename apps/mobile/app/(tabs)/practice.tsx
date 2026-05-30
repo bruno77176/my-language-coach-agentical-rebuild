@@ -140,8 +140,12 @@ export default function PracticeScreen() {
         style: "destructive",
         onPress: () => {
           void (async () => {
+            let endResult: {
+              conversationId: string | null;
+              secondsSpoken: number;
+            } | null = null;
             try {
-              await end();
+              endResult = await end();
             } catch {
               /* best-effort */
             }
@@ -157,7 +161,17 @@ export default function PracticeScreen() {
               queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
               queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
             ]);
-            router.replace("/(tabs)/home");
+            if (endResult?.conversationId) {
+              router.replace({
+                pathname: "/(modals)/end-of-session",
+                params: {
+                  conversationId: endResult.conversationId,
+                  secondsSpoken: String(endResult.secondsSpoken),
+                },
+              });
+            } else {
+              router.replace("/(tabs)/home");
+            }
           })();
         },
       },
@@ -250,6 +264,14 @@ export default function PracticeScreen() {
             >
               Your coach is listening — just talk like you would to a friend.
             </EditorialText>
+            <Pressable
+              onPress={() => router.push("/(modals)/role-play-picker")}
+              style={styles.scenarioLink}
+            >
+              <EditorialText kind="bodySm" color={palette.inkSoft}>
+                Try a scenario
+              </EditorialText>
+            </Pressable>
           </View>
         }
       />
@@ -312,6 +334,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: spacing["3xl"] * 2,
     paddingHorizontal: spacing.xl,
+  },
+  scenarioLink: {
+    padding: spacing.sm,
+    alignSelf: "center",
+    marginTop: spacing.md,
   },
   micBar: {
     position: "absolute",
