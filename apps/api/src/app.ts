@@ -24,6 +24,7 @@ import {
 import { createMessagesRoutes } from "./routes/messages";
 import { createMemoryRoutes } from "./routes/memory";
 import { createFeedbackRoutes } from "./routes/feedback";
+import { createWeeklySummaryRoutes } from "./routes/weekly-summary";
 import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
 import {
   createStorageClient,
@@ -240,6 +241,8 @@ export function createApp(
   app.route("/v1/memory", createMemoryRoutes({ db }));
 
   app.route("/v1", createFeedbackRoutes({ db }));
+
+  app.route("/v1/progress", createWeeklySummaryRoutes({ db }));
 
   return app;
 }
