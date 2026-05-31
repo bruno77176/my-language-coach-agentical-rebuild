@@ -40,7 +40,9 @@ const styles = StyleSheet.create({
   },
   coach: {
     alignSelf: "flex-start",
-    backgroundColor: palette.glassStrong,
+    // Solid cream (was translucent palette.glassStrong) — on Android,
+    // translucent + elevation paints a visible opaque inner rectangle.
+    backgroundColor: palette.cream,
     borderTopLeftRadius: spacing.sm,
   },
   you: {

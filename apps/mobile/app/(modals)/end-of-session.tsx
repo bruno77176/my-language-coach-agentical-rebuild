@@ -200,5 +200,5 @@ const styles = StyleSheet.create({
     ...shadow.cta,
   },
   btnPrimary: { backgroundColor: palette.ink },
-  btnSecondary: { backgroundColor: palette.glassStrong },
+  btnSecondary: { backgroundColor: palette.cream },
 });

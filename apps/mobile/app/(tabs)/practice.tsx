@@ -520,7 +520,12 @@ const chooserStyles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   card: {
-    backgroundColor: palette.glassStrong,
+    // Solid cream instead of translucent palette.glassStrong. On Android,
+    // translucent backgroundColor + elevation:2 makes the compositor draw a
+    // visible opaque inner rectangle inside the shadow — the "grey rectangle
+    // inside the rounded one" Bruno flagged. Cream is opaque and visually
+    // matches the previous look on the sunrise gradient.
+    backgroundColor: palette.cream,
     borderRadius: radius.lg,
     padding: spacing.base,
     marginBottom: spacing.md,
@@ -587,7 +592,7 @@ const activeStyles = StyleSheet.create({
     ...shadow.cta,
   },
   ctaButtonSecondary: {
-    backgroundColor: palette.glassStrong,
+    backgroundColor: palette.cream,
     marginTop: spacing.sm,
     ...shadow.card,
   },
