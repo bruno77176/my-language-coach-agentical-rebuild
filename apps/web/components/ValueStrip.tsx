@@ -4,7 +4,7 @@ interface Props {
   messages: Messages["valueStrip"];
 }
 
-const ICONS = ["💬", "🌐", "⚡", "🗓️"];
+const ICONS = ["🧠", "🎭", "📝", "🌐"];
 
 export function ValueStrip({ messages }: Props) {
   const items = [messages.v1, messages.v2, messages.v3, messages.v4];

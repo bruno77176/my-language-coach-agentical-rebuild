@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Pratiquez les langues. Gagnez en confiance.",
-    "description": "Votre partenaire de conversation alimenté par l'IA. Parlez-lui, recevez des corrections instantanées, et devenez fluide dans n'importe quelle langue."
+    "title": "My Language Coach — Un coach qui se souvient de vous. Un retour après chaque conversation.",
+    "description": "Votre coach de langue IA se souvient de ce que vous avez discuté, vous donne un rapport de retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie. En 12 langues."
   },
   "hero": {
     "eyebrow": "Disponible en bêta ouverte",
     "headline": "Pratiquez les langues.",
     "headlineAccent": "Gagnez en confiance.",
-    "subheadline": "Votre partenaire de conversation IA, dans votre poche. Parlez naturellement — recevez des retours instantanés dans la langue que vous apprenez.",
+    "subheadline": "Un coach IA qui se souvient de vous, vous donne un retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie — en 12 langues.",
     "scanToInstall": "Scannez pour installer",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Bêta ouverte",
@@ -16,24 +16,24 @@
     "iosNote": "Bêta TestFlight — places limitées"
   },
   "valueStrip": {
-    "v1": "Parlez naturellement",
-    "v2": "Plusieurs langues",
-    "v3": "Retours instantanés",
-    "v4": "Sans rendez-vous"
+    "v1": "Se souvient de vous",
+    "v2": "10 scénarios réels",
+    "v3": "Retour après chaque chat",
+    "v4": "12 langues"
   },
   "features": {
-    "title": "Trois choses qui font la différence",
+    "title": "Ce qui fait la différence",
     "f1": {
-      "title": "Parlez. Recevez une réponse.",
-      "body": "Appuyez, parlez, et le coach répond en temps réel — une voix qu'on jurerait humaine."
+      "title": "Un coach qui vous connaît",
+      "body": "Votre coach se souvient de ce dont vous avez parlé, de votre niveau, et de ce qu'il faut revoir. Chaque session s'appuie sur la précédente — pas de départ à froid."
     },
     "f2": {
-      "title": "Des corrections qui enseignent",
-      "body": "Chaque erreur s'accompagne d'un pourquoi-comment, pas d'une réprimande."
+      "title": "Scénarios de la vraie vie",
+      "body": "Commander un café. Arriver à l'hôtel. Survivre à un entretien d'embauche. Dix jeux de rôle où votre coach entre dans son personnage — et vous aussi."
     },
     "f3": {
-      "title": "Partout, à votre rythme",
-      "body": "Cinq minutes dans le bus ou une heure sur le canapé — le coach est toujours là."
+      "title": "Un retour vraiment utile",
+      "body": "Après chaque conversation : ce que vous avez réussi, ce qu'il faut peaufiner, et les nouveaux mots à retenir. Enregistrés pour les retrouver plus tard."
     }
   },
   "howItWorks": {
@@ -41,18 +41,50 @@
     "s1": {
       "n": "1",
       "title": "Choisissez une langue",
-      "body": "Français, allemand, italien, turc — d'autres arrivent."
+      "body": "Douze au choix — français, allemand, italien, espagnol, turc, portugais et plus."
     },
     "s2": {
       "n": "2",
-      "title": "Commencez à parler",
-      "body": "Appuyez sur le micro et parlez. Le coach écoute et répond."
+      "title": "Discutez ou jouez un rôle",
+      "body": "Conversation libre avec votre coach Lisa, ou entrez dans un scénario et rencontrez un inconnu en rôle."
     },
     "s3": {
       "n": "3",
-      "title": "Progressez chaque jour",
-      "body": "Suivez vos séries et voyez votre progression."
+      "title": "Lisez votre retour",
+      "body": "Trois panneaux après chaque chat : moments réussis, corrections, et nouveau vocabulaire — à retrouver quand vous voulez."
     }
+  },
+  "pricing": {
+    "title": "Gratuit pour commencer. Pro quand vous serez prêt.",
+    "subtitle": "Deux cafés par mois. Ou une tasse annuelle.",
+    "free": {
+      "label": "Gratuit",
+      "headline": "Tout ce qu'il faut pour commencer",
+      "price": "0 $",
+      "priceNote": "sans carte, sans essai",
+      "items": [
+        "10 minutes de conversation par jour",
+        "Trois scénarios de jeu de rôle",
+        "Retour pour la session en cours + les 3 dernières",
+        "Mémoire de base entre les sessions"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "Quand vous voulez la boucle complète",
+      "price": "7,99 $ / mois",
+      "priceAnnual": "ou 49,99 $ / an — économisez 48 %",
+      "priceNote": "Essai gratuit de 7 jours",
+      "items": [
+        "60 minutes de conversation par jour",
+        "Tous les 10 scénarios de jeu de rôle",
+        "Historique complet des retours",
+        "Mémoire profonde — points faibles, contexte personnel, thèmes",
+        "Résumé hebdomadaire de progression par e-mail"
+      ],
+      "highlight": "Meilleur choix"
+    },
+    "footnote": "Passez à Pro depuis l'app après votre inscription. Annulable à tout moment dans les paramètres de votre store."
   },
   "languages": {
     "title": "Langues disponibles",
@@ -60,7 +92,7 @@
   },
   "finalCta": {
     "title": "Prêt à commencer à parler ?",
-    "subtitle": "Deux cafés par an seraient déjà trop. C'est gratuit pendant la bêta."
+    "subtitle": "Gratuit pour essayer. Pro à 7,99 $/mois si vous décidez de rester."
   },
   "footer": {
     "tagline": "Pratiquez les langues. Gagnez en confiance.",

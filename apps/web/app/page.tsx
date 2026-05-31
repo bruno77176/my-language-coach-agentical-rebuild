@@ -2,6 +2,7 @@ import { Hero } from "@/components/Hero";
 import { ValueStrip } from "@/components/ValueStrip";
 import { Features } from "@/components/Features";
 import { HowItWorks } from "@/components/HowItWorks";
+import { Pricing } from "@/components/Pricing";
 import { LanguagesStrip } from "@/components/LanguagesStrip";
 import { DownloadCTA } from "@/components/DownloadCTA";
 import { Footer } from "@/components/Footer";
@@ -17,6 +18,7 @@ export default async function HomePage() {
       <ValueStrip messages={m.valueStrip} />
       <Features messages={m.features} />
       <HowItWorks messages={m.howItWorks} />
+      <Pricing messages={m.pricing} />
       <LanguagesStrip messages={m.languages} />
       <FinalCta
         title={m.finalCta.title}

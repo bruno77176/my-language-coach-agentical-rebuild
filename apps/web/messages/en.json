@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Practice languages. Build confidence.",
-    "description": "Your AI conversation partner. Talk to it, get instant corrections, and become fluent in any language — anywhere."
+    "title": "My Language Coach — A coach that remembers you. Feedback after every chat.",
+    "description": "Your AI language coach remembers what you've discussed, gives you a feedback report after every conversation, and lets you role-play real-life scenarios. In 12 languages."
   },
   "hero": {
     "eyebrow": "Now in open beta",
     "headline": "Practice languages.",
     "headlineAccent": "Build confidence.",
-    "subheadline": "Your AI conversation partner, in your pocket. Talk naturally — get instant feedback in the language you're learning.",
+    "subheadline": "An AI coach who remembers you, gives you feedback after every chat, and lets you step into real-life role-plays — in 12 languages.",
     "scanToInstall": "Scan to install",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Open beta",
@@ -16,24 +16,24 @@
     "iosNote": "TestFlight beta — limited spots"
   },
   "valueStrip": {
-    "v1": "Talk naturally",
-    "v2": "Multiple languages",
-    "v3": "Instant feedback",
-    "v4": "No appointments"
+    "v1": "Remembers you",
+    "v2": "10 real-life scenarios",
+    "v3": "Feedback after every chat",
+    "v4": "12 languages"
   },
   "features": {
-    "title": "Three things that make it work",
+    "title": "Why this is different",
     "f1": {
-      "title": "Speak. Get answered.",
-      "body": "Tap, talk, and the coach replies in real time — voice you'd swear was human."
+      "title": "A coach who knows you",
+      "body": "Your coach remembers what you've talked about, your level, and what to revisit. Every session builds on the last — not a cold start."
     },
     "f2": {
-      "title": "Corrections that teach",
-      "body": "Every mistake comes with a quick why-and-how, not a slap on the wrist."
+      "title": "Real-life scenarios",
+      "body": "Order coffee. Check into a hotel. Survive a job interview. Ten role-plays where your coach steps into character — and so do you."
     },
     "f3": {
-      "title": "Anywhere, on your time",
-      "body": "Five minutes on the bus or an hour on the couch — the coach is always there."
+      "title": "Feedback that actually helps",
+      "body": "After every conversation: what you nailed, what to polish, and the new words worth remembering. Saved so you can come back to them."
     }
   },
   "howItWorks": {
@@ -41,18 +41,50 @@
     "s1": {
       "n": "1",
       "title": "Pick a language",
-      "body": "French, German, Italian, Turkish — more on the way."
+      "body": "Twelve to choose from — French, German, Italian, Spanish, Turkish, Portuguese, and more."
     },
     "s2": {
       "n": "2",
-      "title": "Start talking",
-      "body": "Press the mic and just speak. The coach listens and replies."
+      "title": "Talk or role-play",
+      "body": "Free chat with your coach Lisa, or step into a scenario and meet a stranger in role."
     },
     "s3": {
       "n": "3",
-      "title": "Improve every day",
-      "body": "Track your streaks and see how far you've come."
+      "title": "Review your feedback",
+      "body": "Three panels after every chat: highlights, corrections, and new vocab — yours to revisit anytime."
     }
+  },
+  "pricing": {
+    "title": "Free to start. Pro when you're ready.",
+    "subtitle": "Two coffees a month. Or one annual cup.",
+    "free": {
+      "label": "Free",
+      "headline": "Everything you need to start",
+      "price": "$0",
+      "priceNote": "no card, no trial",
+      "items": [
+        "10 minutes of conversation per day",
+        "Three role-play scenarios",
+        "Feedback for your current session + last 3",
+        "Basic memory across sessions"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "When you want the full loop",
+      "price": "$7.99 / month",
+      "priceAnnual": "or $49.99 / year — save 48%",
+      "priceNote": "7-day free trial",
+      "items": [
+        "60 minutes of conversation per day",
+        "All 10 role-play scenarios",
+        "Full feedback history",
+        "Deep memory — weak areas, personal context, themes",
+        "Weekly progress digest by email"
+      ],
+      "highlight": "Best value"
+    },
+    "footnote": "Upgrade from inside the app once you've signed up. Cancel anytime in your store settings."
   },
   "languages": {
     "title": "Available languages",
@@ -60,7 +92,7 @@
   },
   "finalCta": {
     "title": "Ready to start talking?",
-    "subtitle": "Two coffees a year would be too much. It's free during beta."
+    "subtitle": "Free to try. Pro at $7.99/mo if you decide to stick around."
   },
   "footer": {
     "tagline": "Practice languages. Build confidence.",
