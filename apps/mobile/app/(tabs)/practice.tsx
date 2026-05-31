@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   EditorialText,
@@ -16,12 +16,11 @@ import {
   Screen,
   TAB_BAR_RESERVE,
 } from "@/src/design";
+import { palette, radius, shadow, spacing } from "@language-coach/design-tokens";
 import {
-  palette,
-  radius,
-  shadow,
-  spacing,
-} from "@language-coach/design-tokens";
+  LANGUAGES,
+  ROLE_PLAY_SCENARIOS,
+} from "@language-coach/shared";
 import { stopActivePlayer } from "@/src/features/practice/audio-controller";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
@@ -35,6 +34,10 @@ import { useSessionTimer } from "@/src/features/practice/use-session-timer";
 import { useGoalReward } from "@/src/features/practice/use-goal-reward";
 import { GoalReward } from "@/src/features/practice/goal-reward";
 import { useTodayStats } from "@/src/features/home/use-today-stats";
+import {
+  useRecentSessions,
+  type RecentSession,
+} from "@/src/features/practice/use-recent-sessions";
 import { supabase } from "@/src/lib/supabase";
 
 function useCurrentStreak() {
@@ -48,7 +51,174 @@ function useCurrentStreak() {
   });
 }
 
+// PracticeScreen is the top-level tab. It decides between two modes:
+// - Chooser: shown when no scenarioId and start !== "free" — lets the
+//   user pick scenario, free conversation, or review past feedback.
+// - Active: the existing conversation UI (mic, message stream, etc.) —
+//   mounts a fresh session via useConversation, keyed on params so
+//   picking a new scenario tears down the old session cleanly.
 export default function PracticeScreen() {
+  const { scenarioId, start } = useLocalSearchParams<{
+    scenarioId?: string;
+    start?: string;
+  }>();
+  const isActive = !!scenarioId || start === "free";
+
+  if (!isActive) {
+    return <PracticeChooser />;
+  }
+  // key forces a fresh ActiveConversation (and thus a fresh useConversation
+  // session) when scenarioId changes — picking a new scenario mid-day
+  // should not reuse a stale conversation_id.
+  const k = scenarioId ?? "free";
+  return <ActiveConversation key={k} scenarioId={scenarioId} />;
+}
+
+// ============================================================
+// Chooser
+// ============================================================
+
+function PracticeChooser() {
+  const insets = useSafeAreaInsets();
+  const { data: profile } = useProfile();
+  const nativeLang = (profile?.native_lang ?? "en") as "en" | "fr";
+  const { data, isLoading } = useRecentSessions();
+
+  const onScenario = () => router.push("/(modals)/role-play-picker");
+  const onFree = () => router.replace("/(tabs)/practice?start=free");
+  const onReview = (id: string, secondsSpoken: number) =>
+    router.push({
+      pathname: "/(modals)/end-of-session",
+      params: { conversationId: id, secondsSpoken: String(secondsSpoken) },
+    });
+
+  return (
+    <Screen variant="gradient">
+      <ScrollView
+        contentContainerStyle={[
+          chooserStyles.scroll,
+          { paddingTop: insets.top + spacing.lg },
+        ]}
+      >
+        <EditorialText kind="displayMd" italic style={chooserStyles.title}>
+          What do you want to do?
+        </EditorialText>
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={chooserStyles.subtitle}
+        >
+          Pick a real-world scenario or just chat — your coach is ready either way.
+        </EditorialText>
+
+        <Pressable onPress={onScenario} style={chooserStyles.card}>
+          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
+            🎭 Practice a scenario
+          </EditorialText>
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Pick from 10 real-world situations (ordering coffee, hotel
+            check-in, doctor visit, …). Your coach plays the role and
+            throws in a twist.
+          </EditorialText>
+        </Pressable>
+
+        <Pressable onPress={onFree} style={chooserStyles.card}>
+          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
+            💬 Free conversation
+          </EditorialText>
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Just say hello and see where it goes.
+          </EditorialText>
+        </Pressable>
+
+        <EditorialText kind="bodySm" color={palette.inkSoft} style={chooserStyles.historyHeader}>
+          Recent sessions
+        </EditorialText>
+
+        {isLoading && (
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Loading…
+          </EditorialText>
+        )}
+
+        {data && data.sessions.length === 0 && (
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            No completed sessions yet. Have your first conversation above.
+          </EditorialText>
+        )}
+
+        {data?.sessions.map((s) => (
+          <RecentSessionRow
+            key={s.id}
+            session={s}
+            nativeLang={nativeLang}
+            onPress={() => onReview(s.id, s.secondsSpoken)}
+          />
+        ))}
+
+        <View style={{ height: insets.bottom + TAB_BAR_RESERVE + spacing.lg }} />
+      </ScrollView>
+    </Screen>
+  );
+}
+
+function RecentSessionRow({
+  session,
+  nativeLang,
+  onPress,
+}: {
+  session: RecentSession;
+  nativeLang: "en" | "fr";
+  onPress: () => void;
+}) {
+  const lang = LANGUAGES.find((l) => l.code === session.language);
+  const scenario = session.scenarioId
+    ? ROLE_PLAY_SCENARIOS.find((s) => s.id === session.scenarioId)
+    : null;
+  const langName = lang?.englishName ?? session.language;
+  const scenarioTitle = scenario?.title[nativeLang] ?? scenario?.title.en;
+  const min = Math.floor(session.secondsSpoken / 60);
+  const sec = session.secondsSpoken % 60;
+  const when = session.endedAt
+    ? new Date(session.endedAt).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "";
+  const status = session.feedbackStatus;
+  const statusLabel =
+    status === "ready"
+      ? "View feedback →"
+      : status === "pending"
+        ? "Feedback preparing…"
+        : status === "failed"
+          ? "Feedback unavailable"
+          : "Open →";
+
+  return (
+    <Pressable onPress={onPress} style={chooserStyles.historyRow}>
+      <View style={{ flex: 1 }}>
+        <EditorialText kind="bodyMd" style={chooserStyles.historyTitle}>
+          {scenarioTitle ?? `${langName} conversation`}
+        </EditorialText>
+        <EditorialText kind="bodySm" color={palette.inkSoft}>
+          {when} · {min} min {sec > 0 ? `${sec} sec` : ""}
+        </EditorialText>
+      </View>
+      <EditorialText kind="bodySm" color={palette.accent}>
+        {statusLabel}
+      </EditorialText>
+    </Pressable>
+  );
+}
+
+// ============================================================
+// Active conversation
+// ============================================================
+
+function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   useAudioSessionInit();
   const insets = useSafeAreaInsets();
   const micBarBottom = insets.bottom + TAB_BAR_RESERVE;
@@ -57,7 +227,6 @@ export default function PracticeScreen() {
   const displayName = profile?.display_name ?? "there";
   const nativeLang = profile?.native_lang ?? "en";
   const goalMinutes = profile?.daily_goal_minutes ?? 10;
-  const { scenarioId } = useLocalSearchParams<{ scenarioId?: string }>();
 
   const [startedAt] = useState<Date>(() => new Date());
 
@@ -78,7 +247,6 @@ export default function PracticeScreen() {
   const { data: streak } = useCurrentStreak();
   const queryClient = useQueryClient();
 
-  // Pause timer + stop audio when the user leaves the Practice tab.
   const [isFocused, setIsFocused] = useState(true);
   useFocusEffect(
     useCallback(() => {
@@ -150,17 +318,13 @@ export default function PracticeScreen() {
             } catch {
               /* best-effort */
             }
-            // Reset local session counters BEFORE invalidating queries.
-            // Otherwise the refetched todayStats (which now includes the
-            // session we just ended) gets added on top of sessionSeconds in
-            // todaySecondsAtStartRef, double-counting today's seconds and
-            // mis-triggering the goal-reward.
             resetSessionTimer();
             todaySecondsAtStartRef.current = 0;
             await Promise.all([
               queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
               queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
               queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+              queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
             ]);
             if (endResult?.conversationId) {
               router.replace({
@@ -171,7 +335,7 @@ export default function PracticeScreen() {
                 },
               });
             } else {
-              router.replace("/(tabs)/home");
+              router.replace("/(tabs)/practice");
             }
           })();
         },
@@ -182,7 +346,7 @@ export default function PracticeScreen() {
   if (state.phase === "loading-session") {
     return (
       <Screen variant="gradient">
-        <View style={styles.center}>
+        <View style={activeStyles.center}>
           <ActivityIndicator size="large" color={palette.accent} />
           <EditorialText
             kind="bodyMd"
@@ -199,7 +363,7 @@ export default function PracticeScreen() {
   if (state.phase === "error") {
     return (
       <Screen variant="gradient">
-        <View style={styles.center}>
+        <View style={activeStyles.center}>
           <EditorialText
             kind="bodyMd"
             color={palette.danger}
@@ -208,17 +372,17 @@ export default function PracticeScreen() {
           >
             {state.message}
           </EditorialText>
-          <Pressable onPress={dismissError} style={styles.ctaButton}>
+          <Pressable onPress={dismissError} style={activeStyles.ctaButton}>
             <EditorialText kind="bodyMd" color={palette.peach}>
               Try again
             </EditorialText>
           </Pressable>
           <Pressable
-            onPress={() => router.replace("/(tabs)/home")}
-            style={[styles.ctaButton, styles.ctaButtonSecondary]}
+            onPress={() => router.replace("/(tabs)/practice")}
+            style={[activeStyles.ctaButton, activeStyles.ctaButtonSecondary]}
           >
             <EditorialText kind="bodyMd" color={palette.inkSoft}>
-              Back to Home
+              Back to start
             </EditorialText>
           </Pressable>
         </View>
@@ -241,14 +405,14 @@ export default function PracticeScreen() {
           />
         )}
         contentContainerStyle={[
-          styles.chatContainer,
+          activeStyles.chatContainer,
           {
             paddingTop: insets.top + 64,
             paddingBottom: micBarBottom + 96,
           },
         ]}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={activeStyles.emptyState}>
             <EditorialText
               kind="displayMd"
               italic
@@ -265,14 +429,6 @@ export default function PracticeScreen() {
             >
               Your coach is listening — just talk like you would to a friend.
             </EditorialText>
-            <Pressable
-              onPress={() => router.push("/(modals)/role-play-picker")}
-              style={styles.scenarioLink}
-            >
-              <EditorialText kind="bodySm" color={palette.inkSoft}>
-                Try a scenario
-              </EditorialText>
-            </Pressable>
           </View>
         }
       />
@@ -292,12 +448,12 @@ export default function PracticeScreen() {
         onExit={onExit}
       />
 
-      <View style={[styles.micBar, { bottom: micBarBottom }]}>
+      <View style={[activeStyles.micBar, { bottom: micBarBottom }]}>
         {state.phase === "processing" && (
           <GlassCard
             radiusToken="pill"
             padding="sm"
-            style={styles.processingPill}
+            style={activeStyles.processingPill}
           >
             <ActivityIndicator size="small" color={palette.accent} />
             <EditorialText kind="bodySm" color={palette.inkSoft}>
@@ -321,7 +477,55 @@ export default function PracticeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+// ============================================================
+// Styles
+// ============================================================
+
+const chooserStyles = StyleSheet.create({
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
+  },
+  title: {
+    color: palette.ink,
+  },
+  subtitle: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  card: {
+    backgroundColor: palette.glassStrong,
+    borderRadius: radius.lg,
+    padding: spacing.base,
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+    ...shadow.card,
+  },
+  cardTitle: {
+    color: palette.ink,
+    fontWeight: "600",
+  },
+  historyHeader: {
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  historyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: palette.glass,
+    borderRadius: radius.md,
+    padding: spacing.base,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  historyTitle: {
+    color: palette.ink,
+  },
+});
+
+const activeStyles = StyleSheet.create({
   center: {
     flex: 1,
     alignItems: "center",
@@ -335,11 +539,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: spacing["3xl"] * 2,
     paddingHorizontal: spacing.xl,
-  },
-  scenarioLink: {
-    padding: spacing.sm,
-    alignSelf: "center",
-    marginTop: spacing.md,
   },
   micBar: {
     position: "absolute",

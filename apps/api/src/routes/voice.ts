@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, desc, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import {
   conversations,
@@ -85,6 +85,34 @@ const MIN_AUDIO_BYTES = 4_000; // ~< 1s of speech in any reasonable codec
 
 export function createVoiceRoutes(deps: VoiceDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
+
+  // GET /v1/voice/sessions/recent — Plan 8 follow-up: chooser screen
+  // shows the user's last 5 completed sessions with feedback status so
+  // they can review past coaching reports.
+  routes.get("/sessions/recent", async (c) => {
+    const userId = c.get("userId");
+    const rows = await deps.db
+      .select({
+        id: conversations.id,
+        language: conversations.language,
+        scenarioId: conversations.scenarioId,
+        startedAt: conversations.startedAt,
+        endedAt: conversations.endedAt,
+        secondsSpoken: conversations.secondsSpoken,
+        feedbackStatus: sessionFeedback.status,
+      })
+      .from(conversations)
+      .leftJoin(
+        sessionFeedback,
+        eq(sessionFeedback.conversationId, conversations.id),
+      )
+      .where(
+        and(eq(conversations.userId, userId), isNotNull(conversations.endedAt)),
+      )
+      .orderBy(desc(conversations.endedAt))
+      .limit(5);
+    return c.json({ sessions: rows });
+  });
 
   routes.post("/sessions", async (c) => {
     const userId = c.get("userId");

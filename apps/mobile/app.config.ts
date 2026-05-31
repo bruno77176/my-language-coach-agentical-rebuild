@@ -54,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 48,
+      versionCode: 49,
       permissions: ["RECORD_AUDIO"],
       intentFilters: [
         {
