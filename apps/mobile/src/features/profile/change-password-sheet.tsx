@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, View } from "react-native";
 import {
   BottomSheetFooter,
   BottomSheetModal,
-  BottomSheetTextInput,
   BottomSheetView,
   type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";

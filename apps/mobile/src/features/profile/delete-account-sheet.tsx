@@ -2,7 +2,6 @@ import { forwardRef, useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import {
   BottomSheetModal,
-  BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
