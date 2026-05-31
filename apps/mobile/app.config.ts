@@ -1,4 +1,5 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
+import withStripBootCompleted from "./plugins/with-strip-boot-completed";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
@@ -7,13 +8,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   // remote build VM gets env vars from eas.json. Skip the Google plugin when
   // the env var is missing so pre-flight doesn't crash. The plugin is included
   // on actual builds (local --local or remote) where eas.json env applies.
-  const plugins: ExpoConfig["plugins"] = [
+  // ExpoConfig["plugins"] is typed as a tuple of strings/[string, opts] only,
+  // but Expo accepts inline ConfigPlugin functions at runtime too. Cast so
+  // withStripBootCompleted can be appended next to the named plugins.
+  const plugins = [
     "expo-router",
     "expo-secure-store",
     "expo-notifications",
     "expo-audio",
     "expo-apple-authentication",
-  ];
+    withStripBootCompleted,
+  ] as unknown as NonNullable<ExpoConfig["plugins"]>;
   if (googleIosUrlScheme) {
     plugins.push([
       "@react-native-google-signin/google-signin",
@@ -43,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "16",
+      buildNumber: "17",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -54,7 +59,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 54,
+      versionCode: 55,
+      // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
+      // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
+      edgeToEdgeEnabled: true,
       permissions: ["RECORD_AUDIO"],
       intentFilters: [
         {
