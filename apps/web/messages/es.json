@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "My Language Coach — Una coach que te recuerda. Feedback después de cada conversación.",
+    "description": "Tu coach de idiomas con IA recuerda de qué habéis hablado, te da un informe de feedback después de cada conversación y te deja interpretar escenarios de la vida real. En 12 idiomas."
+  },
+  "hero": {
+    "eyebrow": "Ahora en beta abierta",
+    "headline": "Practica idiomas.",
+    "headlineAccent": "Gana confianza.",
+    "subheadline": "Una coach IA que te recuerda, te da feedback después de cada chat y te mete en juegos de rol de la vida real — en 12 idiomas.",
+    "scanToInstall": "Escanea para instalar",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Beta abierta",
+    "iosCta": "Instalar vía TestFlight",
+    "androidCta": "Instalar en Google Play",
+    "iosNote": "Beta TestFlight — plazas limitadas"
+  },
+  "valueStrip": {
+    "v1": "Te recuerda",
+    "v2": "10 escenarios reales",
+    "v3": "Feedback en cada chat",
+    "v4": "12 idiomas"
+  },
+  "features": {
+    "title": "Por qué somos diferentes",
+    "f1": {
+      "title": "Una coach que te conoce",
+      "body": "Tu coach recuerda de qué habéis hablado, tu nivel y qué repasar. Cada sesión se construye sobre la anterior — sin empezar de cero."
+    },
+    "f2": {
+      "title": "Escenarios de la vida real",
+      "body": "Pedir un café. Hacer el check-in en un hotel. Sobrevivir a una entrevista de trabajo. Diez juegos de rol donde tu coach se mete en el personaje — y tú también."
+    },
+    "f3": {
+      "title": "Feedback que de verdad ayuda",
+      "body": "Después de cada conversación: lo que clavaste, lo que pulir y las palabras nuevas que merece la pena recordar. Guardadas para volver a ellas."
+    }
+  },
+  "howItWorks": {
+    "title": "Cómo funciona",
+    "s1": {
+      "n": "1",
+      "title": "Elige un idioma",
+      "body": "Doce para elegir — francés, alemán, italiano, español, turco, portugués y más."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Habla o interpreta un rol",
+      "body": "Charla libre con tu coach Lisa, o entra en un escenario y conoce a un desconocido en un papel."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Revisa tu feedback",
+      "body": "Tres paneles después de cada chat: aciertos, correcciones y vocabulario nuevo — para volver cuando quieras."
+    }
+  },
+  "pricing": {
+    "title": "Gratis para empezar. Pro cuando estés listo.",
+    "subtitle": "Dos cafés al mes. O uno al año.",
+    "free": {
+      "label": "Gratis",
+      "headline": "Todo lo que necesitas para empezar",
+      "price": "0 €",
+      "priceNote": "sin tarjeta, sin prueba",
+      "items": [
+        "10 minutos de conversación al día",
+        "Tres escenarios de juego de rol",
+        "Feedback para la sesión actual + las últimas 3",
+        "Memoria básica entre sesiones"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "Cuando quieres desbloquearlo todo",
+      "price": "7,99 € / mes",
+      "priceAnnual": "o 49,99 € / año — ahorra un 48 %",
+      "priceNote": "7 días de prueba gratis",
+      "items": [
+        "60 minutos de conversación al día",
+        "Los 10 escenarios de juego de rol",
+        "Historial completo de feedback",
+        "Memoria profunda — puntos débiles, contexto personal, temas",
+        "Resumen semanal de progreso por email"
+      ],
+      "highlight": "Mejor opción"
+    },
+    "footnote": "Pásate a Pro desde la app después de registrarte. Cancelable en cualquier momento desde los ajustes de tu tienda."
+  },
+  "languages": {
+    "title": "Idiomas disponibles",
+    "more": "+ más próximamente"
+  },
+  "finalCta": {
+    "title": "¿Listo para empezar a hablar?",
+    "subtitle": "Gratis para probar. Pro a 7,99 €/mes si decides quedarte."
+  },
+  "footer": {
+    "tagline": "Practica idiomas. Gana confianza.",
+    "links": {
+      "privacy": "Privacidad",
+      "terms": "Términos",
+      "deleteAccount": "Eliminar cuenta",
+      "contact": "Contacto"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "Elimina tu cuenta de My Language Coach",
+    "intro": "Introduce el correo con el que te registraste. Te enviaremos un enlace de confirmación de un solo uso. Haz clic para eliminar permanentemente tu cuenta y todos los datos asociados.",
+    "emailLabel": "Email",
+    "submit": "Enviar enlace de confirmación",
+    "submitting": "Enviando…",
+    "sent": "Si existe una cuenta con ese email, te hemos enviado un enlace de confirmación. Revisa tu bandeja de entrada (y la carpeta de spam). El enlace caduca en 24 horas.",
+    "errorGeneric": "Algo ha ido mal. Inténtalo de nuevo en unos minutos.",
+    "whatIsDeleted": "Qué se elimina",
+    "whatIsDeletedList": "Tu email, nombre, foto de perfil, mensajes, historial de conversaciones, rachas, vocabulario guardado, tokens de notificaciones push y derechos de suscripción.",
+    "whatIsKept": "Qué conservamos",
+    "whatIsKeptList": "Registros financieros anonimizados de compras (ya no vinculados a ti, conservados por obligaciones fiscales) y estadísticas de uso anonimizadas.",
+    "confirmTitle": "Confirmar eliminación permanente",
+    "confirmIntro": "Esto eliminará permanentemente tu cuenta y todo tu historial de práctica. No se puede deshacer.",
+    "confirmButton": "Eliminar mi cuenta",
+    "confirmInvalid": "Este enlace de eliminación no es válido o ya ha sido usado.",
+    "confirmExpired": "Este enlace de eliminación ha caducado. Solicita uno nuevo.",
+    "confirmFailed": "No hemos podido completar la eliminación. Inténtalo de nuevo o contacta con soporte.",
+    "doneTitle": "Cuenta eliminada",
+    "doneBody": "Tu cuenta y todos los datos asociados han sido eliminados. Sentimos verte marchar."
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "My Language Coach — Egy coach, aki emlékszik rád. Visszajelzés minden beszélgetés után.",
+    "description": "Az MI-alapú nyelvcoachod emlékszik arra, miről beszéltetek, minden beszélgetés után visszajelzést ad, és valós élethelyzeteket játszhatsz el vele. 12 nyelven."
+  },
+  "hero": {
+    "eyebrow": "Most nyílt béta",
+    "headline": "Gyakorold a nyelveket.",
+    "headlineAccent": "Szerezz magabiztosságot.",
+    "subheadline": "Egy MI-coach, aki emlékszik rád, minden chat után visszajelzést ad és valós szerepekbe enged belépni — 12 nyelven.",
+    "scanToInstall": "Olvasd be a telepítéshez",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Nyílt béta",
+    "iosCta": "Telepítés a TestFlightról",
+    "androidCta": "Telepítés a Google Playről",
+    "iosNote": "TestFlight béta — korlátozott helyek"
+  },
+  "valueStrip": {
+    "v1": "Emlékszik rád",
+    "v2": "10 valós helyzet",
+    "v3": "Visszajelzés minden chat után",
+    "v4": "12 nyelv"
+  },
+  "features": {
+    "title": "Ezért vagyunk mások",
+    "f1": {
+      "title": "Egy coach, aki ismer téged",
+      "body": "A coachod emlékszik arra, miről beszéltetek, a szintedre és arra, mit kell átismételned. Minden alkalom az előzőre épül — nincs hideg start."
+    },
+    "f2": {
+      "title": "Valós élethelyzetek",
+      "body": "Kávérendelés. Bejelentkezés a szállodában. Túlélni egy állásinterjút. Tíz szerepjáték, amelyben a coachod karakterbe lép — és te is."
+    },
+    "f3": {
+      "title": "Visszajelzés, ami tényleg segít",
+      "body": "Minden beszélgetés után: amit jól csináltál, amit csiszolhatsz és az érdemes új szavak. Elmentve, hogy bármikor visszatérhess hozzájuk."
+    }
+  },
+  "howItWorks": {
+    "title": "Így működik",
+    "s1": {
+      "n": "1",
+      "title": "Válassz nyelvet",
+      "body": "Tizenkettő közül választhatsz — francia, német, olasz, spanyol, török, portugál és még több."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Beszélgess vagy játssz szerepet",
+      "body": "Szabad beszélgetés Lisával, a coachoddal, vagy lépj be egy helyzetbe és találkozz egy idegennel szerepben."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Olvasd át a visszajelzést",
+      "body": "Három panel minden chat után: sikerek, javítások és új szavak — bármikor visszatérhetsz hozzájuk."
+    }
+  },
+  "pricing": {
+    "title": "Ingyenes a kezdéshez. Pro, amikor készen állsz.",
+    "subtitle": "Havonta két kávé. Vagy évente egy.",
+    "free": {
+      "label": "Ingyenes",
+      "headline": "Minden ami a kezdéshez kell",
+      "price": "0 $",
+      "priceNote": "kártya nélkül, próbaidő nélkül",
+      "items": [
+        "Napi 10 perc beszélgetés",
+        "Három szerepjáték helyzet",
+        "Visszajelzés a jelenlegi szakaszra + az utolsó 3-ra",
+        "Alap memória a beszélgetések között"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "Amikor mindent fel akarsz oldani",
+      "price": "7,99 $ / hó",
+      "priceAnnual": "vagy 49,99 $ / év — 48 % megtakarítás",
+      "priceNote": "7 napos ingyenes próba",
+      "items": [
+        "Napi 60 perc beszélgetés",
+        "Mind a 10 szerepjáték helyzet",
+        "Teljes visszajelzés-előzmény",
+        "Mély memória — gyenge pontok, személyes kontextus, témák",
+        "Heti előrehaladási összefoglaló e-mailben"
+      ],
+      "highlight": "A legjobb választás"
+    },
+    "footnote": "Válts Pro-ra az appon belül, miután regisztráltál. Bármikor lemondhatod a bolt beállításaiban."
+  },
+  "languages": {
+    "title": "Elérhető nyelvek",
+    "more": "+ továbbiak hamarosan"
+  },
+  "finalCta": {
+    "title": "Készen állsz beszélni?",
+    "subtitle": "Ingyenes kipróbálni. Pro 7,99 $/hó, ha úgy döntesz, hogy maradsz."
+  },
+  "footer": {
+    "tagline": "Gyakorold a nyelveket. Szerezz magabiztosságot.",
+    "links": {
+      "privacy": "Adatvédelem",
+      "terms": "Feltételek",
+      "deleteAccount": "Fiók törlése",
+      "contact": "Kapcsolat"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "My Language Coach fiókod törlése",
+    "intro": "Add meg az e-mail címet, amellyel regisztráltál. Egyszeri megerősítő linket küldünk. Kattints rá, hogy véglegesen töröld a fiókodat és az összes hozzá tartozó adatot.",
+    "emailLabel": "E-mail",
+    "submit": "Megerősítő link küldése",
+    "submitting": "Küldés…",
+    "sent": "Ha ezzel az e-mailcímmel létezik fiók, megerősítő linket küldtünk. Nézd meg a postafiókod (és a spam mappát). A link 24 óra múlva lejár.",
+    "errorGeneric": "Valami nem stimmelt. Próbáld újra néhány perc múlva.",
+    "whatIsDeleted": "Mit törlünk",
+    "whatIsDeletedList": "E-mailcímedet, nevedet, profilképedet, üzeneteidet, beszélgetési előzményeidet, sorozataidat, mentett szókincsedet, push-tokeneidet és előfizetési jogosultságaidat.",
+    "whatIsKept": "Mit tartunk meg",
+    "whatIsKeptList": "Anonimizált pénzügyi nyilvántartások a vásárlásokról (már nem kötődnek hozzád, adózási okokból megőrizve) és anonimizált összesített használati statisztikák.",
+    "confirmTitle": "Végleges törlés megerősítése",
+    "confirmIntro": "Ez véglegesen törli a fiókodat és az egész gyakorlási előzményedet. Nem visszafordítható.",
+    "confirmButton": "Fiókom törlése",
+    "confirmInvalid": "Ez a törlési link érvénytelen vagy már fel lett használva.",
+    "confirmExpired": "Ez a törlési link lejárt. Kérj egy újat.",
+    "confirmFailed": "Nem tudtuk befejezni a törlést. Próbáld újra vagy fordulj a támogatáshoz.",
+    "doneTitle": "Fiók törölve",
+    "doneBody": "Fiókod és minden hozzá tartozó adat törölve. Sajnáljuk, hogy elmész."
+  }
+}

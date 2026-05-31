@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "My Language Coach — En coach som minns dig. Feedback efter varje samtal.",
+    "description": "Din AI-språkcoach minns vad ni har pratat om, ger dig en feedbackrapport efter varje samtal och låter dig spela rollspel från verkliga livet. På 12 språk."
+  },
+  "hero": {
+    "eyebrow": "Öppen beta nu",
+    "headline": "Träna språk.",
+    "headlineAccent": "Bygg självförtroende.",
+    "subheadline": "En AI-coach som minns dig, ger dig feedback efter varje chatt och låter dig kliva in i verkliga rollspel — på 12 språk.",
+    "scanToInstall": "Skanna för att installera",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Öppen beta",
+    "iosCta": "Installera via TestFlight",
+    "androidCta": "Installera via Google Play",
+    "iosNote": "TestFlight-beta — begränsat antal platser"
+  },
+  "valueStrip": {
+    "v1": "Minns dig",
+    "v2": "10 verkliga scenarier",
+    "v3": "Feedback efter varje chatt",
+    "v4": "12 språk"
+  },
+  "features": {
+    "title": "Det här är vad som skiljer oss",
+    "f1": {
+      "title": "En coach som känner dig",
+      "body": "Din coach minns vad ni pratat om, din nivå och vad du behöver repetera. Varje pass bygger på det förra — ingen kallstart."
+    },
+    "f2": {
+      "title": "Verkliga scenarier",
+      "body": "Beställa kaffe. Checka in på hotell. Klara en jobbintervju. Tio rollspel där din coach går in i rollen — och du också."
+    },
+    "f3": {
+      "title": "Feedback som faktiskt hjälper",
+      "body": "Efter varje samtal: vad du fixade bra, vad du kan finputsa och nya ord värda att minnas. Sparat så du kan komma tillbaka när du vill."
+    }
+  },
+  "howItWorks": {
+    "title": "Så funkar det",
+    "s1": {
+      "n": "1",
+      "title": "Välj ett språk",
+      "body": "Tolv att välja mellan — franska, tyska, italienska, spanska, turkiska, portugisiska med flera."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Prata eller spela en roll",
+      "body": "Fri konversation med din coach Lisa, eller gå in i ett scenario och möt en främling i en roll."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Läs din feedback",
+      "body": "Tre paneler efter varje chatt: höjdpunkter, korrigeringar och nya ord — dina att återvända till när du vill."
+    }
+  },
+  "pricing": {
+    "title": "Gratis att börja. Pro när du är redo.",
+    "subtitle": "Två kaffe i månaden. Eller en kopp om året.",
+    "free": {
+      "label": "Gratis",
+      "headline": "Allt du behöver för att komma igång",
+      "price": "0 $",
+      "priceNote": "inget kort, ingen provperiod",
+      "items": [
+        "10 minuters konversation per dag",
+        "Tre rollspelsscenarier",
+        "Feedback för aktuell session + de tre senaste",
+        "Grundläggande minne mellan sessioner"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "När du vill låsa upp allt",
+      "price": "7,99 $ / mån",
+      "priceAnnual": "eller 49,99 $ / år — spara 48 %",
+      "priceNote": "7 dagars gratis provperiod",
+      "items": [
+        "60 minuters konversation per dag",
+        "Alla 10 rollspelsscenarier",
+        "Komplett feedback-historik",
+        "Djupare minne — svaga punkter, personlig kontext, teman",
+        "Veckovis framstegssammanfattning via e-post"
+      ],
+      "highlight": "Bästa valet"
+    },
+    "footnote": "Uppgradera till Pro i appen efter att du registrerat dig. Avsluta när som helst i butiksinställningarna."
+  },
+  "languages": {
+    "title": "Tillgängliga språk",
+    "more": "+ fler på väg"
+  },
+  "finalCta": {
+    "title": "Redo att börja prata?",
+    "subtitle": "Gratis att testa. Pro för 7,99 $/mån om du vill stanna kvar."
+  },
+  "footer": {
+    "tagline": "Träna språk. Bygg självförtroende.",
+    "links": {
+      "privacy": "Integritet",
+      "terms": "Villkor",
+      "deleteAccount": "Ta bort konto",
+      "contact": "Kontakt"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "Ta bort ditt My Language Coach-konto",
+    "intro": "Ange e-postadressen du registrerade dig med. Vi skickar en bekräftelselänk för engångsbruk. Klicka på den för att permanent ta bort ditt konto och all tillhörande data.",
+    "emailLabel": "E-post",
+    "submit": "Skicka bekräftelselänk",
+    "submitting": "Skickar…",
+    "sent": "Om ett konto med den e-postadressen finns har vi skickat en bekräftelselänk. Kolla din inkorg (och skräppostmappen). Länken upphör att gälla om 24 timmar.",
+    "errorGeneric": "Något gick fel. Försök igen om några minuter.",
+    "whatIsDeleted": "Vad som tas bort",
+    "whatIsDeletedList": "Din e-post, ditt namn, profilbild, chattmeddelanden, samtalshistorik, streaks, sparade ord, push-tokens och prenumerationsrättigheter.",
+    "whatIsKept": "Vad vi behåller",
+    "whatIsKeptList": "Anonymiserade finansiella register över köp (inte längre kopplade till dig, sparade för skatteändamål) och anonymiserad samlad användningsstatistik.",
+    "confirmTitle": "Bekräfta permanent borttagning",
+    "confirmIntro": "Det här tar permanent bort ditt konto och hela din övningshistorik. Det kan inte ångras.",
+    "confirmButton": "Ta bort mitt konto",
+    "confirmInvalid": "Den här borttagningslänken är ogiltig eller redan använd.",
+    "confirmExpired": "Den här borttagningslänken har gått ut. Begär en ny.",
+    "confirmFailed": "Vi kunde inte slutföra borttagningen. Försök igen eller kontakta supporten.",
+    "doneTitle": "Konto borttaget",
+    "doneBody": "Ditt konto och all tillhörande data har tagits bort. Ledsen att se dig gå."
+  }
+}

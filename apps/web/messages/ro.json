@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "My Language Coach — Un coach care își amintește de tine. Feedback după fiecare conversație.",
+    "description": "Coach-ul tău AI pentru limbi își amintește despre ce ați discutat, îți oferă un raport de feedback după fiecare conversație și te lasă să joci scenarii din viața reală. În 12 limbi."
+  },
+  "hero": {
+    "eyebrow": "Acum în beta deschisă",
+    "headline": "Exersează limbile.",
+    "headlineAccent": "Câștigă încredere.",
+    "subheadline": "Un coach AI care își amintește de tine, îți oferă feedback după fiecare chat și te pune în scenarii reale — în 12 limbi.",
+    "scanToInstall": "Scanează pentru a instala",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Beta deschisă",
+    "iosCta": "Instalează prin TestFlight",
+    "androidCta": "Instalează din Google Play",
+    "iosNote": "Beta TestFlight — locuri limitate"
+  },
+  "valueStrip": {
+    "v1": "Își amintește de tine",
+    "v2": "10 scenarii reale",
+    "v3": "Feedback după fiecare chat",
+    "v4": "12 limbi"
+  },
+  "features": {
+    "title": "De ce suntem diferiți",
+    "f1": {
+      "title": "Un coach care te cunoaște",
+      "body": "Coach-ul tău își amintește despre ce ați vorbit, nivelul tău și ce trebuie revizuit. Fiecare sesiune se construiește pe cea anterioară — fără să o iei de la zero."
+    },
+    "f2": {
+      "title": "Scenarii din viața reală",
+      "body": "Să comanzi o cafea. Să te cazezi la hotel. Să treci de un interviu. Zece jocuri de rol în care coach-ul intră în personaj — la fel și tu."
+    },
+    "f3": {
+      "title": "Feedback care chiar ajută",
+      "body": "După fiecare conversație: ce ai reușit, ce poți rafina și cuvintele noi care merită reținute. Salvate ca să te poți întoarce la ele."
+    }
+  },
+  "howItWorks": {
+    "title": "Cum funcționează",
+    "s1": {
+      "n": "1",
+      "title": "Alege o limbă",
+      "body": "Douăsprezece din care să alegi — franceză, germană, italiană, spaniolă, turcă, portugheză și altele."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Vorbește sau joacă un rol",
+      "body": "Conversație liberă cu coach-ul tău Lisa sau intră într-un scenariu și întâlnește un străin într-un rol."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Citește-ți feedback-ul",
+      "body": "Trei panouri după fiecare chat: momente reușite, corectări și vocabular nou — la care poți reveni oricând."
+    }
+  },
+  "pricing": {
+    "title": "Gratuit la început. Pro când ești pregătit.",
+    "subtitle": "Două cafele pe lună. Sau una pe an.",
+    "free": {
+      "label": "Gratuit",
+      "headline": "Tot ce-ți trebuie ca să începi",
+      "price": "0 $",
+      "priceNote": "fără card, fără perioadă de probă",
+      "items": [
+        "10 minute de conversație pe zi",
+        "Trei scenarii de joc de rol",
+        "Feedback pentru sesiunea curentă + ultimele 3",
+        "Memorie de bază între sesiuni"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "Când vrei să deblochezi tot",
+      "price": "7,99 $ / lună",
+      "priceAnnual": "sau 49,99 $ / an — economisești 48 %",
+      "priceNote": "7 zile gratuite de probă",
+      "items": [
+        "60 de minute de conversație pe zi",
+        "Toate cele 10 scenarii de joc de rol",
+        "Istoric complet al feedback-ului",
+        "Memorie aprofundată — puncte slabe, context personal, teme",
+        "Rezumat săptămânal al progresului pe e-mail"
+      ],
+      "highlight": "Cea mai bună alegere"
+    },
+    "footnote": "Treci la Pro din aplicație după ce te înregistrezi. Poți anula oricând din setările magazinului tău."
+  },
+  "languages": {
+    "title": "Limbi disponibile",
+    "more": "+ altele în curând"
+  },
+  "finalCta": {
+    "title": "Gata să începi să vorbești?",
+    "subtitle": "Gratuit de încercat. Pro la 7,99 $/lună dacă te decizi să rămâi."
+  },
+  "footer": {
+    "tagline": "Exersează limbile. Câștigă încredere.",
+    "links": {
+      "privacy": "Confidențialitate",
+      "terms": "Termeni",
+      "deleteAccount": "Șterge contul",
+      "contact": "Contact"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "Șterge contul tău My Language Coach",
+    "intro": "Introdu e-mailul cu care te-ai înregistrat. Îți vom trimite un link de confirmare de unică folosință. Apasă pe el ca să ștergi definitiv contul și toate datele asociate.",
+    "emailLabel": "E-mail",
+    "submit": "Trimite linkul de confirmare",
+    "submitting": "Se trimite…",
+    "sent": "Dacă există un cont asociat acelui e-mail, am trimis un link de confirmare. Verifică-ți inbox-ul (și folderul de spam). Linkul expiră în 24 de ore.",
+    "errorGeneric": "Ceva nu a mers. Încearcă din nou peste câteva minute.",
+    "whatIsDeleted": "Ce se șterge",
+    "whatIsDeletedList": "E-mailul, numele, poza de profil, mesajele, istoricul conversațiilor, seriile, vocabularul salvat, token-urile pentru notificări push și drepturile de abonament.",
+    "whatIsKept": "Ce păstrăm",
+    "whatIsKeptList": "Înregistrări financiare anonimizate ale achizițiilor (nu mai sunt legate de tine, păstrate pentru obligațiile fiscale) și statistici de utilizare anonimizate.",
+    "confirmTitle": "Confirmă ștergerea definitivă",
+    "confirmIntro": "Această acțiune îți va șterge definitiv contul și tot istoricul de practică. Nu se poate anula.",
+    "confirmButton": "Șterge contul meu",
+    "confirmInvalid": "Acest link de ștergere este invalid sau a fost deja folosit.",
+    "confirmExpired": "Acest link de ștergere a expirat. Solicită unul nou.",
+    "confirmFailed": "Nu am putut finaliza ștergerea. Încearcă din nou sau contactează suportul.",
+    "doneTitle": "Cont șters",
+    "doneBody": "Contul tău și toate datele asociate au fost șterse. Ne pare rău că pleci."
+  }
+}

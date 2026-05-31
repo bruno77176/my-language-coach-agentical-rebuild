@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "My Language Coach — Ein Coach, der sich an dich erinnert. Feedback nach jedem Gespräch.",
+    "description": "Dein KI-Sprachcoach merkt sich, worüber ihr gesprochen habt, gibt dir nach jedem Gespräch einen Feedback-Bericht und lässt dich Alltagsszenarien spielen. In 12 Sprachen."
+  },
+  "hero": {
+    "eyebrow": "Jetzt in offener Beta",
+    "headline": "Sprachen üben.",
+    "headlineAccent": "Selbstvertrauen aufbauen.",
+    "subheadline": "Ein KI-Coach, der sich an dich erinnert, dir nach jedem Gespräch Feedback gibt und dich in echte Alltagsszenarien schlüpfen lässt — in 12 Sprachen.",
+    "scanToInstall": "Zum Installieren scannen",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Offene Beta",
+    "iosCta": "Über TestFlight laden",
+    "androidCta": "Bei Google Play laden",
+    "iosNote": "TestFlight-Beta — begrenzte Plätze"
+  },
+  "valueStrip": {
+    "v1": "Erinnert sich an dich",
+    "v2": "10 Alltagsszenarien",
+    "v3": "Feedback nach jedem Chat",
+    "v4": "12 Sprachen"
+  },
+  "features": {
+    "title": "Was uns anders macht",
+    "f1": {
+      "title": "Ein Coach, der dich kennt",
+      "body": "Dein Coach merkt sich, worüber ihr gesprochen habt, dein Niveau und was du wiederholen solltest. Jede Sitzung baut auf der letzten auf — kein Kaltstart."
+    },
+    "f2": {
+      "title": "Echte Alltagsszenarien",
+      "body": "Einen Kaffee bestellen. Im Hotel einchecken. Ein Vorstellungsgespräch überstehen. Zehn Rollenspiele, in denen dein Coach in seine Rolle schlüpft — und du auch."
+    },
+    "f3": {
+      "title": "Feedback, das wirklich hilft",
+      "body": "Nach jedem Gespräch: was du gut gemacht hast, was du noch schleifen kannst und die neuen Wörter, die du dir merken solltest. Gespeichert, damit du jederzeit darauf zurückkommen kannst."
+    }
+  },
+  "howItWorks": {
+    "title": "So funktioniert's",
+    "s1": {
+      "n": "1",
+      "title": "Sprache wählen",
+      "body": "Zwölf zur Auswahl — Französisch, Deutsch, Italienisch, Spanisch, Türkisch, Portugiesisch und mehr."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Reden oder Rolle spielen",
+      "body": "Freies Gespräch mit deinem Coach Lisa, oder du steigst in ein Szenario ein und triffst eine fremde Person in einer Rolle."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Feedback durchlesen",
+      "body": "Drei Bereiche nach jedem Chat: Höhepunkte, Korrekturen und neues Vokabular — jederzeit für dich abrufbar."
+    }
+  },
+  "pricing": {
+    "title": "Kostenlos starten. Pro, wenn du bereit bist.",
+    "subtitle": "Zwei Kaffees im Monat. Oder einer im Jahr.",
+    "free": {
+      "label": "Kostenlos",
+      "headline": "Alles, was du zum Loslegen brauchst",
+      "price": "0 €",
+      "priceNote": "keine Karte, keine Testphase",
+      "items": [
+        "10 Minuten Gespräch pro Tag",
+        "Drei Rollenspiel-Szenarien",
+        "Feedback für die aktuelle Sitzung + die letzten 3",
+        "Basis-Gedächtnis über Sitzungen hinweg"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "Wenn du alles freischalten willst",
+      "price": "7,99 € / Monat",
+      "priceAnnual": "oder 49,99 € / Jahr — 48 % sparen",
+      "priceNote": "7 Tage gratis testen",
+      "items": [
+        "60 Minuten Gespräch pro Tag",
+        "Alle 10 Rollenspiel-Szenarien",
+        "Vollständige Feedback-Historie",
+        "Tiefes Gedächtnis — Schwächen, persönlicher Kontext, Themen",
+        "Wöchentliche Fortschritts-Mail"
+      ],
+      "highlight": "Bestes Angebot"
+    },
+    "footnote": "Upgrade in der App, nachdem du dich angemeldet hast. Jederzeit in deinen Store-Einstellungen kündbar."
+  },
+  "languages": {
+    "title": "Verfügbare Sprachen",
+    "more": "+ weitere folgen"
+  },
+  "finalCta": {
+    "title": "Bereit, loszureden?",
+    "subtitle": "Kostenlos ausprobieren. Pro für 7,99 €/Monat, wenn du dabei bleiben möchtest."
+  },
+  "footer": {
+    "tagline": "Sprachen üben. Selbstvertrauen aufbauen.",
+    "links": {
+      "privacy": "Datenschutz",
+      "terms": "AGB",
+      "deleteAccount": "Konto löschen",
+      "contact": "Kontakt"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "Dein My Language Coach Konto löschen",
+    "intro": "Gib die E-Mail-Adresse ein, mit der du dich angemeldet hast. Wir senden dir einen einmaligen Bestätigungslink. Klicke darauf, um dein Konto und alle zugehörigen Daten dauerhaft zu löschen.",
+    "emailLabel": "E-Mail",
+    "submit": "Bestätigungslink senden",
+    "submitting": "Wird gesendet…",
+    "sent": "Falls ein Konto mit dieser E-Mail existiert, haben wir einen Bestätigungslink gesendet. Schau in deinen Posteingang (und Spam-Ordner). Der Link läuft in 24 Stunden ab.",
+    "errorGeneric": "Etwas ist schiefgelaufen. Versuch es in ein paar Minuten erneut.",
+    "whatIsDeleted": "Was gelöscht wird",
+    "whatIsDeletedList": "Deine E-Mail, dein Name, dein Profilbild, deine Chat-Nachrichten, deine Gesprächshistorie, deine Streaks, dein gespeichertes Vokabular, deine Push-Tokens und deine Abo-Berechtigungen.",
+    "whatIsKept": "Was wir behalten",
+    "whatIsKeptList": "Anonymisierte Finanzdaten zu Käufen (nicht mehr mit dir verknüpft, aus steuerlichen Gründen aufbewahrt) und anonymisierte aggregierte Nutzungsstatistiken.",
+    "confirmTitle": "Dauerhafte Löschung bestätigen",
+    "confirmIntro": "Dadurch werden dein Konto und deine gesamte Übungshistorie dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "confirmButton": "Mein Konto löschen",
+    "confirmInvalid": "Dieser Löschlink ist ungültig oder wurde bereits verwendet.",
+    "confirmExpired": "Dieser Löschlink ist abgelaufen. Fordere einen neuen an.",
+    "confirmFailed": "Wir konnten die Löschung nicht abschließen. Versuch es erneut oder kontaktiere den Support.",
+    "doneTitle": "Konto gelöscht",
+    "doneBody": "Dein Konto und alle zugehörigen Daten wurden gelöscht. Schade, dass du gehst."
+  }
+}

@@ -7,24 +7,19 @@ import { LanguagesStrip } from "@/components/LanguagesStrip";
 import { DownloadCTA } from "@/components/DownloadCTA";
 import { Footer } from "@/components/Footer";
 import { ScrollDepthTracker } from "@/components/ScrollDepthTracker";
-import { getMessages } from "@/lib/i18n";
-import type { Metadata } from "next";
+import { TopBar } from "@/components/TopBar";
+import { getMessages, type Locale } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "My Language Coach — Pratiquez les langues. Gagnez en confiance.",
-  description:
-    "Votre partenaire de conversation alimenté par l'IA. Parlez-lui, recevez des corrections instantanées, et devenez fluide dans n'importe quelle langue.",
-  alternates: {
-    canonical: "/fr",
-    languages: { en: "/", fr: "/fr", "x-default": "/" },
-  },
-};
+interface Props {
+  locale: Locale;
+}
 
-export default async function FrenchHomePage() {
-  const m = getMessages("fr");
+export function LandingPage({ locale }: Props) {
+  const m = getMessages(locale);
   return (
     <main>
       <ScrollDepthTracker />
+      <TopBar locale={locale} />
       <Hero messages={m.hero} />
       <ValueStrip messages={m.valueStrip} />
       <Features messages={m.features} />
@@ -36,12 +31,12 @@ export default async function FrenchHomePage() {
         subtitle={m.finalCta.subtitle}
         heroMessages={m.hero}
       />
-      <Footer messages={m.footer} locale="fr" />
+      <Footer messages={m.footer} locale={locale} />
     </main>
   );
 }
 
-async function FinalCta({
+function FinalCta({
   title,
   subtitle,
   heroMessages,

@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "My Language Coach — Seni hatırlayan bir koç. Her konuşmadan sonra geri bildirim.",
+    "description": "Yapay zekâ dil koçun ne konuştuğunuzu hatırlar, her konuşmadan sonra sana bir geri bildirim raporu verir ve gerçek hayat senaryolarını canlandırmana izin verir. 12 dilde."
+  },
+  "hero": {
+    "eyebrow": "Şimdi açık betada",
+    "headline": "Dil pratiği yap.",
+    "headlineAccent": "Özgüven kazan.",
+    "subheadline": "Seni hatırlayan, her sohbetten sonra geri bildirim veren ve gerçek hayat rol oyunlarına seni dahil eden bir YZ koçu — 12 dilde.",
+    "scanToInstall": "Yüklemek için tara",
+    "iosLabel": "iOS — TestFlight",
+    "androidLabel": "Android — Açık beta",
+    "iosCta": "TestFlight'tan yükle",
+    "androidCta": "Google Play'den yükle",
+    "iosNote": "TestFlight beta — sınırlı yer"
+  },
+  "valueStrip": {
+    "v1": "Seni hatırlar",
+    "v2": "10 gerçek senaryo",
+    "v3": "Her sohbetten sonra geri bildirim",
+    "v4": "12 dil"
+  },
+  "features": {
+    "title": "Bizi farklı kılan ne",
+    "f1": {
+      "title": "Seni tanıyan bir koç",
+      "body": "Koçun ne konuştuğunuzu, seviyeni ve neyi tekrar etmen gerektiğini hatırlar. Her seans bir öncekinin üzerine kurulur — sıfırdan başlamak yok."
+    },
+    "f2": {
+      "title": "Gerçek hayat senaryoları",
+      "body": "Kahve ısmarlamak. Otele giriş yapmak. İş görüşmesinden sağ çıkmak. Koçunun karaktere büründüğü on rol oyunu — sen de öyle."
+    },
+    "f3": {
+      "title": "Gerçekten faydalı geri bildirim",
+      "body": "Her konuşmadan sonra: iyi yaptıkların, geliştirebileceklerin ve hatırlamaya değer yeni kelimeler. Sonra dönüp bakabilmen için kaydedilir."
+    }
+  },
+  "howItWorks": {
+    "title": "Nasıl çalışır",
+    "s1": {
+      "n": "1",
+      "title": "Bir dil seç",
+      "body": "On iki seçenek — Fransızca, Almanca, İtalyanca, İspanyolca, Türkçe, Portekizce ve daha fazlası."
+    },
+    "s2": {
+      "n": "2",
+      "title": "Konuş ya da rol yap",
+      "body": "Koçun Lisa ile serbest sohbet et ya da bir senaryoya gir ve bir yabancıyla rolde tanış."
+    },
+    "s3": {
+      "n": "3",
+      "title": "Geri bildirimini incele",
+      "body": "Her sohbetten sonra üç panel: öne çıkanlar, düzeltmeler ve yeni kelimeler — istediğin zaman dönebilirsin."
+    }
+  },
+  "pricing": {
+    "title": "Başlamak ücretsiz. Hazır olunca Pro.",
+    "subtitle": "Ayda iki kahve. Ya da yılda bir.",
+    "free": {
+      "label": "Ücretsiz",
+      "headline": "Başlaman için gereken her şey",
+      "price": "0 $",
+      "priceNote": "kart yok, deneme yok",
+      "items": [
+        "Günde 10 dakika konuşma",
+        "Üç rol oyunu senaryosu",
+        "Mevcut seans + son 3 için geri bildirim",
+        "Seanslar arası temel hafıza"
+      ]
+    },
+    "pro": {
+      "label": "Pro",
+      "headline": "Her şeyin kilidini açmak istediğinde",
+      "price": "7,99 $ / ay",
+      "priceAnnual": "ya da 49,99 $ / yıl — %48 tasarruf",
+      "priceNote": "7 gün ücretsiz deneme",
+      "items": [
+        "Günde 60 dakika konuşma",
+        "10 rol oyunu senaryosunun tamamı",
+        "Tam geri bildirim geçmişi",
+        "Derin hafıza — zayıf yönler, kişisel bağlam, temalar",
+        "Haftalık e-posta ilerleme özeti"
+      ],
+      "highlight": "En iyi seçim"
+    },
+    "footnote": "Kaydolduktan sonra uygulamadan Pro'ya yükselt. Mağaza ayarlarından istediğin zaman iptal edebilirsin."
+  },
+  "languages": {
+    "title": "Mevcut diller",
+    "more": "+ yenileri yolda"
+  },
+  "finalCta": {
+    "title": "Konuşmaya hazır mısın?",
+    "subtitle": "Denemek ücretsiz. Kalmaya karar verirsen Pro ayda 7,99 $."
+  },
+  "footer": {
+    "tagline": "Dil pratiği yap. Özgüven kazan.",
+    "links": {
+      "privacy": "Gizlilik",
+      "terms": "Koşullar",
+      "deleteAccount": "Hesabı sil",
+      "contact": "İletişim"
+    },
+    "switchLanguage": "English",
+    "copyright": "© 2026 My Language Coach"
+  },
+  "deleteAccount": {
+    "title": "My Language Coach hesabını sil",
+    "intro": "Kayıt olurken kullandığın e-postayı gir. Sana tek kullanımlık bir onay bağlantısı göndereceğiz. Hesabını ve ilişkili tüm verileri kalıcı olarak silmek için tıkla.",
+    "emailLabel": "E-posta",
+    "submit": "Onay bağlantısı gönder",
+    "submitting": "Gönderiliyor…",
+    "sent": "Bu e-postaya bağlı bir hesap varsa onay bağlantısı gönderdik. Gelen kutunu (ve spam klasörünü) kontrol et. Bağlantı 24 saat sonra geçersiz olur.",
+    "errorGeneric": "Bir şeyler ters gitti. Birkaç dakika sonra tekrar dene.",
+    "whatIsDeleted": "Silinenler",
+    "whatIsDeletedList": "E-postan, adın, profil fotoğrafın, sohbet mesajların, konuşma geçmişin, serilerin, kayıtlı kelimelerin, push bildirim tokenların ve abonelik haklarn.",
+    "whatIsKept": "Sakladıklarımız",
+    "whatIsKeptList": "Satın almaların anonimleştirilmiş finansal kayıtları (artık seninle ilişkilendirilmez, vergi yükümlülükleri için saklanır) ve anonim toplu kullanım istatistikleri.",
+    "confirmTitle": "Kalıcı silmeyi onayla",
+    "confirmIntro": "Bu, hesabını ve tüm pratik geçmişini kalıcı olarak siler. Geri alınamaz.",
+    "confirmButton": "Hesabımı sil",
+    "confirmInvalid": "Bu silme bağlantısı geçersiz ya da daha önce kullanılmış.",
+    "confirmExpired": "Bu silme bağlantısının süresi dolmuş. Yenisini iste.",
+    "confirmFailed": "Silmeyi tamamlayamadık. Tekrar dene ya da destekle iletişime geç.",
+    "doneTitle": "Hesap silindi",
+    "doneBody": "Hesabın ve ilişkili tüm veriler silindi. Gittiğin için üzgünüz."
+  }
+}

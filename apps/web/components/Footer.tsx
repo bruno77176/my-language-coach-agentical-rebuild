@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import type { Messages, Locale } from "@/lib/i18n";
 
 interface FooterProps {
@@ -7,8 +6,14 @@ interface FooterProps {
   locale: Locale;
 }
 
+// Privacy / terms / delete-account exist only in en and fr today. For any
+// other locale, fall back to the English page rather than hitting a 404.
+function legalPrefix(locale: Locale): string {
+  return locale === "fr" ? "/fr" : "";
+}
+
 export function Footer({ messages, locale }: FooterProps) {
-  const prefix = locale === "fr" ? "/fr" : "";
+  const prefix = legalPrefix(locale);
   const contactEmail =
     process.env.NEXT_PUBLIC_CONTACT_EMAIL || "bruno.a.moise@gmail.com";
 
@@ -32,10 +37,6 @@ export function Footer({ messages, locale }: FooterProps) {
           <a href={`mailto:${contactEmail}`} className="hover:text-ink">
             {messages.links.contact}
           </a>
-          <LanguageSwitcher
-            currentLocale={locale}
-            label={messages.switchLanguage}
-          />
         </nav>
       </div>
       <div className="max-w-content mx-auto px-6 pb-6">
