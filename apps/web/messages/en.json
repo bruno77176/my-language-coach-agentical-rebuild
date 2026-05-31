@@ -33,7 +33,7 @@
     },
     "f3": {
       "title": "Feedback that actually helps",
-      "body": "After every conversation: what you nailed, what to polish, and the new words worth remembering. Saved so you can come back to them."
+      "body": "After every conversation: your highlights, what to polish, and the new words worth remembering. Saved so you can come back to them."
     }
   },
   "howItWorks": {
@@ -71,7 +71,7 @@
     },
     "pro": {
       "label": "Pro",
-      "headline": "When you want the full loop",
+      "headline": "When you want everything unlocked",
       "price": "$7.99 / month",
       "priceAnnual": "or $49.99 / year — save 48%",
       "priceNote": "7-day free trial",

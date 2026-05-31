@@ -1,14 +1,15 @@
+import { useCallback } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { LANGUAGES } from "@language-coach/shared";
 import { useOnboardingStore } from "@/src/features/onboarding/onboarding-store";
-import { GlassCard, EditorialText } from "@/src/design";
+import { LanguageRow } from "@/src/features/onboarding/language-row";
+import { EditorialText } from "@/src/design";
 import {
   palette,
   spacing,
   radius,
   shadow,
-  touch,
 } from "@language-coach/design-tokens";
 
 function ProgressDots({ step, total }: { step: number; total: number }) {
@@ -35,6 +36,12 @@ export default function NativeLangStep() {
   const selected = useOnboardingStore((s) => s.nativeLang);
   const setNativeLang = useOnboardingStore((s) => s.setNativeLang);
 
+  // Stable identity so React.memo on LanguageRow actually skips re-renders.
+  const onPickLang = useCallback(
+    (code: string) => setNativeLang(code),
+    [setNativeLang],
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -49,42 +56,19 @@ export default function NativeLangStep() {
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews
       >
-        {LANGUAGES.map((lang) => {
-          const isSelected = selected === lang.code;
-          return (
-            <Pressable
-              key={lang.code}
-              onPress={() => setNativeLang(lang.code)}
-              style={styles.rowPressable}
-            >
-              <GlassCard
-                padding="md"
-                radiusToken="md"
-                style={isSelected ? styles.rowSelected : undefined}
-              >
-                <View style={styles.rowInner}>
-                  <EditorialText kind="bodyLg" style={styles.flag}>
-                    {lang.flag}
-                  </EditorialText>
-                  <View style={styles.rowText}>
-                    <EditorialText kind="bodyMd" color={palette.ink}>
-                      {lang.englishName}
-                    </EditorialText>
-                    <EditorialText kind="bodySm" color={palette.inkSoft}>
-                      {lang.nativeName}
-                    </EditorialText>
-                  </View>
-                  {isSelected && (
-                    <EditorialText kind="bodyMd" color={palette.accent}>
-                      ✓
-                    </EditorialText>
-                  )}
-                </View>
-              </GlassCard>
-            </Pressable>
-          );
-        })}
+        {LANGUAGES.map((lang) => (
+          <LanguageRow
+            key={lang.code}
+            code={lang.code}
+            englishName={lang.englishName}
+            nativeName={lang.nativeName}
+            flag={lang.flag}
+            isSelected={selected === lang.code}
+            onPress={onPickLang}
+          />
+        ))}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -119,25 +103,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.base,
     gap: spacing.sm,
     paddingBottom: spacing.base,
-  },
-  rowPressable: {
-    minHeight: touch.min,
-  },
-  rowInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    minHeight: touch.min - spacing.base * 2,
-  },
-  rowSelected: {
-    borderWidth: 1,
-    borderColor: palette.accent,
-  },
-  flag: {
-    fontSize: 24,
-  },
-  rowText: {
-    flex: 1,
   },
   footer: {
     paddingHorizontal: spacing.xl,

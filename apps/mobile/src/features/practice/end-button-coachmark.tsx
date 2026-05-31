@@ -71,7 +71,8 @@ export function EndButtonCoachmark() {
           <EditorialText kind="bodySm" color={palette.accent}>
             End ▸
           </EditorialText>{" "}
-          when you&apos;re done — that&apos;s how you get your feedback.
+          when you&apos;re done with the conversation — that&apos;s how you get
+          your feedback.
         </EditorialText>
         <Ionicons name="close" size={14} color={palette.cream} />
       </Pressable>

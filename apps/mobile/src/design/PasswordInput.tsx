@@ -41,7 +41,12 @@ export function PasswordInput(props: Omit<TextInputProps, "secureTextEntry">) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center" },
+  row: { flexDirection: "row", alignItems: "stretch" },
   input: { flex: 1 },
-  toggle: { padding: spacing.xs, marginLeft: spacing.xs },
+  toggle: {
+    paddingHorizontal: spacing.xs,
+    marginLeft: spacing.xs,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

@@ -30,6 +30,7 @@ import type { CoachMemory, SessionFeedback } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
+import { reportError } from "../lib/sentry";
 
 export type SynthesizeSpeechFn = (
   input: SynthesizeInput,
@@ -583,8 +584,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
               updatedAt: new Date(),
             },
           });
-      } catch {
-        // Memory extraction never breaks the user-visible flow.
+      } catch (err) {
+        // Memory extraction never breaks the user-visible flow, but we still
+        // want failures surfaced in Sentry so silent regressions are visible.
+        reportError(err, {
+          where: "voice.end.memory-extract",
+          userId,
+          conversationId,
+        });
       }
     })();
 

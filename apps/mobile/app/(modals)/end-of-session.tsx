@@ -66,7 +66,7 @@ export default function EndOfSessionScreen() {
 
         {data?.status === "ready" && (
           <>
-            <Section title="✨ What you nailed">
+            <Section title="✨ Highlights">
               {data.highlights.length === 0 ? (
                 <EditorialText kind="bodySm" color={palette.inkSoft}>
                   Plenty more next time.

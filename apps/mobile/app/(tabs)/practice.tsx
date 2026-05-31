@@ -316,7 +316,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   const onExit = () => {
     Alert.alert(
       "End conversation?",
-      "Your coach will prepare a feedback report — highlights of what you nailed, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.",
+      "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.",
       [
         { text: "Keep talking", style: "cancel" },
         {

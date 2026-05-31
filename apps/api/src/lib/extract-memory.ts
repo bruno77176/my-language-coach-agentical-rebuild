@@ -20,20 +20,38 @@ export type ExtractMemoryInput = {
   onUsage?: OnUsage;
 };
 
-const SYSTEM_PROMPT = `You update a structured language-learner profile.
+const SYSTEM_PROMPT = `You update a structured language-learner profile based on a new conversation.
 
 You receive:
-1. The student's CURRENT memory (JSON).
+1. The student's CURRENT memory (JSON conforming to the schema below).
 2. A NEW conversation transcript between the student and their coach.
 
-You output ONLY a JSON object that strictly matches the same schema as the current memory. Rules:
-- If a field is unchanged, return its existing value.
-- If a fact is unclear from the transcript, omit changes to that field.
-- Cap recent_topics at 20 entries; keep the most recent.
-- proficiency_level must be one of "A1","A2","B1","B2","C1","C2" or omitted.
-- Never invent personal facts the student did not say.
+You output ONLY a JSON object matching this EXACT schema:
+{
+  "proficiency_level": "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null,
+  "recent_topics": [
+    { "topic": "<short topic name>", "last_practiced_at": "<ISO 8601 UTC>" }
+  ],
+  "weak_areas": ["<short grammar or vocab pattern the student struggles with>"],
+  "personal_context": {
+    "hobbies": ["<string>"],
+    "job": "<string>",
+    "family": "<string>",
+    "location": "<string>",
+    "motivations": ["<string>"]
+  },
+  "last_session_summary": "<one short sentence summarizing THIS conversation>" | null
+}
+
+Rules:
+- ALWAYS write recent_topics as an array of OBJECTS with "topic" and "last_practiced_at" — never plain strings.
+- Merge new topics into the existing recent_topics array. Keep up to 20, most recent last.
 - last_practiced_at MUST be a strict ISO 8601 UTC timestamp, e.g. "2026-05-30T10:00:00.000Z".
-- Output ONLY the JSON object, no commentary, no markdown fences.`;
+- For fields under personal_context, OMIT keys that aren't established — do not write empty strings or empty arrays.
+- If a field is unchanged from current memory, return its existing value verbatim.
+- Never invent personal facts the student did not say in the transcript.
+- last_session_summary should be filled in for every transcript (one short sentence about what was discussed).
+- Output ONLY the JSON object — no markdown fences, no commentary.`;
 
 export async function extractMemory(
   client: OpenAI,
