@@ -14,9 +14,7 @@ import { palette, spacing } from "@language-coach/design-tokens";
  * Accepts the same props as TextInput — except `secureTextEntry`, which is
  * managed internally based on the toggle state.
  */
-export function PasswordInput(
-  props: Omit<TextInputProps, "secureTextEntry">,
-) {
+export function PasswordInput(props: Omit<TextInputProps, "secureTextEntry">) {
   const [visible, setVisible] = useState(false);
   return (
     <View style={styles.row}>

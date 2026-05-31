@@ -343,7 +343,10 @@ export function useConversation(
       setState({ phase: "loading-session" });
       void (async () => {
         try {
-          const { conversation_id } = await startSession(targetLang, scenarioId);
+          const { conversation_id } = await startSession(
+            targetLang,
+            scenarioId,
+          );
           conversationIdRef.current = conversation_id;
           setState({ phase: "idle", conversationId: conversation_id });
         } catch (err) {

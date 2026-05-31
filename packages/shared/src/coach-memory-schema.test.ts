@@ -88,6 +88,8 @@ describe("parseCoachMemoryRow", () => {
       personalContext: {},
     });
     expect(parsed).not.toBeNull();
-    expect(parsed!.recent_topics[0]!.last_practiced_at).toBe("2026-05-30 10:00");
+    expect(parsed!.recent_topics[0]!.last_practiced_at).toBe(
+      "2026-05-30 10:00",
+    );
   });
 });

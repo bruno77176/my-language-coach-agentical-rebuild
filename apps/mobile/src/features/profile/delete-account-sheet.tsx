@@ -1,9 +1,6 @@
 import { forwardRef, useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import {
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";

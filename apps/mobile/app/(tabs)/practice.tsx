@@ -16,11 +16,13 @@ import {
   Screen,
   TAB_BAR_RESERVE,
 } from "@/src/design";
-import { palette, radius, shadow, spacing } from "@language-coach/design-tokens";
 import {
-  LANGUAGES,
-  ROLE_PLAY_SCENARIOS,
-} from "@language-coach/shared";
+  palette,
+  radius,
+  shadow,
+  spacing,
+} from "@language-coach/design-tokens";
+import { LANGUAGES, ROLE_PLAY_SCENARIOS } from "@language-coach/shared";
 import { stopActivePlayer } from "@/src/features/practice/audio-controller";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
@@ -108,7 +110,8 @@ function PracticeChooser() {
           color={palette.inkSoft}
           style={chooserStyles.subtitle}
         >
-          Pick a real-world scenario or just chat — your coach is ready either way.
+          Pick a real-world scenario or just chat — your coach is ready either
+          way.
         </EditorialText>
 
         <Pressable onPress={onScenario} style={chooserStyles.card}>
@@ -116,9 +119,8 @@ function PracticeChooser() {
             🎭 Practice a scenario
           </EditorialText>
           <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Pick from 10 real-world situations (ordering coffee, hotel
-            check-in, doctor visit, …). Your coach plays the role and
-            throws in a twist.
+            Pick from 10 real-world situations (ordering coffee, hotel check-in,
+            doctor visit, …). Your coach plays the role and throws in a twist.
           </EditorialText>
         </Pressable>
 
@@ -131,7 +133,11 @@ function PracticeChooser() {
           </EditorialText>
         </Pressable>
 
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={chooserStyles.historyHeader}>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={chooserStyles.historyHeader}
+        >
           Recent sessions
         </EditorialText>
 
@@ -156,7 +162,9 @@ function PracticeChooser() {
           />
         ))}
 
-        <View style={{ height: insets.bottom + TAB_BAR_RESERVE + spacing.lg }} />
+        <View
+          style={{ height: insets.bottom + TAB_BAR_RESERVE + spacing.lg }}
+        />
       </ScrollView>
     </Screen>
   );
