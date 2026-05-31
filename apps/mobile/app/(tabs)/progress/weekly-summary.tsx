@@ -38,7 +38,16 @@ export default function WeeklySummary() {
 
   return (
     <Screen variant="gradient">
-      <Stack.Screen options={{ title: "Weekly summary" }} />
+      <Stack.Screen
+        options={{
+          title: "Weekly summary",
+          headerShown: true,
+          headerStyle: { backgroundColor: palette.cream },
+          headerTintColor: palette.ink,
+          headerTitleStyle: { fontWeight: "600" },
+          headerBackTitle: "Progress",
+        }}
+      />
       <ScrollView contentContainerStyle={styles.container}>
         <EditorialText kind="displayMd" italic style={styles.title}>
           Your week

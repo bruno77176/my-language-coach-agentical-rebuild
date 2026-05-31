@@ -7,7 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 import { LANGUAGES } from "@language-coach/shared";
 import { EditorialText, Screen } from "@/src/design";
@@ -20,12 +20,22 @@ import {
   useUpdateMemory,
 } from "@/src/features/coach-memory/use-update-memory";
 import { useUpdateMemoryConsent } from "@/src/features/coach-memory/use-update-memory-consent";
+import { showToast } from "@/src/lib/toast";
 
 export default function MemoryEditorScreen() {
   const { data, isLoading } = useCoachMemory();
   return (
     <Screen variant="gradient">
-      <Stack.Screen options={{ title: "Coach's Memory" }} />
+      <Stack.Screen
+        options={{
+          title: "Coach's Memory",
+          headerShown: true,
+          headerStyle: { backgroundColor: palette.cream },
+          headerTintColor: palette.ink,
+          headerTitleStyle: { fontWeight: "600" },
+          headerBackTitle: "Profile",
+        }}
+      />
       <ScrollView contentContainerStyle={styles.container}>
         <EditorialText
           kind="bodyMd"
@@ -116,25 +126,33 @@ function EditableMemoryCard({ entry }: { entry: CoachMemoryEntry }) {
   }, [entry]);
 
   const onSave = () => {
-    update.mutate({
-      languageCode: entry.language_code,
-      memory: {
-        ...entry.memory,
-        last_session_summary: summary || null,
-        recent_topics: topics
-          .split("\n")
-          .map((t) => t.trim())
-          .filter(Boolean)
-          .map((t) => ({
-            topic: t,
-            last_practiced_at: new Date().toISOString(),
-          })),
-        weak_areas: weakAreas
-          .split("\n")
-          .map((t) => t.trim())
-          .filter(Boolean),
+    update.mutate(
+      {
+        languageCode: entry.language_code,
+        memory: {
+          ...entry.memory,
+          last_session_summary: summary || null,
+          recent_topics: topics
+            .split("\n")
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .map((t) => ({
+              topic: t,
+              last_practiced_at: new Date().toISOString(),
+            })),
+          weak_areas: weakAreas
+            .split("\n")
+            .map((t) => t.trim())
+            .filter(Boolean),
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          showToast("Memory saved");
+          if (router.canGoBack()) router.back();
+        },
+      },
+    );
   };
 
   const onDelete = () => {
@@ -146,7 +164,13 @@ function EditableMemoryCard({ entry }: { entry: CoachMemoryEntry }) {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => del.mutate(entry.language_code),
+          onPress: () =>
+            del.mutate(entry.language_code, {
+              onSuccess: () => {
+                showToast("Memory cleared");
+                if (router.canGoBack()) router.back();
+              },
+            }),
         },
       ],
     );

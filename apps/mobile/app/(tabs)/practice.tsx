@@ -32,6 +32,7 @@ import type { ChatMessage } from "@/src/features/practice/types";
 import { MessageBubble } from "@/src/features/practice/MessageBubble";
 import { MicButton } from "@/src/features/practice/MicButton";
 import { TopStatusBar } from "@/src/features/practice/top-status-bar";
+import { EndButtonCoachmark } from "@/src/features/practice/end-button-coachmark";
 import { useSessionTimer } from "@/src/features/practice/use-session-timer";
 import { useGoalReward } from "@/src/features/practice/use-goal-reward";
 import { GoalReward } from "@/src/features/practice/goal-reward";
@@ -470,6 +471,8 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         shareMessages={messages.map((m) => ({ role: m.role, text: m.text }))}
         onExit={onExit}
       />
+
+      <EndButtonCoachmark />
 
       <View style={[activeStyles.micBar, { bottom: micBarBottom }]}>
         {state.phase === "processing" && (
