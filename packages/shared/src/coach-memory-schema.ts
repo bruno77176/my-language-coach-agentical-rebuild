@@ -2,7 +2,11 @@ import { z } from "zod";
 
 export const RecentTopicSchema = z.object({
   topic: z.string().min(1).max(80),
-  last_practiced_at: z.string().datetime(),
+  // Plain string (was `.datetime()` strict ISO 8601). gpt-4o-mini commonly
+  // emits "2026-05-30 10:00" (space, no T, no Z) which broke extraction
+  // entirely — we'd rather accept loose timestamps than fail the whole
+  // memory parse. Format is for human/log display only; nothing parses it.
+  last_practiced_at: z.string().min(1).max(64),
 });
 
 export const PersonalContextSchema = z

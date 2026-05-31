@@ -77,14 +77,17 @@ describe("parseCoachMemoryRow", () => {
     ).toBeNull();
   });
 
-  it("returns null when recent_topics contains a non-ISO-strict datetime", () => {
-    expect(
-      parseCoachMemoryRow({
-        proficiencyLevel: "B1",
-        recentTopics: [{ topic: "x", last_practiced_at: "2026-05-30 10:00" }],
-        weakAreas: [],
-        personalContext: {},
-      }),
-    ).toBeNull();
+  it("accepts loose timestamp strings in recent_topics (no .datetime() strictness)", () => {
+    // Documents the deliberate relaxation: gpt-4o-mini often emits
+    // "2026-05-30 10:00" or similar non-ISO formats. We accept them rather
+    // than fail the whole memory parse on a cosmetic field.
+    const parsed = parseCoachMemoryRow({
+      proficiencyLevel: "B1",
+      recentTopics: [{ topic: "x", last_practiced_at: "2026-05-30 10:00" }],
+      weakAreas: [],
+      personalContext: {},
+    });
+    expect(parsed).not.toBeNull();
+    expect(parsed!.recent_topics[0]!.last_practiced_at).toBe("2026-05-30 10:00");
   });
 });

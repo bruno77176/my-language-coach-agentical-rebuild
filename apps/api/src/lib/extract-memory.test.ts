@@ -98,7 +98,10 @@ describe("extractMemory", () => {
     expect(out).toBeNull();
   });
 
-  it("returns null when last_practiced_at is not strict ISO 8601", async () => {
+  it("accepts loose timestamp strings in last_practiced_at (no strict ISO)", async () => {
+    // Documents the deliberate relaxation: rejecting non-ISO timestamps
+    // broke real-world extraction because gpt-4o-mini's output isn't
+    // always strict ISO 8601. We accept the field as a plain string.
     const looseClient = {
       chat: {
         completions: {
@@ -128,7 +131,8 @@ describe("extractMemory", () => {
       transcript: [{ role: "user", text: "hi" }],
       languageCode: "it",
     });
-    expect(out).toBeNull();
+    expect(out).not.toBeNull();
+    expect(out!.recent_topics[0]!.last_practiced_at).toBe("2026-05-30 10:00");
   });
 
   it("returns null when proficiency_level is an unknown enum value", async () => {
