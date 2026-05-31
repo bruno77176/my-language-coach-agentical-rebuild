@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FilterBar } from "@/components/filter-bar";
+import { RefreshViewsButton } from "@/components/refresh-views-button";
 import { formatUsd } from "@/components/kpi-card";
 import { apiGet } from "@/lib/api-client";
 import { filtersFromSearchParams, filtersToQuery } from "@/lib/filters";
@@ -9,10 +10,20 @@ export const revalidate = 30;
 
 type UserRow = {
   userId: string | null;
+  email: string | null;
+  displayName: string | null;
   costUsd: number;
   eventCount: number;
   lastSeenAt: string | null;
 };
+
+function userLabel(r: UserRow): string {
+  // Prefer email (most recognizable), then displayName, then UUID prefix.
+  if (r.email) return r.email;
+  if (r.displayName) return r.displayName;
+  if (r.userId) return `${r.userId.slice(0, 8)}…`;
+  return "unattributed";
+}
 
 export default async function UsersPage({
   searchParams,
@@ -25,7 +36,10 @@ export default async function UsersPage({
 
   return (
     <>
-      <FilterBar />
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <FilterBar />
+        <RefreshViewsButton />
+      </div>
       <div className="bg-white border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-100 text-slate-600">
@@ -44,12 +58,18 @@ export default async function UsersPage({
                     <Link
                       href={`/users/${r.userId}?${q}`}
                       className="text-blue-700 underline"
+                      title={r.userId}
                     >
-                      {r.userId.slice(0, 8)}…
+                      {userLabel(r)}
                     </Link>
                   ) : (
                     <span className="text-slate-400">unattributed</span>
                   )}
+                  {r.userId && r.email && r.displayName ? (
+                    <span className="text-slate-500 ml-2">
+                      ({r.displayName})
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-4 py-2 text-right">{formatUsd(r.costUsd)}</td>
                 <td className="px-4 py-2 text-right">{r.eventCount}</td>

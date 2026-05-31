@@ -95,7 +95,7 @@ export function buildCoachSystemPrompt(input: CoachPromptInput): string {
     const ctxParts = [basic, deep].filter(Boolean);
     if (ctxParts.length > 0) {
       blocks.push(
-        `<context>${ctxParts.join(" ")} Reference these naturally when relevant — do not list them robotically.</context>`,
+        `<context>${ctxParts.join(" ")} Reference these naturally when relevant — do not list them robotically. If the user falls silent or says they don't know what to talk about, take initiative: pick something from what you know about them (a recent topic, their job, hobbies, family, location, or learning motivations) and start a thread of conversation around it. Don't ask "what do you want to talk about?" — propose something specific based on them.</context>`,
       );
     }
   }

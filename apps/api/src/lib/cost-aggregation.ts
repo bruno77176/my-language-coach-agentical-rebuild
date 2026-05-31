@@ -11,17 +11,26 @@ export type Filters = {
 
 // ---- helpers ----
 
-function buildVariableWhere(f: Filters): SQL {
+function buildVariableWhere(f: Filters, alias?: string): SQL {
   // postgres-js can't bind a JS Date directly when drizzle hands params through
   // db.execute(sql`...`) — it ends up at Buffer.byteLength which rejects Date.
   // Serialize to ISO so the driver gets a plain string and PG casts it back.
+  //
+  // `alias` qualifies column refs (e.g. "c.day") when the caller JOINs another
+  // table that also has overlapping column names. Drizzle's sql template
+  // doesn't safely interpolate identifiers, so we whitelist a-z to be safe.
+  const safe = alias && /^[a-z][a-z0-9_]*$/i.test(alias) ? alias : "";
+  const day = sql.raw(safe ? `${safe}.day` : "day");
+  const platform = sql.raw(safe ? `${safe}.platform` : "platform");
+  const provider = sql.raw(safe ? `${safe}.provider` : "provider");
+  const userId = sql.raw(safe ? `${safe}.user_id` : "user_id");
   const parts: SQL[] = [
-    sql`day >= ${f.from.toISOString()}`,
-    sql`day < ${f.to.toISOString()}`,
+    sql`${day} >= ${f.from.toISOString()}`,
+    sql`${day} < ${f.to.toISOString()}`,
   ];
-  if (f.platform) parts.push(sql`platform = ${f.platform}`);
-  if (f.service) parts.push(sql`provider = ${f.service}`);
-  if (f.userId) parts.push(sql`user_id = ${f.userId}`);
+  if (f.platform) parts.push(sql`${platform} = ${f.platform}`);
+  if (f.service) parts.push(sql`${provider} = ${f.service}`);
+  if (f.userId) parts.push(sql`${userId} = ${f.userId}`);
   return parts.reduce((acc, p, i) => (i === 0 ? p : sql`${acc} AND ${p}`));
 }
 
@@ -268,30 +277,43 @@ export async function getByPlatform(
 
 export type UserRow = {
   userId: string | null;
+  email: string | null;
+  displayName: string | null;
   costUsd: number;
   eventCount: number;
   lastSeenAt: Date | null;
 };
 
 export async function getByUser(db: Database, f: Filters): Promise<UserRow[]> {
+  // LEFT JOIN profiles + auth.users so the dashboard can show email +
+  // displayName instead of just a UUID prefix. unattributed rows (user_id
+  // NULL) keep their null email/displayName and render as "unattributed".
   const rows = (await db.execute(sql`
-    SELECT user_id,
-           SUM(cost_usd)::text AS cost,
-           SUM(event_count)::int AS event_count,
-           MAX(day) AS last_seen
-    FROM daily_cost_by_user
-    WHERE ${buildVariableWhere(f)}
-    GROUP BY user_id
-    ORDER BY SUM(cost_usd) DESC
+    SELECT c.user_id,
+           u.email AS email,
+           p.display_name AS display_name,
+           SUM(c.cost_usd)::text AS cost,
+           SUM(c.event_count)::int AS event_count,
+           MAX(c.day) AS last_seen
+    FROM daily_cost_by_user c
+    LEFT JOIN profiles p ON p.user_id = c.user_id
+    LEFT JOIN auth.users u ON u.id = c.user_id
+    WHERE ${buildVariableWhere(f, "c")}
+    GROUP BY c.user_id, u.email, p.display_name
+    ORDER BY SUM(c.cost_usd) DESC
     LIMIT 200
   `)) as unknown as Array<{
     user_id: string | null;
+    email: string | null;
+    display_name: string | null;
     cost: string;
     event_count: number;
     last_seen: Date | null;
   }>;
   return rows.map((r) => ({
     userId: r.user_id,
+    email: r.email,
+    displayName: r.display_name,
     costUsd: Number(r.cost),
     eventCount: r.event_count,
     lastSeenAt: r.last_seen,

@@ -61,6 +61,17 @@ export function createAdminRoutes(deps: {
     });
   });
 
+  // Manual refresh trigger for daily_cost_by_user. The pg_cron job hits the
+  // separate /admin/internal/refresh-views endpoint every 5 minutes; this
+  // sibling endpoint lets admins force a refresh from the dashboard when they
+  // need fresh numbers right now (or when the cron is misconfigured).
+  routes.post("/refresh-views", async (c) => {
+    await deps.db.execute(
+      sql`REFRESH MATERIALIZED VIEW CONCURRENTLY daily_cost_by_user`,
+    );
+    return c.json({ ok: true, refreshedAt: new Date().toISOString() });
+  });
+
   routes.get("/overview", async (c) => {
     const f = parseFilters(c.req.query());
     const data = await getOverview(deps.db, f);
