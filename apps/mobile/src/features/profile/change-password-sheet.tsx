@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
 import { EditorialText, GlassCard, TAB_BAR_RESERVE } from "@/src/design";
+import { BottomSheetPasswordInput } from "@/src/design/BottomSheetPasswordInput";
 import {
   palette,
   radius,
@@ -101,10 +102,9 @@ export const ChangePasswordSheet = forwardRef<BottomSheetModal, Props>(
             >
               Current password
             </EditorialText>
-            <BottomSheetTextInput
+            <BottomSheetPasswordInput
               value={current}
               onChangeText={setCurrent}
-              secureTextEntry
               placeholder="••••••"
               autoCapitalize="none"
               style={[typeTokens.bodyLg, styles.input]}
@@ -119,10 +119,9 @@ export const ChangePasswordSheet = forwardRef<BottomSheetModal, Props>(
             >
               New password
             </EditorialText>
-            <BottomSheetTextInput
+            <BottomSheetPasswordInput
               value={next}
               onChangeText={setNext}
-              secureTextEntry
               placeholder="At least 6 characters"
               autoCapitalize="none"
               style={[typeTokens.bodyLg, styles.input]}

@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
 import { EditorialText, GlassCard } from "@/src/design";
+import { PasswordInput } from "@/src/design/PasswordInput";
 import {
   palette,
   radius,
@@ -108,11 +109,10 @@ export default function ResetPasswordScreen() {
         >
           New password
         </EditorialText>
-        <TextInput
+        <PasswordInput
           value={password}
           onChangeText={setPassword}
           placeholder="At least 6 characters"
-          secureTextEntry
           autoCapitalize="none"
           autoComplete="password-new"
           style={[typeTokens.bodyLg, styles.textInput]}
@@ -128,11 +128,10 @@ export default function ResetPasswordScreen() {
         >
           Confirm
         </EditorialText>
-        <TextInput
+        <PasswordInput
           value={confirm}
           onChangeText={setConfirm}
           placeholder="Type it again"
-          secureTextEntry
           autoCapitalize="none"
           autoComplete="password-new"
           style={[typeTokens.bodyLg, styles.textInput]}

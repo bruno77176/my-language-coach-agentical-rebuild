@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
 import { EditorialText, GlassCard } from "@/src/design";
+import { BottomSheetPasswordInput } from "@/src/design/BottomSheetPasswordInput";
 import {
   palette,
   radius,
@@ -85,10 +86,9 @@ export const DeleteAccountSheet = forwardRef<BottomSheetModal, Props>(
               >
                 Confirm your password
               </EditorialText>
-              <BottomSheetTextInput
+              <BottomSheetPasswordInput
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
                 placeholder="password"
                 autoCapitalize="none"
                 style={[typeTokens.bodyLg, styles.input]}
