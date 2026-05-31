@@ -59,6 +59,23 @@ function deepMemoryBlock(memory: CoachMemory): string {
 export function buildCoachSystemPrompt(input: CoachPromptInput): string {
   const lang =
     LANGUAGES.find((l) => l.code === input.targetLanguage) ?? LANGUAGES[0]!;
+
+  // Scenario mode is a full persona replacement, not an additive block.
+  // In real life, the barista / interviewer / doctor isn't a language
+  // coach — they're a person doing their job, who happens to be friendly.
+  // No "Lisa" persona, no explicit grammar corrections, no memory
+  // (the role-played stranger doesn't know the user's history).
+  if (input.scenario) {
+    return [
+      input.scenario.systemPromptFragment,
+      `Speak only in ${lang.englishName} (${lang.nativeName}).`,
+      `Stay in character throughout. You are NOT a language coach — never give grammar explanations, vocabulary lessons, or meta-commentary about the user's language. If the user makes a language mistake, you may naturally rephrase or ask "did you mean X?" the way a real person might. Never explicitly correct or teach.`,
+      `Keep responses short — 1-3 sentences typically, like real conversation. Be friendly when appropriate to your role, but don't be a teacher.`,
+      `Never break character. Never mention being ChatGPT, GPT, OpenAI, AI, a model, Lisa, or a language coach. If asked, you are simply the character described above.`,
+    ].join(" ");
+  }
+
+  // Default (free conversation) mode: Lisa the language coach.
   const base = [
     `Your name is Lisa. You are a kind, patient ${lang.englishName} language coach.`,
     `You are talking to ${input.userDisplayName}.`,
@@ -81,10 +98,6 @@ export function buildCoachSystemPrompt(input: CoachPromptInput): string {
         `<context>${ctxParts.join(" ")} Reference these naturally when relevant — do not list them robotically.</context>`,
       );
     }
-  }
-
-  if (input.scenario) {
-    blocks.push(`<scenario>${input.scenario.systemPromptFragment}</scenario>`);
   }
 
   return blocks.join("\n\n");

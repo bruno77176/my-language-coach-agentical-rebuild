@@ -110,26 +110,29 @@ function PracticeChooser() {
           color={palette.inkSoft}
           style={chooserStyles.subtitle}
         >
-          Pick a real-world scenario or just chat — your coach is ready either
-          way.
+          Talk to your coach about anything, or step into a real-life scenario
+          and practice with someone in role.
         </EditorialText>
+
+        {/* Free conversation first — main functionality. */}
+        <Pressable onPress={onFree} style={chooserStyles.card}>
+          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
+            💬 Free conversation with your language coach
+          </EditorialText>
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Lisa talks with you about anything — she&apos;ll gently correct
+            grammar and vocabulary as you go.
+          </EditorialText>
+        </Pressable>
 
         <Pressable onPress={onScenario} style={chooserStyles.card}>
           <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
             🎭 Practice a scenario
           </EditorialText>
           <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Pick from 10 real-world situations (ordering coffee, hotel check-in,
-            doctor visit, …). Your coach plays the role and throws in a twist.
-          </EditorialText>
-        </Pressable>
-
-        <Pressable onPress={onFree} style={chooserStyles.card}>
-          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
-            💬 Free conversation
-          </EditorialText>
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Just say hello and see where it goes.
+            Real-life conversation with a stranger — at the café, the doctor, a
+            job interview. They&apos;re not there to teach you, but they can be
+            friendly.
           </EditorialText>
         </Pressable>
 
@@ -310,45 +313,53 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   };
 
   const onExit = () => {
-    Alert.alert("End conversation?", undefined, [
-      { text: "Keep talking", style: "cancel" },
-      {
-        text: "End",
-        style: "destructive",
-        onPress: () => {
-          void (async () => {
-            let endResult: {
-              conversationId: string | null;
-              secondsSpoken: number;
-            } | null = null;
-            try {
-              endResult = await end();
-            } catch {
-              /* best-effort */
-            }
-            resetSessionTimer();
-            todaySecondsAtStartRef.current = 0;
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
-              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
-              queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
-            ]);
-            if (endResult?.conversationId) {
-              router.replace({
-                pathname: "/(modals)/end-of-session",
-                params: {
-                  conversationId: endResult.conversationId,
-                  secondsSpoken: String(endResult.secondsSpoken),
-                },
-              });
-            } else {
-              router.replace("/(tabs)/practice");
-            }
-          })();
+    Alert.alert(
+      "End conversation?",
+      "Your coach will prepare a feedback report — highlights of what you nailed, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.",
+      [
+        { text: "Keep talking", style: "cancel" },
+        {
+          text: "End & see feedback",
+          style: "default",
+          onPress: () => {
+            void (async () => {
+              let endResult: {
+                conversationId: string | null;
+                secondsSpoken: number;
+              } | null = null;
+              try {
+                endResult = await end();
+              } catch {
+                /* best-effort */
+              }
+              resetSessionTimer();
+              todaySecondsAtStartRef.current = 0;
+              await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+                queryClient.invalidateQueries({
+                  queryKey: ["progress-summary"],
+                }),
+                queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+                queryClient.invalidateQueries({
+                  queryKey: ["recent-sessions"],
+                }),
+              ]);
+              if (endResult?.conversationId) {
+                router.replace({
+                  pathname: "/(modals)/end-of-session",
+                  params: {
+                    conversationId: endResult.conversationId,
+                    secondsSpoken: String(endResult.secondsSpoken),
+                  },
+                });
+              } else {
+                router.replace("/(tabs)/practice");
+              }
+            })();
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   if (state.phase === "loading-session") {
@@ -427,7 +438,9 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
               align="center"
               color={palette.inkSoft}
             >
-              Tap the mic to say hello.
+              {scenarioId
+                ? "Tap the mic to begin."
+                : "Tap the mic to say hello."}
             </EditorialText>
             <EditorialText
               kind="bodySm"
@@ -435,7 +448,9 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
               color={palette.inkSoft}
               style={{ marginTop: spacing.md, opacity: 0.7 }}
             >
-              Your coach is listening — just talk like you would to a friend.
+              {scenarioId
+                ? "You make the first move — walk in and speak. The other person will respond in their role."
+                : "Your coach is listening — just talk like you would to a friend."}
             </EditorialText>
           </View>
         }

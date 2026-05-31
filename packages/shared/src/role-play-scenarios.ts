@@ -4,6 +4,10 @@ export type RolePlayScenario = {
   description: { en: string; fr: string };
   systemPromptFragment: string;
   pro: boolean;
+  /** Ionicons glyph name used in the picker row (mobile-side) — stable across
+   * versions for standard glyphs; if you change it, verify against the
+   * mobile's @expo/vector-icons Ionicons.glyphMap. */
+  icon: string;
 };
 
 export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
@@ -18,6 +22,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Dans un petit café local. Registre familier.",
     },
     pro: false,
+    icon: "cafe-outline",
     systemPromptFragment:
       "Play the role of the barista at a small local café. Greet the student naturally. Take their order. Mid-conversation, introduce a twist: either the espresso machine is broken, the pastry they want is out, OR the card reader is down (pick one). Keep it natural and brief.",
   },
@@ -29,6 +34,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Un inconnu dans la rue. L'étudiant cherche un lieu connu.",
     },
     pro: false,
+    icon: "compass-outline",
     systemPromptFragment:
       "Play the role of a friendly stranger the student stops on the street. They are trying to find a well-known landmark in your city. Give directions with a couple of landmarks (e.g., 'turn left at the bakery'). Be patient if they ask you to repeat. Optional twist: you don't actually know — suggest someone else.",
   },
@@ -40,6 +46,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Première rencontre à la fête d'un ami d'ami.",
     },
     pro: false,
+    icon: "wine-outline",
     systemPromptFragment:
       "Play the role of another guest at a friend-of-a-friend's birthday party. Introduce yourself, ask how they know the host. Mid-conversation, find one thing in common (job, hobby, travel) and dig into it. Keep it light, casual register.",
   },
@@ -51,6 +58,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Registre poli. Problème de réservation à mi-parcours.",
     },
     pro: true,
+    icon: "bed-outline",
     systemPromptFragment:
       "Play the role of a hotel receptionist. Greet the student formally, ask for their booking name, and present a small issue: their room isn't ready yet OR they were upgraded but it costs extra OR there's a noise complaint about a neighbor. Negotiate politely.",
   },
@@ -62,6 +70,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Décrire ses symptômes; comprendre les instructions pour un médicament.",
     },
     pro: true,
+    icon: "medkit-outline",
     systemPromptFragment:
       "Play the role of a kind GP. Ask the student what brings them in. Ask follow-up questions about symptoms (when it started, severity, prior episodes). Eventually give them a prescription and clear instructions (dosage, frequency, duration). Be patient with vocabulary.",
   },
@@ -73,6 +82,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Registre formel; tester comment l'étudiant répond à une question difficile.",
     },
     pro: true,
+    icon: "briefcase-outline",
     systemPromptFragment:
       "Play the role of a hiring manager interviewing the student for a role in their field. After 2-3 friendly opening questions, ask ONE harder question (e.g., 'tell me about a failure', or 'why are you leaving your current job?') and follow up. Keep your turns short — let them talk.",
   },
@@ -87,6 +97,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Registre assertif sans être impoli.",
     },
     pro: true,
+    icon: "headset-outline",
     systemPromptFragment:
       "Play the role of a customer-service agent on the phone. The student has a complaint (defective product, late delivery, billing error — let them pick). Initially be slightly bureaucratic; if they advocate clearly, eventually offer a fair resolution. Keep it realistic, not theatrical.",
   },
@@ -101,6 +112,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Décontracté, rapide, contractions permises.",
     },
     pro: true,
+    icon: "call-outline",
     systemPromptFragment:
       "Play the role of a close friend the student hasn't spoken to in a few weeks. Catch up — what's new, what's coming up. Casual register, slang OK. Mention one small thing going on in your life that needs their advice.",
   },
@@ -115,6 +127,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Professionnel poli; l'étudiant se présente à une nouvelle équipe.",
     },
     pro: true,
+    icon: "people-outline",
     systemPromptFragment:
       "Play the role of a colleague chairing a meeting where the student is the new joiner. Invite them to introduce themselves, ask 1-2 friendly questions about their background, then ask them what they're looking forward to. Keep it brief and warm.",
   },
@@ -129,6 +142,7 @@ export const ROLE_PLAY_SCENARIOS: RolePlayScenario[] = [
       fr: "Registre formel et stressé; suivre des instructions sous pression.",
     },
     pro: true,
+    icon: "shield-outline",
     systemPromptFragment:
       "Play the role of a police officer at a station. The student has lost their passport while traveling. Ask the necessary questions (when, where, identifying details, hotel address), give them clear next steps (which embassy to contact, what documents to bring, fee). Keep tone professional.",
   },

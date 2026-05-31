@@ -109,6 +109,15 @@ export function useConversation(
         if (cancelled) return;
         conversationIdRef.current = conversation_id;
 
+        // Scenarios skip the Lisa-coach greeting entirely — the user walks
+        // into the role (café, hotel, police station, …) and opens by
+        // speaking. The coach responds in-character on the first /turns.
+        if (scenarioId) {
+          setMessages([]);
+          setState({ phase: "idle", conversationId: conversation_id });
+          return;
+        }
+
         const greetingText = buildGreeting(
           targetLang as SupportedLang,
           displayName,

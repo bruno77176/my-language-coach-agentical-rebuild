@@ -62,7 +62,7 @@ describe("buildCoachSystemPrompt", () => {
     expect(out).toContain("engineer");
   });
 
-  it("injects a <scenario> block when a scenario is provided", () => {
+  it("fully replaces the coach persona when a scenario is provided", () => {
     const out = buildCoachSystemPrompt({
       targetLanguage: "it",
       userDisplayName: "Bruno",
@@ -72,7 +72,40 @@ describe("buildCoachSystemPrompt", () => {
           "You are the barista at a small Italian café. Greet the user, take their order, and introduce one twist (the espresso machine is broken).",
       },
     });
-    expect(out).toContain("<scenario>");
+    // Scenario fragment IS in the prompt
     expect(out).toContain("barista");
+    expect(out).toContain("Italian");
+    // No Lisa-coach persona — the role person replaces it entirely. The
+    // word "Lisa" still appears in the "never mention being Lisa" guard,
+    // but it's never assigned as the persona's name.
+    expect(out).not.toContain("Your name is Lisa");
+    expect(out).not.toContain("You are a kind, patient");
+    expect(out).not.toContain("Bruno"); // role person doesn't know the user's name
+  });
+
+  it("ignores memory when a scenario is active (role-played stranger has no memory of the student)", () => {
+    const memory: CoachMemory = {
+      ...emptyCoachMemory(),
+      recent_topics: [
+        {
+          topic: "trip to Italy",
+          last_practiced_at: "2026-05-30T10:00:00.000Z",
+        },
+      ],
+      last_session_summary: "Talked about food.",
+    };
+    const out = buildCoachSystemPrompt({
+      targetLanguage: "it",
+      userDisplayName: "Bruno",
+      memory,
+      memoryDepth: "basic",
+      scenario: {
+        id: "coffee",
+        systemPromptFragment: "You are the barista at a small Italian café.",
+      },
+    });
+    expect(out).not.toContain("<context>");
+    expect(out).not.toContain("trip to Italy");
+    expect(out).not.toContain("Talked about food.");
   });
 });
