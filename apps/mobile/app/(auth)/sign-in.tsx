@@ -114,7 +114,13 @@ export default function SignInScreen() {
       return;
     }
     if (!data.session) {
-      showToast("Check your inbox to confirm your email.");
+      // Signup succeeded but email confirmation is pending. Route to the
+      // code-entry screen instead of leaving the user stranded with a toast
+      // and no clear next step.
+      router.push({
+        pathname: "/(auth)/verify",
+        params: { email: trimmedEmail },
+      });
       return;
     }
     router.replace("/");
