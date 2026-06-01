@@ -32,7 +32,7 @@ import type { ChatMessage } from "@/src/features/practice/types";
 import { MessageBubble } from "@/src/features/practice/MessageBubble";
 import { MicButton } from "@/src/features/practice/MicButton";
 import { TopStatusBar } from "@/src/features/practice/top-status-bar";
-import { EndButtonCoachmark } from "@/src/features/practice/end-button-coachmark";
+import { EndSessionCTA } from "@/src/features/practice/end-session-cta";
 import { useSessionTimer } from "@/src/features/practice/use-session-timer";
 import { useGoalReward } from "@/src/features/practice/use-goal-reward";
 import { GoalReward } from "@/src/features/practice/goal-reward";
@@ -42,6 +42,7 @@ import {
   type RecentSession,
 } from "@/src/features/practice/use-recent-sessions";
 import { supabase } from "@/src/lib/supabase";
+import { useActiveSession } from "@/src/features/practice/active-session-store";
 
 function useCurrentStreak() {
   return useQuery<number>({
@@ -239,6 +240,11 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   const displayName = profile?.display_name ?? "there";
   const nativeLang = profile?.native_lang ?? "en";
   const goalMinutes = profile?.daily_goal_minutes ?? 10;
+  // TODO: add memory_enabled to the generated Supabase profile type when types
+  // are regenerated. Until then, cast to avoid any implicit-any lint error.
+  const memoryEnabled =
+    (profile as { memory_enabled?: boolean } | undefined)?.memory_enabled ??
+    false;
 
   const [startedAt] = useState<Date>(() => new Date());
 
@@ -247,6 +253,8 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     messages,
     listeningMode,
     revealedIds,
+    userTurnCount,
+    persistActive,
     start,
     stop,
     end,
@@ -270,6 +278,19 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     }, []),
   );
 
+  const setActiveConversationId = useActiveSession((s) => s.setConversationId);
+
+  useEffect(() => {
+    const id =
+      state.phase === "idle" ||
+      state.phase === "recording" ||
+      state.phase === "processing"
+        ? state.conversationId
+        : null;
+    setActiveConversationId(id);
+    return () => setActiveConversationId(null);
+  }, [state, setActiveConversationId]);
+
   const sessionActive =
     isFocused &&
     (state.phase === "idle" ||
@@ -277,6 +298,18 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       state.phase === "processing");
   const { seconds: sessionSeconds, reset: resetSessionTimer } =
     useSessionTimer(sessionActive);
+
+  // Persist current state to AsyncStorage so the stale-session guard can
+  // recover this session on next foreground / cold start. Re-persist when
+  // userTurnCount changes or when sessionSeconds crosses the 30s eligibility
+  // threshold (the boolean flips exactly once and triggers a single refresh).
+  useEffect(() => {
+    if (state.phase === "loading-session" || state.phase === "error") return;
+    void persistActive(sessionSeconds);
+    // Intentional: deps include the boolean `sessionSeconds >= 30` (flips once)
+    // and `userTurnCount` (fires on each user turn). Raw `sessionSeconds` is
+    // deliberately excluded so we don't persist on every timer tick.
+  }, [userTurnCount, sessionSeconds >= 30, state.phase, persistActive]);
 
   const todaySecondsAtStartRef = useRef(0);
   useEffect(() => {
@@ -313,55 +346,110 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     else if (state.phase === "recording") void stop();
   };
 
-  const onExit = () => {
-    Alert.alert(
-      "End conversation?",
-      "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.",
-      [
-        { text: "Keep talking", style: "cancel" },
-        {
-          text: "End & see feedback",
-          style: "default",
-          onPress: () => {
-            void (async () => {
-              let endResult: {
-                conversationId: string | null;
-                secondsSpoken: number;
-              } | null = null;
-              try {
-                endResult = await end();
-              } catch {
-                /* best-effort */
-              }
-              resetSessionTimer();
-              todaySecondsAtStartRef.current = 0;
-              await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
-                queryClient.invalidateQueries({
-                  queryKey: ["progress-summary"],
-                }),
-                queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
-                queryClient.invalidateQueries({
-                  queryKey: ["recent-sessions"],
-                }),
-              ]);
-              if (endResult?.conversationId) {
-                router.replace({
-                  pathname: "/(modals)/end-of-session",
-                  params: {
-                    conversationId: endResult.conversationId,
-                    secondsSpoken: String(endResult.secondsSpoken),
-                  },
-                });
-              } else {
-                router.replace("/(tabs)/practice");
-              }
-            })();
-          },
+  const confirmAndEnd = useCallback(() => {
+    const body = memoryEnabled
+      ? "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Plus your coach will remember what matters from this chat next time. Your practice time also goes toward your daily goal and streak."
+      : "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.";
+
+    Alert.alert("End conversation?", body, [
+      { text: "Keep talking", style: "cancel" },
+      {
+        text: "End & see feedback",
+        style: "default",
+        onPress: () => {
+          void (async () => {
+            let endResult: {
+              conversationId: string | null;
+              secondsSpoken: number;
+            } | null = null;
+            try {
+              endResult = await end();
+            } catch {
+              /* best-effort */
+            }
+            resetSessionTimer();
+            todaySecondsAtStartRef.current = 0;
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
+              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+              queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
+            ]);
+            if (endResult?.conversationId) {
+              router.replace({
+                pathname: "/(modals)/end-of-session",
+                params: {
+                  conversationId: endResult.conversationId,
+                  secondsSpoken: String(endResult.secondsSpoken),
+                },
+              });
+            } else {
+              router.replace("/(tabs)/practice");
+            }
+          })();
         },
-      ],
-    );
-  };
+      },
+    ]);
+  }, [memoryEnabled, end, queryClient, resetSessionTimer]);
+
+  const pendingTabName = useActiveSession((s) => s.pendingTabName);
+  const clearPendingTabSwitch = useActiveSession((s) => s.clearPendingTabSwitch);
+
+  useEffect(() => {
+    if (!pendingTabName) return;
+    const target = pendingTabName;
+    const body = memoryEnabled
+      ? "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Plus your coach will remember what matters from this chat next time. Your practice time also goes toward your daily goal and streak."
+      : "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.";
+
+    Alert.alert("End conversation?", body, [
+      {
+        text: "Just leave",
+        style: "cancel",
+        onPress: () => {
+          clearPendingTabSwitch();
+          router.push(`/(tabs)/${target}`);
+        },
+      },
+      {
+        text: "End & see feedback",
+        style: "default",
+        onPress: () => {
+          clearPendingTabSwitch();
+          void (async () => {
+            let endResult: {
+              conversationId: string | null;
+              secondsSpoken: number;
+            } | null = null;
+            try {
+              endResult = await end();
+            } catch {
+              /* best-effort */
+            }
+            resetSessionTimer();
+            todaySecondsAtStartRef.current = 0;
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
+              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+              queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
+            ]);
+            if (endResult?.conversationId) {
+              router.replace({
+                pathname: "/(modals)/end-of-session",
+                params: {
+                  conversationId: endResult.conversationId,
+                  secondsSpoken: String(endResult.secondsSpoken),
+                },
+              });
+            } else {
+              router.replace(`/(tabs)/${target}`);
+            }
+          })();
+        },
+      },
+    ]);
+  }, [pendingTabName, memoryEnabled, end, queryClient, resetSessionTimer, clearPendingTabSwitch]);
 
   if (state.phase === "loading-session") {
     return (
@@ -469,10 +557,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
           (Date.now() - startedAt.getTime()) / 60000,
         )}
         shareMessages={messages.map((m) => ({ role: m.role, text: m.text }))}
-        onExit={onExit}
       />
-
-      <EndButtonCoachmark />
 
       <View style={[activeStyles.micBar, { bottom: micBarBottom }]}>
         {state.phase === "processing" && (
@@ -487,6 +572,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             </EditorialText>
           </GlassCard>
         )}
+        <EndSessionCTA visible={userTurnCount >= 1} onPress={confirmAndEnd} />
         <MicButton
           onPress={onMicPress}
           isRecording={isRecording}
