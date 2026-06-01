@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import {
   useAudioRecorder,
@@ -188,21 +188,24 @@ export function useConversation(
   // Called by the Practice screen after each turn and on the session-timer
   // 30s threshold so the persisted "eligible" flag reflects the current
   // seconds spoken. The screen knows secondsSpoken; the hook knows turn count.
-  async function persistActive(secondsSpoken: number) {
-    const id = conversationIdRef.current;
-    if (!id) return;
-    const eligible = userTurnCount >= 1 && secondsSpoken >= 30;
-    const payload: PersistedActiveSession = {
-      conversationId: id,
-      lastActivityAt: Date.now(),
-      eligible,
-    };
-    try {
-      await AsyncStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(payload));
-    } catch {
-      // best-effort — persistence failure should not break the conversation
-    }
-  }
+  const persistActive = useCallback(
+    async (secondsSpoken: number) => {
+      const id = conversationIdRef.current;
+      if (!id) return;
+      const eligible = userTurnCount >= 1 && secondsSpoken >= 30;
+      const payload: PersistedActiveSession = {
+        conversationId: id,
+        lastActivityAt: Date.now(),
+        eligible,
+      };
+      try {
+        await AsyncStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(payload));
+      } catch {
+        // best-effort — persistence failure should not break the conversation
+      }
+    },
+    [userTurnCount],
+  );
 
   async function start() {
     if (state.phase !== "idle") return;
