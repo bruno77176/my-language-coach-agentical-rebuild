@@ -12,12 +12,21 @@ import {
   type SoftErrorCode,
   type SupportedLang,
 } from "@language-coach/shared";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { configureForRecording } from "@/src/lib/audio-session";
 import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
 import { playOnce } from "./audio-controller";
+
+export const ACTIVE_SESSION_KEY = "active-session.v1";
+
+export type PersistedActiveSession = {
+  conversationId: string;
+  lastActivityAt: number; // ms epoch
+  eligible: boolean;
+};
 
 // Bundled greeting MP3s — emergency fallback if the personalized greeting
 // (per-user, per-language, name spoken) can't be fetched / cached. Generic
@@ -85,6 +94,8 @@ export function useConversation(
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [listeningMode, setListeningMode] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const [userTurnCount, setUserTurnCount] = useState(0);
+  const [lastActivityAt, setLastActivityAt] = useState<number>(() => Date.now());
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const conversationIdRef = useRef<string | null>(null);
@@ -174,6 +185,25 @@ export function useConversation(
     };
   }, [targetLang, displayName, nativeLang, scenarioId]);
 
+  // Called by the Practice screen after each turn and on the session-timer
+  // 30s threshold so the persisted "eligible" flag reflects the current
+  // seconds spoken. The screen knows secondsSpoken; the hook knows turn count.
+  async function persistActive(secondsSpoken: number) {
+    const id = conversationIdRef.current;
+    if (!id) return;
+    const eligible = userTurnCount >= 1 && secondsSpoken >= 30;
+    const payload: PersistedActiveSession = {
+      conversationId: id,
+      lastActivityAt: Date.now(),
+      eligible,
+    };
+    try {
+      await AsyncStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(payload));
+    } catch {
+      // best-effort — persistence failure should not break the conversation
+    }
+  }
+
   async function start() {
     if (state.phase !== "idle") return;
     const conversationId = state.conversationId;
@@ -253,6 +283,8 @@ export function useConversation(
               audioDurationMs: durationMs,
             },
           ]);
+          setUserTurnCount((n) => n + 1);
+          setLastActivityAt(Date.now());
         } else if (event.type === "reply-chunk") {
           chunkTexts[event.index] = event.text;
           const accumText = chunkTexts.filter(Boolean).join(" ");
@@ -297,6 +329,7 @@ export function useConversation(
               prev.map((m) => (m.id === localId ? { ...m, id: serverId } : m)),
             );
           }
+          setLastActivityAt(Date.now());
         } else if (event.type === "error") {
           // Plan 8 M4: free-tier daily cap — open paywall instead of the
           // generic error screen. The backend returns HTTP 429 with
@@ -335,8 +368,12 @@ export function useConversation(
     secondsSpoken: number;
   }> {
     const conversationId = conversationIdRef.current;
-    if (!conversationId) return { conversationId: null, secondsSpoken: 0 };
+    if (!conversationId) {
+      await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
+      return { conversationId: null, secondsSpoken: 0 };
+    }
     const result = await endSession(conversationId);
+    await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
     return {
       conversationId,
       secondsSpoken: result.seconds_spoken ?? 0,
@@ -382,6 +419,9 @@ export function useConversation(
     messages,
     listeningMode,
     revealedIds,
+    userTurnCount,
+    lastActivityAt,
+    persistActive,
     start,
     stop,
     end,
