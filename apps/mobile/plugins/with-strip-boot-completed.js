@@ -1,4 +1,8 @@
-import { withAndroidManifest, type ConfigPlugin } from "expo/config-plugins";
+// Config plugin loaded as CommonJS — `@expo/config` evaluates this via Node's
+// classic require, so ESM syntax / TS would not load. Disable the
+// no-require-imports rule for this file only.
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { withAndroidManifest } = require("expo/config-plugins");
 
 /**
  * Strip BOOT_COMPLETED intent-filters from every <receiver> in the merged
@@ -19,33 +23,35 @@ import { withAndroidManifest, type ConfigPlugin } from "expo/config-plugins";
  * intent-filter list contains an action of BOOT_COMPLETED, and either
  * remove just that filter (when the receiver has multiple) or mark the
  * receiver itself for removal via `tools:node="remove"`.
+ *
+ * Note: kept as .js (not .ts) because @expo/config evaluates app.config.ts
+ * via a transformer that doesn't extend to nested requires — a .ts plugin
+ * import here breaks `npx expo config` and therefore EAS builds.
  */
-const withStripBootCompleted: ConfigPlugin = (config) =>
+const withStripBootCompleted = (config) =>
   withAndroidManifest(config, (cfg) => {
     const manifest = cfg.modResults.manifest;
-    const application = manifest.application?.[0];
+    const application = manifest.application && manifest.application[0];
     if (!application) return cfg;
 
-    // Ensure the tools namespace is available so tools:node attributes resolve.
-    const attrs = (manifest as unknown as { $?: Record<string, string> }).$;
+    const attrs = manifest.$;
     if (attrs && !attrs["xmlns:tools"]) {
       attrs["xmlns:tools"] = "http://schemas.android.com/tools";
     }
 
-    const receivers = application.receiver ?? [];
+    const receivers = application.receiver || [];
     for (const receiver of receivers) {
-      const filters = receiver["intent-filter"] ?? [];
+      const filters = receiver["intent-filter"] || [];
       const remaining = filters.filter((f) => {
-        const actions = f.action ?? [];
-        const hasBoot = actions.some(
+        const actions = f.action || [];
+        return !actions.some(
           (a) =>
-            a.$?.["android:name"] === "android.intent.action.BOOT_COMPLETED",
+            a.$ &&
+            a.$["android:name"] === "android.intent.action.BOOT_COMPLETED",
         );
-        return !hasBoot;
       });
-      if (remaining.length === filters.length) continue; // nothing to strip
+      if (remaining.length === filters.length) continue;
       if (remaining.length === 0) {
-        // Receiver only existed to handle BOOT_COMPLETED — remove it entirely.
         receiver.$ = {
           ...receiver.$,
           "tools:node": "remove",
@@ -58,4 +64,5 @@ const withStripBootCompleted: ConfigPlugin = (config) =>
     return cfg;
   });
 
-export default withStripBootCompleted;
+module.exports = withStripBootCompleted;
+module.exports.default = withStripBootCompleted;
