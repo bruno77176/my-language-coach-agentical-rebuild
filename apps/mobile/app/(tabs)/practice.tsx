@@ -280,16 +280,17 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
 
   const setActiveConversationId = useActiveSession((s) => s.setConversationId);
 
+  const activeConversationId =
+    state.phase === "idle" ||
+    state.phase === "recording" ||
+    state.phase === "processing"
+      ? state.conversationId
+      : null;
+
   useEffect(() => {
-    const id =
-      state.phase === "idle" ||
-      state.phase === "recording" ||
-      state.phase === "processing"
-        ? state.conversationId
-        : null;
-    setActiveConversationId(id);
+    setActiveConversationId(activeConversationId);
     return () => setActiveConversationId(null);
-  }, [state, setActiveConversationId]);
+  }, [activeConversationId, setActiveConversationId]);
 
   const sessionActive =
     isFocused &&
@@ -398,6 +399,10 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   useEffect(() => {
     if (!pendingTabName) return;
     const target = pendingTabName;
+    // Clear the trigger BEFORE showing the Alert so this effect doesn't
+    // re-fire and stack a second dialog if any other dep changes while
+    // the user is still deciding.
+    clearPendingTabSwitch();
     const body = memoryEnabled
       ? "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Plus your coach will remember what matters from this chat next time. Your practice time also goes toward your daily goal and streak."
       : "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.";
@@ -407,7 +412,6 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         text: "Just leave",
         style: "cancel",
         onPress: () => {
-          clearPendingTabSwitch();
           router.push(`/(tabs)/${target}`);
         },
       },
@@ -415,7 +419,6 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         text: "End & see feedback",
         style: "default",
         onPress: () => {
-          clearPendingTabSwitch();
           void (async () => {
             let endResult: {
               conversationId: string | null;
