@@ -15,17 +15,20 @@
 ## File map
 
 **Create:**
+
 - `apps/mobile/src/features/practice/active-session-store.ts` — Zustand store for active-session id + pending tab nav signal.
 - `apps/mobile/src/features/practice/end-session-cta.tsx` — Bottom CTA pill component.
 - `apps/mobile/src/features/practice/use-stale-session-guard.ts` — Hook that checks AsyncStorage and auto-ends stale sessions on foreground / cold start.
 
 **Modify:**
+
 - `apps/mobile/src/features/practice/use-conversation.ts` — Track `userTurnCount`, `lastActivityAt`; persist active session to AsyncStorage; clear on `end()`.
 - `apps/mobile/src/features/practice/top-status-bar.tsx` — Remove End pill + `onExit` prop.
 - `apps/mobile/app/(tabs)/practice.tsx` — Drop `EndButtonCoachmark`, add `EndSessionCTA`, set active-session store, respond to `pendingTabName`, branch confirm copy on `memory_enabled`.
 - `apps/mobile/app/(tabs)/_layout.tsx` — Attach `tabPress` listeners to Home/Progress/Profile that consult the store.
 
 **Delete:**
+
 - `apps/mobile/src/features/practice/end-button-coachmark.tsx`
 
 ---
@@ -33,6 +36,7 @@
 ## Task 1: Active-session Zustand store
 
 **Files:**
+
 - Create: `apps/mobile/src/features/practice/active-session-store.ts`
 
 - [ ] **Step 1: Create the store**
@@ -78,6 +82,7 @@ git commit -m "feat(practice): add active-session store for end-flow coordinatio
 ## Task 2: Track turn count + last activity, persist to AsyncStorage
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/practice/use-conversation.ts`
 
 The hook needs to (a) bump `userTurnCount` and `lastActivityAt` after each successful user turn, (b) persist `{conversationId, lastActivityAt, eligible}` to AsyncStorage on every change, (c) clear AsyncStorage on `end()`. We also need a way for the Practice screen to read `lastActivityAt` (so it can render the CTA after the first user turn) — we expose it via the hook return.
@@ -226,6 +231,7 @@ git commit -m "feat(practice): track userTurnCount + lastActivityAt, persist act
 ## Task 3: EndSessionCTA component
 
 **Files:**
+
 - Create: `apps/mobile/src/features/practice/end-session-cta.tsx`
 
 - [ ] **Step 1: Write the component**
@@ -320,6 +326,7 @@ git commit -m "feat(practice): add EndSessionCTA pill component"
 ## Task 4: Remove End pill from TopStatusBar
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/practice/top-status-bar.tsx`
 
 - [ ] **Step 1: Drop the `onExit` prop, the End pill JSX, and the related styles**
@@ -430,9 +437,11 @@ git commit -m "feat(practice): remove End pill from TopStatusBar"
 ## Task 5: Wire CTA, confirm flow, and store into Practice screen
 
 **Files:**
+
 - Modify: `apps/mobile/app/(tabs)/practice.tsx`
 
 This is the biggest task. It:
+
 1. Drops the `EndButtonCoachmark` import + render.
 2. Drops `onExit` from the `<TopStatusBar>` props.
 3. Imports + renders `<EndSessionCTA>`.
@@ -532,7 +541,13 @@ After the `useSessionTimer` line, add:
 useEffect(() => {
   if (state.phase === "loading-session" || state.phase === "error") return;
   void persistActive(sessionSeconds);
-}, [userTurnCount, sessionSeconds >= 30, state.phase, persistActive, sessionSeconds]);
+}, [
+  userTurnCount,
+  sessionSeconds >= 30,
+  state.phase,
+  persistActive,
+  sessionSeconds,
+]);
 ```
 
 (The intent is: persist on every turn, and once when the 30s threshold is crossed so `eligible` flips to true. The dependency `sessionSeconds >= 30` is fine — it changes value exactly once at the threshold. Some linters will warn about boolean dependencies; add `// eslint-disable-next-line react-hooks/exhaustive-deps` if needed.)
@@ -698,11 +713,7 @@ So the relevant chunk looks like:
     </GlassCard>
   )}
   <EndSessionCTA visible={userTurnCount >= 1} onPress={confirmAndEnd} />
-  <MicButton
-    onPress={onMicPress}
-    isRecording={isRecording}
-    isBusy={isBusy}
-  />
+  <MicButton onPress={onMicPress} isRecording={isRecording} isBusy={isBusy} />
 </View>
 ```
 
@@ -723,6 +734,7 @@ git commit -m "feat(practice): wire EndSessionCTA + active-session store + memor
 ## Task 6: Delete the old end-button coachmark
 
 **Files:**
+
 - Delete: `apps/mobile/src/features/practice/end-button-coachmark.tsx`
 
 - [ ] **Step 1: Confirm no remaining references**
@@ -755,6 +767,7 @@ git commit -m "chore(practice): remove orphaned EndButtonCoachmark"
 ## Task 7: Stale-session guard hook
 
 **Files:**
+
 - Create: `apps/mobile/src/features/practice/use-stale-session-guard.ts`
 
 The hook reads AsyncStorage, checks staleness + eligibility, and either calls `endSession` + routes to the feedback modal, or silently clears storage.
@@ -879,6 +892,7 @@ git commit -m "feat(practice): add stale-session guard hook"
 ## Task 8: Mount stale guard + tab-press interceptors in tabs layout
 
 **Files:**
+
 - Modify: `apps/mobile/app/(tabs)/_layout.tsx`
 
 - [ ] **Step 1: Replace the file**

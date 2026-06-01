@@ -95,7 +95,9 @@ export function useConversation(
   const [listeningMode, setListeningMode] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [userTurnCount, setUserTurnCount] = useState(0);
-  const [lastActivityAt, setLastActivityAt] = useState<number>(() => Date.now());
+  const [lastActivityAt, setLastActivityAt] = useState<number>(() =>
+    Date.now(),
+  );
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const conversationIdRef = useRef<string | null>(null);

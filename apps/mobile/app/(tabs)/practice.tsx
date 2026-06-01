@@ -394,7 +394,9 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   }, [memoryEnabled, end, queryClient, resetSessionTimer]);
 
   const pendingTabName = useActiveSession((s) => s.pendingTabName);
-  const clearPendingTabSwitch = useActiveSession((s) => s.clearPendingTabSwitch);
+  const clearPendingTabSwitch = useActiveSession(
+    (s) => s.clearPendingTabSwitch,
+  );
 
   useEffect(() => {
     if (!pendingTabName) return;
@@ -452,7 +454,14 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         },
       },
     ]);
-  }, [pendingTabName, memoryEnabled, end, queryClient, resetSessionTimer, clearPendingTabSwitch]);
+  }, [
+    pendingTabName,
+    memoryEnabled,
+    end,
+    queryClient,
+    resetSessionTimer,
+    clearPendingTabSwitch,
+  ]);
 
   if (state.phase === "loading-session") {
     return (

@@ -58,7 +58,7 @@ After every turn completion (user or coach) **and** on the initial `start()` cal
 ```ts
 await AsyncStorage.setItem(
   "active-session.v1",
-  JSON.stringify({ conversationId, lastActivityAt, eligible })
+  JSON.stringify({ conversationId, lastActivityAt, eligible }),
 );
 ```
 
