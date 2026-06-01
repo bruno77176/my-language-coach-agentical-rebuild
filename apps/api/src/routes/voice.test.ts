@@ -77,7 +77,11 @@ describe("POST /v1/voice/sessions/:id/end", () => {
       secondsSpoken: number;
       startedAt: Date;
     } | null;
-    profile: { timezone: string; dailyGoalMinutes: number } | null;
+    profile: {
+      timezone: string;
+      dailyGoalMinutes: number;
+      memoryEnabled?: boolean;
+    } | null;
   }) {
     return {
       query: {
@@ -121,7 +125,11 @@ describe("POST /v1/voice/sessions/:id/end", () => {
         secondsSpoken: 0,
         startedAt: new Date(Date.now() - 700 * 1000),
       },
-      profile: { timezone: "Europe/Paris", dailyGoalMinutes: 10 },
+      profile: {
+        timezone: "Europe/Paris",
+        dailyGoalMinutes: 10,
+        memoryEnabled: true,
+      },
     });
     const routes = createVoiceRoutes({
       db: fakeDb as never,
@@ -154,7 +162,11 @@ describe("POST /v1/voice/sessions/:id/end", () => {
         secondsSpoken: 0,
         startedAt: new Date(Date.now() - 120 * 1000),
       },
-      profile: { timezone: "Europe/Paris", dailyGoalMinutes: 10 },
+      profile: {
+        timezone: "Europe/Paris",
+        dailyGoalMinutes: 10,
+        memoryEnabled: true,
+      },
     });
     const routes = createVoiceRoutes({
       db: fakeDb as never,
@@ -172,7 +184,7 @@ describe("POST /v1/voice/sessions/:id/end", () => {
   it("returns 404 when conversation does not belong to user", async () => {
     const fakeDb = makeFakeDb({
       conversation: null,
-      profile: { timezone: "UTC", dailyGoalMinutes: 10 },
+      profile: { timezone: "UTC", dailyGoalMinutes: 10, memoryEnabled: true },
     });
     const routes = createVoiceRoutes({
       db: fakeDb as never,

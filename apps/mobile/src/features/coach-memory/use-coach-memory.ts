@@ -8,12 +8,16 @@ import type { CoachMemory } from "@language-coach/shared";
 
 export type CoachMemoryEntry = {
   language_code: string;
-  opted_out: boolean;
   memory: CoachMemory;
   updated_at: string;
 };
 
-async function fetchCoachMemory(): Promise<{ memories: CoachMemoryEntry[] }> {
+export type CoachMemoryResponse = {
+  memory_enabled: boolean;
+  memories: CoachMemoryEntry[];
+};
+
+async function fetchCoachMemory(): Promise<CoachMemoryResponse> {
   const res = await fetch(`${API_BASE_URL}/v1/memory`, {
     headers: {
       authorization: await authHeader(),
@@ -24,7 +28,7 @@ async function fetchCoachMemory(): Promise<{ memories: CoachMemoryEntry[] }> {
     const text = await res.text().catch(() => "");
     throw new Error(`fetchCoachMemory ${res.status}: ${text}`);
   }
-  return res.json() as Promise<{ memories: CoachMemoryEntry[] }>;
+  return res.json() as Promise<CoachMemoryResponse>;
 }
 
 export function useCoachMemory() {

@@ -39,6 +39,7 @@ type ProfileRow = {
   targetLang: string;
   dailyGoalMinutes: number;
   timezone: string;
+  memoryEnabled: boolean;
   createdAt: Date;
 };
 
@@ -85,6 +86,7 @@ function defaultProfile(): ProfileRow {
     targetLang: "es",
     dailyGoalMinutes: 10,
     timezone: "UTC",
+    memoryEnabled: true,
     createdAt: new Date(),
   };
 }

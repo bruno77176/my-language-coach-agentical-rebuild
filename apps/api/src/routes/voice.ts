@@ -230,14 +230,15 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     }
 
     // Load coach memory for this user × language (Plan 8 M1).
-    // parseCoachMemoryRow defensively returns null on corrupt data so we
-    // degrade to "no memory" rather than crashing or passing junk to the model.
+    // Consent is global (profiles.memory_enabled); when off we degrade to "no
+    // memory" for every language. parseCoachMemoryRow defensively returns null
+    // on corrupt data so we never crash or pass junk to the model.
     const memoryRow = await deps.db.query.coachMemory.findFirst({
       where: (t, { eq: e, and: a }) =>
         a(e(t.userId, userId), e(t.languageCode, conversation.language)),
     });
     const memory =
-      memoryRow && !memoryRow.optedOut ? parseCoachMemoryRow(memoryRow) : null;
+      memoryRow && profile.memoryEnabled ? parseCoachMemoryRow(memoryRow) : null;
     const memoryDepth =
       entitlement.plan === "pro" &&
       entitlement.proUntil &&
@@ -534,11 +535,12 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     // Plan 8 M1: fire-and-forget memory extraction. Never block the response.
     void (async () => {
       try {
+        // Global consent gate: skip extraction entirely when memory is off.
+        if (!profile.memoryEnabled) return;
         const memoryRow = await deps.db.query.coachMemory.findFirst({
           where: (t, { eq: e, and: a }) =>
             a(e(t.userId, userId), e(t.languageCode, conversation.language)),
         });
-        if (memoryRow?.optedOut) return;
         const existingMemory =
           parseCoachMemoryRow(memoryRow) ?? emptyCoachMemory();
         const transcript = await deps.db.query.messages.findMany({

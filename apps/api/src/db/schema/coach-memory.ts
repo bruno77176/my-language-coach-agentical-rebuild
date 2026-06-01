@@ -3,7 +3,6 @@ import {
   uuid,
   text,
   jsonb,
-  boolean,
   timestamp,
   primaryKey,
 } from "drizzle-orm/pg-core";
@@ -21,7 +20,6 @@ export const coachMemory = pgTable(
     weakAreas: jsonb("weak_areas").notNull().default([]),
     personalContext: jsonb("personal_context").notNull().default({}),
     lastSessionSummary: text("last_session_summary"),
-    optedOut: boolean("opted_out").notNull().default(false),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

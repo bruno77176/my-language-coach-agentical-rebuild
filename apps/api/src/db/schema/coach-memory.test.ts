@@ -12,7 +12,6 @@ describe("coach_memory schema", () => {
       "weakAreas",
       "personalContext",
       "lastSessionSummary",
-      "optedOut",
       "updatedAt",
     ]) {
       expect(cols).toContain(c);

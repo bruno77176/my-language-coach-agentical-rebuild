@@ -2,10 +2,9 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import type { Database } from "../db";
-import { coachMemory } from "../db/schema";
+import { coachMemory, profiles } from "../db/schema";
 import {
   CoachMemorySchema,
-  emptyCoachMemory,
   LANGUAGES,
   type CoachMemory,
 } from "@language-coach/shared";
@@ -14,9 +13,9 @@ export type MemoryDeps = { db: Database };
 
 const LANGUAGE_CODES = LANGUAGES.map((l) => l.code) as [string, ...string[]];
 
+// Consent is global: one flag per user governs memory for every language.
 const ConsentBody = z.object({
-  language_code: z.enum(LANGUAGE_CODES),
-  opted_out: z.boolean(),
+  enabled: z.boolean(),
 });
 
 const UpdateBody = z.object({
@@ -27,16 +26,19 @@ const UpdateBody = z.object({
 export function createMemoryRoutes(deps: MemoryDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
 
-  // GET /v1/memory - list all memories for the user (across languages)
+  // GET /v1/memory - global consent flag + all memories for the user
   routes.get("/", async (c) => {
     const userId = c.get("userId");
+    const profile = await deps.db.query.profiles.findFirst({
+      where: (t, { eq: e }) => e(t.userId, userId),
+    });
     const rows = await deps.db.query.coachMemory.findMany({
       where: (t, { eq: e }) => e(t.userId, userId),
     });
     return c.json({
+      memory_enabled: profile?.memoryEnabled ?? true,
       memories: rows.map((r) => ({
         language_code: r.languageCode,
-        opted_out: r.optedOut,
         memory: {
           proficiency_level: r.proficiencyLevel as
             | CoachMemory["proficiency_level"]
@@ -52,7 +54,7 @@ export function createMemoryRoutes(deps: MemoryDeps) {
     });
   });
 
-  // PUT /v1/memory/consent
+  // PUT /v1/memory/consent — global opt in/out for coach memory
   routes.put("/consent", async (c) => {
     const userId = c.get("userId");
     const body = await c.req.json().catch(() => ({}));
@@ -63,22 +65,10 @@ export function createMemoryRoutes(deps: MemoryDeps) {
         400,
       );
     }
-    const empty = emptyCoachMemory();
     await deps.db
-      .insert(coachMemory)
-      .values({
-        userId,
-        languageCode: parsed.data.language_code,
-        optedOut: parsed.data.opted_out,
-        recentTopics: empty.recent_topics,
-        weakAreas: empty.weak_areas,
-        personalContext: empty.personal_context,
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [coachMemory.userId, coachMemory.languageCode],
-        set: { optedOut: parsed.data.opted_out, updatedAt: new Date() },
-      });
+      .update(profiles)
+      .set({ memoryEnabled: parsed.data.enabled })
+      .where(eq(profiles.userId, userId));
     return c.json({ ok: true });
   });
 
@@ -93,18 +83,16 @@ export function createMemoryRoutes(deps: MemoryDeps) {
         400,
       );
     }
-    // Reject writes to opted-out rows — the editor must re-enable consent first.
-    const existing = await deps.db.query.coachMemory.findFirst({
-      where: (t, { eq: e, and: a }) =>
-        a(e(t.userId, userId), e(t.languageCode, parsed.data.language_code)),
+    // Reject edits while memory is globally disabled — re-enable consent first.
+    const profile = await deps.db.query.profiles.findFirst({
+      where: (t, { eq: e }) => e(t.userId, userId),
     });
-    if (existing?.optedOut) {
+    if (profile && !profile.memoryEnabled) {
       return c.json(
         {
           error: {
             code: "OPTED_OUT",
-            message:
-              "Memory is disabled for this language. Re-enable it before editing.",
+            message: "Memory is disabled. Re-enable it before editing.",
           },
         },
         409,

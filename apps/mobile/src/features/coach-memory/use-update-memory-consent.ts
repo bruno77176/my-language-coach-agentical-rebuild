@@ -6,8 +6,7 @@ import {
 } from "@/src/lib/api-client";
 
 export type UpdateConsentInput = {
-  languageCode: string;
-  optedOut: boolean;
+  enabled: boolean;
 };
 
 async function updateMemoryConsent(input: UpdateConsentInput): Promise<void> {
@@ -18,10 +17,7 @@ async function updateMemoryConsent(input: UpdateConsentInput): Promise<void> {
       "content-type": "application/json",
       ...clientPlatformHeader(),
     },
-    body: JSON.stringify({
-      language_code: input.languageCode,
-      opted_out: input.optedOut,
-    }),
+    body: JSON.stringify({ enabled: input.enabled }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");

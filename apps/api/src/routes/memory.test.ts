@@ -12,9 +12,10 @@ type MemoryRow = {
   weakAreas: unknown;
   personalContext: unknown;
   lastSessionSummary: string | null;
-  optedOut: boolean;
   updatedAt: Date;
 };
+
+type ProfileRow = { userId: string; memoryEnabled: boolean };
 
 function appWithMemory(routes: ReturnType<typeof createMemoryRoutes>) {
   const app = new Hono<{ Variables: { userId: string } }>();
@@ -26,24 +27,28 @@ function appWithMemory(routes: ReturnType<typeof createMemoryRoutes>) {
   return app;
 }
 
-function makeFakeDb(initial: MemoryRow[] = []) {
-  const rows: MemoryRow[] = [...initial];
+function makeFakeDb({
+  memoryRows = [] as MemoryRow[],
+  profile = { userId, memoryEnabled: true } as ProfileRow | undefined,
+} = {}) {
+  const rows: MemoryRow[] = [...memoryRows];
+  const profileRow: ProfileRow | undefined = profile
+    ? { ...profile }
+    : undefined;
 
   const fakeDb = {
     query: {
       coachMemory: {
-        findMany: vi.fn(async (opts: { where?: unknown }) => {
-          // Simulate Drizzle's relational query helpers — return all rows
-          // owned by the user (the tests only ever set one userId).
-          const _ = opts;
-          return rows.filter((r) => r.userId === userId);
-        }),
-        findFirst: vi.fn(async (_opts: { where?: unknown }) => {
-          // The PUT / handler calls findFirst to detect opted-out rows.
-          // Tests scope at most one row per (userId, languageCode), so
-          // returning the first matching row by userId is sufficient.
-          return rows.find((r) => r.userId === userId);
-        }),
+        findMany: vi.fn(async (_opts: { where?: unknown }) =>
+          rows.filter((r) => r.userId === userId),
+        ),
+        findFirst: vi.fn(async (_opts: { where?: unknown }) =>
+          rows.find((r) => r.userId === userId),
+        ),
+      },
+      profiles: {
+        // Global consent flag lives on the profile now.
+        findFirst: vi.fn(async (_opts: { where?: unknown }) => profileRow),
       },
     },
     insert: vi.fn(() => ({
@@ -66,7 +71,6 @@ function makeFakeDb(initial: MemoryRow[] = []) {
                 weakAreas: vals.weakAreas ?? [],
                 personalContext: vals.personalContext ?? {},
                 lastSessionSummary: vals.lastSessionSummary ?? null,
-                optedOut: vals.optedOut ?? false,
                 updatedAt: vals.updatedAt ?? new Date(),
               });
             }
@@ -74,18 +78,18 @@ function makeFakeDb(initial: MemoryRow[] = []) {
         ),
       })),
     })),
+    update: vi.fn(() => ({
+      set: vi.fn((vals: Partial<ProfileRow>) => ({
+        where: vi.fn(async () => {
+          if (profileRow) Object.assign(profileRow, vals);
+        }),
+      })),
+    })),
     delete: vi.fn(() => ({
-      where: vi.fn(async () => {
-        // Simplification: the tests' delete cases call DELETE
-        // /memory/:lang once, scoped to a known (userId, languageCode).
-        // We don't try to interpret the Drizzle expression — instead the
-        // test asserts on db.delete being called and then on a follow-up
-        // GET returning the right state. We delete based on the last
-        // values passed to a hypothetical filter we cannot inspect, so
-        // we rely on the test invoking delete with specific scope.
-      }),
+      where: vi.fn(async () => {}),
     })),
     _rows: rows,
+    profileRow: () => profileRow,
   };
 
   return fakeDb;
@@ -93,21 +97,33 @@ function makeFakeDb(initial: MemoryRow[] = []) {
 
 describe("memory routes", () => {
   describe("PUT /v1/memory/consent", () => {
-    it("returns ok and upserts a row with the consent flag", async () => {
+    it("sets the global memory_enabled flag on the profile", async () => {
       const db = makeFakeDb();
       const app = appWithMemory(createMemoryRoutes({ db: db as never }));
 
       const res = await app.request("/v1/memory/consent", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ language_code: "fr", opted_out: true }),
+        body: JSON.stringify({ enabled: false }),
       });
 
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ ok: true });
-      expect(db._rows).toHaveLength(1);
-      expect(db._rows[0]?.languageCode).toBe("fr");
-      expect(db._rows[0]?.optedOut).toBe(true);
+      expect(db.profileRow()?.memoryEnabled).toBe(false);
+    });
+
+    it("re-enables memory globally", async () => {
+      const db = makeFakeDb({ profile: { userId, memoryEnabled: false } });
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/consent", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enabled: true }),
+      });
+
+      expect(res.status).toBe(200);
+      expect(db.profileRow()?.memoryEnabled).toBe(true);
     });
 
     it("returns 400 on invalid body", async () => {
@@ -117,20 +133,7 @@ describe("memory routes", () => {
       const res = await app.request("/v1/memory/consent", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ language_code: "" }),
-      });
-
-      expect(res.status).toBe(400);
-    });
-
-    it("rejects unknown language_code with 400", async () => {
-      const db = makeFakeDb();
-      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
-
-      const res = await app.request("/v1/memory/consent", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ language_code: "xx", opted_out: true }),
+        body: JSON.stringify({ enabled: "yes" }),
       });
 
       expect(res.status).toBe(400);
@@ -183,20 +186,8 @@ describe("memory routes", () => {
       expect(res.status).toBe(400);
     });
 
-    it("returns 409 when the existing row is opted out", async () => {
-      const db = makeFakeDb([
-        {
-          userId,
-          languageCode: "fr",
-          proficiencyLevel: null,
-          recentTopics: [],
-          weakAreas: [],
-          personalContext: {},
-          lastSessionSummary: null,
-          optedOut: true,
-          updatedAt: new Date(),
-        },
-      ]);
+    it("returns 409 when memory is globally disabled", async () => {
+      const db = makeFakeDb({ profile: { userId, memoryEnabled: false } });
       const app = appWithMemory(createMemoryRoutes({ db: db as never }));
 
       const res = await app.request("/v1/memory", {
@@ -219,60 +210,70 @@ describe("memory routes", () => {
         error: { code: string; message: string };
       };
       expect(body.error.code).toBe("OPTED_OUT");
-      // Existing row should still be opted out & unchanged
-      expect(db._rows[0]?.optedOut).toBe(true);
-      expect(db._rows[0]?.weakAreas).toEqual([]);
+      // No memory row should have been written.
+      expect(db._rows).toHaveLength(0);
     });
   });
 
   describe("GET /v1/memory", () => {
-    it("returns the user's memories array", async () => {
-      const db = makeFakeDb([
-        {
-          userId,
-          languageCode: "fr",
-          proficiencyLevel: "B2",
-          recentTopics: [],
-          weakAreas: ["gender agreement"],
-          personalContext: { hobbies: ["reading"] },
-          lastSessionSummary: "Discussed books",
-          optedOut: false,
-          updatedAt: new Date("2026-05-29T00:00:00Z"),
-        },
-      ]);
+    it("returns the global flag plus the user's memories array", async () => {
+      const db = makeFakeDb({
+        memoryRows: [
+          {
+            userId,
+            languageCode: "fr",
+            proficiencyLevel: "B2",
+            recentTopics: [],
+            weakAreas: ["gender agreement"],
+            personalContext: { hobbies: ["reading"] },
+            lastSessionSummary: "Discussed books",
+            updatedAt: new Date("2026-05-29T00:00:00Z"),
+          },
+        ],
+      });
       const app = appWithMemory(createMemoryRoutes({ db: db as never }));
 
       const res = await app.request("/v1/memory");
       expect(res.status).toBe(200);
       const body = (await res.json()) as {
+        memory_enabled: boolean;
         memories: Array<{
           language_code: string;
-          opted_out: boolean;
           memory: { proficiency_level: string | null };
         }>;
       };
+      expect(body.memory_enabled).toBe(true);
       expect(body.memories).toHaveLength(1);
       expect(body.memories[0]?.language_code).toBe("fr");
-      expect(body.memories[0]?.opted_out).toBe(false);
       expect(body.memories[0]?.memory.proficiency_level).toBe("B2");
+    });
+
+    it("reports memory_enabled=false when the profile is opted out", async () => {
+      const db = makeFakeDb({ profile: { userId, memoryEnabled: false } });
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory");
+      const body = (await res.json()) as { memory_enabled: boolean };
+      expect(body.memory_enabled).toBe(false);
     });
   });
 
   describe("DELETE /v1/memory/:lang", () => {
     it("calls db.delete and returns ok", async () => {
-      const db = makeFakeDb([
-        {
-          userId,
-          languageCode: "fr",
-          proficiencyLevel: null,
-          recentTopics: [],
-          weakAreas: [],
-          personalContext: {},
-          lastSessionSummary: null,
-          optedOut: false,
-          updatedAt: new Date(),
-        },
-      ]);
+      const db = makeFakeDb({
+        memoryRows: [
+          {
+            userId,
+            languageCode: "fr",
+            proficiencyLevel: null,
+            recentTopics: [],
+            weakAreas: [],
+            personalContext: {},
+            lastSessionSummary: null,
+            updatedAt: new Date(),
+          },
+        ],
+      });
       const app = appWithMemory(createMemoryRoutes({ db: db as never }));
 
       const res = await app.request("/v1/memory/fr", {

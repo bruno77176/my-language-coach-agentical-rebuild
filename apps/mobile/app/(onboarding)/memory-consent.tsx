@@ -8,22 +8,16 @@ import {
   shadow,
   spacing,
 } from "@language-coach/design-tokens";
-import { useProfile } from "@/src/features/auth/use-profile";
 import { useUpdateMemoryConsent } from "@/src/features/coach-memory/use-update-memory-consent";
 
 export default function MemoryConsentScreen() {
-  const { data: profile } = useProfile();
-  const targetLang = profile?.target_lang ?? "en";
   const [busy, setBusy] = useState(false);
   const updateConsent = useUpdateMemoryConsent();
 
-  const onAccept = async () => {
+  const setConsent = async (enabled: boolean) => {
     setBusy(true);
     try {
-      await updateConsent.mutateAsync({
-        languageCode: targetLang,
-        optedOut: false,
-      });
+      await updateConsent.mutateAsync({ enabled });
       router.replace("/(tabs)/home");
     } catch (e) {
       Alert.alert("Couldn't save your choice", String(e));
@@ -33,21 +27,8 @@ export default function MemoryConsentScreen() {
     }
   };
 
-  const onSkip = async () => {
-    setBusy(true);
-    try {
-      await updateConsent.mutateAsync({
-        languageCode: targetLang,
-        optedOut: true,
-      });
-      router.replace("/(tabs)/home");
-    } catch (e) {
-      Alert.alert("Couldn't save your choice", String(e));
-      router.replace("/(tabs)/home");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const onAccept = () => setConsent(true);
+  const onSkip = () => setConsent(false);
 
   return (
     <View style={styles.container}>

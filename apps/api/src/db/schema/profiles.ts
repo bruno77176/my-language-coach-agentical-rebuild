@@ -1,4 +1,11 @@
-import { pgTable, uuid, text, integer, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  integer,
+  boolean,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const profiles = pgTable("profiles", {
   userId: uuid("user_id").primaryKey(),
@@ -7,6 +14,9 @@ export const profiles = pgTable("profiles", {
   targetLang: text("target_lang").notNull(),
   dailyGoalMinutes: integer("daily_goal_minutes").notNull().default(10),
   timezone: text("timezone").notNull(),
+  // Global coach-memory consent: one switch governs whether any coach
+  // remembers this user, across every language.
+  memoryEnabled: boolean("memory_enabled").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
