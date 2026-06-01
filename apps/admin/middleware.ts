@@ -3,7 +3,6 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 export async function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith("/login")) return NextResponse.next();
-  if (req.nextUrl.pathname.startsWith("/auth/")) return NextResponse.next();
 
   const res = NextResponse.next();
   const sb = createServerClient(
