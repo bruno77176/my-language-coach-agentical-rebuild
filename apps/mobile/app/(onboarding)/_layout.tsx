@@ -14,6 +14,12 @@ export default function OnboardingLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: "transparent" },
+          // Default native-stack slide on Android renders source + destination
+          // side-by-side while both 12-item lists mount, causing the lag
+          // between native-lang and target-lang. Fade lets the destination
+          // mount under the source so the transition feels instant.
+          animation: "fade",
+          animationDuration: 180,
         }}
       />
     </Screen>

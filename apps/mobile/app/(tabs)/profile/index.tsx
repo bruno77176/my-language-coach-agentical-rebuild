@@ -1,5 +1,12 @@
 import { useRef } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import {
   BottomSheetModalProvider,
   type BottomSheetModal,
@@ -80,10 +87,13 @@ export default function ProfileScreen() {
 
   const initial = profile.display_name?.[0]?.toUpperCase() ?? "?";
   const version = Constants.expoConfig?.version ?? "?";
+  // expoConfig holds both platform blocks regardless of which one we're
+  // running on, so a `??` chain that starts with android.versionCode would
+  // also show that number to iOS users. Branch on Platform.OS instead.
   const buildNumber =
-    Constants.expoConfig?.android?.versionCode ??
-    Constants.expoConfig?.ios?.buildNumber ??
-    "?";
+    (Platform.OS === "ios"
+      ? Constants.expoConfig?.ios?.buildNumber
+      : Constants.expoConfig?.android?.versionCode) ?? "?";
 
   return (
     <BottomSheetModalProvider>
