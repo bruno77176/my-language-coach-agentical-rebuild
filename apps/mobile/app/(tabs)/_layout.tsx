@@ -13,10 +13,10 @@ export default function TabsLayout() {
   // confirm Alert. We use getState() (not the hook) so a re-render of this
   // layout isn't triggered every time the store changes.
   const makeInterceptor = (tabName: string) => ({
-    tabPress: (e: { preventDefault?: () => void; defaultPrevented?: boolean }) => {
+    tabPress: (e: { preventDefault: () => void }) => {
       const s = useActiveSession.getState();
       if (!s.conversationId) return; // no active session — let the press go
-      e.preventDefault?.();
+      e.preventDefault();
       s.requestTabSwitch(tabName);
     },
   });
