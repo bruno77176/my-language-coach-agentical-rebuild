@@ -18,7 +18,6 @@ type Props = {
   shareStartedAt: Date;
   shareDurationMinutes: number;
   shareMessages: TranscriptMessage[];
-  onExit: () => void;
 };
 
 function formatMinSec(totalSeconds: number): string {
@@ -76,20 +75,8 @@ export function TopStatusBar(props: Props) {
           messages={props.shareMessages}
         />
 
-        {/* End pill — labeled, not just an X, so users discover that
-            ending generates the feedback report (Bruno's iPad feedback). */}
-        <Pressable onPress={props.onExit} hitSlop={8}>
-          <GlassCard radiusToken="pill" padding="xs" style={styles.endButton}>
-            <EditorialText
-              kind="bodySm"
-              color={palette.ink}
-              style={styles.endLabel}
-            >
-              End
-            </EditorialText>
-            <Ionicons name="chevron-forward" size={14} color={palette.ink} />
-          </GlassCard>
-        </Pressable>
+        {/* End action moved to a bottom CTA + auto-save flow.
+            See EndSessionCTA + use-stale-session-guard. */}
       </View>
     </View>
   );
@@ -122,12 +109,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  endButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  endLabel: { fontWeight: "600" },
 });
