@@ -9,6 +9,7 @@ import {
   ACTIVE_SESSION_KEY,
   type PersistedActiveSession,
 } from "./use-conversation";
+import { useActiveSession } from "./active-session-store";
 
 const STALE_AFTER_MS = 5 * 60 * 1000;
 
@@ -20,6 +21,7 @@ async function readPersisted(): Promise<PersistedActiveSession | null> {
     if (
       !parsed ||
       typeof parsed.conversationId !== "string" ||
+      parsed.conversationId.length === 0 ||
       typeof parsed.lastActivityAt !== "number" ||
       typeof parsed.eligible !== "boolean"
     ) {
@@ -42,28 +44,37 @@ export function useStaleSessionGuard() {
       const persisted = await readPersisted();
       if (!persisted) return;
 
+      // Bail if the persisted conversation is the one currently mounted on the
+      // Practice screen — the user is back from a >5min background but the
+      // in-memory conversation is still alive. Let them resume naturally; the
+      // manual end / tab-nav / fresh background will all still handle it.
+      const liveId = useActiveSession.getState().conversationId;
+      if (persisted.conversationId === liveId) return;
+
       const ageMs = Date.now() - persisted.lastActivityAt;
-      if (ageMs <= STALE_AFTER_MS) return; // not stale yet — leave alone
+      if (ageMs <= STALE_AFTER_MS) return; // not stale yet
 
       if (!persisted.eligible) {
-        // Stale but below the summary threshold — silent discard. No
-        // server call (the conversation row is left open; server-side
-        // cleanup can prune it later if needed).
+        // Stale but below the summary threshold — silent discard.
         await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
         return;
       }
 
-      // Stale + eligible — end on the server, then route to the feedback
-      // modal. endSession may throw if the row is already ended; we still
-      // clear storage in that case so we don't retry.
+      // Stale + eligible — try to end on the server. If endSession fails
+      // (offline, already ended, 5xx), we still clear local storage but DO
+      // NOT navigate to the feedback modal — a modal showing secondsSpoken=0
+      // and broken feedback is worse than silently dropping the recovery.
       let secondsSpoken = 0;
+      let endedOk = false;
       try {
         const res = await endSession(persisted.conversationId);
         secondsSpoken = res.seconds_spoken ?? 0;
+        endedOk = true;
       } catch {
-        // best-effort — server may have already ended this row
+        // best-effort
       }
       await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
+      if (!endedOk) return;
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
@@ -85,17 +96,13 @@ export function useStaleSessionGuard() {
   }
 
   useEffect(() => {
-    // Cold start: check once.
     void check();
-
-    // Background → foreground: check again.
     const sub = AppState.addEventListener("change", (next: AppStateStatus) => {
       if (next === "active") void check();
     });
     return () => sub.remove();
-    // The check closure captures queryClient (stable) and module-level
-    // helpers — re-running this effect on every render would be wasteful.
-    // react-hooks/exhaustive-deps would flag the empty dep array; intentional.
-    // (eslint-plugin-react-hooks is not loaded in this project's ESLint config)
+    // Empty deps are intentional: check() captures queryClient (stable across
+    // the QueryClientProvider lifetime) and module-level helpers; re-running
+    // this effect on every render would be wasteful.
   }, []);
 }
