@@ -358,6 +358,13 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         text: "End & see feedback",
         style: "default",
         onPress: () => {
+          // Clear the active-session store synchronously so the tab-press
+          // interceptors in (tabs)/_layout.tsx stop intercepting. The effect
+          // cleanup that nulls the store only fires on unmount or when
+          // activeConversationId changes — neither happens just from
+          // router.replace to a modal, so without this clear the popup keeps
+          // firing on every subsequent tab navigation.
+          setActiveConversationId(null);
           void (async () => {
             let endResult: {
               conversationId: string | null;
@@ -391,7 +398,13 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         },
       },
     ]);
-  }, [memoryEnabled, end, queryClient, resetSessionTimer]);
+  }, [
+    memoryEnabled,
+    end,
+    queryClient,
+    resetSessionTimer,
+    setActiveConversationId,
+  ]);
 
   const pendingTabName = useActiveSession((s) => s.pendingTabName);
   const clearPendingTabSwitch = useActiveSession(
@@ -421,6 +434,8 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         text: "End & see feedback",
         style: "default",
         onPress: () => {
+          // Same store-clear as confirmAndEnd — see comment there.
+          setActiveConversationId(null);
           void (async () => {
             let endResult: {
               conversationId: string | null;
@@ -461,6 +476,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     queryClient,
     resetSessionTimer,
     clearPendingTabSwitch,
+    setActiveConversationId,
   ]);
 
   if (state.phase === "loading-session") {
