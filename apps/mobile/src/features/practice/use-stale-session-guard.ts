@@ -76,7 +76,7 @@ export function useStaleSessionGuard() {
       await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
       // Also clear the in-memory active-session store so tab-press interceptors
       // stop firing the confirm dialog after a stale recovery.
-      useActiveSession.getState().setConversationId(null);
+      useActiveSession.getState().clearActive();
       if (!endedOk) return;
 
       await Promise.all([

@@ -62,11 +62,29 @@ function useCurrentStreak() {
 //   mounts a fresh session via useConversation, keyed on params so
 //   picking a new scenario tears down the old session cleanly.
 export default function PracticeScreen() {
-  const { scenarioId, start } = useLocalSearchParams<{
+  const { scenarioId: urlScenarioId, start: urlStart } = useLocalSearchParams<{
     scenarioId?: string;
     start?: string;
   }>();
+  // Prefer in-memory active-session params over URL state. After the user
+  // chose "Just leave" on a tab-nav popup, router.push to a sibling tab wipes
+  // the Practice tab's URL params; on return the URL is bare. Without this
+  // fallback we'd render the chooser and lose the live conversation.
+  const stored = useActiveSession((s) => s.activeStartParams);
+  const setCurrentTab = useActiveSession((s) => s.setCurrentTab);
+  const scenarioId = urlScenarioId ?? stored?.scenarioId;
+  const start = urlStart ?? stored?.start;
   const isActive = !!scenarioId || start === "free";
+
+  // Track that the user is on the Practice tab. Used by the tab interceptors
+  // in (tabs)/_layout.tsx so the popup only fires when leaving Practice,
+  // not between unrelated tabs like Progress -> Profile.
+  useFocusEffect(
+    useCallback(() => {
+      setCurrentTab("practice");
+      return () => setCurrentTab(null);
+    }, [setCurrentTab]),
+  );
 
   if (!isActive) {
     return <PracticeChooser />;
@@ -278,7 +296,8 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     }, []),
   );
 
-  const setActiveConversationId = useActiveSession((s) => s.setConversationId);
+  const setActive = useActiveSession((s) => s.setActive);
+  const clearActive = useActiveSession((s) => s.clearActive);
 
   const activeConversationId =
     state.phase === "idle" ||
@@ -288,9 +307,18 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       : null;
 
   useEffect(() => {
-    setActiveConversationId(activeConversationId);
-    return () => setActiveConversationId(null);
-  }, [activeConversationId, setActiveConversationId]);
+    if (activeConversationId) {
+      // Capture both the conversation id and the URL params so the Practice
+      // tab interceptor can restore the right route after a "Just leave".
+      setActive(activeConversationId, {
+        scenarioId,
+        start: scenarioId ? undefined : "free",
+      });
+    } else {
+      clearActive();
+    }
+    return () => clearActive();
+  }, [activeConversationId, scenarioId, setActive, clearActive]);
 
   const sessionActive =
     isFocused &&
@@ -364,7 +392,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
           // activeConversationId changes — neither happens just from
           // router.replace to a modal, so without this clear the popup keeps
           // firing on every subsequent tab navigation.
-          setActiveConversationId(null);
+          clearActive();
           void (async () => {
             let endResult: {
               conversationId: string | null;
@@ -398,13 +426,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         },
       },
     ]);
-  }, [
-    memoryEnabled,
-    end,
-    queryClient,
-    resetSessionTimer,
-    setActiveConversationId,
-  ]);
+  }, [memoryEnabled, end, queryClient, resetSessionTimer, clearActive]);
 
   const pendingTabName = useActiveSession((s) => s.pendingTabName);
   const clearPendingTabSwitch = useActiveSession(
@@ -435,7 +457,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         style: "default",
         onPress: () => {
           // Same store-clear as confirmAndEnd — see comment there.
-          setActiveConversationId(null);
+          clearActive();
           void (async () => {
             let endResult: {
               conversationId: string | null;
@@ -476,7 +498,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     queryClient,
     resetSessionTimer,
     clearPendingTabSwitch,
-    setActiveConversationId,
+    clearActive,
   ]);
 
   if (state.phase === "loading-session") {
