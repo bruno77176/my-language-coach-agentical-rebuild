@@ -12,12 +12,12 @@ export function filtersFromSearchParams(
   const get = (k: string): string | undefined =>
     sp instanceof URLSearchParams ? (sp.get(k) ?? undefined) : sp[k];
   const now = new Date();
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
+  // Anchored start so the default view never accidentally hides activity.
+  // Bump forward when 2026 data stops being relevant.
+  const defaultFrom = "2026-01-01";
   const today = now.toISOString().slice(0, 10);
   return {
-    from: get("from") ?? firstOfMonth,
+    from: get("from") ?? defaultFrom,
     to: get("to") ?? today,
     platform: get("platform"),
     service: get("service"),
