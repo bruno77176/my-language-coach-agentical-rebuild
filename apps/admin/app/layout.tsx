@@ -1,5 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export const metadata = { title: "Language Coach — Admin" };
 
@@ -20,6 +21,7 @@ export default function RootLayout({
             <Link href="/settings" className="ml-auto">
               Settings
             </Link>
+            <SignOutButton />
           </div>
         </nav>
         <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>

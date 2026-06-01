@@ -51,35 +51,50 @@ export default async function UsersPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
-              <tr key={i} className="border-t">
-                <td className="px-4 py-2">
-                  {r.userId ? (
-                    <Link
-                      href={`/users/${r.userId}?${q}`}
-                      className="text-blue-700 underline"
-                      title={r.userId}
-                    >
-                      {userLabel(r)}
-                    </Link>
-                  ) : (
-                    <span className="text-slate-400">unattributed</span>
-                  )}
-                  {r.userId && r.email && r.displayName ? (
-                    <span className="text-slate-500 ml-2">
-                      ({r.displayName})
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-4 py-2 text-right">{formatUsd(r.costUsd)}</td>
-                <td className="px-4 py-2 text-right">{r.eventCount}</td>
-                <td className="px-4 py-2 text-right text-slate-500">
-                  {r.lastSeenAt
-                    ? new Date(r.lastSeenAt).toLocaleDateString()
-                    : "—"}
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-4 py-10 text-center text-slate-500"
+                >
+                  No user activity in {f.from} → {f.to}. Widen the date range or
+                  click <span className="font-medium">Refresh data</span> after
+                  a practice session.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((r, i) => (
+                <tr key={i} className="border-t">
+                  <td className="px-4 py-2">
+                    {r.userId ? (
+                      <Link
+                        href={`/users/${r.userId}?${q}`}
+                        className="text-blue-700 underline"
+                        title={r.userId}
+                      >
+                        {userLabel(r)}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-400">unattributed</span>
+                    )}
+                    {r.userId && r.email && r.displayName ? (
+                      <span className="text-slate-500 ml-2">
+                        ({r.displayName})
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    {formatUsd(r.costUsd)}
+                  </td>
+                  <td className="px-4 py-2 text-right">{r.eventCount}</td>
+                  <td className="px-4 py-2 text-right text-slate-500">
+                    {r.lastSeenAt
+                      ? new Date(r.lastSeenAt).toLocaleDateString()
+                      : "—"}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
