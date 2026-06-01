@@ -238,7 +238,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         a(e(t.userId, userId), e(t.languageCode, conversation.language)),
     });
     const memory =
-      memoryRow && profile.memoryEnabled ? parseCoachMemoryRow(memoryRow) : null;
+      memoryRow && profile.memoryEnabled
+        ? parseCoachMemoryRow(memoryRow)
+        : null;
     const memoryDepth =
       entitlement.plan === "pro" &&
       entitlement.proUntil &&
