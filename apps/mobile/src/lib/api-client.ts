@@ -1,6 +1,7 @@
 import EventSource from "react-native-sse";
 import { Platform } from "react-native";
 import { supabase } from "./supabase";
+import type { TtsConfig } from "@language-coach/shared";
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
@@ -70,6 +71,33 @@ export async function endSession(
   return res.json() as Promise<EndSessionResponse>;
 }
 
+export type PreviewVoiceResponse = {
+  audioBase64: string;
+  contentType: string;
+};
+
+// Dev Voice Lab: synthesize a short sample in an arbitrary TTS config.
+export async function previewVoice(input: {
+  languageCode: string;
+  config: TtsConfig;
+  text?: string;
+}): Promise<PreviewVoiceResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/voice/preview`, {
+    method: "POST",
+    headers: {
+      authorization: await authHeader(),
+      "content-type": "application/json",
+      ...clientPlatformHeader(),
+    },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`previewVoice ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<PreviewVoiceResponse>;
+}
+
 export async function selfDeleteAccount(): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/v1/account-deletion/self`, {
     method: "POST",
@@ -109,6 +137,7 @@ type TurnEventName = "transcription" | "reply-chunk" | "done";
 export function streamTurn(
   conversationId: string,
   audioUri: string,
+  voiceConfig?: TtsConfig,
 ): {
   events: AsyncIterable<TurnEvent>;
   close: () => void;
@@ -123,6 +152,9 @@ export function streamTurn(
     name: "recording.m4a",
     type: "audio/m4a",
   } as unknown as Blob);
+  if (voiceConfig) {
+    form.append("voice_config", JSON.stringify(voiceConfig));
+  }
 
   const url = `${API_BASE_URL}/v1/voice/sessions/${conversationId}/turns`;
 
