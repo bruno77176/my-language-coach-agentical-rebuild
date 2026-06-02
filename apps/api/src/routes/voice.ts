@@ -15,11 +15,9 @@ import { canUseSecondsDaily } from "../lib/quota";
 import { ProviderError } from "../providers/deepgram";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
 import type { StreamInput, ChatMessage } from "../providers/openai";
-import type {
-  SynthesizeInput,
-  SynthesizeResult,
-} from "../providers/elevenlabs";
-import { voiceIdForLanguage } from "../providers/voice-map";
+import type { TtsResult } from "../providers/openai";
+import type { RoutedTtsInput } from "../providers/tts-router";
+import { parseTtsConfig } from "../providers/tts-config";
 import {
   buildCoachSystemPrompt,
   parseCoachMemoryRow,
@@ -32,9 +30,7 @@ import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
 
-export type SynthesizeSpeechFn = (
-  input: SynthesizeInput,
-) => Promise<SynthesizeResult>;
+export type SynthesizeSpeechFn = (input: RoutedTtsInput) => Promise<TtsResult>;
 
 export type UploadCoachAudioChunkFn = (input: {
   userId: string;
@@ -338,18 +334,29 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         const ttsPromises: Promise<void>[] = [];
         let fullCoachText = "";
         const turnSeq = Date.now(); // unique-per-turn for chunk paths
-        const voiceId = voiceIdForLanguage(conversation.language);
         // Capture outside the closure: TS drops the `conversation` non-null
-        // narrowing inside emitChunk (same reason voiceId is computed here).
+        // narrowing inside emitChunk.
         const languageCode = conversation.language;
+        // Optional per-turn voice override from the dev Voice Lab; junk →
+        // undefined so the router falls back to DEFAULT_TTS_CONFIG (production
+        // behavior). Auth is already enforced by the /v1 middleware.
+        const voiceConfigRaw = formData?.get("voice_config");
+        let voiceConfig: import("@language-coach/shared").TtsConfig | undefined;
+        if (typeof voiceConfigRaw === "string") {
+          try {
+            voiceConfig = parseTtsConfig(JSON.parse(voiceConfigRaw));
+          } catch {
+            voiceConfig = undefined;
+          }
+        }
 
         async function emitChunk(text: string, idx: number): Promise<void> {
-          let audio: SynthesizeResult;
+          let audio: TtsResult;
           try {
             audio = await deps.synthesizeSpeech({
               text,
-              voiceId,
               languageCode,
+              config: voiceConfig,
               onUsage,
             });
           } catch {

@@ -18,9 +18,10 @@ import { createDeepgram, transcribeAudio } from "./providers/deepgram";
 import {
   createOpenAI,
   streamChatCompletion,
-  synthesizeSpeechOpenAI,
   translateMessage,
 } from "./providers/openai";
+import { createElevenLabs } from "./providers/elevenlabs";
+import { makeSynthesizeSpeech } from "./providers/tts-router";
 import { createMessagesRoutes } from "./routes/messages";
 import { createMemoryRoutes } from "./routes/memory";
 import { createFeedbackRoutes } from "./routes/feedback";
@@ -198,6 +199,10 @@ export function createApp(
 
   const deepgram = createDeepgram(env);
   const openai = createOpenAI(env);
+  const eleven = createElevenLabs(env);
+  // Provider-agnostic TTS: no config (or default config) reproduces today's
+  // OpenAI/nova behavior; the dev Voice Lab can pass a per-turn override.
+  const synthesizeSpeech = makeSynthesizeSpeech(openai, eleven);
   const storage = createStorageClient(env);
 
   app.route(
@@ -206,11 +211,7 @@ export function createApp(
       db,
       transcribeAudio: (input) => transcribeAudio(deepgram, input),
       streamChatCompletion: (input) => streamChatCompletion(openai, input),
-      // TTS via OpenAI (ElevenLabs free + pay-as-you-go credits both block
-      // library voices via API; only Creator subscription tier unlocks them).
-      // Swap back to ElevenLabs by importing from ./providers/elevenlabs
-      // once we're on a paid subscription.
-      synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
+      synthesizeSpeech,
       uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
       extractMemory: (input) => extractMemory(openai, input),
       generateFeedback: (input) => generateFeedback(openai, input),
@@ -222,7 +223,7 @@ export function createApp(
     createMessagesRoutes({
       db,
       translate: (input) => translateMessage(openai, input),
-      synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
+      synthesizeSpeech,
       uploadCoachAudioChunk: (input) => uploadCoachAudioChunk(storage, input),
       getCachedAudioUrl: (input) => getCachedCoachAudioUrl(storage, input),
     }),
@@ -232,7 +233,7 @@ export function createApp(
     "/v1/voice/greeting",
     createVoiceGreetingRoutes({
       db,
-      synthesizeSpeech: (input) => synthesizeSpeechOpenAI(openai, input),
+      synthesizeSpeech,
       uploadGreeting: (input) => uploadGreetingAudio(storage, input),
       getCachedGreetingUrl: (input) => getGreetingAudioUrl(storage, input),
     }),

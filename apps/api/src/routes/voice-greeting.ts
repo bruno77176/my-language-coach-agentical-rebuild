@@ -8,8 +8,8 @@ import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
 export type SynthesizeGreetingFn = (input: {
   text: string;
-  voiceId: string;
   languageCode?: string;
+  config?: import("@language-coach/shared").TtsConfig;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -73,7 +73,6 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
     try {
       audio = await deps.synthesizeSpeech({
         text,
-        voiceId: "nova",
         languageCode: lang,
         onUsage,
       });
