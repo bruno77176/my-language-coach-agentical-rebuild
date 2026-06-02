@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { Database } from "../db";
 import { messages } from "../db/schema/messages";
 import type { OnUsage } from "../providers/usage";
+import type { TtsConfig } from "@language-coach/shared";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
 export type TranslateInput = {
@@ -14,8 +15,8 @@ export type TranslateFn = (input: TranslateInput) => Promise<string>;
 
 export type SynthesizeSpeechFn = (input: {
   text: string;
-  voiceId: string;
   languageCode?: string;
+  config?: TtsConfig;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -140,7 +141,6 @@ export function createMessagesRoutes(deps: MessagesDeps) {
     try {
       audio = await deps.synthesizeSpeech({
         text: message.text,
-        voiceId: "nova",
         languageCode: message.conversation.language,
         onUsage,
       });

@@ -75,4 +75,27 @@ describe("synthesizeSpeech", () => {
     expect(result.contentType).toBe("audio/mpeg");
     expect(result.audioBuffer.byteLength).toBe(3);
   });
+
+  it("passes language_code and voice_settings derived from speed/style", async () => {
+    const stream = vi.fn().mockResolvedValue(
+      (async function* () {
+        yield new Uint8Array([1, 2, 3]);
+      })(),
+    );
+    const client = { textToSpeech: { stream } } as never;
+
+    await synthesizeSpeech(client, {
+      text: "Ciao",
+      voiceId: "EXAVITQu4vr4xnSDxMaL",
+      languageCode: "it",
+      speed: 1.1,
+      style: "energetic",
+    });
+
+    const [voiceId, opts] = stream.mock.calls[0]!;
+    expect(voiceId).toBe("EXAVITQu4vr4xnSDxMaL");
+    expect(opts.languageCode).toBe("it");
+    expect(opts.voiceSettings.speed).toBe(1.1);
+    expect(opts.voiceSettings).toHaveProperty("stability");
+  });
 });

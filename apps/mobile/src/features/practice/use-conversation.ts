@@ -19,6 +19,7 @@ import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
 import { playOnce } from "./audio-controller";
+import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
 
 export const ACTIVE_SESSION_KEY = "active-session.v1";
 
@@ -261,8 +262,12 @@ export function useConversation(
       // source of truth. Client heuristic was unreliable (recorder.getStatus()
       // returns 0 after stop()).
 
-      // Stream turn — handle the chunk-based protocol
-      const { events } = streamTurn(conversationId, uri);
+      // Stream turn — handle the chunk-based protocol. Read the dev Voice Lab
+      // override imperatively (not as a reactive hook) so it never lands in a
+      // dependency array; when disabled, undefined => backend defaults.
+      const vl = useVoiceLab.getState();
+      const voiceOverride = vl.overrideEnabled ? vl.config : undefined;
+      const { events } = streamTurn(conversationId, uri, voiceOverride);
       const audioQueue = new AudioQueue({
         playChunk: async (chunk) => {
           await playOnce({

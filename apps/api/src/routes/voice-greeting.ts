@@ -1,15 +1,19 @@
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
 import { z } from "zod";
-import { buildGreeting, type SupportedLang } from "@language-coach/shared";
+import {
+  buildGreeting,
+  type SupportedLang,
+  type TtsConfig,
+} from "@language-coach/shared";
 import type { Database } from "../db";
 import type { OnUsage } from "../providers/usage";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
 export type SynthesizeGreetingFn = (input: {
   text: string;
-  voiceId: string;
   languageCode?: string;
+  config?: TtsConfig;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -73,7 +77,6 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
     try {
       audio = await deps.synthesizeSpeech({
         text,
-        voiceId: "nova",
         languageCode: lang,
         onUsage,
       });

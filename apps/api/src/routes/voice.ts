@@ -15,26 +15,26 @@ import { canUseSecondsDaily } from "../lib/quota";
 import { ProviderError } from "../providers/deepgram";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
 import type { StreamInput, ChatMessage } from "../providers/openai";
-import type {
-  SynthesizeInput,
-  SynthesizeResult,
-} from "../providers/elevenlabs";
-import { voiceIdForLanguage } from "../providers/voice-map";
+import type { TtsResult } from "../providers/openai";
+import type { RoutedTtsInput } from "../providers/tts-router";
+import { parseTtsConfig } from "../providers/tts-config";
 import {
   buildCoachSystemPrompt,
   parseCoachMemoryRow,
   emptyCoachMemory,
   ROLE_PLAY_SCENARIOS,
 } from "@language-coach/shared";
-import type { CoachMemory, SessionFeedback } from "@language-coach/shared";
+import type {
+  CoachMemory,
+  SessionFeedback,
+  TtsConfig,
+} from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
 
-export type SynthesizeSpeechFn = (
-  input: SynthesizeInput,
-) => Promise<SynthesizeResult>;
+export type SynthesizeSpeechFn = (input: RoutedTtsInput) => Promise<TtsResult>;
 
 export type UploadCoachAudioChunkFn = (input: {
   userId: string;
@@ -338,18 +338,29 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         const ttsPromises: Promise<void>[] = [];
         let fullCoachText = "";
         const turnSeq = Date.now(); // unique-per-turn for chunk paths
-        const voiceId = voiceIdForLanguage(conversation.language);
         // Capture outside the closure: TS drops the `conversation` non-null
-        // narrowing inside emitChunk (same reason voiceId is computed here).
+        // narrowing inside emitChunk.
         const languageCode = conversation.language;
+        // Optional per-turn voice override from the dev Voice Lab; junk →
+        // undefined so the router falls back to DEFAULT_TTS_CONFIG (production
+        // behavior). Auth is already enforced by the /v1 middleware.
+        const voiceConfigRaw = formData?.get("voice_config");
+        let voiceConfig: TtsConfig | undefined;
+        if (typeof voiceConfigRaw === "string") {
+          try {
+            voiceConfig = parseTtsConfig(JSON.parse(voiceConfigRaw));
+          } catch {
+            voiceConfig = undefined;
+          }
+        }
 
         async function emitChunk(text: string, idx: number): Promise<void> {
-          let audio: SynthesizeResult;
+          let audio: TtsResult;
           try {
             audio = await deps.synthesizeSpeech({
               text,
-              voiceId,
               languageCode,
+              config: voiceConfig,
               onUsage,
             });
           } catch {
@@ -666,6 +677,36 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       seconds_spoken: sessionDurationSec,
       goal_reached: goalReached,
     });
+  });
+
+  // Dev voice-lab preview: synthesize a short sample in any config. No quota
+  // (dev tool); auth still required via the /v1 middleware.
+  const PREVIEW_SAMPLES: Record<string, string> = {
+    es: "Hola, soy tu entrenador. ¿Qué te gustaría practicar hoy?",
+    it: "Ciao, sono il tuo allenatore. Cosa ti piacerebbe praticare oggi?",
+  };
+  routes.post("/preview", async (c) => {
+    const body = await c.req
+      .json()
+      .catch(() => ({}) as Record<string, unknown>);
+    const languageCode =
+      typeof body.languageCode === "string" ? body.languageCode : "en";
+    const config = parseTtsConfig(body.config);
+    const text =
+      typeof body.text === "string" && body.text.trim()
+        ? body.text
+        : (PREVIEW_SAMPLES[languageCode] ??
+          "Hello, I am your coach. What would you like to practice today?");
+    try {
+      const audio = await deps.synthesizeSpeech({ text, languageCode, config });
+      return c.json({
+        audioBase64: audio.audioBuffer.toString("base64"),
+        contentType: audio.contentType,
+      });
+    } catch (err) {
+      const message = (err as Error).message ?? "TTS failed";
+      return c.json({ error: { code: "TTS_PROVIDER_FAILURE", message } }, 503);
+    }
   });
 
   return routes;

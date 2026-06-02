@@ -2,6 +2,8 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
 import type { OnUsage } from "./usage";
+import type { TtsStyle } from "@language-coach/shared";
+import { elevenLabsStyleSettings } from "./tts-config";
 
 export function createElevenLabs(env: Env): ElevenLabsClient {
   return new ElevenLabsClient({ apiKey: env.ELEVENLABS_API_KEY });
@@ -13,6 +15,8 @@ export type SynthesizeInput = {
   // Target language of `text`; threaded through so the active TTS provider can
   // pin the spoken language instead of auto-detecting it (see openai.ts).
   languageCode?: string;
+  speed?: number;
+  style?: TtsStyle;
   modelId?: string;
   onUsage?: OnUsage;
 };
@@ -31,9 +35,17 @@ export async function synthesizeSpeech(
     // Cast: SDK types stream() as returning ReadableStream<Uint8Array>, but
     // Web ReadableStream is async-iterable in Node 20+ and our tests mock it
     // as a plain AsyncGenerator. Either way, `for await` consumes it.
+    const settings = elevenLabsStyleSettings(input.style ?? "warm");
+    const elSpeed = Math.min(1.2, Math.max(0.7, input.speed ?? 1.0));
     stream = (await client.textToSpeech.stream(input.voiceId, {
       text: input.text,
       modelId: input.modelId ?? "eleven_flash_v2_5",
+      languageCode: input.languageCode,
+      voiceSettings: {
+        stability: settings.stability,
+        style: settings.style,
+        speed: elSpeed,
+      },
       outputFormat: "mp3_44100_128",
     })) as unknown as AsyncIterable<Uint8Array>;
   } catch (err) {
