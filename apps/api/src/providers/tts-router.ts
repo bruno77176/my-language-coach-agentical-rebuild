@@ -24,7 +24,10 @@ export type RoutedTtsInput = {
 export function makeSynthesizeSpeech(
   openai: OpenAI,
   eleven: ElevenLabsClient,
-  openAiSynth: (c: OpenAI, i: TtsInput) => Promise<TtsResult> = synthesizeSpeechOpenAI,
+  openAiSynth: (
+    c: OpenAI,
+    i: TtsInput,
+  ) => Promise<TtsResult> = synthesizeSpeechOpenAI,
   elevenSynth: (
     c: ElevenLabsClient,
     i: SynthesizeInput,

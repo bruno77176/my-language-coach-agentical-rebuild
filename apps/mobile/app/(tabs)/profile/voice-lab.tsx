@@ -36,10 +36,7 @@ function Chip({
       onPress={onPress}
       style={[styles.chip, active && styles.chipActive]}
     >
-      <EditorialText
-        kind="bodySm"
-        color={active ? palette.cream : palette.ink}
-      >
+      <EditorialText kind="bodySm" color={active ? palette.cream : palette.ink}>
         {label}
       </EditorialText>
     </Pressable>
@@ -88,9 +85,14 @@ export default function VoiceLabScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.container}>
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.note}>
-          Dev tool — pick a provider, voice, speed and tone, then Preview. Toggle
-          “Apply to live conversation” to use the config in real practice turns.
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.note}
+        >
+          Dev tool — pick a provider, voice, speed and tone, then Preview.
+          Toggle “Apply to live conversation” to use the config in real practice
+          turns.
         </EditorialText>
 
         <EditorialText kind="caps" color={palette.inkSoft} style={styles.label}>
@@ -116,7 +118,8 @@ export default function VoiceLabScreen() {
               onPress={() =>
                 setConfig({
                   provider: p,
-                  voiceId: p === "openai" ? "nova" : ELEVENLABS_TTS_VOICES[0]!.id,
+                  voiceId:
+                    p === "openai" ? "nova" : ELEVENLABS_TTS_VOICES[0]!.id,
                 })
               }
             />
@@ -185,7 +188,11 @@ export default function VoiceLabScreen() {
           </EditorialText>
         </Pressable>
         {status ? (
-          <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.status}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.status}
+          >
             {status}
           </EditorialText>
         ) : null}
