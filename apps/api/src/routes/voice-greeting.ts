@@ -9,6 +9,7 @@ import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 export type SynthesizeGreetingFn = (input: {
   text: string;
   voiceId: string;
+  languageCode?: string;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -70,7 +71,12 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
 
     let audio: { audioBuffer: Buffer; contentType: string };
     try {
-      audio = await deps.synthesizeSpeech({ text, voiceId: "nova", onUsage });
+      audio = await deps.synthesizeSpeech({
+        text,
+        voiceId: "nova",
+        languageCode: lang,
+        onUsage,
+      });
     } catch {
       return c.json({ error: { code: "TTS_PROVIDER_FAILURE" } }, 503);
     }

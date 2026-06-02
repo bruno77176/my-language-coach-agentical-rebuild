@@ -339,11 +339,19 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         let fullCoachText = "";
         const turnSeq = Date.now(); // unique-per-turn for chunk paths
         const voiceId = voiceIdForLanguage(conversation.language);
+        // Capture outside the closure: TS drops the `conversation` non-null
+        // narrowing inside emitChunk (same reason voiceId is computed here).
+        const languageCode = conversation.language;
 
         async function emitChunk(text: string, idx: number): Promise<void> {
           let audio: SynthesizeResult;
           try {
-            audio = await deps.synthesizeSpeech({ text, voiceId, onUsage });
+            audio = await deps.synthesizeSpeech({
+              text,
+              voiceId,
+              languageCode,
+              onUsage,
+            });
           } catch {
             await stream.writeSSE({
               event: "error",

@@ -4,6 +4,7 @@ import {
   streamChatCompletion,
   synthesizeSpeechOpenAI,
   translateMessage,
+  ttsLanguageInstruction,
 } from "./openai";
 
 describe("streamChatCompletion", () => {
@@ -165,7 +166,7 @@ describe("openai usage instrumentation", () => {
     expect(onUsage).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "openai",
-        operation: "tts:tts-1",
+        operation: "tts:gpt-4o-mini-tts",
         characters: text.length,
       }),
     );
@@ -219,5 +220,50 @@ describe("openai usage instrumentation", () => {
     });
     expect(result.contentType).toBe("audio/mpeg");
     expect(result.audioBuffer.byteLength).toBe(8);
+  });
+});
+
+describe("TTS language forcing (wrong-language voice bug fix)", () => {
+  it("builds a language-pinning instruction from a known code", () => {
+    const es = ttsLanguageInstruction("es");
+    expect(es).toContain("Spanish");
+    expect(es).toMatch(/do NOT speak slowly/i);
+    expect(ttsLanguageInstruction("it")).toContain("Italian");
+  });
+
+  it("returns undefined for missing or unknown language codes", () => {
+    expect(ttsLanguageInstruction(undefined)).toBeUndefined();
+    expect(ttsLanguageInstruction("zz")).toBeUndefined();
+  });
+
+  it("sends gpt-4o-mini-tts + a language instruction when languageCode is set", async () => {
+    const create = vi.fn().mockResolvedValue({
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    });
+    const fakeClient = { audio: { speech: { create } } } as unknown as OpenAI;
+
+    await synthesizeSpeechOpenAI(fakeClient, {
+      text: "¿Qué es lo que más te gusta de tu trabajo?",
+      voiceId: "nova",
+      languageCode: "es",
+    });
+
+    expect(create).toHaveBeenCalledTimes(1);
+    const params = create.mock.calls[0]![0];
+    expect(params.model).toBe("gpt-4o-mini-tts");
+    expect(params.instructions).toContain("Spanish");
+  });
+
+  it("omits instructions entirely when no languageCode is given", async () => {
+    const create = vi.fn().mockResolvedValue({
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    });
+    const fakeClient = { audio: { speech: { create } } } as unknown as OpenAI;
+
+    await synthesizeSpeechOpenAI(fakeClient, { text: "hi", voiceId: "nova" });
+
+    const params = create.mock.calls[0]![0];
+    expect(params.model).toBe("gpt-4o-mini-tts");
+    expect(params.instructions).toBeUndefined();
   });
 });

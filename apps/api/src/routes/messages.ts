@@ -15,6 +15,7 @@ export type TranslateFn = (input: TranslateInput) => Promise<string>;
 export type SynthesizeSpeechFn = (input: {
   text: string;
   voiceId: string;
+  languageCode?: string;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -140,6 +141,7 @@ export function createMessagesRoutes(deps: MessagesDeps) {
       audio = await deps.synthesizeSpeech({
         text: message.text,
         voiceId: "nova",
+        languageCode: message.conversation.language,
         onUsage,
       });
     } catch {

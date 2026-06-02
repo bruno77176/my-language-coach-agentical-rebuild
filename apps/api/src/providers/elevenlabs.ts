@@ -10,6 +10,9 @@ export function createElevenLabs(env: Env): ElevenLabsClient {
 export type SynthesizeInput = {
   text: string;
   voiceId: string;
+  // Target language of `text`; threaded through so the active TTS provider can
+  // pin the spoken language instead of auto-detecting it (see openai.ts).
+  languageCode?: string;
   modelId?: string;
   onUsage?: OnUsage;
 };

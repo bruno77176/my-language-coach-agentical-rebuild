@@ -88,6 +88,11 @@ export async function* streamChatCompletion(
 export type TtsInput = {
   text: string;
   voiceId: string; // alloy | echo | fable | onyx | nova | shimmer
+  // Target language of `text`. REQUIRED to get correct pronunciation: without
+  // it the TTS model auto-detects language from the text, which fails ~25% of
+  // the time on short/ambiguous chunks (esp. Spanish/Italian) and speaks the
+  // text in the wrong language. See `ttsLanguageInstruction` below.
+  languageCode?: string;
   modelId?: string;
   onUsage?: OnUsage;
 };
@@ -97,23 +102,41 @@ export type TtsResult = {
   contentType: string;
 };
 
+// gpt-4o-mini-tts is the only OpenAI TTS model that honors `instructions`
+// (tts-1 / tts-1-hd ignore them and have no language parameter at all, so they
+// CANNOT be told which language to speak — that's the root cause of the
+// wrong-language voice bug). We force the language here instead of relying on
+// auto-detection.
+const TTS_MODEL = "gpt-4o-mini-tts";
+
+// Build the steering instruction that pins the spoken language and keeps the
+// delivery lively (counters the "too slow / unnatural" feel of un-instructed
+// gpt-4o-mini-tts). Returns undefined for unknown codes so we degrade to the
+// model's default behavior rather than injecting a bogus language name.
+export function ttsLanguageInstruction(
+  languageCode: string | undefined,
+): string | undefined {
+  if (!languageCode) return undefined;
+  const lang = LANGUAGES.find((l) => l.code === languageCode);
+  if (!lang) return undefined;
+  return `Speak in ${lang.englishName} with a natural, native accent. Warm, friendly, encouraging tone. Use a lively, natural conversational pace — do NOT speak slowly.`;
+}
+
 export async function synthesizeSpeechOpenAI(
   client: OpenAI,
   input: TtsInput,
 ): Promise<TtsResult> {
+  const model = input.modelId ?? TTS_MODEL;
+  const instructions = ttsLanguageInstruction(input.languageCode);
   let arrayBuf: ArrayBuffer;
   try {
     const response = await client.audio.speech.create({
-      model: input.modelId ?? "tts-1",
-      voice: input.voiceId as
-        | "alloy"
-        | "echo"
-        | "fable"
-        | "onyx"
-        | "nova"
-        | "shimmer",
+      model,
+      voice: input.voiceId,
       input: input.text,
       response_format: "mp3",
+      // Only gpt-4o-mini-tts honors instructions; harmless to omit otherwise.
+      ...(instructions ? { instructions } : {}),
     });
     arrayBuf = await response.arrayBuffer();
   } catch (err) {
@@ -128,7 +151,7 @@ export async function synthesizeSpeechOpenAI(
     void Promise.resolve(
       input.onUsage({
         provider: "openai",
-        operation: `tts:${input.modelId ?? "tts-1"}`,
+        operation: `tts:${model}`,
         characters: input.text.length,
       }),
     ).catch(() => {});
