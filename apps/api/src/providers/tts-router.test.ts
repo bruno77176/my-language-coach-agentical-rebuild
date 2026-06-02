@@ -43,7 +43,11 @@ describe("makeSynthesizeSpeech", () => {
     expect(openai).not.toHaveBeenCalled();
     expect(eleven).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ voiceId: "v1", languageCode: "it", speed: 1.1 }),
+      expect.objectContaining({
+        voiceId: "v1",
+        languageCode: "it",
+        speed: 1.1,
+      }),
     );
   });
 });
