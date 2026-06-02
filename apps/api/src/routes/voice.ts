@@ -23,11 +23,14 @@ import {
   parseCoachMemoryRow,
   emptyCoachMemory,
   ROLE_PLAY_SCENARIOS,
+  buildGreeting,
+  GREETING_TEMPLATES,
 } from "@language-coach/shared";
 import type {
   CoachMemory,
   SessionFeedback,
   TtsConfig,
+  SupportedLang,
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { SentenceBuffer } from "../lib/sentence-buffer";
@@ -680,11 +683,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
   });
 
   // Dev voice-lab preview: synthesize a short sample in any config. No quota
-  // (dev tool); auth still required via the /v1 middleware.
-  const PREVIEW_SAMPLES: Record<string, string> = {
-    es: "Hola, soy tu entrenador. ¿Qué te gustaría practicar hoy?",
-    it: "Ciao, sono il tuo allenatore. Cosa ti piacerebbe praticare oggi?",
-  };
+  // (dev tool); auth still required via the /v1 middleware. The sample text is
+  // the app's localized greeting so the preview is actually IN the chosen
+  // language for all 12 supported langs (not just a hardcoded few).
   routes.post("/preview", async (c) => {
     const body = await c.req
       .json()
@@ -692,11 +693,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     const languageCode =
       typeof body.languageCode === "string" ? body.languageCode : "en";
     const config = parseTtsConfig(body.config);
+    const sampleLang: SupportedLang =
+      languageCode in GREETING_TEMPLATES
+        ? (languageCode as SupportedLang)
+        : "en";
     const text =
       typeof body.text === "string" && body.text.trim()
         ? body.text
-        : (PREVIEW_SAMPLES[languageCode] ??
-          "Hello, I am your coach. What would you like to practice today?");
+        : buildGreeting(sampleLang, "Alex");
     try {
       const audio = await deps.synthesizeSpeech({ text, languageCode, config });
       return c.json({

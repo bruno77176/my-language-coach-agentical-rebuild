@@ -52,4 +52,34 @@ describe("POST /v1/voice/preview", () => {
       expect.objectContaining({ languageCode: "es" }),
     );
   });
+
+  it("uses localized sample text for the chosen language (not English)", async () => {
+    const synth = vi.fn().mockResolvedValue({
+      audioBuffer: Buffer.from([1, 2, 3]),
+      contentType: "audio/mpeg",
+    });
+    const app = appWith(synth);
+    const res = await app.request("/v1/voice/preview", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        languageCode: "de",
+        config: {
+          provider: "elevenlabs",
+          voiceId: "EXAVITQu4vr4xnSDxMaL",
+          speed: 1.0,
+          style: "warm",
+        },
+      }),
+    });
+    expect(res.status).toBe(200);
+    const call = synth.mock.calls[0]![0] as {
+      text: string;
+      languageCode: string;
+    };
+    expect(call.languageCode).toBe("de");
+    // German greeting — must NOT be the English fallback sample.
+    expect(call.text).toMatch(/möchtest|Hallo/);
+    expect(call.text).not.toMatch(/What would you like/);
+  });
 });
