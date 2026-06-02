@@ -204,6 +204,31 @@ export default function ProfileScreen() {
             />
           </GlassCard>
 
+          {/* DEV section — only in development builds */}
+          {__DEV__ && (
+            <>
+              <EditorialText
+                kind="caps"
+                color={palette.inkSoft}
+                style={styles.sectionLabel}
+              >
+                Dev
+              </EditorialText>
+              <GlassCard
+                padding="sm"
+                radiusToken="lg"
+                style={styles.sectionCard}
+              >
+                <ProfileRow
+                  label="🎛 Voice Lab"
+                  value="Test voices"
+                  onPress={() => router.push("/(tabs)/profile/voice-lab")}
+                  isLast
+                />
+              </GlassCard>
+            </>
+          )}
+
           {/* PLAN section */}
           <EditorialText
             kind="caps"
