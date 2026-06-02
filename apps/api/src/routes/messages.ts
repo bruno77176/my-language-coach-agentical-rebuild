@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { Database } from "../db";
 import { messages } from "../db/schema/messages";
 import type { OnUsage } from "../providers/usage";
+import type { TtsConfig } from "@language-coach/shared";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 
 export type TranslateInput = {
@@ -15,7 +16,7 @@ export type TranslateFn = (input: TranslateInput) => Promise<string>;
 export type SynthesizeSpeechFn = (input: {
   text: string;
   languageCode?: string;
-  config?: import("@language-coach/shared").TtsConfig;
+  config?: TtsConfig;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 

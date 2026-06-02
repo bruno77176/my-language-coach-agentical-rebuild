@@ -42,7 +42,10 @@ describe("POST /v1/voice/preview", () => {
       }),
     });
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as {
+      contentType: string;
+      audioBase64: string;
+    };
     expect(body.contentType).toBe("audio/mpeg");
     expect(typeof body.audioBase64).toBe("string");
     expect(synth).toHaveBeenCalledWith(

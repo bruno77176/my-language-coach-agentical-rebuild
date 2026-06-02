@@ -24,7 +24,11 @@ import {
   emptyCoachMemory,
   ROLE_PLAY_SCENARIOS,
 } from "@language-coach/shared";
-import type { CoachMemory, SessionFeedback } from "@language-coach/shared";
+import type {
+  CoachMemory,
+  SessionFeedback,
+  TtsConfig,
+} from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
@@ -341,7 +345,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         // undefined so the router falls back to DEFAULT_TTS_CONFIG (production
         // behavior). Auth is already enforced by the /v1 middleware.
         const voiceConfigRaw = formData?.get("voice_config");
-        let voiceConfig: import("@language-coach/shared").TtsConfig | undefined;
+        let voiceConfig: TtsConfig | undefined;
         if (typeof voiceConfigRaw === "string") {
           try {
             voiceConfig = parseTtsConfig(JSON.parse(voiceConfigRaw));

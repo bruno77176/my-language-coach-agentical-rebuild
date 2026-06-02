@@ -2,6 +2,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
 import type { OnUsage } from "./usage";
+import type { TtsStyle } from "@language-coach/shared";
 import { elevenLabsStyleSettings } from "./tts-config";
 
 export function createElevenLabs(env: Env): ElevenLabsClient {
@@ -15,7 +16,7 @@ export type SynthesizeInput = {
   // pin the spoken language instead of auto-detecting it (see openai.ts).
   languageCode?: string;
   speed?: number;
-  style?: import("@language-coach/shared").TtsStyle;
+  style?: TtsStyle;
   modelId?: string;
   onUsage?: OnUsage;
 };

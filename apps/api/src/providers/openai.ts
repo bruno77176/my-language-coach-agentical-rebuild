@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
 import type { OnUsage } from "./usage";
-import { LANGUAGES } from "@language-coach/shared";
+import { LANGUAGES, type TtsStyle } from "@language-coach/shared";
 import { openAiStylePhrase, pacePhrase } from "./tts-config";
 
 export function createOpenAI(env: Env): OpenAI {
@@ -95,7 +95,7 @@ export type TtsInput = {
   // text in the wrong language. See `ttsLanguageInstruction` below.
   languageCode?: string;
   speed?: number;
-  style?: import("@language-coach/shared").TtsStyle;
+  style?: TtsStyle;
   modelId?: string;
   onUsage?: OnUsage;
 };
@@ -118,7 +118,7 @@ const TTS_MODEL = "gpt-4o-mini-tts";
 // model's default behavior rather than injecting a bogus language name.
 export function ttsLanguageInstruction(
   languageCode: string | undefined,
-  style: import("@language-coach/shared").TtsStyle = "warm",
+  style: TtsStyle = "warm",
   speed = 1.0,
 ): string | undefined {
   if (!languageCode) return undefined;
