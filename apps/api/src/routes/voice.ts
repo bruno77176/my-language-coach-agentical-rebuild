@@ -675,5 +675,35 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     });
   });
 
+  // Dev voice-lab preview: synthesize a short sample in any config. No quota
+  // (dev tool); auth still required via the /v1 middleware.
+  const PREVIEW_SAMPLES: Record<string, string> = {
+    es: "Hola, soy tu entrenador. ¿Qué te gustaría practicar hoy?",
+    it: "Ciao, sono il tuo allenatore. Cosa ti piacerebbe praticare oggi?",
+  };
+  routes.post("/preview", async (c) => {
+    const body = await c.req
+      .json()
+      .catch(() => ({}) as Record<string, unknown>);
+    const languageCode =
+      typeof body.languageCode === "string" ? body.languageCode : "en";
+    const config = parseTtsConfig(body.config);
+    const text =
+      typeof body.text === "string" && body.text.trim()
+        ? body.text
+        : (PREVIEW_SAMPLES[languageCode] ??
+          "Hello, I am your coach. What would you like to practice today?");
+    try {
+      const audio = await deps.synthesizeSpeech({ text, languageCode, config });
+      return c.json({
+        audioBase64: audio.audioBuffer.toString("base64"),
+        contentType: audio.contentType,
+      });
+    } catch (err) {
+      const message = (err as Error).message ?? "TTS failed";
+      return c.json({ error: { code: "TTS_PROVIDER_FAILURE", message } }, 503);
+    }
+  });
+
   return routes;
 }
