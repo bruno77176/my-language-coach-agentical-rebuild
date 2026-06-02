@@ -226,9 +226,31 @@ describe("openai usage instrumentation", () => {
 describe("TTS language forcing (wrong-language voice bug fix)", () => {
   it("builds a language-pinning instruction from a known code", () => {
     const es = ttsLanguageInstruction("es");
-    expect(es).toContain("Spanish");
-    expect(es).toMatch(/do NOT speak slowly/i);
+    expect(es).toMatch(/Spanish/);
+    expect(es).toMatch(/natural/i);
     expect(ttsLanguageInstruction("it")).toContain("Italian");
+  });
+
+  it("includes style + pace wording and passes numeric speed", async () => {
+    const create = vi.fn().mockResolvedValue({
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    });
+    const fakeClient = { audio: { speech: { create } } } as unknown as OpenAI;
+
+    await synthesizeSpeechOpenAI(fakeClient, {
+      text: "Hola",
+      voiceId: "shimmer",
+      languageCode: "es",
+      speed: 1.2,
+      style: "cheerful",
+    });
+
+    const params = create.mock.calls[0]![0];
+    expect(params.voice).toBe("shimmer");
+    expect(params.speed).toBe(1.2);
+    expect(params.instructions).toContain("Spanish");
+    expect(params.instructions).toMatch(/cheerful/i);
+    expect(params.instructions).toMatch(/brisk|lively/i);
   });
 
   it("returns undefined for missing or unknown language codes", () => {

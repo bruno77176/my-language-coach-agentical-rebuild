@@ -3,6 +3,7 @@ import type { Env } from "../env";
 import { ProviderError } from "./deepgram";
 import type { OnUsage } from "./usage";
 import { LANGUAGES } from "@language-coach/shared";
+import { openAiStylePhrase, pacePhrase } from "./tts-config";
 
 export function createOpenAI(env: Env): OpenAI {
   return new OpenAI({ apiKey: env.OPENAI_API_KEY });
@@ -93,6 +94,8 @@ export type TtsInput = {
   // the time on short/ambiguous chunks (esp. Spanish/Italian) and speaks the
   // text in the wrong language. See `ttsLanguageInstruction` below.
   languageCode?: string;
+  speed?: number;
+  style?: import("@language-coach/shared").TtsStyle;
   modelId?: string;
   onUsage?: OnUsage;
 };
@@ -115,11 +118,13 @@ const TTS_MODEL = "gpt-4o-mini-tts";
 // model's default behavior rather than injecting a bogus language name.
 export function ttsLanguageInstruction(
   languageCode: string | undefined,
+  style: import("@language-coach/shared").TtsStyle = "warm",
+  speed = 1.0,
 ): string | undefined {
   if (!languageCode) return undefined;
   const lang = LANGUAGES.find((l) => l.code === languageCode);
   if (!lang) return undefined;
-  return `Speak in ${lang.englishName} with a natural, native accent. Warm, friendly, encouraging tone. Use a lively, natural conversational pace — do NOT speak slowly.`;
+  return `Speak in ${lang.englishName} with a natural, native accent. Use ${openAiStylePhrase(style)} and ${pacePhrase(speed)}.`;
 }
 
 export async function synthesizeSpeechOpenAI(
@@ -127,7 +132,11 @@ export async function synthesizeSpeechOpenAI(
   input: TtsInput,
 ): Promise<TtsResult> {
   const model = input.modelId ?? TTS_MODEL;
-  const instructions = ttsLanguageInstruction(input.languageCode);
+  const instructions = ttsLanguageInstruction(
+    input.languageCode,
+    input.style ?? "warm",
+    input.speed ?? 1.0,
+  );
   let arrayBuf: ArrayBuffer;
   try {
     const response = await client.audio.speech.create({
@@ -135,6 +144,7 @@ export async function synthesizeSpeechOpenAI(
       voice: input.voiceId,
       input: input.text,
       response_format: "mp3",
+      ...(input.speed ? { speed: input.speed } : {}),
       // Only gpt-4o-mini-tts honors instructions; harmless to omit otherwise.
       ...(instructions ? { instructions } : {}),
     });
