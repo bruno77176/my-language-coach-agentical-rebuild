@@ -88,7 +88,7 @@ export async function uploadCoachAudioChunk(
 /**
  * Upload a pre-generated greeting audio clip to the shared greeting-audio bucket.
  *
- * Path scheme: greeting-{lang}-{nameHash}.mp3
+ * Path scheme: greeting-{lang}-{nameHash}-{voiceHash}.mp3
  * Bucket: greeting-audio (public).
  *
  * REQUIRES (one-shot, run once in Supabase SQL Editor before first use):
@@ -102,11 +102,12 @@ export async function uploadGreetingAudio(
   input: {
     lang: string;
     nameHash: string;
+    voiceHash: string;
     audioBuffer: Buffer;
     contentType: string;
   },
 ): Promise<{ audioUrl: string }> {
-  const path = `greeting-${input.lang}-${input.nameHash}.mp3`;
+  const path = `greeting-${input.lang}-${input.nameHash}-${input.voiceHash}.mp3`;
   const { error: uploadErr } = await client.storage
     .from("greeting-audio")
     .upload(path, input.audioBuffer, {
@@ -132,9 +133,9 @@ export async function uploadGreetingAudio(
  */
 export async function getGreetingAudioUrl(
   client: SupabaseClient,
-  input: { lang: string; nameHash: string },
+  input: { lang: string; nameHash: string; voiceHash: string },
 ): Promise<string | null> {
-  const path = `greeting-${input.lang}-${input.nameHash}.mp3`;
+  const path = `greeting-${input.lang}-${input.nameHash}-${input.voiceHash}.mp3`;
   const { data: list, error: listErr } = await client.storage
     .from("greeting-audio")
     .list("", { search: path });

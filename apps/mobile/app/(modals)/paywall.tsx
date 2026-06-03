@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { StyleSheet, View, Pressable, Alert } from "react-native";
+import { Platform, StyleSheet, View, Pressable, Alert } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EditorialText, Screen } from "@/src/design";
 import {
   palette,
@@ -9,6 +11,8 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { usePurchases } from "@/src/features/paywall/use-purchases";
+
+const STORE_NAME = Platform.OS === "ios" ? "App Store" : "Google Play";
 
 const FEATURES_LIST = [
   "Memory that remembers you across sessions",
@@ -49,9 +53,19 @@ export default function PaywallModal() {
 
   const monthly = offerings?.monthly?.product;
   const annual = offerings?.annual?.product;
+  const insets = useSafeAreaInsets();
 
   return (
     <Screen variant="gradient">
+      <Pressable
+        onPress={() => router.back()}
+        style={[styles.closeButton, { top: insets.top + spacing.md }]}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+      >
+        <Ionicons name="close" size={28} color={palette.ink} />
+      </Pressable>
       <View style={styles.container}>
         <EditorialText kind="displayMd" italic style={styles.title}>
           Unlock your coach
@@ -91,7 +105,7 @@ export default function PaywallModal() {
           color={palette.inkSoft}
           style={styles.fineprint}
         >
-          7-day free trial. Cancel anytime in Google Play settings.
+          7-day free trial. Cancel anytime in {STORE_NAME} settings.
         </EditorialText>
         <Pressable onPress={onRestore} style={styles.restore}>
           <EditorialText kind="bodySm" color={palette.inkSoft}>
@@ -109,6 +123,17 @@ export default function PaywallModal() {
 }
 
 const styles = StyleSheet.create({
+  closeButton: {
+    position: "absolute",
+    right: spacing.lg,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: palette.glassStrong,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   container: { flex: 1, padding: spacing.xl, justifyContent: "center" },
   title: { color: palette.ink, marginBottom: spacing.xl },
   bullets: { gap: spacing.sm, marginBottom: spacing.xl },

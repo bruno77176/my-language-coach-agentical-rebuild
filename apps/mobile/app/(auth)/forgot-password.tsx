@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
@@ -44,55 +51,67 @@ export default function ForgotPasswordScreen() {
   const isDisabled = busy || !email.trim();
 
   return (
-    <View style={styles.container}>
-      <EditorialText kind="displayLg">Forgot password?</EditorialText>
-      <EditorialText kind="bodyMd" color={palette.inkSoft}>
-        Enter the email you signed up with. We&apos;ll send a code to reset your
-        password.
-      </EditorialText>
-
-      <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fieldLabel}
-        >
-          Email
-        </EditorialText>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          style={[typeTokens.bodyLg, styles.textInput]}
-          placeholderTextColor={palette.inkSoft}
-        />
-      </GlassCard>
-
-      <Pressable
-        onPress={submit}
-        disabled={isDisabled}
-        style={[styles.button, isDisabled && styles.buttonDisabled]}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <EditorialText kind="bodyLg" color={palette.peach}>
-          {busy ? "Sending…" : "Send reset code"}
-        </EditorialText>
-      </Pressable>
-
-      <Pressable onPress={() => router.back()} style={styles.secondary}>
+        <EditorialText kind="displayLg">Forgot password?</EditorialText>
         <EditorialText kind="bodyMd" color={palette.inkSoft}>
-          Cancel
+          Enter the email you signed up with. We&apos;ll send a code to reset
+          your password.
         </EditorialText>
-      </Pressable>
-    </View>
+
+        <GlassCard padding="md" style={styles.inputCard}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fieldLabel}
+          >
+            Email
+          </EditorialText>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            style={[typeTokens.bodyLg, styles.textInput]}
+            placeholderTextColor={palette.inkSoft}
+          />
+        </GlassCard>
+
+        <Pressable
+          onPress={submit}
+          disabled={isDisabled}
+          style={[styles.button, isDisabled && styles.buttonDisabled]}
+        >
+          <EditorialText kind="bodyLg" color={palette.peach}>
+            {busy ? "Sending…" : "Send reset code"}
+          </EditorialText>
+        </Pressable>
+
+        <Pressable onPress={() => router.back()} style={styles.secondary}>
+          <EditorialText kind="bodyMd" color={palette.inkSoft}>
+            Cancel
+          </EditorialText>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     padding: spacing.xl,
     gap: spacing.base,
     justifyContent: "center",

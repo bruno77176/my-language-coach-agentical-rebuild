@@ -200,8 +200,9 @@ export function createApp(
   const deepgram = createDeepgram(env);
   const openai = createOpenAI(env);
   const eleven = createElevenLabs(env);
-  // Provider-agnostic TTS: no config (or default config) reproduces today's
-  // OpenAI/nova behavior; the dev Voice Lab can pass a per-turn override.
+  // Provider-agnostic TTS: no config (or default config) uses the global
+  // default voice (Gemini "Kore", warm); the client passes a per-turn override
+  // when the user has picked a different coach voice.
   const synthesizeSpeech = makeSynthesizeSpeech({
     openai,
     eleven,

@@ -8,10 +8,10 @@ import {
 } from "./tts-config";
 
 describe("tts-config", () => {
-  it("default config reproduces today's behavior (openai/nova/1.0/warm)", () => {
+  it("defaults everyone to the Gemini Kore warm voice", () => {
     expect(DEFAULT_TTS_CONFIG).toEqual({
-      provider: "openai",
-      voiceId: "nova",
+      provider: "gemini",
+      voiceId: "Kore",
       speed: 1.0,
       style: "warm",
     });

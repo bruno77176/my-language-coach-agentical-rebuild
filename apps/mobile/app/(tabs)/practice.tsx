@@ -23,7 +23,10 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { LANGUAGES, ROLE_PLAY_SCENARIOS } from "@language-coach/shared";
-import { stopActivePlayer } from "@/src/features/practice/audio-controller";
+import {
+  resumePlayback,
+  stopAllPlayback,
+} from "@/src/features/practice/audio-controller";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
@@ -289,9 +292,14 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   useFocusEffect(
     useCallback(() => {
       setIsFocused(true);
+      // Re-enable playback whenever we return to Practice (it was latched off
+      // on the last blur).
+      resumePlayback();
       return () => {
         setIsFocused(false);
-        stopActivePlayer();
+        // Hard-stop playback AND latch it off so no queued/streaming chunk leaks
+        // past navigation (tab switch or a modal pushed over us).
+        stopAllPlayback();
       };
     }, []),
   );
@@ -358,13 +366,14 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   });
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
-  useEffect(() => {
-    if (messages.length > 0) {
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      });
-    }
-  }, [messages.length]);
+  // Keep the newest message pinned to the bottom (above the mic bar). Driven by
+  // onContentSizeChange on the list so it also tracks a streaming coach reply
+  // that grows the same bubble (messages.length doesn't change mid-stream).
+  const scrollToLatest = useCallback(() => {
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    });
+  }, []);
 
   const isBusy =
     state.phase === "processing" || state.phase === "loading-session";
@@ -562,6 +571,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             onReveal={revealMessage}
           />
         )}
+        onContentSizeChange={scrollToLatest}
         contentContainerStyle={[
           activeStyles.chatContainer,
           {
@@ -577,9 +587,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
               align="center"
               color={palette.inkSoft}
             >
-              {scenarioId
-                ? "Tap the mic to begin."
-                : "Tap the mic to say hello."}
+              {scenarioId ? "Setting the scene…" : "Tap the mic to say hello."}
             </EditorialText>
             <EditorialText
               kind="bodySm"
@@ -588,7 +596,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
               style={{ marginTop: spacing.md, opacity: 0.7 }}
             >
               {scenarioId
-                ? "You make the first move — walk in and speak. The other person will respond in their role."
+                ? "Your partner speaks first — then it's your turn."
                 : "Your coach is listening — just talk like you would to a friend."}
             </EditorialText>
           </View>
