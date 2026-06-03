@@ -41,6 +41,11 @@ export type TtsDeps = {
   };
 };
 
+// Reliable OpenAI voice used when the requested provider fails. OpenAI is our
+// most dependable provider and its voiceIds differ from Gemini/ElevenLabs/
+// Inworld, so we can't reuse the requested voiceId on the fallback path.
+const FALLBACK_VOICE_ID = "nova";
+
 export function makeSynthesizeSpeech(deps: TtsDeps) {
   const openAiSynth = deps.synth?.openai ?? synthesizeSpeechOpenAI;
   const elevenSynth = deps.synth?.eleven ?? synthesizeSpeechElevenLabs;
@@ -57,15 +62,30 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
       style: config.style,
       onUsage: input.onUsage,
     };
-    switch (config.provider) {
-      case "elevenlabs":
-        return elevenSynth(deps.eleven, shared);
-      case "gemini":
-        return geminiSynth(deps.geminiKey, shared);
-      case "inworld":
-        return inworldSynth(deps.inworldKey, shared);
-      default:
-        return openAiSynth(deps.openai, shared);
+    try {
+      switch (config.provider) {
+        case "elevenlabs":
+          return await elevenSynth(deps.eleven, shared);
+        case "gemini":
+          return await geminiSynth(deps.geminiKey, shared);
+        case "inworld":
+          return await inworldSynth(deps.inworldKey, shared);
+        default:
+          return await openAiSynth(deps.openai, shared);
+      }
+    } catch (err) {
+      // A non-OpenAI provider failed (rate limit, outage, bad response). Degrade
+      // to OpenAI's reliable default voice so the user still gets audio instead
+      // of a "TTS failed" message. If OpenAI itself was the request, propagate.
+      if (config.provider === "openai") throw err;
+      console.warn(
+        `[tts] provider "${config.provider}" failed (${(err as Error).message}); ` +
+          `falling back to OpenAI "${FALLBACK_VOICE_ID}"`,
+      );
+      return openAiSynth(deps.openai, {
+        ...shared,
+        voiceId: FALLBACK_VOICE_ID,
+      });
     }
   };
 }

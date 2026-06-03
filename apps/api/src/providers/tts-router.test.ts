@@ -70,6 +70,48 @@ describe("makeSynthesizeSpeech", () => {
     );
   });
 
+  it("falls back to OpenAI nova when the requested provider fails", async () => {
+    const gemini = vi
+      .fn()
+      .mockRejectedValue(new Error("HTTP 429 RESOURCE_EXHAUSTED"));
+    const openai = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ gemini, openai }));
+    const out = await synth({
+      text: "hola",
+      languageCode: "es",
+      config: {
+        provider: "gemini",
+        voiceId: "Kore",
+        speed: 1.0,
+        style: "warm",
+      },
+    });
+    expect(out).toBe(result);
+    expect(gemini).toHaveBeenCalled();
+    // Fallback must use a valid OpenAI voice, not the Gemini voiceId.
+    expect(openai).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ voiceId: "nova", languageCode: "es" }),
+    );
+  });
+
+  it("propagates the error when OpenAI itself is the failing provider (no infinite fallback)", async () => {
+    const openai = vi.fn().mockRejectedValue(new Error("openai down"));
+    const synth = makeSynthesizeSpeech(deps({ openai }));
+    await expect(
+      synth({
+        text: "hi",
+        config: {
+          provider: "openai",
+          voiceId: "nova",
+          speed: 1.0,
+          style: "warm",
+        },
+      }),
+    ).rejects.toThrow("openai down");
+    expect(openai).toHaveBeenCalledTimes(1);
+  });
+
   it("inworld config routes to Inworld with the key", async () => {
     const inworld = vi.fn().mockResolvedValue(result);
     const synth = makeSynthesizeSpeech(deps({ inworld }));
