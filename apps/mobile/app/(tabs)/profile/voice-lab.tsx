@@ -10,6 +10,7 @@ import {
 } from "expo-file-system/legacy";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 import {
+  DEFAULT_TTS_CONFIG,
   LANGUAGES,
   TTS_STYLES,
   OPENAI_TTS_VOICES,
@@ -17,11 +18,15 @@ import {
   GEMINI_TTS_VOICES,
   INWORLD_TTS_VOICES,
   TTS_SPEED_OPTIONS,
+  type TtsConfig,
   type TtsProvider,
 } from "@language-coach/shared";
 import { EditorialText, Screen } from "@/src/design";
 import { previewVoice } from "@/src/lib/api-client";
-import { playOnce } from "@/src/features/practice/audio-controller";
+import {
+  playOnce,
+  resumePlayback,
+} from "@/src/features/practice/audio-controller";
 import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
 import {
   PROVIDER_LABELS,
@@ -76,18 +81,41 @@ function Chip({
 }
 
 export default function CoachVoiceScreen() {
-  const { config, setConfig, reset } = useVoiceLab();
+  const savedConfig = useVoiceLab((s) => s.config);
+  const setConfig = useVoiceLab((s) => s.setConfig);
   const [previewLang, setPreviewLang] = useState("es");
   const [status, setStatus] = useState<string>("");
 
-  const voices = voicesFor(config.provider);
+  // Edits stay in a local draft until the user taps Save — so a half-changed
+  // selection never leaks into live conversations.
+  const [draft, setDraft] = useState<TtsConfig>(savedConfig);
+  const update = (patch: Partial<TtsConfig>) => {
+    setStatus("");
+    setDraft((d) => ({ ...d, ...patch }));
+  };
+  const dirty = JSON.stringify(draft) !== JSON.stringify(savedConfig);
+
+  const voices = voicesFor(draft.provider);
+
+  function onSave() {
+    setConfig(draft);
+    setStatus("Saved ✓");
+  }
+
+  function onReset() {
+    setStatus("");
+    setDraft(DEFAULT_TTS_CONFIG);
+  }
 
   async function onPreview() {
+    // Preview is an explicit play action — clear any navigation latch left by
+    // leaving the Practice screen so the sample is audible here.
+    resumePlayback();
     setStatus("Synthesizing…");
     try {
       const { audioBase64, contentType } = await previewVoice({
         languageCode: previewLang,
-        config,
+        config: draft,
       });
       const ext = contentType === "audio/wav" ? "wav" : "mp3";
       const uri = (cacheDirectory ?? "") + `coach-voice-preview.${ext}`;
@@ -119,8 +147,8 @@ export default function CoachVoiceScreen() {
           color={palette.inkSoft}
           style={styles.note}
         >
-          Pick how your coach sounds. Preview a sample, then it's used in every
-          conversation.
+          Pick how your coach sounds. Preview a sample, then Save to use it in
+          every conversation.
         </EditorialText>
 
         <EditorialText kind="caps" color={palette.inkSoft} style={styles.label}>
@@ -132,9 +160,9 @@ export default function CoachVoiceScreen() {
               key={p}
               label={PROVIDER_LABELS[p]}
               caption={PROVIDER_TAGLINES[p]}
-              active={config.provider === p}
+              active={draft.provider === p}
               onPress={() =>
-                setConfig({
+                update({
                   provider: p,
                   voiceId: voicesFor(p)[0]!.id,
                 })
@@ -152,8 +180,8 @@ export default function CoachVoiceScreen() {
               key={v.id}
               label={v.name}
               caption={VOICE_DESCRIPTORS[v.id]}
-              active={config.voiceId === v.id}
-              onPress={() => setConfig({ voiceId: v.id })}
+              active={draft.voiceId === v.id}
+              onPress={() => update({ voiceId: v.id })}
             />
           ))}
         </View>
@@ -166,8 +194,8 @@ export default function CoachVoiceScreen() {
             <Chip
               key={s}
               label={`${s}x`}
-              active={config.speed === s}
-              onPress={() => setConfig({ speed: s })}
+              active={draft.speed === s}
+              onPress={() => update({ speed: s })}
             />
           ))}
         </View>
@@ -180,8 +208,8 @@ export default function CoachVoiceScreen() {
             <Chip
               key={s}
               label={s}
-              active={config.style === s}
-              onPress={() => setConfig({ style: s })}
+              active={draft.style === s}
+              onPress={() => update({ style: s })}
             />
           ))}
         </View>
@@ -215,7 +243,17 @@ export default function CoachVoiceScreen() {
           </EditorialText>
         ) : null}
 
-        <Pressable style={styles.resetBtn} onPress={reset}>
+        <Pressable
+          style={[styles.saveBtn, !dirty && styles.saveBtnDisabled]}
+          onPress={onSave}
+          disabled={!dirty}
+        >
+          <EditorialText kind="bodyMd" color={palette.cream}>
+            {dirty ? "Save voice" : "Saved"}
+          </EditorialText>
+        </Pressable>
+
+        <Pressable style={styles.resetBtn} onPress={onReset}>
           <EditorialText kind="bodySm" color={palette.inkSoft}>
             Reset to default
           </EditorialText>
@@ -246,5 +284,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   status: { marginTop: spacing.sm },
+  saveBtn: {
+    marginTop: spacing.lg,
+    backgroundColor: palette.ink,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    alignItems: "center",
+  },
+  saveBtnDisabled: { opacity: 0.4 },
   resetBtn: { marginTop: spacing.md, alignItems: "center" },
 });

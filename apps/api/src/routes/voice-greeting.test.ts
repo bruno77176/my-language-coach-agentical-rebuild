@@ -102,6 +102,77 @@ describe("POST /v1/voice/greeting/audio", () => {
     expect(res.status).toBe(503);
   });
 
+  it("passes the requested voice config to synthesizeSpeech", async () => {
+    const tts = vi.fn().mockResolvedValue({
+      audioBuffer: Buffer.from("x"),
+      contentType: "audio/mpeg",
+    });
+    const routes = createVoiceGreetingRoutes({
+      db: {} as never,
+      getCachedGreetingUrl: vi.fn().mockResolvedValue(null),
+      synthesizeSpeech: tts,
+      uploadGreeting: vi.fn().mockResolvedValue({ audioUrl: "https://x" }),
+    });
+    const app = appWithRoutes(routes);
+    const config = {
+      provider: "gemini",
+      voiceId: "Kore",
+      speed: 1.0,
+      style: "warm",
+    };
+    await app.request("/v1/voice/greeting/audio", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ lang: "it", name: "Bruno", config }),
+    });
+    expect(tts).toHaveBeenCalledWith(expect.objectContaining({ config }));
+  });
+
+  it("keys the cache by voice — different voices look up different files", async () => {
+    const getCached = vi.fn().mockResolvedValue(null);
+    const routes = createVoiceGreetingRoutes({
+      db: {} as never,
+      getCachedGreetingUrl: getCached,
+      synthesizeSpeech: vi.fn().mockResolvedValue({
+        audioBuffer: Buffer.from("x"),
+        contentType: "audio/mpeg",
+      }),
+      uploadGreeting: vi.fn().mockResolvedValue({ audioUrl: "https://x" }),
+    });
+    const app = appWithRoutes(routes);
+    const base = { lang: "it", name: "Bruno" };
+    await app.request("/v1/voice/greeting/audio", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        ...base,
+        config: {
+          provider: "gemini",
+          voiceId: "Kore",
+          speed: 1,
+          style: "warm",
+        },
+      }),
+    });
+    await app.request("/v1/voice/greeting/audio", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        ...base,
+        config: {
+          provider: "openai",
+          voiceId: "nova",
+          speed: 1,
+          style: "warm",
+        },
+      }),
+    });
+    const hashes = getCached.mock.calls.map((c) => c[0].voiceHash);
+    expect(hashes[0]).toBeTruthy();
+    expect(hashes[1]).toBeTruthy();
+    expect(hashes[0]).not.toBe(hashes[1]);
+  });
+
   it("uses sha1-truncated nameHash so 'Bruno' and 'bruno' share cache", async () => {
     const getCached = vi.fn().mockResolvedValue(null);
     const tts = vi.fn().mockResolvedValue({

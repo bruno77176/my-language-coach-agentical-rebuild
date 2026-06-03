@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
@@ -72,98 +79,110 @@ export default function ResetPasswordScreen() {
     busy || code.length < 4 || password.length < 6 || password !== confirm;
 
   return (
-    <View style={styles.container}>
-      <EditorialText kind="displayLg">Enter the code.</EditorialText>
-      <EditorialText kind="bodyMd" color={palette.inkSoft}>
-        {email
-          ? `We sent a code to ${email}. Check your inbox.`
-          : "Check your inbox for the reset code."}
-      </EditorialText>
-
-      <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fieldLabel}
-        >
-          Verification code
-        </EditorialText>
-        <TextInput
-          value={code}
-          onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 10))}
-          placeholder="Code from email"
-          keyboardType="number-pad"
-          maxLength={10}
-          autoComplete="one-time-code"
-          textContentType="oneTimeCode"
-          style={[typeTokens.bodyLg, styles.codeInput]}
-          placeholderTextColor={palette.inkSoft}
-        />
-      </GlassCard>
-
-      <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fieldLabel}
-        >
-          New password
-        </EditorialText>
-        <PasswordInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="At least 6 characters"
-          autoCapitalize="none"
-          autoComplete="password-new"
-          style={[typeTokens.bodyLg, styles.textInput]}
-          placeholderTextColor={palette.inkSoft}
-        />
-      </GlassCard>
-
-      <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fieldLabel}
-        >
-          Confirm
-        </EditorialText>
-        <PasswordInput
-          value={confirm}
-          onChangeText={setConfirm}
-          placeholder="Type it again"
-          autoCapitalize="none"
-          autoComplete="password-new"
-          style={[typeTokens.bodyLg, styles.textInput]}
-          placeholderTextColor={palette.inkSoft}
-        />
-      </GlassCard>
-
-      <Pressable
-        onPress={onSubmit}
-        disabled={isDisabled}
-        style={[styles.button, isDisabled && styles.buttonDisabled]}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <EditorialText kind="bodyLg" color={palette.peach}>
-          {busy ? "Saving…" : "Save password"}
+        <EditorialText kind="displayLg">Enter the code.</EditorialText>
+        <EditorialText kind="bodyMd" color={palette.inkSoft}>
+          {email
+            ? `We sent a code to ${email}. Check your inbox.`
+            : "Check your inbox for the reset code."}
         </EditorialText>
-      </Pressable>
 
-      <Pressable
-        onPress={() => router.replace("/(auth)/forgot-password")}
-        style={styles.secondary}
-      >
-        <EditorialText kind="bodySm" color={palette.inkSoft}>
-          Didn&apos;t get a code? Request a new one.
-        </EditorialText>
-      </Pressable>
-    </View>
+        <GlassCard padding="md" style={styles.inputCard}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fieldLabel}
+          >
+            Verification code
+          </EditorialText>
+          <TextInput
+            value={code}
+            onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 10))}
+            placeholder="Code from email"
+            keyboardType="number-pad"
+            maxLength={10}
+            autoComplete="one-time-code"
+            textContentType="oneTimeCode"
+            style={[typeTokens.bodyLg, styles.codeInput]}
+            placeholderTextColor={palette.inkSoft}
+          />
+        </GlassCard>
+
+        <GlassCard padding="md" style={styles.inputCard}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fieldLabel}
+          >
+            New password
+          </EditorialText>
+          <PasswordInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="At least 6 characters"
+            autoCapitalize="none"
+            autoComplete="password-new"
+            style={[typeTokens.bodyLg, styles.textInput]}
+            placeholderTextColor={palette.inkSoft}
+          />
+        </GlassCard>
+
+        <GlassCard padding="md" style={styles.inputCard}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fieldLabel}
+          >
+            Confirm
+          </EditorialText>
+          <PasswordInput
+            value={confirm}
+            onChangeText={setConfirm}
+            placeholder="Type it again"
+            autoCapitalize="none"
+            autoComplete="password-new"
+            style={[typeTokens.bodyLg, styles.textInput]}
+            placeholderTextColor={palette.inkSoft}
+          />
+        </GlassCard>
+
+        <Pressable
+          onPress={onSubmit}
+          disabled={isDisabled}
+          style={[styles.button, isDisabled && styles.buttonDisabled]}
+        >
+          <EditorialText kind="bodyLg" color={palette.peach}>
+            {busy ? "Saving…" : "Save password"}
+          </EditorialText>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.replace("/(auth)/forgot-password")}
+          style={styles.secondary}
+        >
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Didn&apos;t get a code? Request a new one.
+          </EditorialText>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     padding: spacing.xl,
     gap: spacing.base,
     justifyContent: "center",

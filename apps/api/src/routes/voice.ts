@@ -23,6 +23,7 @@ import {
   parseCoachMemoryRow,
   emptyCoachMemory,
   ROLE_PLAY_SCENARIOS,
+  getOpeningLine,
   buildGreeting,
   GREETING_TEMPLATES,
 } from "@language-coach/shared";
@@ -541,28 +542,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       });
     }
 
-    const sysPrompt = buildCoachSystemPrompt({
-      targetLanguage: conversation.language,
-      userDisplayName: profile.displayName,
-      memory: null,
-      scenario: {
-        id: scenario.id,
-        systemPromptFragment: scenario.systemPromptFragment,
-      },
-    });
-
     const languageCode = conversation.language;
+    // Prefer the saved, deterministic opener so the line appears instantly and
+    // we skip the LLM round-trip. Falls back to live generation if a scenario
+    // has no saved line for this language.
+    const savedOpener = getOpeningLine(scenario.id, languageCode);
 
     return streamSSE(c, async (stream) => {
       try {
-        // System-only context: the model produces the opener because there is
-        // no prior user turn.
-        const gptStream = deps.streamChatCompletion({
-          messages: [{ role: "system" as const, content: sysPrompt }],
-          model: "gpt-4o-mini",
-          onUsage,
-        });
-
         const sentenceBuf = new SentenceBuffer();
         let chunkIndex = 0;
         const ttsPromises: Promise<void>[] = [];
@@ -602,20 +589,43 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           });
         }
 
-        for await (const delta of gptStream) {
-          fullCoachText += delta;
-          const sentences = sentenceBuf.push(delta);
-          for (const s of sentences) {
-            const idx = chunkIndex++;
-            ttsPromises.push(emitChunk(s, idx));
+        if (savedOpener) {
+          // Deterministic saved opener: one chunk, no LLM. Fast and free.
+          fullCoachText = savedOpener;
+          await emitChunk(savedOpener, chunkIndex++);
+        } else {
+          // No saved line for this scenario/language — generate the opener
+          // live. System-only context: the model produces the opener because
+          // there is no prior user turn.
+          const sysPrompt = buildCoachSystemPrompt({
+            targetLanguage: conversation.language,
+            userDisplayName: profile.displayName,
+            memory: null,
+            scenario: {
+              id: scenario.id,
+              systemPromptFragment: scenario.systemPromptFragment,
+            },
+          });
+          const gptStream = deps.streamChatCompletion({
+            messages: [{ role: "system" as const, content: sysPrompt }],
+            model: "gpt-4o-mini",
+            onUsage,
+          });
+          for await (const delta of gptStream) {
+            fullCoachText += delta;
+            const sentences = sentenceBuf.push(delta);
+            for (const s of sentences) {
+              const idx = chunkIndex++;
+              ttsPromises.push(emitChunk(s, idx));
+            }
           }
+          const tail = sentenceBuf.flush();
+          if (tail) {
+            const idx = chunkIndex++;
+            ttsPromises.push(emitChunk(tail, idx));
+          }
+          await Promise.all(ttsPromises);
         }
-        const tail = sentenceBuf.flush();
-        if (tail) {
-          const idx = chunkIndex++;
-          ttsPromises.push(emitChunk(tail, idx));
-        }
-        await Promise.all(ttsPromises);
 
         const [coachRow] = await deps.db
           .insert(messages)

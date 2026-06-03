@@ -178,6 +178,22 @@ describe("POST /v1/voice/sessions/:id/opening", () => {
     expect(synthesizeSpeech).toHaveBeenCalled();
   });
 
+  it("uses the saved opener line and skips the LLM for a known scenario+language", async () => {
+    const { app, streamChatCompletion } = setupRoute();
+    const res = await app.request(
+      `/v1/voice/sessions/${conversationId}/opening`,
+      { method: "POST" },
+    );
+    const events = await readSseEvents(res.body!);
+    const chunks = events.filter((e) => e.event === "reply-chunk");
+    // The saved Spanish "coffee" opener is emitted as a single chunk.
+    expect(chunks).toHaveLength(1);
+    expect(JSON.parse(chunks[0]!.data).text).toBe(
+      "¡Buenos días! ¿Qué le pongo?",
+    );
+    expect(streamChatCompletion).not.toHaveBeenCalled();
+  });
+
   it("does not touch quota or seconds (no entitlement/conversation update)", async () => {
     const { app, fakeDb, updateChain } = setupRoute();
     await readSseEvents(

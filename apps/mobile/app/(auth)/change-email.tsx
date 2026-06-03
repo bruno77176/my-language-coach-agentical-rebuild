@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
@@ -54,43 +62,57 @@ export default function ChangeEmail() {
   }
 
   return (
-    <View style={styles.body}>
-      <EditorialText kind="displayLg">Change your email.</EditorialText>
-      <EditorialText kind="bodyMd" color={palette.inkSoft} style={styles.copy}>
-        We&apos;ll send a verification link to both your current and new
-        address.
-      </EditorialText>
-      <GlassCard padding="md" style={styles.field}>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="new@email.com"
-          placeholderTextColor={palette.inkSoft}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={styles.input}
-        />
-      </GlassCard>
-      <Pressable
-        style={[styles.cta, busy && styles.ctaBusy]}
-        onPress={onSubmit}
-        disabled={busy}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <EditorialText kind="bodyLg" color={palette.peach}>
-          {busy ? "Sending…" : "Send confirmation"}
+        <EditorialText kind="displayLg">Change your email.</EditorialText>
+        <EditorialText
+          kind="bodyMd"
+          color={palette.inkSoft}
+          style={styles.copy}
+        >
+          We&apos;ll send a verification link to both your current and new
+          address.
         </EditorialText>
-      </Pressable>
-      <Pressable onPress={() => router.back()} style={styles.secondary}>
-        <EditorialText kind="bodyMd" color={palette.inkSoft}>
-          Cancel
-        </EditorialText>
-      </Pressable>
-    </View>
+        <GlassCard padding="md" style={styles.field}>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="new@email.com"
+            placeholderTextColor={palette.inkSoft}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={styles.input}
+          />
+        </GlassCard>
+        <Pressable
+          style={[styles.cta, busy && styles.ctaBusy]}
+          onPress={onSubmit}
+          disabled={busy}
+        >
+          <EditorialText kind="bodyLg" color={palette.peach}>
+            {busy ? "Sending…" : "Send confirmation"}
+          </EditorialText>
+        </Pressable>
+        <Pressable onPress={() => router.back()} style={styles.secondary}>
+          <EditorialText kind="bodyMd" color={palette.inkSoft}>
+            Cancel
+          </EditorialText>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { padding: spacing.xl, gap: spacing.base, flex: 1 },
+  flex: { flex: 1 },
+  body: { padding: spacing.xl, gap: spacing.base, flexGrow: 1 },
   copy: { marginBottom: spacing.md },
   field: { marginTop: spacing.sm },
   input: {

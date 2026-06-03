@@ -14,15 +14,15 @@ describe("makeSynthesizeSpeech", () => {
     };
   }
 
-  it("default config routes to OpenAI with nova", async () => {
+  it("default config routes to Gemini with Kore", async () => {
+    const gemini = vi.fn().mockResolvedValue(result);
     const openai = vi.fn().mockResolvedValue(result);
-    const eleven = vi.fn().mockResolvedValue(result);
-    const synth = makeSynthesizeSpeech(deps({ openai, eleven }));
+    const synth = makeSynthesizeSpeech(deps({ gemini, openai }));
     await synth({ text: "hi", languageCode: "es" });
-    expect(eleven).not.toHaveBeenCalled();
-    expect(openai).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ voiceId: "nova", languageCode: "es" }),
+    expect(openai).not.toHaveBeenCalled();
+    expect(gemini).toHaveBeenCalledWith(
+      "gk",
+      expect.objectContaining({ voiceId: "Kore", languageCode: "es" }),
     );
   });
 

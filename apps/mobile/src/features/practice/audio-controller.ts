@@ -17,6 +17,12 @@ import { configureForPlayback } from "@/src/lib/audio-session";
 
 let currentPlayer: AudioPlayer | null = null;
 
+// Latch set when playback is hard-stopped (navigating away from Practice).
+// While set, every playOnce is a no-op, so neither chunks already queued nor
+// chunks an in-flight stream enqueues afterwards can start. Cleared by
+// resumePlayback() when the Practice screen regains focus.
+let playbackStopped = false;
+
 function safeStop(p: AudioPlayer): void {
   try {
     (p as { volume?: number }).volume = 0;
@@ -42,6 +48,25 @@ export function stopActivePlayer(): void {
 }
 
 /**
+ * Hard-stop all playback and latch playback off. Use when navigating away from
+ * the Practice screen: the active player is stopped AND every subsequent
+ * playOnce (queued chunks, or chunks an in-flight SSE stream is still
+ * enqueuing) becomes a no-op until resumePlayback() is called.
+ */
+export function stopAllPlayback(): void {
+  playbackStopped = true;
+  stopActivePlayer();
+}
+
+/**
+ * Re-enable playback after a stopAllPlayback(). Called when the Practice screen
+ * regains focus so new greetings / turns / repeats can play again.
+ */
+export function resumePlayback(): void {
+  playbackStopped = false;
+}
+
+/**
  * Play a single audio source through the global slot. Resolves when audio
  * finishes OR after a hard timeout (estimated from text length / explicit
  * durationMs). Always cleans up the player — no leaks even if the audio
@@ -52,6 +77,8 @@ export async function playOnce(input: {
   text?: string;
   durationMs?: number;
 }): Promise<void> {
+  // If playback was hard-stopped (navigated away), don't start anything.
+  if (playbackStopped) return;
   // Stop any prior playback before creating a new player.
   stopActivePlayer();
   try {
@@ -59,6 +86,8 @@ export async function playOnce(input: {
   } catch {
     // best-effort
   }
+  // Re-check: a stop may have landed while we awaited the session config.
+  if (playbackStopped) return;
   const player = createAudioPlayer(input.source);
   currentPlayer = player;
 

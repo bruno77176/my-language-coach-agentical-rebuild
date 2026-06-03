@@ -1,3 +1,4 @@
+import type { TtsConfig } from "@language-coach/shared";
 import {
   API_BASE_URL,
   authHeader,
@@ -7,6 +8,7 @@ import {
 export async function fetchGreetingAudio(input: {
   lang: string;
   name: string;
+  config?: TtsConfig;
 }): Promise<{ audioUrl: string }> {
   const res = await fetch(`${API_BASE_URL}/v1/voice/greeting/audio`, {
     method: "POST",

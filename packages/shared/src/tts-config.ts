@@ -16,10 +16,11 @@ export const TTS_STYLES: TtsStyle[] = [
   "energetic",
 ];
 
-// No override == this == current production behavior.
+// The default coach voice for everyone. Gemini "Kore" with a warm tone —
+// requires Gemini Cloud billing on the key's project (free-tier quota is tiny).
 export const DEFAULT_TTS_CONFIG: TtsConfig = {
-  provider: "openai",
-  voiceId: "nova",
+  provider: "gemini",
+  voiceId: "Kore",
   speed: 1.0,
   style: "warm",
 };

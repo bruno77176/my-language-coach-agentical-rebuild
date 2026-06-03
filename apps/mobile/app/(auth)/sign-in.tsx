@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { SocialButton } from "@/src/features/auth/social-button";
 import {
@@ -131,128 +139,144 @@ export default function SignInScreen() {
   const buttonLabel = mode === "signIn" ? "Sign in" : "Create account";
 
   return (
-    <View style={styles.container}>
-      <EditorialText kind="displayLg">My Language Coach</EditorialText>
-      <EditorialText kind="bodyMd" color={palette.inkSoft}>
-        {mode === "signIn" ? "Welcome back." : "Create your account."}
-      </EditorialText>
-
-      {Platform.OS === "ios" ? (
-        <AppleAuthentication.AppleAuthenticationButton
-          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-          cornerRadius={radius.lg}
-          style={styles.appleButton}
-          onPress={onApple}
-        />
-      ) : null}
-      <SocialButton
-        label="Continue with Google"
-        onPress={onGoogle}
-        busy={googleBusy}
-        disabled={appleBusy || busy}
-      />
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <EditorialText kind="bodySm" color={palette.inkSoft}>
-          or
-        </EditorialText>
-        <View style={styles.dividerLine} />
-      </View>
-
-      <View style={styles.tabRow}>
-        <Pressable
-          onPress={() => setMode("signIn")}
-          disabled={busy || googleBusy || appleBusy}
-          style={[styles.tab, mode === "signIn" && styles.tabActive]}
-        >
-          <EditorialText
-            kind="bodyMd"
-            color={mode === "signIn" ? palette.ink : palette.inkSoft}
-          >
-            Sign in
-          </EditorialText>
-        </Pressable>
-        <Pressable
-          onPress={() => setMode("signUp")}
-          disabled={busy || googleBusy || appleBusy}
-          style={[styles.tab, mode === "signUp" && styles.tabActive]}
-        >
-          <EditorialText
-            kind="bodyMd"
-            color={mode === "signUp" ? palette.ink : palette.inkSoft}
-          >
-            Create account
-          </EditorialText>
-        </Pressable>
-      </View>
-
-      <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fieldLabel}
-        >
-          Email
-        </EditorialText>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          style={[typeTokens.bodyLg, styles.textInput]}
-          placeholderTextColor={palette.inkSoft}
-        />
-      </GlassCard>
-
-      <GlassCard padding="md" style={styles.inputCard}>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fieldLabel}
-        >
-          Password
-        </EditorialText>
-        <PasswordInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="At least 6 characters"
-          autoCapitalize="none"
-          autoComplete="password"
-          style={[typeTokens.bodyLg, styles.textInput]}
-          placeholderTextColor={palette.inkSoft}
-        />
-      </GlassCard>
-
-      {mode === "signIn" ? (
-        <Pressable
-          onPress={() => router.push("/(auth)/forgot-password")}
-          style={styles.forgotLink}
-        >
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Forgot password?
-          </EditorialText>
-        </Pressable>
-      ) : null}
-
-      <Pressable
-        onPress={submit}
-        disabled={isDisabled}
-        style={[styles.button, isDisabled && styles.buttonDisabled]}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <EditorialText kind="bodyLg" color={palette.peach}>
-          {busy ? "Working…" : buttonLabel}
+        <EditorialText kind="displayLg">My Language Coach</EditorialText>
+        <EditorialText kind="bodyMd" color={palette.inkSoft}>
+          {mode === "signIn" ? "Welcome back." : "Create your account."}
         </EditorialText>
-      </Pressable>
-    </View>
+
+        {Platform.OS === "ios" ? (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={
+              AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+            }
+            buttonStyle={
+              AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+            }
+            cornerRadius={radius.lg}
+            style={styles.appleButton}
+            onPress={onApple}
+          />
+        ) : null}
+        <SocialButton
+          label="Continue with Google"
+          onPress={onGoogle}
+          busy={googleBusy}
+          disabled={appleBusy || busy}
+        />
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            or
+          </EditorialText>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <View style={styles.tabRow}>
+          <Pressable
+            onPress={() => setMode("signIn")}
+            disabled={busy || googleBusy || appleBusy}
+            style={[styles.tab, mode === "signIn" && styles.tabActive]}
+          >
+            <EditorialText
+              kind="bodyMd"
+              color={mode === "signIn" ? palette.ink : palette.inkSoft}
+            >
+              Sign in
+            </EditorialText>
+          </Pressable>
+          <Pressable
+            onPress={() => setMode("signUp")}
+            disabled={busy || googleBusy || appleBusy}
+            style={[styles.tab, mode === "signUp" && styles.tabActive]}
+          >
+            <EditorialText
+              kind="bodyMd"
+              color={mode === "signUp" ? palette.ink : palette.inkSoft}
+            >
+              Create account
+            </EditorialText>
+          </Pressable>
+        </View>
+
+        <GlassCard padding="md" style={styles.inputCard}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fieldLabel}
+          >
+            Email
+          </EditorialText>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            style={[typeTokens.bodyLg, styles.textInput]}
+            placeholderTextColor={palette.inkSoft}
+          />
+        </GlassCard>
+
+        <GlassCard padding="md" style={styles.inputCard}>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fieldLabel}
+          >
+            Password
+          </EditorialText>
+          <PasswordInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="At least 6 characters"
+            autoCapitalize="none"
+            autoComplete="password"
+            style={[typeTokens.bodyLg, styles.textInput]}
+            placeholderTextColor={palette.inkSoft}
+          />
+        </GlassCard>
+
+        {mode === "signIn" ? (
+          <Pressable
+            onPress={() => router.push("/(auth)/forgot-password")}
+            style={styles.forgotLink}
+          >
+            <EditorialText kind="bodySm" color={palette.inkSoft}>
+              Forgot password?
+            </EditorialText>
+          </Pressable>
+        ) : null}
+
+        <Pressable
+          onPress={submit}
+          disabled={isDisabled}
+          style={[styles.button, isDisabled && styles.buttonDisabled]}
+        >
+          <EditorialText kind="bodyLg" color={palette.peach}>
+            {busy ? "Working…" : buttonLabel}
+          </EditorialText>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     padding: spacing.xl,
     gap: spacing.base,
     justifyContent: "center",

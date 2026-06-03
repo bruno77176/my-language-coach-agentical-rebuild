@@ -9,6 +9,7 @@ import {
 import {
   buildGreeting,
   getCoachFallback,
+  getOpeningLine,
   type SoftErrorCode,
   type SupportedLang,
 } from "@language-coach/shared";
@@ -75,7 +76,10 @@ async function fetchPersonalizedGreetingUrl(
   name: string,
 ): Promise<string | null> {
   try {
-    const { audioUrl } = await fetchGreetingAudio({ lang, name });
+    // Send the user's chosen voice so the greeting matches the rest of the
+    // conversation (server caches greetings per voice).
+    const config = useVoiceLab.getState().config;
+    const { audioUrl } = await fetchGreetingAudio({ lang, name, config });
     console.log("[GREETING] got personalized URL:", audioUrl.slice(0, 80));
     return audioUrl;
   } catch (err) {
@@ -240,8 +244,12 @@ export function useConversation(
     events: AsyncIterable<TurnEvent>,
     audioQueue: ReturnType<typeof createAudioQueue>,
     onTranscription?: (text: string) => void,
+    seedCoachMessageId?: string,
   ): Promise<CoachStreamOutcome> {
-    let coachMessageId: string | null = null;
+    // When seeded (scenario opener), the coach message already exists on screen
+    // with this id — adopt it so the first chunk updates it in place instead of
+    // appending a duplicate.
+    let coachMessageId: string | null = seedCoachMessageId ?? null;
     const chunkTexts: string[] = [];
 
     for await (const event of events) {
@@ -316,10 +324,39 @@ export function useConversation(
     isCancelled: () => boolean,
   ) {
     setState({ phase: "processing", conversationId });
+
+    // Show the saved opener line instantly (audio follows from the stream). The
+    // backend streams the same saved line, so the first chunk just adopts this
+    // message via the seeded id rather than appending a duplicate.
+    let seedId: string | undefined;
+    if (scenarioId) {
+      const openerText = getOpeningLine(scenarioId, targetLang);
+      if (openerText) {
+        seedId = `opening-${Date.now()}`;
+        const openerTranslation =
+          nativeLang !== targetLang
+            ? (getOpeningLine(scenarioId, nativeLang) ?? undefined)
+            : undefined;
+        setMessages([
+          {
+            id: seedId,
+            role: "coach",
+            text: openerText,
+            clientTranslation: openerTranslation,
+          },
+        ]);
+      }
+    }
+
     const audioQueue = createAudioQueue();
     try {
       const { events } = streamOpening(conversationId);
-      const outcome = await consumeCoachStream(events, audioQueue);
+      const outcome = await consumeCoachStream(
+        events,
+        audioQueue,
+        undefined,
+        seedId,
+      );
       await audioQueue.waitForDrain();
       // Opener is soft-fail (we still land on idle), but surface a coach-side
       // error so a broken /opening endpoint isn't invisible in the field.
