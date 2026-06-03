@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { LOCALES } from "../lib/i18n";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -20,6 +21,16 @@ const dmSans = DM_Sans({
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://mylanguagecoach.app";
 
+// hreflang map for every supported locale. English lives at the root; every
+// other locale lives under /<locale>. Generated from LOCALES so new locales
+// stay in sync automatically.
+const languageAlternates: Record<string, string> = {
+  ...Object.fromEntries(
+    LOCALES.map((locale) => [locale, locale === "en" ? "/" : `/${locale}`]),
+  ),
+  "x-default": "/",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "My Language Coach — Practice languages. Build confidence.",
@@ -27,11 +38,7 @@ export const metadata: Metadata = {
     "Your AI conversation partner. Talk to it, get instant corrections, and become fluent in any language — anywhere.",
   alternates: {
     canonical: "/",
-    languages: {
-      en: "/",
-      fr: "/fr",
-      "x-default": "/",
-    },
+    languages: languageAlternates,
   },
   openGraph: {
     type: "website",
