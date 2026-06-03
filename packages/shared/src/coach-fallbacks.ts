@@ -95,6 +95,30 @@ export const COACH_FALLBACKS: Record<SupportedLang, FallbackMap> = {
     LLM_PROVIDER_FAILURE: "Valami nem stimmelt nálam — folytassuk.",
     TTS_PROVIDER_FAILURE: "(Hang sikertelen — olvasd a fenti üzenetem.)",
   },
+  ja: {
+    AUDIO_SILENT:
+      "うーん、うまく聞き取れませんでした — もう一度お願いできますか？",
+    AUDIO_TOO_SHORT: "少し短すぎました — もう一度試してみてください！",
+    STT_PROVIDER_FAILURE: "うまく聞き取れません — もう一度言ってもらえますか？",
+    LLM_PROVIDER_FAILURE: "こちらで少し不具合がありました — 続けましょう。",
+    TTS_PROVIDER_FAILURE:
+      "（音声に失敗しました — 上のメッセージをお読みください。）",
+  },
+  zh: {
+    AUDIO_SILENT: "嗯，我没听清楚 — 可以再说一遍吗？",
+    AUDIO_TOO_SHORT: "有点太短了 — 再试一次吧！",
+    STT_PROVIDER_FAILURE: "我有点听不清 — 可以重复一遍吗？",
+    LLM_PROVIDER_FAILURE: "我这边出了点小问题 — 我们继续吧。",
+    TTS_PROVIDER_FAILURE: "（音频播放失败 — 请阅读我上面的消息。）",
+  },
+  ko: {
+    AUDIO_SILENT: "음, 잘 못 들었어요 — 다시 한번 말씀해 주시겠어요?",
+    AUDIO_TOO_SHORT: "조금 너무 짧았어요 — 다시 한번 해보세요!",
+    STT_PROVIDER_FAILURE: "잘 들리지 않네요 — 다시 말씀해 주시겠어요?",
+    LLM_PROVIDER_FAILURE: "제 쪽에서 문제가 좀 생겼어요 — 계속 진행해요.",
+    TTS_PROVIDER_FAILURE:
+      "(오디오 재생에 실패했어요 — 위의 메시지를 읽어 주세요.)",
+  },
 };
 
 export function getCoachFallback(
