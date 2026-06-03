@@ -49,7 +49,7 @@ describe("synthesizeSpeechInworld", () => {
     const call = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0]!;
     const body = JSON.parse(call[1].body as string);
     expect(body.voiceId).toBe("Olivia");
-    expect(body.modelId).toBe("inworld-tts-1.5");
+    expect(body.modelId).toBe("inworld-tts-1.5-max");
     expect(body.audioConfig.audioEncoding).toBe("MP3");
     expect(body.audioConfig.speakingRate).toBeCloseTo(0.9);
     expect(call[1].headers.authorization).toMatch(/^Basic /);
@@ -66,7 +66,7 @@ describe("synthesizeSpeechInworld", () => {
     expect(onUsage).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "inworld",
-        operation: "tts:inworld-tts-1.5",
+        operation: "tts:inworld-tts-1.5-max",
         characters: 4,
       }),
     );

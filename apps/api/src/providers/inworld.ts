@@ -1,11 +1,11 @@
 import type { SynthesizeInput, SynthesizeResult } from "./elevenlabs";
 import { ProviderError } from "./deepgram";
 
-// NOTE: The exact Inworld endpoint, auth scheme, request/response field names,
-// and voice IDs are to be verified against live Inworld docs at integration
-// time. The model/url below are isolated constants so a tier/model change is
-// one edit. "inworld-tts-1.5" == the Max tier.
-const INWORLD_TTS_MODEL = "inworld-tts-1.5";
+// Verified against docs.inworld.ai (2026-06-03): endpoint, `Basic` auth, the
+// `text`/`voiceId`/`modelId`/`audioConfig` request fields, and the `audioContent`
+// base64 response all match. The Max-tier model id is "inworld-tts-1.5-max"
+// ("inworld-tts-1.5-mini" is the cheaper tier). Isolated so a tier swap is one edit.
+const INWORLD_TTS_MODEL = "inworld-tts-1.5-max";
 const INWORLD_TTS_URL = "https://api.inworld.ai/tts/v1/voice";
 
 export async function synthesizeSpeechInworld(

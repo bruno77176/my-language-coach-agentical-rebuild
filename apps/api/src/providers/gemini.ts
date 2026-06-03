@@ -4,9 +4,10 @@ import { ProviderError } from "./deepgram";
 import { openAiStylePhrase, pacePhrase } from "./tts-config";
 import { pcmToWav } from "./audio";
 
-// Model id is isolated here — Gemini TTS model naming may need a tweak once
-// verified against the live API (see spec).
-const GEMINI_TTS_MODEL = "gemini-3.1-flash-tts";
+// Verified against ai.google.dev/gemini-api/docs/speech-generation (2026-06-03):
+// the current recommended flash TTS model id carries a "-preview" suffix.
+// Isolated here so a model bump is one edit.
+const GEMINI_TTS_MODEL = "gemini-3.1-flash-tts-preview";
 
 function buildPrompt(input: SynthesizeInput): string {
   const lang = input.languageCode
