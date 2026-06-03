@@ -79,6 +79,14 @@ const SEEDS: Seed[] = [
     pricePerUnit: "0.0000072", // $0.0043/min for nova-3 pay-as-you-go ≈ $0.0000717/s
     // NOTE: verify against your billing — Deepgram tiers change.
   },
+  // Deepgram Nova-2 (used for Mandarin Chinese — nova-3 lacks zh support)
+  {
+    provider: "deepgram",
+    operation: "transcribe:nova-2",
+    unitType: "seconds",
+    pricePerUnit: "0.0000072", // mirror nova-3 PAYG; verify against billing
+    // NOTE: verify the nova-2 pre-recorded PAYG rate — Deepgram tiers change.
+  },
   // ElevenLabs TTS (when re-enabled). Operation name must match the provider's
   // active default in providers/elevenlabs.ts so recordUsage finds a rate card.
   {
