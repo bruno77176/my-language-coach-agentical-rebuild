@@ -316,8 +316,13 @@ export function useConversation(
     const audioQueue = createAudioQueue();
     try {
       const { events } = streamOpening(conversationId);
-      await consumeCoachStream(events, audioQueue);
+      const outcome = await consumeCoachStream(events, audioQueue);
       await audioQueue.waitForDrain();
+      // Opener is soft-fail (we still land on idle), but surface a coach-side
+      // error so a broken /opening endpoint isn't invisible in the field.
+      if (outcome.kind === "fatal-error" || outcome.kind === "soft-error") {
+        console.warn(`[OPENING] coach stream error: ${outcome.code}`);
+      }
     } catch (err) {
       console.warn("[OPENING] failed:", err);
     }
