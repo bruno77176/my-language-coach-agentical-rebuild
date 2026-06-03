@@ -3,7 +3,7 @@
 **Date:** 2026-06-03
 **Trigger:** Bruno saw "Speech to Speech — have a realtime conversation with maximum naturalness and
 minimal latency" in the Inworld onboarding and asked whether we should explore it. That tagline is
-*exactly* the product goal for the practice loop.
+_exactly_ the product goal for the practice loop.
 **Status:** Investigation only — not a commitment. Feeds a future plan (likely Plan 8+).
 **Related:** [[project-model-benchmarking]], the merged 4-provider TTS work (PR #30),
 `docs/superpowers/research/2026-05-28-tts-model-landscape.md`, [[project-coach-memory-feature]].
@@ -15,12 +15,12 @@ minimal latency" in the Inworld onboarding and asked whether we should explore i
 Inworld's "Speech-to-Speech" is exposed as their **Realtime API**: STT + LLM + TTS unified behind a
 **single WebSocket**, **sub-1s end-to-end** voice-to-voice, with native VAD / end-of-turn / barge-in.
 
-The crucial finding for us: **it is a *cascaded* pipeline, not an opaque native audio model.** That
+The crucial finding for us: **it is a _cascaded_ pipeline, not an opaque native audio model.** That
 means:
 
 - ✅ **We keep our own LLM and system prompt** — Inworld is model-agnostic (OpenAI, Anthropic, Google,
   Groq, Mistral, xAI via their router); instructions set via `session.update`.
-- ✅ **We keep the text transcript** (streaming STT partials + final), which a language coach *needs*
+- ✅ **We keep the text transcript** (streaming STT partials + final), which a language coach _needs_
   for corrections, translation, end-of-session feedback, and coach-memory extraction.
 - ✅ We gain the hard parts for free: semantic VAD, interruption/barge-in, streaming, cancellation —
   all handled server-side.
@@ -38,24 +38,24 @@ a flag for Pro**, don't rip out the current loop.
 
 Two architectures get marketed under the same words:
 
-| | **Cascaded** (STT → LLM → TTS) | **Native audio-in/audio-out** |
-|---|---|---|
-| Examples | Inworld Realtime API, LiveKit/Pipecat stacks | OpenAI Realtime, Gemini Live |
-| Text transcript | **Exposed** (partials + final) | Hidden / lossy |
-| Own LLM + system prompt | **Yes** | No (the model *is* the LLM) |
-| Prosody/emotion fidelity | Good (steering tags + voice-profile signals) | Best (no text bottleneck) |
-| Latency | Sub-1s achievable with streaming | Lowest (no intermediate text) |
-| Control / transparency | High | Low |
+|                          | **Cascaded** (STT → LLM → TTS)               | **Native audio-in/audio-out** |
+| ------------------------ | -------------------------------------------- | ----------------------------- |
+| Examples                 | Inworld Realtime API, LiveKit/Pipecat stacks | OpenAI Realtime, Gemini Live  |
+| Text transcript          | **Exposed** (partials + final)               | Hidden / lossy                |
+| Own LLM + system prompt  | **Yes**                                      | No (the model _is_ the LLM)   |
+| Prosody/emotion fidelity | Good (steering tags + voice-profile signals) | Best (no text bottleneck)     |
+| Latency                  | Sub-1s achievable with streaming             | Lowest (no intermediate text) |
+| Control / transparency   | High                                         | Low                           |
 
 Inworld is firmly in the **cascaded-but-unified** camp: one endpoint, but each stage is real and
-inspectable. For a coaching product where the *text* is the teachable artifact, that transparency is
+inspectable. For a coaching product where the _text_ is the teachable artifact, that transparency is
 the whole game.
 
 ## How Inworld's Realtime API works (from their docs/marketing, 2026-06)
 
 - **One WebSocket** carries the full loop. "The only Realtime API where STT voice profile, LLM
   steering, and Realtime TTS-2 expressive output run as one WebSocket call."
-- **STT emits paralinguistic signals** (emotion, age, accent, speaking rate) *alongside* each
+- **STT emits paralinguistic signals** (emotion, age, accent, speaking rate) _alongside_ each
   transcript chunk → injected into LLM context.
 - **The LLM emits inline Realtime TTS-2 "steering tags"** — `[whisper]`, `[sigh]`, `[laugh]`,
   `[speak softly]` — consumed by TTS in the same stream for expressive output.
@@ -77,7 +77,8 @@ the whole game.
 ## Why this matters for a language coach (fit analysis)
 
 **Strong fit:**
-- The product goal *is* "realtime conversation, maximally natural, minimal latency." This is purpose-built for that.
+
+- The product goal _is_ "realtime conversation, maximally natural, minimal latency." This is purpose-built for that.
 - We keep the **coaching brain** — our scenario prompts, correction logic, persona, and the
   swappable LLM (today OpenAI; the benchmarking thread wants optionality — this preserves it).
 - We keep **transcripts**, so everything downstream still works: inline translate, end-of-session
@@ -89,6 +90,7 @@ the whole game.
   ([[project-plan-8-ideas]]).
 
 **Tensions / costs:**
+
 - **Architecture rework.** Our loop today is turn-based: `react-native` mic record → multipart upload
   → Deepgram STT → OpenAI LLM → provider TTS, mediated entirely by our Fly API. Realtime is a
   **duplex streaming WebSocket**. Mobile audio capture, playback, and state all change.
@@ -110,7 +112,7 @@ the whole game.
 ## Integration options (sketch — for a future plan, not now)
 
 1. **Status quo, tuned.** Keep turn-based; shave latency (stream TTS by sentence, parallelize STT/LLM).
-   Cheapest; doesn't deliver true barge-in or "maximum naturalness." *Baseline.*
+   Cheapest; doesn't deliver true barge-in or "maximum naturalness." _Baseline._
 2. **Inworld Realtime via our API proxy (recommended to prototype).** Backend opens the Inworld
    WebSocket, relays audio frames to/from mobile over our own WS, keeps the key server-side, and taps
    the transcript/usage stream for metering + memory + feedback. Mobile gets a streaming mic/playback
@@ -119,7 +121,7 @@ the whole game.
    tokens and reconciles usage from Inworld reports. More vendor trust, less central control. Consider
    only if proxy latency proves too high.
 
-Compare-also: **OpenAI Realtime** and **Gemini Live** (native S2S) — likely *more* natural prosody but
+Compare-also: **OpenAI Realtime** and **Gemini Live** (native S2S) — likely _more_ natural prosody but
 they hide the transcript and the LLM, which fights our coaching needs. Worth a side-by-side latency +
 "does it expose usable text" test before committing.
 
