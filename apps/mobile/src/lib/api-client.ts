@@ -393,16 +393,28 @@ export function streamOpening(conversationId: string): {
       const maybeData = (e as { data?: string | null }).data;
       if (maybeData) {
         try {
-          const raw = JSON.parse(maybeData) as {
-            code?: string;
-            message?: string;
-            retryable?: boolean;
-          };
+          const raw = JSON.parse(maybeData) as
+            | { code?: string; message?: string; retryable?: boolean }
+            | {
+                error?: {
+                  code?: string;
+                  message?: string;
+                  retryable?: boolean;
+                };
+              };
+          const flat =
+            "error" in raw && raw.error
+              ? raw.error
+              : (raw as {
+                  code?: string;
+                  message?: string;
+                  retryable?: boolean;
+                });
           push({
             type: "error",
-            code: raw.code ?? "INTERNAL",
-            message: raw.message ?? "Stream error",
-            retryable: raw.retryable ?? false,
+            code: flat.code ?? "INTERNAL",
+            message: flat.message ?? "Stream error",
+            retryable: flat.retryable ?? false,
           });
         } catch {
           push({
