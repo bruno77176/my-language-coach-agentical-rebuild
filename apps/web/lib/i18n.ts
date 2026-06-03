@@ -10,6 +10,9 @@ import da from "../messages/da.json";
 import ru from "../messages/ru.json";
 import ro from "../messages/ro.json";
 import hu from "../messages/hu.json";
+import ja from "../messages/ja.json";
+import zh from "../messages/zh.json";
+import ko from "../messages/ko.json";
 
 export type Locale =
   | "en"
@@ -23,7 +26,10 @@ export type Locale =
   | "da"
   | "ru"
   | "ro"
-  | "hu";
+  | "hu"
+  | "ja"
+  | "zh"
+  | "ko";
 export const LOCALES: readonly Locale[] = [
   "en",
   "fr",
@@ -37,6 +43,9 @@ export const LOCALES: readonly Locale[] = [
   "ru",
   "ro",
   "hu",
+  "ja",
+  "zh",
+  "ko",
 ] as const;
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -57,6 +66,9 @@ export const LOCALE_META: Record<
   ru: { englishName: "Russian", nativeName: "Русский", flag: "🇷🇺" },
   ro: { englishName: "Romanian", nativeName: "Română", flag: "🇷🇴" },
   hu: { englishName: "Hungarian", nativeName: "Magyar", flag: "🇭🇺" },
+  ja: { englishName: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
+  zh: { englishName: "Chinese", nativeName: "中文", flag: "🇨🇳" },
+  ko: { englishName: "Korean", nativeName: "한국어", flag: "🇰🇷" },
 };
 
 export type Messages = typeof en;
@@ -74,6 +86,9 @@ const dictionaries: Record<Locale, Messages> = {
   ru: ru as Messages,
   ro: ro as Messages,
   hu: hu as Messages,
+  ja: ja as Messages,
+  zh: zh as Messages,
+  ko: ko as Messages,
 };
 
 export function getMessages(locale: Locale): Messages {
