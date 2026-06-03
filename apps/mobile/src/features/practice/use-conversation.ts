@@ -311,7 +311,10 @@ export function useConversation(
 
   // Scenario opener: the coach speaks first. Non-fatal — whatever happens we
   // land on idle so the user can start talking. Free turn (no quota).
-  async function runOpening(conversationId: string, isCancelled: () => boolean) {
+  async function runOpening(
+    conversationId: string,
+    isCancelled: () => boolean,
+  ) {
     setState({ phase: "processing", conversationId });
     const audioQueue = createAudioQueue();
     try {
