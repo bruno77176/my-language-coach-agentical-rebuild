@@ -22,6 +22,7 @@ import {
 } from "./providers/openai";
 import { createElevenLabs } from "./providers/elevenlabs";
 import { makeSynthesizeSpeech } from "./providers/tts-router";
+import { makeGoogleAccessTokenProvider } from "./lib/google-tts-auth";
 import { createMessagesRoutes } from "./routes/messages";
 import { createMemoryRoutes } from "./routes/memory";
 import { createFeedbackRoutes } from "./routes/feedback";
@@ -200,13 +201,22 @@ export function createApp(
   const deepgram = createDeepgram(env);
   const openai = createOpenAI(env);
   const eleven = createElevenLabs(env);
+  // GA Cloud TTS (Gemini "Kore" default voice) authenticates via a service
+  // account, not an API key. Build the token provider only when the SA secret
+  // is present; otherwise Gemini is unconfigured and TTS falls back to OpenAI.
+  const geminiAuth = env.GOOGLE_TTS_SA_JSON_B64
+    ? makeGoogleAccessTokenProvider(
+        Buffer.from(env.GOOGLE_TTS_SA_JSON_B64, "base64").toString("utf8"),
+      )
+    : undefined;
   // Provider-agnostic TTS: no config (or default config) uses the global
   // default voice (Gemini "Kore", warm); the client passes a per-turn override
-  // when the user has picked a different coach voice.
+  // when the user has picked a different coach voice. Any provider failure
+  // falls back to OpenAI inside makeSynthesizeSpeech.
   const synthesizeSpeech = makeSynthesizeSpeech({
     openai,
     eleven,
-    geminiKey: env.GEMINI_API_KEY,
+    geminiAuth,
     inworldKey: env.INWORLD_API_KEY,
   });
   const storage = createStorageClient(env);

@@ -1,6 +1,7 @@
 import type { SynthesizeInput, SynthesizeResult } from "./elevenlabs";
 import { ProviderError } from "./deepgram";
 import { openAiStylePhrase, pacePhrase } from "./tts-config";
+import type { AccessTokenProvider } from "../lib/google-tts-auth";
 
 // GA (stable) Gemini-TTS model on the Cloud Text-to-Speech API. Unlike the
 // "-preview" models on the generativelanguage (AI Studio) endpoint, the GA
@@ -39,14 +40,26 @@ function bcp47(code: string | undefined): string {
 const REQUEST_TIMEOUT_MS = 8000;
 
 export async function synthesizeSpeechGemini(
-  apiKey: string | undefined,
+  getAccessToken: AccessTokenProvider | undefined,
   input: SynthesizeInput,
 ): Promise<SynthesizeResult> {
-  if (!apiKey) {
+  if (!getAccessToken) {
     throw new ProviderError(
       "TTS_PROVIDER_NOT_CONFIGURED",
       503,
-      "Gemini API key not configured",
+      "Gemini (Cloud TTS) service account not configured",
+    );
+  }
+
+  // GA Cloud TTS requires an OAuth2 access token (API keys are rejected 401).
+  let accessToken: string;
+  try {
+    accessToken = await getAccessToken();
+  } catch (err) {
+    throw new ProviderError(
+      "TTS_PROVIDER_FAILURE",
+      503,
+      `Gemini (Cloud TTS) auth failed: ${(err as Error).message}`,
     );
   }
 
@@ -62,10 +75,13 @@ export async function synthesizeSpeechGemini(
   let res: Response;
   try {
     res = await fetch(
-      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+      `https://texttospeech.googleapis.com/v1/text:synthesize`,
       {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           input: { prompt, text: input.text },
           voice: {

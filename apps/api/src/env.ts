@@ -14,6 +14,11 @@ const EnvSchema = z.object({
   DEEPGRAM_API_KEY: z.string().min(1),
   ELEVENLABS_API_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().optional(),
+  // Base64-encoded service-account JSON for GA Cloud TTS (Gemini voices). GA
+  // Cloud TTS rejects API keys, so we mint OAuth tokens from this. Optional:
+  // when absent, the Gemini provider is unconfigured and TTS falls back to
+  // OpenAI.
+  GOOGLE_TTS_SA_JSON_B64: z.string().optional(),
   INWORLD_API_KEY: z.string().optional(),
   ADMIN_USER_IDS: z.string().default(""), // comma-separated Supabase user IDs
   ADMIN_ALLOWED_ORIGINS: z.string().default(""), // comma-separated origins allowed to call /admin/* (CORS)

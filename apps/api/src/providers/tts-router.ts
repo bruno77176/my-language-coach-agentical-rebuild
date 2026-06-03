@@ -12,6 +12,7 @@ import {
 } from "./elevenlabs";
 import { synthesizeSpeechGemini } from "./gemini";
 import { synthesizeSpeechInworld } from "./inworld";
+import type { AccessTokenProvider } from "../lib/google-tts-auth";
 import type { OnUsage } from "./usage";
 
 export type RoutedTtsInput = {
@@ -24,14 +25,16 @@ export type RoutedTtsInput = {
 export type TtsDeps = {
   openai: OpenAI;
   eleven: ElevenLabsClient;
-  geminiKey?: string;
+  // GA Cloud TTS (Gemini) authenticates with an OAuth2 access token from a
+  // service account, not an API key.
+  geminiAuth?: AccessTokenProvider;
   inworldKey?: string;
   // Injected so tests can stub providers; production uses the real fns.
   synth?: {
     openai?: (c: OpenAI, i: TtsInput) => Promise<TtsResult>;
     eleven?: (c: ElevenLabsClient, i: SynthesizeInput) => Promise<TtsResult>;
     gemini?: (
-      key: string | undefined,
+      auth: AccessTokenProvider | undefined,
       i: SynthesizeInput,
     ) => Promise<TtsResult>;
     inworld?: (
@@ -67,7 +70,7 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
         case "elevenlabs":
           return await elevenSynth(deps.eleven, shared);
         case "gemini":
-          return await geminiSynth(deps.geminiKey, shared);
+          return await geminiSynth(deps.geminiAuth, shared);
         case "inworld":
           return await inworldSynth(deps.inworldKey, shared);
         default:

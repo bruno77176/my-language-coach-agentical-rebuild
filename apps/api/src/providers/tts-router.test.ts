@@ -3,12 +3,13 @@ import { makeSynthesizeSpeech } from "./tts-router";
 
 describe("makeSynthesizeSpeech", () => {
   const result = { audioBuffer: Buffer.from([1]), contentType: "audio/mpeg" };
+  const GEMINI_AUTH = async () => "ya29.tok";
 
   function deps(overrides: Record<string, unknown>) {
     return {
       openai: {} as never,
       eleven: {} as never,
-      geminiKey: "gk",
+      geminiAuth: GEMINI_AUTH,
       inworldKey: "ik",
       synth: overrides,
     };
@@ -21,7 +22,7 @@ describe("makeSynthesizeSpeech", () => {
     await synth({ text: "hi", languageCode: "es" });
     expect(openai).not.toHaveBeenCalled();
     expect(gemini).toHaveBeenCalledWith(
-      "gk",
+      GEMINI_AUTH,
       expect.objectContaining({ voiceId: "Kore", languageCode: "es" }),
     );
   });
@@ -65,7 +66,7 @@ describe("makeSynthesizeSpeech", () => {
       },
     });
     expect(gemini).toHaveBeenCalledWith(
-      "gk",
+      GEMINI_AUTH,
       expect.objectContaining({ voiceId: "Kore", languageCode: "es" }),
     );
   });
