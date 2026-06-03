@@ -15,6 +15,7 @@ All commands run from `app/` (the monorepo root) unless stated. Current branch: 
 ### Task 1: Rewrite the 10 scenario persona prompts
 
 **Files:**
+
 - Modify: `packages/shared/src/role-play-scenarios.ts:26-147` (the 10 `systemPromptFragment` values)
 - Test: `packages/shared/src/role-play-scenarios.test.ts` (existing — no edits, must stay green)
 
@@ -28,51 +29,61 @@ Expected: PASS (4 tests — 10 scenarios, 3 free, fragments >40 chars, unique id
 Edit `packages/shared/src/role-play-scenarios.ts`. Replace ONLY the `systemPromptFragment` string of each scenario (leave `id`, `title`, `description`, `icon`, `pro` untouched). Use exactly these strings:
 
 `coffee`:
+
 ```
 "You are Marco, the barista at a small neighbourhood café on a quiet mid-morning. You speak first: greet the customer warmly and ask what they'd like. Take their order naturally and feel free to mention the day's special. Keep your turns to a sentence or two and let them lead. If it comes up naturally, one small hiccup might surface — the card reader is playing up, or the last almond croissant just went — but don't force it. Stay relaxed and friendly."
 ```
 
 `directions`:
+
 ```
 "You are a friendly local out for a walk when someone stops you to ask the way to a well-known spot in town. You speak first with a warm 'Oh, hi — you look a little lost, can I help?' Give directions using real landmarks ('go past the bakery, then turn left at the church'). Be patient and happy to repeat yourself. If they ask for somewhere you genuinely wouldn't know, admit it and point them to someone who might."
 ```
 
 `party`:
+
 ```
 "You are Sofia, a guest at a mutual friend's birthday party, drink in hand. You speak first: introduce yourself and ask how they know the host. Keep it light and curious — find one thing you have in common (work, a hobby, a place you've both been) and dig into it. Short, casual turns; let them talk more than you do."
 ```
 
 `hotel`:
+
 ```
 "You are the receptionist at a mid-range city hotel. You speak first: greet the guest politely and ask for the name on the booking. Handle check-in formally but warmly. A small wrinkle may surface — the room isn't quite ready, or there's a paid upgrade available — which you raise courteously and work through together. Keep your turns brief and professional."
 ```
 
 `doctor`:
+
 ```
 "You are Dr. Lewis, a kind GP. You speak first: greet the patient and ask what's brought them in today. Ask gentle follow-up questions one at a time — when it started, how bad it is, whether it's happened before. Once you have a picture, give a simple diagnosis and clear instructions for a treatment (how much, how often, how long). Be patient if they search for words and never lecture."
 ```
 
 `interview`:
+
 ```
 "You are the hiring manager interviewing this candidate for a role in their field. You speak first: welcome them and open with something easy ('thanks for coming in — tell me a bit about yourself'). After two or three warm questions, ask one harder one (a past failure, or why they're leaving their current job) and follow up on their answer. Keep your own turns short and let them do most of the talking."
 ```
 
 `complaint`:
+
 ```
 "You are a customer-service agent answering the phone. You speak first with a standard greeting ('Thanks for calling support — how can I help today?'). Let the customer explain their problem. Start a little by-the-book and ask for details (order number, dates); if they make their case clearly and politely, soften and offer a fair resolution. Keep it calm and realistic, never theatrical."
 ```
 
 `phone-friend`:
+
 ```
 "You are Alex, a close friend the person hasn't spoken to in a few weeks, calling to catch up. You speak first: pick up warmly ('hey! it's been ages — how are you?'). Trade news using casual language and contractions. Somewhere in the chat, mention one small thing going on in your life that you'd like their take on. Keep it easy and back-and-forth."
 ```
 
 `meeting`:
+
 ```
 "You are Priya, chairing a small team meeting where this person is the new joiner. You speak first: welcome them to the team and invite them to introduce themselves. Ask one or two friendly questions about their background, then ask what they're looking forward to in the role. Keep it warm, brief and professional."
 ```
 
 `emergency`:
+
 ```
 "You are a duty officer at a police station. Someone has come in having lost their passport while travelling. You speak first: greet them calmly and ask how you can help. Take it step by step — what happened, when and where, a few identifying details, where they're staying. Stay professional and reassuring, then give clear next steps (which embassy to contact, what to bring, any fee). Keep your turns short so they can follow."
 ```
@@ -94,6 +105,7 @@ git commit -m "feat(scenarios): rewrite persona prompts for realism + coach open
 ### Task 2: Add "coach speaks first" to the shared scenario scaffolding
 
 **Files:**
+
 - Modify: `packages/shared/src/prompts.ts:68-76` (the `if (input.scenario)` return block)
 - Test: `packages/shared/src/prompts.test.ts` (existing — no edits, must stay green)
 
@@ -107,16 +119,16 @@ Expected: PASS (5 tests)
 In `packages/shared/src/prompts.ts`, replace the scenario return block (lines 68-76) with:
 
 ```ts
-  if (input.scenario) {
-    return [
-      input.scenario.systemPromptFragment,
-      `Speak only in ${lang.englishName} (${lang.nativeName}).`,
-      `You speak first: open the interaction the way your character naturally would, then respond to whatever the user actually says rather than following a fixed script.`,
-      `Stay in character throughout. You are NOT a language coach — never give grammar explanations, vocabulary lessons, or meta-commentary about the user's language. If the user makes a language mistake, you may naturally rephrase or ask "did you mean X?" the way a real person might. Never explicitly correct or teach.`,
-      `Keep responses short — 1-3 sentences typically, like real conversation. Be friendly when appropriate to your role, but don't be a teacher.`,
-      `Never break character. Never mention being ChatGPT, GPT, OpenAI, AI, a model, Lisa, or a language coach. If asked, you are simply the character described above.`,
-    ].join(" ");
-  }
+if (input.scenario) {
+  return [
+    input.scenario.systemPromptFragment,
+    `Speak only in ${lang.englishName} (${lang.nativeName}).`,
+    `You speak first: open the interaction the way your character naturally would, then respond to whatever the user actually says rather than following a fixed script.`,
+    `Stay in character throughout. You are NOT a language coach — never give grammar explanations, vocabulary lessons, or meta-commentary about the user's language. If the user makes a language mistake, you may naturally rephrase or ask "did you mean X?" the way a real person might. Never explicitly correct or teach.`,
+    `Keep responses short — 1-3 sentences typically, like real conversation. Be friendly when appropriate to your role, but don't be a teacher.`,
+    `Never break character. Never mention being ChatGPT, GPT, OpenAI, AI, a model, Lisa, or a language coach. If asked, you are simply the character described above.`,
+  ].join(" ");
+}
 ```
 
 - [ ] **Step 3: Run the test to confirm still green**
@@ -136,6 +148,7 @@ git commit -m "feat(prompts): scenario coach speaks first and reacts to the user
 ### Task 3: Backend — `POST /v1/voice/sessions/:id/opening` (TDD)
 
 **Files:**
+
 - Create: `apps/api/src/routes/voice-opening.test.ts`
 - Modify: `apps/api/src/routes/voice.ts` (add the route inside `createVoiceRoutes`, after the `/turns` route, before `/sessions/:id/end`)
 
@@ -190,9 +203,7 @@ function setupRoute(overrides: SetupOverrides = {}) {
       : overrides.conversation;
   const history = overrides.history ?? [];
 
-  const insertReturning = vi
-    .fn()
-    .mockResolvedValue([{ id: coachMessageId }]);
+  const insertReturning = vi.fn().mockResolvedValue([{ id: coachMessageId }]);
 
   const updateChain = {
     set: vi.fn(() => updateChain),
@@ -389,177 +400,174 @@ Expected: FAIL — route does not exist yet (404 for all, or no `/opening` handl
 In `apps/api/src/routes/voice.ts`, add this route inside `createVoiceRoutes`, immediately after the `/sessions/:id/turns` route closes (after line 475) and before `routes.post("/sessions/:id/end", ...)`:
 
 ```ts
-  // POST /sessions/:id/opening — scenario-only coach opener. The coach speaks
-  // the first line in character. This turn is FREE: no transcription, no quota
-  // check, no usage/seconds counting. Reuses the reply-chunk → TTS pipeline.
-  routes.post("/sessions/:id/opening", async (c) => {
-    const userId = c.get("userId");
-    const conversationId = c.req.param("id");
-    const platform = platformFromHeader(c.req.header("X-Client-Platform"));
-    const onUsage = makeOnUsage(deps.db, { userId, platform, conversationId });
+// POST /sessions/:id/opening — scenario-only coach opener. The coach speaks
+// the first line in character. This turn is FREE: no transcription, no quota
+// check, no usage/seconds counting. Reuses the reply-chunk → TTS pipeline.
+routes.post("/sessions/:id/opening", async (c) => {
+  const userId = c.get("userId");
+  const conversationId = c.req.param("id");
+  const platform = platformFromHeader(c.req.header("X-Client-Platform"));
+  const onUsage = makeOnUsage(deps.db, { userId, platform, conversationId });
 
-    const conversation = await deps.db.query.conversations.findFirst({
-      where: (t, { eq: e, and: a }) =>
-        a(e(t.id, conversationId), e(t.userId, userId)),
-    });
-    if (!conversation) {
-      return c.json(
-        { error: { code: "NOT_FOUND", message: "Conversation not found" } },
-        404,
-      );
-    }
-    if (!conversation.scenarioId) {
-      return c.json(
-        {
-          error: {
-            code: "BAD_REQUEST",
-            message: "Opening is only available for scenarios",
-          },
-        },
-        400,
-      );
-    }
-    const scenario = ROLE_PLAY_SCENARIOS.find(
-      (s) => s.id === conversation.scenarioId,
+  const conversation = await deps.db.query.conversations.findFirst({
+    where: (t, { eq: e, and: a }) =>
+      a(e(t.id, conversationId), e(t.userId, userId)),
+  });
+  if (!conversation) {
+    return c.json(
+      { error: { code: "NOT_FOUND", message: "Conversation not found" } },
+      404,
     );
-    if (!scenario) {
-      return c.json(
-        { error: { code: "BAD_REQUEST", message: "Unknown scenario" } },
-        400,
-      );
-    }
-
-    const profile = await deps.db.query.profiles.findFirst({
-      where: (t, { eq: e }) => e(t.userId, userId),
-    });
-    if (!profile) {
-      return c.json(
-        { error: { code: "INTERNAL", message: "No profile" } },
-        500,
-      );
-    }
-
-    // Idempotency: if this conversation already has messages, the opener was
-    // already produced (double mount / retry). Emit done without regenerating.
-    const existing = await deps.db.query.messages.findMany({
-      where: (t, { eq: e }) => e(t.conversationId, conversationId),
-      orderBy: (t, { asc: a }) => [a(t.createdAt)],
-    });
-    if (existing.length > 0) {
-      return streamSSE(c, async (stream) => {
-        await stream.writeSSE({
-          event: "done",
-          data: JSON.stringify({
-            messageId: existing[existing.length - 1]?.id ?? "",
-          }),
-        });
-      });
-    }
-
-    const sysPrompt = buildCoachSystemPrompt({
-      targetLanguage: conversation.language,
-      userDisplayName: profile.displayName,
-      memory: null,
-      scenario: {
-        id: scenario.id,
-        systemPromptFragment: scenario.systemPromptFragment,
+  }
+  if (!conversation.scenarioId) {
+    return c.json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: "Opening is only available for scenarios",
+        },
       },
-    });
+      400,
+    );
+  }
+  const scenario = ROLE_PLAY_SCENARIOS.find(
+    (s) => s.id === conversation.scenarioId,
+  );
+  if (!scenario) {
+    return c.json(
+      { error: { code: "BAD_REQUEST", message: "Unknown scenario" } },
+      400,
+    );
+  }
 
-    const languageCode = conversation.language;
+  const profile = await deps.db.query.profiles.findFirst({
+    where: (t, { eq: e }) => e(t.userId, userId),
+  });
+  if (!profile) {
+    return c.json({ error: { code: "INTERNAL", message: "No profile" } }, 500);
+  }
 
+  // Idempotency: if this conversation already has messages, the opener was
+  // already produced (double mount / retry). Emit done without regenerating.
+  const existing = await deps.db.query.messages.findMany({
+    where: (t, { eq: e }) => e(t.conversationId, conversationId),
+    orderBy: (t, { asc: a }) => [a(t.createdAt)],
+  });
+  if (existing.length > 0) {
     return streamSSE(c, async (stream) => {
-      try {
-        // System-only context: the model produces the opener because there is
-        // no prior user turn.
-        const gptStream = deps.streamChatCompletion({
-          messages: [{ role: "system" as const, content: sysPrompt }],
-          model: "gpt-4o-mini",
-          onUsage,
-        });
+      await stream.writeSSE({
+        event: "done",
+        data: JSON.stringify({
+          messageId: existing[existing.length - 1]?.id ?? "",
+        }),
+      });
+    });
+  }
 
-        const sentenceBuf = new SentenceBuffer();
-        let chunkIndex = 0;
-        const ttsPromises: Promise<void>[] = [];
-        let fullCoachText = "";
-        const turnSeq = Date.now();
+  const sysPrompt = buildCoachSystemPrompt({
+    targetLanguage: conversation.language,
+    userDisplayName: profile.displayName,
+    memory: null,
+    scenario: {
+      id: scenario.id,
+      systemPromptFragment: scenario.systemPromptFragment,
+    },
+  });
 
-        async function emitChunk(text: string, idx: number): Promise<void> {
-          let audio: TtsResult;
-          try {
-            audio = await deps.synthesizeSpeech({
-              text,
-              languageCode,
-              onUsage,
-            });
-          } catch {
-            await stream.writeSSE({
-              event: "error",
-              data: JSON.stringify({
-                code: "TTS_PROVIDER_FAILURE",
-                message: "TTS failed for chunk " + idx,
-                retryable: true,
-              }),
-            });
-            return;
-          }
-          const { audioUrl } = await deps.uploadCoachAudioChunk({
-            userId,
-            conversationId,
-            messageId: `pending-${conversationId}-${turnSeq}`,
-            chunkIndex: idx,
-            audioBuffer: audio.audioBuffer,
-            contentType: audio.contentType,
+  const languageCode = conversation.language;
+
+  return streamSSE(c, async (stream) => {
+    try {
+      // System-only context: the model produces the opener because there is
+      // no prior user turn.
+      const gptStream = deps.streamChatCompletion({
+        messages: [{ role: "system" as const, content: sysPrompt }],
+        model: "gpt-4o-mini",
+        onUsage,
+      });
+
+      const sentenceBuf = new SentenceBuffer();
+      let chunkIndex = 0;
+      const ttsPromises: Promise<void>[] = [];
+      let fullCoachText = "";
+      const turnSeq = Date.now();
+
+      async function emitChunk(text: string, idx: number): Promise<void> {
+        let audio: TtsResult;
+        try {
+          audio = await deps.synthesizeSpeech({
+            text,
+            languageCode,
+            onUsage,
           });
+        } catch {
           await stream.writeSSE({
-            event: "reply-chunk",
-            data: JSON.stringify({ index: idx, text, audioUrl, durationMs: 0 }),
+            event: "error",
+            data: JSON.stringify({
+              code: "TTS_PROVIDER_FAILURE",
+              message: "TTS failed for chunk " + idx,
+              retryable: true,
+            }),
           });
+          return;
         }
-
-        for await (const delta of gptStream) {
-          fullCoachText += delta;
-          const sentences = sentenceBuf.push(delta);
-          for (const s of sentences) {
-            const idx = chunkIndex++;
-            ttsPromises.push(emitChunk(s, idx));
-          }
-        }
-        const tail = sentenceBuf.flush();
-        if (tail) {
-          const idx = chunkIndex++;
-          ttsPromises.push(emitChunk(tail, idx));
-        }
-        await Promise.all(ttsPromises);
-
-        const [coachRow] = await deps.db
-          .insert(messages)
-          .values({
-            conversationId,
-            role: "coach",
-            text: fullCoachText,
-            audioStoragePath: null,
-          })
-          .returning();
-
-        await stream.writeSSE({
-          event: "done",
-          data: JSON.stringify({ messageId: coachRow!.id }),
+        const { audioUrl } = await deps.uploadCoachAudioChunk({
+          userId,
+          conversationId,
+          messageId: `pending-${conversationId}-${turnSeq}`,
+          chunkIndex: idx,
+          audioBuffer: audio.audioBuffer,
+          contentType: audio.contentType,
         });
-      } catch (err) {
-        const code = err instanceof ProviderError ? err.code : "INTERNAL";
-        const message = (err as Error).message ?? "Unexpected error";
         await stream.writeSSE({
-          event: "error",
-          data: JSON.stringify({
-            code,
-            message,
-            retryable: code !== "QUOTA_EXCEEDED",
-          }),
+          event: "reply-chunk",
+          data: JSON.stringify({ index: idx, text, audioUrl, durationMs: 0 }),
         });
       }
-    });
+
+      for await (const delta of gptStream) {
+        fullCoachText += delta;
+        const sentences = sentenceBuf.push(delta);
+        for (const s of sentences) {
+          const idx = chunkIndex++;
+          ttsPromises.push(emitChunk(s, idx));
+        }
+      }
+      const tail = sentenceBuf.flush();
+      if (tail) {
+        const idx = chunkIndex++;
+        ttsPromises.push(emitChunk(tail, idx));
+      }
+      await Promise.all(ttsPromises);
+
+      const [coachRow] = await deps.db
+        .insert(messages)
+        .values({
+          conversationId,
+          role: "coach",
+          text: fullCoachText,
+          audioStoragePath: null,
+        })
+        .returning();
+
+      await stream.writeSSE({
+        event: "done",
+        data: JSON.stringify({ messageId: coachRow!.id }),
+      });
+    } catch (err) {
+      const code = err instanceof ProviderError ? err.code : "INTERNAL";
+      const message = (err as Error).message ?? "Unexpected error";
+      await stream.writeSSE({
+        event: "error",
+        data: JSON.stringify({
+          code,
+          message,
+          retryable: code !== "QUOTA_EXCEEDED",
+        }),
+      });
+    }
   });
+});
 ```
 
 > Note: `TtsResult`, `SentenceBuffer`, `ProviderError`, `streamSSE`, `messages`, `ROLE_PLAY_SCENARIOS`, `buildCoachSystemPrompt`, `makeOnUsage`, `platformFromHeader` are all already imported at the top of `voice.ts` (used by `/turns`). No new imports needed.
@@ -586,6 +594,7 @@ git commit -m "feat(api): free scenario opener endpoint (coach speaks first)"
 ### Task 4: Mobile — `streamOpening` client helper
 
 **Files:**
+
 - Modify: `apps/mobile/src/lib/api-client.ts` (add `streamOpening` after `streamTurn`, end of file)
 
 - [ ] **Step 1: Add `streamOpening`**
@@ -740,6 +749,7 @@ git commit -m "feat(mobile): streamOpening client for the scenario opener SSE"
 ### Task 5: Mobile — play the opener in `use-conversation`
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/practice/use-conversation.ts`
 
 This task (a) extracts the audio-queue factory and the coach-stream consumption loop so the opener and user turns share them, then (b) runs the opener in the scenario branch.
@@ -763,115 +773,115 @@ import {
 Inside `useConversation`, just before `async function start()` (line 213), add these two nested helpers. They close over `setMessages` / `setLastActivityAt`, which are already in scope:
 
 ```ts
-  // Single place that turns a coach SSE stream's reply-chunks into the growing
-  // coach message + queued audio, and resolves the server message id on done.
-  // Shared by user turns (stop) and the scenario opener (runOpening).
-  function createAudioQueue() {
-    return new AudioQueue({
-      playChunk: async (chunk) => {
-        await playOnce({
-          source: { uri: chunk.audioUrl },
-          text: chunk.text,
-          durationMs: chunk.durationMs,
-        });
-      },
-    });
-  }
+// Single place that turns a coach SSE stream's reply-chunks into the growing
+// coach message + queued audio, and resolves the server message id on done.
+// Shared by user turns (stop) and the scenario opener (runOpening).
+function createAudioQueue() {
+  return new AudioQueue({
+    playChunk: async (chunk) => {
+      await playOnce({
+        source: { uri: chunk.audioUrl },
+        text: chunk.text,
+        durationMs: chunk.durationMs,
+      });
+    },
+  });
+}
 
-  type CoachStreamOutcome =
-    | { kind: "ok" }
-    | { kind: "paywall" }
-    | { kind: "soft-error"; code: SoftErrorCode }
-    | { kind: "fatal-error"; code: string; message: string };
+type CoachStreamOutcome =
+  | { kind: "ok" }
+  | { kind: "paywall" }
+  | { kind: "soft-error"; code: SoftErrorCode }
+  | { kind: "fatal-error"; code: string; message: string };
 
-  async function consumeCoachStream(
-    events: AsyncIterable<TurnEvent>,
-    audioQueue: ReturnType<typeof createAudioQueue>,
-    onTranscription?: (text: string) => void,
-  ): Promise<CoachStreamOutcome> {
-    let coachMessageId: string | null = null;
-    const chunkTexts: string[] = [];
+async function consumeCoachStream(
+  events: AsyncIterable<TurnEvent>,
+  audioQueue: ReturnType<typeof createAudioQueue>,
+  onTranscription?: (text: string) => void,
+): Promise<CoachStreamOutcome> {
+  let coachMessageId: string | null = null;
+  const chunkTexts: string[] = [];
 
-    for await (const event of events) {
-      if (event.type === "transcription") {
-        onTranscription?.(event.text);
-      } else if (event.type === "reply-chunk") {
-        chunkTexts[event.index] = event.text;
-        const accumText = chunkTexts.filter(Boolean).join(" ");
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (
-            last &&
-            last.role === "coach" &&
-            coachMessageId !== null &&
-            last.id === coachMessageId
-          ) {
-            return [
-              ...prev.slice(0, -1),
-              { ...last, text: accumText, audioUrl: event.audioUrl },
-            ];
-          }
-          const newId = `c-${Date.now()}`;
-          coachMessageId = newId;
+  for await (const event of events) {
+    if (event.type === "transcription") {
+      onTranscription?.(event.text);
+    } else if (event.type === "reply-chunk") {
+      chunkTexts[event.index] = event.text;
+      const accumText = chunkTexts.filter(Boolean).join(" ");
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (
+          last &&
+          last.role === "coach" &&
+          coachMessageId !== null &&
+          last.id === coachMessageId
+        ) {
           return [
-            ...prev,
-            {
-              id: newId,
-              role: "coach",
-              text: accumText,
-              audioUrl: event.audioUrl,
-            },
+            ...prev.slice(0, -1),
+            { ...last, text: accumText, audioUrl: event.audioUrl },
           ];
-        });
-        audioQueue.enqueue({
-          index: event.index,
-          text: event.text,
-          audioUrl: event.audioUrl,
-          durationMs: event.durationMs,
-        });
-      } else if (event.type === "done") {
-        if (coachMessageId && event.messageId) {
-          const serverId = event.messageId;
-          const localId = coachMessageId;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === localId ? { ...m, id: serverId } : m)),
-          );
         }
-        setLastActivityAt(Date.now());
-      } else if (event.type === "error") {
-        if (event.code === "DAILY_QUOTA_EXCEEDED") {
-          return { kind: "paywall" };
-        }
-        const code = event.code as SoftErrorCode;
-        if (SOFT_ERROR_CODES.has(code)) {
-          pushSoftErrorAsCoachMessage(code);
-          return { kind: "soft-error", code };
-        }
-        return {
-          kind: "fatal-error",
-          code: event.code,
-          message: event.message,
-        };
+        const newId = `c-${Date.now()}`;
+        coachMessageId = newId;
+        return [
+          ...prev,
+          {
+            id: newId,
+            role: "coach",
+            text: accumText,
+            audioUrl: event.audioUrl,
+          },
+        ];
+      });
+      audioQueue.enqueue({
+        index: event.index,
+        text: event.text,
+        audioUrl: event.audioUrl,
+        durationMs: event.durationMs,
+      });
+    } else if (event.type === "done") {
+      if (coachMessageId && event.messageId) {
+        const serverId = event.messageId;
+        const localId = coachMessageId;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === localId ? { ...m, id: serverId } : m)),
+        );
       }
+      setLastActivityAt(Date.now());
+    } else if (event.type === "error") {
+      if (event.code === "DAILY_QUOTA_EXCEEDED") {
+        return { kind: "paywall" };
+      }
+      const code = event.code as SoftErrorCode;
+      if (SOFT_ERROR_CODES.has(code)) {
+        pushSoftErrorAsCoachMessage(code);
+        return { kind: "soft-error", code };
+      }
+      return {
+        kind: "fatal-error",
+        code: event.code,
+        message: event.message,
+      };
     }
-    return { kind: "ok" };
   }
+  return { kind: "ok" };
+}
 
-  // Scenario opener: the coach speaks first. Non-fatal — whatever happens we
-  // land on idle so the user can start talking. Free turn (no quota).
-  async function runOpening(conversationId: string, isCancelled: () => boolean) {
-    setState({ phase: "processing", conversationId });
-    const audioQueue = createAudioQueue();
-    try {
-      const { events } = streamOpening(conversationId);
-      await consumeCoachStream(events, audioQueue);
-      await audioQueue.waitForDrain();
-    } catch (err) {
-      console.warn("[OPENING] failed:", err);
-    }
-    if (isCancelled()) return;
-    setState({ phase: "idle", conversationId });
+// Scenario opener: the coach speaks first. Non-fatal — whatever happens we
+// land on idle so the user can start talking. Free turn (no quota).
+async function runOpening(conversationId: string, isCancelled: () => boolean) {
+  setState({ phase: "processing", conversationId });
+  const audioQueue = createAudioQueue();
+  try {
+    const { events } = streamOpening(conversationId);
+    await consumeCoachStream(events, audioQueue);
+    await audioQueue.waitForDrain();
+  } catch (err) {
+    console.warn("[OPENING] failed:", err);
   }
+  if (isCancelled()) return;
+  setState({ phase: "idle", conversationId });
+}
 ```
 
 - [ ] **Step 3: Use the opener in the scenario branch of the session-start effect**
@@ -879,13 +889,13 @@ Inside `useConversation`, just before `async function start()` (line 213), add t
 Replace lines 129-133 (the `if (scenarioId) { setMessages([]); setState(idle); return; }` block) with:
 
 ```ts
-        // Scenarios: the coach speaks first, in character. Play the opener
-        // through the same reply-chunk/audio pipeline as a normal turn.
-        if (scenarioId) {
-          setMessages([]);
-          await runOpening(conversation_id, () => cancelled);
-          return;
-        }
+// Scenarios: the coach speaks first, in character. Play the opener
+// through the same reply-chunk/audio pipeline as a normal turn.
+if (scenarioId) {
+  setMessages([]);
+  await runOpening(conversation_id, () => cancelled);
+  return;
+}
 ```
 
 - [ ] **Step 4: Refactor `stop()` to use the shared consumer**
@@ -893,47 +903,47 @@ Replace lines 129-133 (the `if (scenarioId) { setMessages([]); setState(idle); r
 Replace the body of the `try` block in `stop()` from the `const { events } = streamTurn(...)` line through the `setState({ phase: "idle", conversationId });` that follows `await audioQueue.waitForDrain();` (lines 270-370) with:
 
 ```ts
-      const vl = useVoiceLab.getState();
-      const voiceOverride = vl.overrideEnabled ? vl.config : undefined;
-      const { events } = streamTurn(conversationId, uri, voiceOverride);
-      const audioQueue = createAudioQueue();
+const vl = useVoiceLab.getState();
+const voiceOverride = vl.overrideEnabled ? vl.config : undefined;
+const { events } = streamTurn(conversationId, uri, voiceOverride);
+const audioQueue = createAudioQueue();
 
-      const outcome = await consumeCoachStream(events, audioQueue, (text) => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `u-${Date.now()}`,
-            role: "user",
-            text,
-            audioUrl: uri,
-            audioDurationMs: durationMs,
-          },
-        ]);
-        setUserTurnCount((n) => n + 1);
-        setLastActivityAt(Date.now());
-      });
+const outcome = await consumeCoachStream(events, audioQueue, (text) => {
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: `u-${Date.now()}`,
+      role: "user",
+      text,
+      audioUrl: uri,
+      audioDurationMs: durationMs,
+    },
+  ]);
+  setUserTurnCount((n) => n + 1);
+  setLastActivityAt(Date.now());
+});
 
-      if (outcome.kind === "paywall") {
-        await audioQueue.waitForDrain();
-        if (!paywallShownRef.current) {
-          paywallShownRef.current = true;
-          router.push("/(modals)/paywall");
-        }
-        setState({ phase: "idle", conversationId });
-        return;
-      }
-      if (outcome.kind === "soft-error") {
-        await audioQueue.waitForDrain();
-        setState({ phase: "idle", conversationId });
-        return;
-      }
-      if (outcome.kind === "fatal-error") {
-        throw new Error(`${outcome.code}: ${outcome.message}`);
-      }
+if (outcome.kind === "paywall") {
+  await audioQueue.waitForDrain();
+  if (!paywallShownRef.current) {
+    paywallShownRef.current = true;
+    router.push("/(modals)/paywall");
+  }
+  setState({ phase: "idle", conversationId });
+  return;
+}
+if (outcome.kind === "soft-error") {
+  await audioQueue.waitForDrain();
+  setState({ phase: "idle", conversationId });
+  return;
+}
+if (outcome.kind === "fatal-error") {
+  throw new Error(`${outcome.code}: ${outcome.message}`);
+}
 
-      await audioQueue.waitForDrain();
-      paywallShownRef.current = false;
-      setState({ phase: "idle", conversationId });
+await audioQueue.waitForDrain();
+paywallShownRef.current = false;
+setState({ phase: "idle", conversationId });
 ```
 
 > This preserves the original behavior exactly: transcription inserts the user message + bumps the turn count; `DAILY_QUOTA_EXCEEDED` drains then opens the paywall once; soft errors push a coach fallback then go idle; other errors throw to the outer catch (error screen).
@@ -1005,5 +1015,5 @@ Not automatable here, but verify before release:
 1. Start a **Coffee** scenario → the coach (Marco) greets you in the target language, audio plays, mic is disabled until he finishes, then enables.
 2. Reply → normal turn flow continues.
 3. End and reopen the same scenario type → opener line differs (dynamic, not canned).
-4. As a **free** user already at the daily cap → starting a scenario still plays the opener (it's free); the paywall only appears when *you* speak.
+4. As a **free** user already at the daily cap → starting a scenario still plays the opener (it's free); the paywall only appears when _you_ speak.
 5. Kill the network at session start → opener fails silently, you land on idle and can still start speaking.

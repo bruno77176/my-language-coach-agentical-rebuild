@@ -12,9 +12,9 @@ Two issues with role-play scenarios in the rebuilt app:
    QA checklist than a person. The model produces stilted, generic openings and
    over-eager "twists."
 2. **The coach stays silent.** In scenario mode the client deliberately sends an
-   empty message list and waits for the *user* to speak first
+   empty message list and waits for the _user_ to speak first
    (`use-conversation.ts:128-133`). In real life the barista / receptionist /
-   officer greets *you*. Users expect the other person to open the dialog.
+   officer greets _you_. Users expect the other person to open the dialog.
 
 ## Goals
 
@@ -115,7 +115,7 @@ Rewrite all 10 `systemPromptFragment`s. Each gains:
 - Natural turn-taking: keep turns short, let the student lead, react to what they
   actually say rather than running a script.
 - A realistic (not theatrical) twist where one already exists, framed as something
-  that *might* come up rather than something to force.
+  that _might_ come up rather than something to force.
 
 Unchanged: `id`, `title`, `description`, `icon`, `pro` for every scenario. Still
 10 scenarios, 3 free (coffee / directions / party), 7 pro.
