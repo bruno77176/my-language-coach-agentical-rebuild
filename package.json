@@ -14,10 +14,13 @@
     "test": "turbo run test",
     "build": "turbo run build",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "prepare": "husky"
   },
   "devDependencies": {
     "eslint": "^9.17.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
     "prettier": "^3.4.2",
     "turbo": "^2.9.12"
   },
@@ -26,5 +29,8 @@
       "@types/react": "19.1.17",
       "@types/react-dom": "19.1.10"
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,json,md,yml,yaml}": "prettier --write --ignore-unknown"
   }
 }

@@ -1,0 +1,3 @@
+# Auto-format staged files so a Prettier `format:check` failure can never reach CI.
+# Bypass in an emergency with: git commit --no-verify
+pnpm exec lint-staged
