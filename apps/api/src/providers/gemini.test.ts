@@ -25,7 +25,9 @@ describe("synthesizeSpeechGemini", () => {
       {
         content: {
           parts: [
-            { inlineData: { mimeType: "audio/L16;rate=24000", data: pcmBase64 } },
+            {
+              inlineData: { mimeType: "audio/L16;rate=24000", data: pcmBase64 },
+            },
           ],
         },
       },

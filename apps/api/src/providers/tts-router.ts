@@ -30,8 +30,14 @@ export type TtsDeps = {
   synth?: {
     openai?: (c: OpenAI, i: TtsInput) => Promise<TtsResult>;
     eleven?: (c: ElevenLabsClient, i: SynthesizeInput) => Promise<TtsResult>;
-    gemini?: (key: string | undefined, i: SynthesizeInput) => Promise<TtsResult>;
-    inworld?: (key: string | undefined, i: SynthesizeInput) => Promise<TtsResult>;
+    gemini?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
+    inworld?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
   };
 };
 

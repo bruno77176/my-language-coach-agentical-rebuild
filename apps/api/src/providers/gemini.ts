@@ -41,7 +41,9 @@ export async function synthesizeSpeechGemini(
 
   let json: {
     candidates?: Array<{
-      content?: { parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }> };
+      content?: {
+        parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }>;
+      };
     }>;
   };
   try {

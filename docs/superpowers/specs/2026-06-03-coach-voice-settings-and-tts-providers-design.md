@@ -57,8 +57,8 @@ Row to add (mirrors existing `ProfileRow` usage):
 Keep the route/file name (`voice-lab`) to avoid churn; only user-facing strings and behavior change.
 
 - **Title:** `"🎛 Voice Lab"` → `"Coach's voice"`. Remove the "Dev tool — …" note paragraph; replace
-  with a one-line user-facing description, e.g. *"Pick how your coach sounds. Preview, then it's used
-  in every conversation."*
+  with a one-line user-facing description, e.g. _"Pick how your coach sounds. Preview, then it's used
+  in every conversation."_
 - **Remove** the entire "Apply to live conversation" label + ON/OFF chip block.
 - **Keep** Provider, Voice, Speed, Tone, Preview language (all 12 languages), Preview button, and
   "Reset to default".
@@ -133,19 +133,19 @@ existing users see no regression.)
 
 - `synthesizeSpeechGemini(apiKey: string | undefined, input: SynthesizeInput): Promise<TtsResult>`.
 - If `apiKey` is falsy → throw `ProviderError("TTS_PROVIDER_NOT_CONFIGURED", 503, "Gemini API key not
-  configured")`.
+configured")`.
 - Call the Gemini API `generateContent` (REST via `fetch`) for model
   `gemini-3.1-flash-tts` (held in a single editable `GEMINI_TTS_MODEL` constant — model id may need a
   tweak once verified against the live API), with:
   - `contents`: a prose instruction prefix built from `openAiStylePhrase(style)` + `pacePhrase(speed)`
-    + target-language hint + the text. (Gemini TTS has no native `speed` param, so pace is conveyed in
-    the instruction.)
+    - target-language hint + the text. (Gemini TTS has no native `speed` param, so pace is conveyed in
+      the instruction.)
   - `generationConfig.responseModalities: ["AUDIO"]`
   - `generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName: input.voiceId`
 - Response inline audio is **PCM (signed 16-bit LE, 24 kHz, mono)**. Wrap it with `pcmToWav(...)` (B5)
   and return `{ audioBuffer, contentType: "audio/wav" }`.
 - Fire `onUsage({ provider: "gemini", operation: "tts:gemini-3.1-flash-tts", characters:
-  input.text.length })` (fire-and-forget, matching ElevenLabs).
+input.text.length })` (fire-and-forget, matching ElevenLabs).
 - On API error → `ProviderError("TTS_PROVIDER_FAILURE", 503, "Gemini error: …")`.
 
 ### B4. Inworld provider — `apps/api/src/providers/inworld.ts` (new)
@@ -166,7 +166,7 @@ existing users see no regression.)
 ### B5. PCM→WAV helper — `apps/api/src/providers/audio.ts` (new)
 
 - `pcmToWav(pcm: Buffer, opts?: { sampleRate?: number; channels?: number; bitsPerSample?: number }):
-  Buffer` — prepend a 44-byte canonical WAV header (defaults: 24000 Hz, mono, 16-bit). Pure function,
+Buffer` — prepend a 44-byte canonical WAV header (defaults: 24000 Hz, mono, 16-bit). Pure function,
   unit-tested.
 
 ### B6. Router refactor — `apps/api/src/providers/tts-router.ts`
@@ -184,12 +184,20 @@ type TtsDeps = {
   synth?: {
     openai?: (c: OpenAI, i: TtsInput) => Promise<TtsResult>;
     eleven?: (c: ElevenLabsClient, i: SynthesizeInput) => Promise<TtsResult>;
-    gemini?: (key: string | undefined, i: SynthesizeInput) => Promise<TtsResult>;
-    inworld?: (key: string | undefined, i: SynthesizeInput) => Promise<TtsResult>;
+    gemini?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
+    inworld?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
   };
 };
 
-export function makeSynthesizeSpeech(deps: TtsDeps): (input: RoutedTtsInput) => Promise<TtsResult>;
+export function makeSynthesizeSpeech(
+  deps: TtsDeps,
+): (input: RoutedTtsInput) => Promise<TtsResult>;
 ```
 
 Dispatch on `config.provider` across all four. Update the one call site in `app.ts` and the existing
@@ -211,6 +219,7 @@ are set as **Fly secrets** (`fly secrets set …`) once created — never bundle
 ### B8. Tests
 
 Mirror existing provider test patterns:
+
 - `audio.test.ts` — `pcmToWav` header bytes + length.
 - `gemini.test.ts` — mocked `fetch`: success returns WAV; missing key → `TTS_PROVIDER_NOT_CONFIGURED`;
   API error → `TTS_PROVIDER_FAILURE`.
@@ -222,12 +231,14 @@ Mirror existing provider test patterns:
 ## Key creation steps (Bruno, after merge / before testing)
 
 **Gemini API key (AI Studio — distinct from the legacy GCP Cloud TTS key):**
+
 1. Go to <https://aistudio.google.com/app/apikey>.
 2. "Create API key" → pick a project (or new). Copy the key.
 3. `fly secrets set GEMINI_API_KEY=… -a my-language-coach-agentical-rebuild` (and add to local
    `apps/api/.env` for local testing).
 
 **Inworld API key:**
+
 1. Sign up at <https://inworld.ai> → developer portal / API keys.
 2. Create a key (note Basic vs Bearer auth scheme; confirm against current docs).
 3. `fly secrets set INWORLD_API_KEY=… -a my-language-coach-agentical-rebuild` (and local `.env`).

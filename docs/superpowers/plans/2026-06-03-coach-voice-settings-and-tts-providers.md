@@ -26,6 +26,7 @@ git checkout -b feat/coach-voice-gemini-inworld
 ### Task 1: Widen the shared TTS provider union + add voice catalogs
 
 **Files:**
+
 - Modify: `packages/shared/src/tts-config.ts`
 
 (`packages/shared/src/index.ts:10` already does `export * from "./tts-config"`, so new exports surface automatically. The shared package has no Vitest setup; verify with typecheck.)
@@ -84,6 +85,7 @@ git commit -m "feat(shared): add gemini + inworld TTS providers and voice catalo
 ### Task 2: Extend ProviderError codes + UsageReport providers
 
 **Files:**
+
 - Modify: `apps/api/src/providers/deepgram.ts:19-26`
 - Modify: `apps/api/src/providers/usage.ts:8`
 
@@ -108,7 +110,7 @@ In `apps/api/src/providers/deepgram.ts`, extend the `code` union in the `Provide
 In `apps/api/src/providers/usage.ts`, change line 8:
 
 ```ts
-  provider: "openai" | "deepgram" | "elevenlabs" | "gemini" | "inworld";
+provider: "openai" | "deepgram" | "elevenlabs" | "gemini" | "inworld";
 ```
 
 - [ ] **Step 3: Typecheck**
@@ -128,6 +130,7 @@ git commit -m "feat(api): add TTS_PROVIDER_NOT_CONFIGURED code + gemini/inworld 
 ### Task 3: PCM→WAV helper
 
 **Files:**
+
 - Create: `apps/api/src/providers/audio.ts`
 - Test: `apps/api/src/providers/audio.test.ts`
 
@@ -222,6 +225,7 @@ git commit -m "feat(api): add pcmToWav helper for Gemini PCM audio"
 ### Task 4: Gemini TTS provider
 
 **Files:**
+
 - Create: `apps/api/src/providers/gemini.ts`
 - Test: `apps/api/src/providers/gemini.test.ts`
 
@@ -259,7 +263,9 @@ describe("synthesizeSpeechGemini", () => {
       {
         content: {
           parts: [
-            { inlineData: { mimeType: "audio/L16;rate=24000", data: pcmBase64 } },
+            {
+              inlineData: { mimeType: "audio/L16;rate=24000", data: pcmBase64 },
+            },
           ],
         },
       },
@@ -372,7 +378,9 @@ export async function synthesizeSpeechGemini(
 
   let json: {
     candidates?: Array<{
-      content?: { parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }> };
+      content?: {
+        parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }>;
+      };
     }>;
   };
   try {
@@ -452,6 +460,7 @@ git commit -m "feat(api): add Gemini 3.1 Flash TTS provider"
 ### Task 5: Inworld TTS provider
 
 **Files:**
+
 - Create: `apps/api/src/providers/inworld.ts`
 - Test: `apps/api/src/providers/inworld.test.ts`
 
@@ -646,6 +655,7 @@ git commit -m "feat(api): add Inworld TTS 1.5 Max provider"
 ### Task 6: Widen backend config zod enum
 
 **Files:**
+
 - Modify: `apps/api/src/providers/tts-config.ts:10`
 - Test: `apps/api/src/providers/tts-config.test.ts`
 
@@ -654,23 +664,23 @@ git commit -m "feat(api): add Inworld TTS 1.5 Max provider"
 Append inside the existing top-level `describe` in `apps/api/src/providers/tts-config.test.ts` (mirror the file's existing `parseTtsConfig` test style):
 
 ```ts
-  it("accepts gemini and inworld providers", () => {
-    const gemini = parseTtsConfig({
-      provider: "gemini",
-      voiceId: "Kore",
-      speed: 1.0,
-      style: "warm",
-    });
-    expect(gemini.provider).toBe("gemini");
-
-    const inworld = parseTtsConfig({
-      provider: "inworld",
-      voiceId: "Ashley",
-      speed: 1.0,
-      style: "warm",
-    });
-    expect(inworld.provider).toBe("inworld");
+it("accepts gemini and inworld providers", () => {
+  const gemini = parseTtsConfig({
+    provider: "gemini",
+    voiceId: "Kore",
+    speed: 1.0,
+    style: "warm",
   });
+  expect(gemini.provider).toBe("gemini");
+
+  const inworld = parseTtsConfig({
+    provider: "inworld",
+    voiceId: "Ashley",
+    speed: 1.0,
+    style: "warm",
+  });
+  expect(inworld.provider).toBe("inworld");
+});
 ```
 
 Ensure `parseTtsConfig` is imported at the top of the test file (it is already used there; if not, add `import { parseTtsConfig } from "./tts-config";`).
@@ -705,6 +715,7 @@ git commit -m "feat(api): accept gemini + inworld in TTS config schema"
 ### Task 7: Refactor the TTS router to a deps object + dispatch all four providers
 
 **Files:**
+
 - Modify: `apps/api/src/providers/tts-router.ts`
 - Test: `apps/api/src/providers/tts-router.test.ts`
 
@@ -748,12 +759,21 @@ describe("makeSynthesizeSpeech", () => {
     await synth({
       text: "ciao",
       languageCode: "it",
-      config: { provider: "elevenlabs", voiceId: "v1", speed: 1.1, style: "calm" },
+      config: {
+        provider: "elevenlabs",
+        voiceId: "v1",
+        speed: 1.1,
+        style: "calm",
+      },
     });
     expect(openai).not.toHaveBeenCalled();
     expect(eleven).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ voiceId: "v1", languageCode: "it", speed: 1.1 }),
+      expect.objectContaining({
+        voiceId: "v1",
+        languageCode: "it",
+        speed: 1.1,
+      }),
     );
   });
 
@@ -763,7 +783,12 @@ describe("makeSynthesizeSpeech", () => {
     await synth({
       text: "hola",
       languageCode: "es",
-      config: { provider: "gemini", voiceId: "Kore", speed: 1.0, style: "warm" },
+      config: {
+        provider: "gemini",
+        voiceId: "Kore",
+        speed: 1.0,
+        style: "warm",
+      },
     });
     expect(gemini).toHaveBeenCalledWith(
       "gk",
@@ -777,7 +802,12 @@ describe("makeSynthesizeSpeech", () => {
     await synth({
       text: "hola",
       languageCode: "es",
-      config: { provider: "inworld", voiceId: "Ashley", speed: 1.0, style: "warm" },
+      config: {
+        provider: "inworld",
+        voiceId: "Ashley",
+        speed: 1.0,
+        style: "warm",
+      },
     });
     expect(inworld).toHaveBeenCalledWith(
       "ik",
@@ -829,8 +859,14 @@ export type TtsDeps = {
   synth?: {
     openai?: (c: OpenAI, i: TtsInput) => Promise<TtsResult>;
     eleven?: (c: ElevenLabsClient, i: SynthesizeInput) => Promise<TtsResult>;
-    gemini?: (key: string | undefined, i: SynthesizeInput) => Promise<TtsResult>;
-    inworld?: (key: string | undefined, i: SynthesizeInput) => Promise<TtsResult>;
+    gemini?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
+    inworld?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
   };
 };
 
@@ -881,6 +917,7 @@ git commit -m "refactor(api): TTS router takes deps object, dispatches 4 provide
 ### Task 8: Wire env keys + update the app.ts call site
 
 **Files:**
+
 - Modify: `apps/api/src/env.ts:13-15` (add two optional vars)
 - Modify: `apps/api/src/app.ts:205`
 
@@ -898,18 +935,18 @@ In `apps/api/src/env.ts`, inside `EnvSchema` (after the `ELEVENLABS_API_KEY` lin
 In `apps/api/src/app.ts`, change line 205 from:
 
 ```ts
-  const synthesizeSpeech = makeSynthesizeSpeech(openai, eleven);
+const synthesizeSpeech = makeSynthesizeSpeech(openai, eleven);
 ```
 
 to:
 
 ```ts
-  const synthesizeSpeech = makeSynthesizeSpeech({
-    openai,
-    eleven,
-    geminiKey: env.GEMINI_API_KEY,
-    inworldKey: env.INWORLD_API_KEY,
-  });
+const synthesizeSpeech = makeSynthesizeSpeech({
+  openai,
+  eleven,
+  geminiKey: env.GEMINI_API_KEY,
+  inworldKey: env.INWORLD_API_KEY,
+});
 ```
 
 - [ ] **Step 3: Typecheck + run the full API test suite**
@@ -931,6 +968,7 @@ git commit -m "feat(api): wire optional GEMINI_API_KEY + INWORLD_API_KEY into TT
 ### Task 9: Voice metadata (labels, taglines, descriptors)
 
 **Files:**
+
 - Create: `apps/mobile/src/features/voice-lab/voice-meta.ts`
 
 (Mobile has no Vitest unit harness for this; verify via typecheck in Task 13's final check. This is pure data.)
@@ -1002,6 +1040,7 @@ git commit -m "feat(mobile): add voice metadata (labels, taglines, descriptors)"
 ### Task 10: Simplify the voice store (drop the override toggle)
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/voice-lab/voice-lab-store.ts`
 
 - [ ] **Step 1: Remove override state**
@@ -1050,6 +1089,7 @@ git commit -m "refactor(mobile): voice store always applies config (drop overrid
 ### Task 11: Update the live-conversation consumer
 
 **Files:**
+
 - Modify: `apps/mobile/src/features/practice/use-conversation.ts:268-269`
 
 - [ ] **Step 1: Always send the config**
@@ -1057,15 +1097,15 @@ git commit -m "refactor(mobile): voice store always applies config (drop overrid
 In `apps/mobile/src/features/practice/use-conversation.ts`, change lines 268-269 from:
 
 ```ts
-      const vl = useVoiceLab.getState();
-      const voiceOverride = vl.overrideEnabled ? vl.config : undefined;
+const vl = useVoiceLab.getState();
+const voiceOverride = vl.overrideEnabled ? vl.config : undefined;
 ```
 
 to:
 
 ```ts
-      const vl = useVoiceLab.getState();
-      const voiceOverride = vl.config;
+const vl = useVoiceLab.getState();
+const voiceOverride = vl.config;
 ```
 
 (If `vl` is referenced nowhere else after this, the variable stays valid as written. Do not remove the `useVoiceLab` import.)
@@ -1087,6 +1127,7 @@ git commit -m "feat(mobile): coach voice always applies to live conversation"
 ### Task 12: Rebuild the Coach's voice screen
 
 **Files:**
+
 - Modify: `apps/mobile/app/(tabs)/profile/voice-lab.tsx` (full rewrite)
 
 - [ ] **Step 1: Replace the screen**
@@ -1210,7 +1251,11 @@ export default function CoachVoiceScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.container}>
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.note}>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.note}
+        >
           Pick how your coach sounds. Preview a sample, then it's used in every
           conversation.
         </EditorialText>
@@ -1359,6 +1404,7 @@ git commit -m "feat(mobile): Coach's voice screen with 4 providers + descriptors
 ### Task 13: Regroup Profile into "Coach settings" + ungate the entry
 
 **Files:**
+
 - Modify: `apps/mobile/app/(tabs)/profile/index.tsx` (Coach section ~190-205; Dev section ~207-230)
 
 - [ ] **Step 1: Rename the Coach section + add the Coach's voice row**
@@ -1461,4 +1507,7 @@ fly secrets set INWORLD_API_KEY=<key> -a my-language-coach-agentical-rebuild
 - **Spec coverage:** Part A → Tasks 10–13; Part B → Tasks 1–8; descriptors → Task 9. Key-creation steps → Task 14 Step 4.
 - **Known-unknowns to verify during implementation (flagged in-task):** exact Gemini model id (Task 4), Inworld endpoint/auth/field names + voice IDs (Tasks 1 & 5). If reality differs, adjust the isolated constants and re-run that task's tests.
 - **Type consistency:** `makeSynthesizeSpeech(deps)` deps object is used identically in Task 7 (definition + test) and Task 8 (call site). `synthesizeSpeechGemini(key, input)` / `synthesizeSpeechInworld(key, input)` signatures match their router calls. `useVoiceLab` exposes `{ config, setConfig, reset }` after Task 10 and is consumed that way in Tasks 11–12.
+
+```
+
 ```

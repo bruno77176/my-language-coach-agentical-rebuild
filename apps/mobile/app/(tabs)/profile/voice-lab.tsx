@@ -114,7 +114,11 @@ export default function CoachVoiceScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.container}>
-        <EditorialText kind="bodySm" color={palette.inkSoft} style={styles.note}>
+        <EditorialText
+          kind="bodySm"
+          color={palette.inkSoft}
+          style={styles.note}
+        >
           Pick how your coach sounds. Preview a sample, then it's used in every
           conversation.
         </EditorialText>

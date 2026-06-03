@@ -33,12 +33,21 @@ describe("makeSynthesizeSpeech", () => {
     await synth({
       text: "ciao",
       languageCode: "it",
-      config: { provider: "elevenlabs", voiceId: "v1", speed: 1.1, style: "calm" },
+      config: {
+        provider: "elevenlabs",
+        voiceId: "v1",
+        speed: 1.1,
+        style: "calm",
+      },
     });
     expect(openai).not.toHaveBeenCalled();
     expect(eleven).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ voiceId: "v1", languageCode: "it", speed: 1.1 }),
+      expect.objectContaining({
+        voiceId: "v1",
+        languageCode: "it",
+        speed: 1.1,
+      }),
     );
   });
 
@@ -48,7 +57,12 @@ describe("makeSynthesizeSpeech", () => {
     await synth({
       text: "hola",
       languageCode: "es",
-      config: { provider: "gemini", voiceId: "Kore", speed: 1.0, style: "warm" },
+      config: {
+        provider: "gemini",
+        voiceId: "Kore",
+        speed: 1.0,
+        style: "warm",
+      },
     });
     expect(gemini).toHaveBeenCalledWith(
       "gk",
@@ -62,7 +76,12 @@ describe("makeSynthesizeSpeech", () => {
     await synth({
       text: "hola",
       languageCode: "es",
-      config: { provider: "inworld", voiceId: "Ashley", speed: 1.0, style: "warm" },
+      config: {
+        provider: "inworld",
+        voiceId: "Ashley",
+        speed: 1.0,
+        style: "warm",
+      },
     });
     expect(inworld).toHaveBeenCalledWith(
       "ik",
