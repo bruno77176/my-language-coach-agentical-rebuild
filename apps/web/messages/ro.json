@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — Un coach care își amintește de tine. Feedback după fiecare conversație.",
-    "description": "Coach-ul tău AI pentru limbi își amintește despre ce ați discutat, îți oferă un raport de feedback după fiecare conversație și te lasă să joci scenarii din viața reală. În 12 limbi."
+    "description": "Coach-ul tău AI pentru limbi își amintește despre ce ați discutat, îți oferă un raport de feedback după fiecare conversație și te lasă să joci scenarii din viața reală. În 15 limbi."
   },
   "hero": {
     "eyebrow": "Acum în beta deschisă",
     "headline": "Exersează limbile.",
     "headlineAccent": "Câștigă încredere.",
-    "subheadline": "Un coach AI care își amintește de tine, îți oferă feedback după fiecare chat și te pune în scenarii reale — în 12 limbi.",
+    "subheadline": "Un coach AI care își amintește de tine, îți oferă feedback după fiecare chat și te pune în scenarii reale — în 15 limbi.",
     "scanToInstall": "Scanează pentru a instala",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Beta deschisă",
@@ -19,7 +19,7 @@
     "v1": "Își amintește de tine",
     "v2": "10 scenarii reale",
     "v3": "Feedback după fiecare chat",
-    "v4": "12 limbi"
+    "v4": "15 limbi"
   },
   "features": {
     "title": "De ce suntem diferiți",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Alege o limbă",
-      "body": "Douăsprezece din care să alegi — franceză, germană, italiană, spaniolă, turcă, portugheză și altele."
+      "body": "Cincisprezece din care să alegi — franceză, germană, italiană, spaniolă, turcă, portugheză și altele."
     },
     "s2": {
       "n": "2",

@@ -9,6 +9,9 @@ const LANGUAGES: Array<{ flag: string; name: string }> = [
   { flag: "🇩🇪", name: "Deutsch" },
   { flag: "🇮🇹", name: "Italiano" },
   { flag: "🇹🇷", name: "Türkçe" },
+  { flag: "🇯🇵", name: "日本語" },
+  { flag: "🇰🇷", name: "한국어" },
+  { flag: "🇨🇳", name: "中文" },
 ];
 
 export function LanguagesStrip({ messages }: Props) {

@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — Egy coach, aki emlékszik rád. Visszajelzés minden beszélgetés után.",
-    "description": "Az MI-alapú nyelvcoachod emlékszik arra, miről beszéltetek, minden beszélgetés után visszajelzést ad, és valós élethelyzeteket játszhatsz el vele. 12 nyelven."
+    "description": "Az MI-alapú nyelvcoachod emlékszik arra, miről beszéltetek, minden beszélgetés után visszajelzést ad, és valós élethelyzeteket játszhatsz el vele. 15 nyelven."
   },
   "hero": {
     "eyebrow": "Most nyílt béta",
     "headline": "Gyakorold a nyelveket.",
     "headlineAccent": "Szerezz magabiztosságot.",
-    "subheadline": "Egy MI-coach, aki emlékszik rád, minden chat után visszajelzést ad és valós szerepekbe enged belépni — 12 nyelven.",
+    "subheadline": "Egy MI-coach, aki emlékszik rád, minden chat után visszajelzést ad és valós szerepekbe enged belépni — 15 nyelven.",
     "scanToInstall": "Olvasd be a telepítéshez",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Nyílt béta",
@@ -19,7 +19,7 @@
     "v1": "Emlékszik rád",
     "v2": "10 valós helyzet",
     "v3": "Visszajelzés minden chat után",
-    "v4": "12 nyelv"
+    "v4": "15 nyelv"
   },
   "features": {
     "title": "Ezért vagyunk mások",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Válassz nyelvet",
-      "body": "Tizenkettő közül választhatsz — francia, német, olasz, spanyol, török, portugál és még több."
+      "body": "Tizenöt közül választhatsz — francia, német, olasz, spanyol, török, portugál és még több."
     },
     "s2": {
       "n": "2",

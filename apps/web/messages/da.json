@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — En coach, der husker dig. Feedback efter hver samtale.",
-    "description": "Din AI-sprogcoach husker, hvad I har talt om, giver dig en feedbackrapport efter hver samtale og lader dig spille hverdagsscenarier. På 12 sprog."
+    "description": "Din AI-sprogcoach husker, hvad I har talt om, giver dig en feedbackrapport efter hver samtale og lader dig spille hverdagsscenarier. På 15 sprog."
   },
   "hero": {
     "eyebrow": "Nu i åben beta",
     "headline": "Træn sprog.",
     "headlineAccent": "Få selvtillid.",
-    "subheadline": "En AI-coach, der husker dig, giver dig feedback efter hver chat og lader dig træde ind i virkelige rollespil — på 12 sprog.",
+    "subheadline": "En AI-coach, der husker dig, giver dig feedback efter hver chat og lader dig træde ind i virkelige rollespil — på 15 sprog.",
     "scanToInstall": "Scan for at installere",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Åben beta",
@@ -19,7 +19,7 @@
     "v1": "Husker dig",
     "v2": "10 virkelige scenarier",
     "v3": "Feedback efter hver chat",
-    "v4": "12 sprog"
+    "v4": "15 sprog"
   },
   "features": {
     "title": "Det gør os anderledes",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Vælg et sprog",
-      "body": "Tolv at vælge mellem — fransk, tysk, italiensk, spansk, tyrkisk, portugisisk og flere."
+      "body": "Femten at vælge mellem — fransk, tysk, italiensk, spansk, tyrkisk, portugisisk og flere."
     },
     "s2": {
       "n": "2",

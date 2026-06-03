@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — Un coach qui se souvient de vous. Un retour après chaque conversation.",
-    "description": "Votre coach de langue IA se souvient de ce que vous avez discuté, vous donne un rapport de retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie. En 12 langues."
+    "description": "Votre coach de langue IA se souvient de ce que vous avez discuté, vous donne un rapport de retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie. En 15 langues."
   },
   "hero": {
     "eyebrow": "Disponible en bêta ouverte",
     "headline": "Pratiquez les langues.",
     "headlineAccent": "Gagnez en confiance.",
-    "subheadline": "Un coach IA qui se souvient de vous, vous donne un retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie — en 12 langues.",
+    "subheadline": "Un coach IA qui se souvient de vous, vous donne un retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie — en 15 langues.",
     "scanToInstall": "Scannez pour installer",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Bêta ouverte",
@@ -19,7 +19,7 @@
     "v1": "Se souvient de vous",
     "v2": "10 scénarios réels",
     "v3": "Retour après chaque chat",
-    "v4": "12 langues"
+    "v4": "15 langues"
   },
   "features": {
     "title": "Ce qui fait la différence",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Choisissez une langue",
-      "body": "Douze au choix — français, allemand, italien, espagnol, turc, portugais et plus."
+      "body": "Quinze au choix — français, allemand, italien, espagnol, turc, portugais et plus."
     },
     "s2": {
       "n": "2",

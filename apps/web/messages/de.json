@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — Ein Coach, der sich an dich erinnert. Feedback nach jedem Gespräch.",
-    "description": "Dein KI-Sprachcoach merkt sich, worüber ihr gesprochen habt, gibt dir nach jedem Gespräch einen Feedback-Bericht und lässt dich Alltagsszenarien spielen. In 12 Sprachen."
+    "description": "Dein KI-Sprachcoach merkt sich, worüber ihr gesprochen habt, gibt dir nach jedem Gespräch einen Feedback-Bericht und lässt dich Alltagsszenarien spielen. In 15 Sprachen."
   },
   "hero": {
     "eyebrow": "Jetzt in offener Beta",
     "headline": "Sprachen üben.",
     "headlineAccent": "Selbstvertrauen aufbauen.",
-    "subheadline": "Ein KI-Coach, der sich an dich erinnert, dir nach jedem Gespräch Feedback gibt und dich in echte Alltagsszenarien schlüpfen lässt — in 12 Sprachen.",
+    "subheadline": "Ein KI-Coach, der sich an dich erinnert, dir nach jedem Gespräch Feedback gibt und dich in echte Alltagsszenarien schlüpfen lässt — in 15 Sprachen.",
     "scanToInstall": "Zum Installieren scannen",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Offene Beta",
@@ -19,7 +19,7 @@
     "v1": "Erinnert sich an dich",
     "v2": "10 Alltagsszenarien",
     "v3": "Feedback nach jedem Chat",
-    "v4": "12 Sprachen"
+    "v4": "15 Sprachen"
   },
   "features": {
     "title": "Was uns anders macht",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Sprache wählen",
-      "body": "Zwölf zur Auswahl — Französisch, Deutsch, Italienisch, Spanisch, Türkisch, Portugiesisch und mehr."
+      "body": "Fünfzehn zur Auswahl — Französisch, Deutsch, Italienisch, Spanisch, Türkisch, Portugiesisch und mehr."
     },
     "s2": {
       "n": "2",

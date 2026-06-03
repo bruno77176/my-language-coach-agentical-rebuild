@@ -23,6 +23,9 @@ export const LANGUAGES: ReadonlyArray<Language> = [
   { code: "ru", englishName: "Russian", nativeName: "Русский", flag: "🇷🇺" },
   { code: "ro", englishName: "Romanian", nativeName: "Română", flag: "🇷🇴" },
   { code: "hu", englishName: "Hungarian", nativeName: "Magyar", flag: "🇭🇺" },
+  { code: "ja", englishName: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
+  { code: "zh", englishName: "Chinese", nativeName: "中文", flag: "🇨🇳" },
+  { code: "ko", englishName: "Korean", nativeName: "한국어", flag: "🇰🇷" },
 ];
 
 export type SupportedLang =
@@ -37,7 +40,10 @@ export type SupportedLang =
   | "da"
   | "ru"
   | "ro"
-  | "hu";
+  | "hu"
+  | "ja"
+  | "zh"
+  | "ko";
 
 export const SUPPORTED_LANG_CODES: readonly SupportedLang[] = [
   "en",
@@ -52,4 +58,7 @@ export const SUPPORTED_LANG_CODES: readonly SupportedLang[] = [
   "ru",
   "ro",
   "hu",
+  "ja",
+  "zh",
+  "ko",
 ];

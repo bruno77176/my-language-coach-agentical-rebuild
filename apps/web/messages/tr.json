@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — Seni hatırlayan bir koç. Her konuşmadan sonra geri bildirim.",
-    "description": "Yapay zekâ dil koçun ne konuştuğunuzu hatırlar, her konuşmadan sonra sana bir geri bildirim raporu verir ve gerçek hayat senaryolarını canlandırmana izin verir. 12 dilde."
+    "description": "Yapay zekâ dil koçun ne konuştuğunuzu hatırlar, her konuşmadan sonra sana bir geri bildirim raporu verir ve gerçek hayat senaryolarını canlandırmana izin verir. 15 dilde."
   },
   "hero": {
     "eyebrow": "Şimdi açık betada",
     "headline": "Dil pratiği yap.",
     "headlineAccent": "Özgüven kazan.",
-    "subheadline": "Seni hatırlayan, her sohbetten sonra geri bildirim veren ve gerçek hayat rol oyunlarına seni dahil eden bir YZ koçu — 12 dilde.",
+    "subheadline": "Seni hatırlayan, her sohbetten sonra geri bildirim veren ve gerçek hayat rol oyunlarına seni dahil eden bir YZ koçu — 15 dilde.",
     "scanToInstall": "Yüklemek için tara",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Açık beta",
@@ -19,7 +19,7 @@
     "v1": "Seni hatırlar",
     "v2": "10 gerçek senaryo",
     "v3": "Her sohbetten sonra geri bildirim",
-    "v4": "12 dil"
+    "v4": "15 dil"
   },
   "features": {
     "title": "Bizi farklı kılan ne",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Bir dil seç",
-      "body": "On iki seçenek — Fransızca, Almanca, İtalyanca, İspanyolca, Türkçe, Portekizce ve daha fazlası."
+      "body": "On beş seçenek — Fransızca, Almanca, İtalyanca, İspanyolca, Türkçe, Portekizce ve daha fazlası."
     },
     "s2": {
       "n": "2",

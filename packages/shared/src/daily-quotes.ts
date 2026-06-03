@@ -45,6 +45,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Границы моего языка — это границы моего мира.",
       ro: "Limitele limbajului meu sunt limitele lumii mele.",
       hu: "Nyelvem határai világom határait jelentik.",
+      ja: "私の言語の限界は、私の世界の限界を意味する。",
+      zh: "我的语言的界限意味着我的世界的界限。",
+      ko: "내 언어의 한계는 내 세계의 한계를 의미한다.",
     },
   },
 
@@ -71,6 +74,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Мы учимся, обучая других.",
       ro: "Învățăm predând.",
       hu: "Tanítva tanulunk.",
+      ja: "教えることで、私たちは学ぶ。",
+      zh: "教学相长，我们在教导中学习。",
+      ko: "우리는 가르치면서 배운다.",
     },
   },
 
@@ -97,6 +103,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Учиться без размышления — бесполезно; размышлять без учения — опасно.",
       ro: "A învăța fără a gândi este muncă pierdută; a gândi fără a învăța este periculos.",
       hu: "Tanulni gondolkodás nélkül hiábavaló; gondolkodni tanulás nélkül veszélyes.",
+      ja: "学びて思わざれば則ち罔し、思いて学ばざれば則ち殆し。",
+      zh: "学而不思则罔，思而不学则殆。",
+      ko: "배우기만 하고 생각하지 않으면 얻는 것이 없고, 생각만 하고 배우지 않으면 위태롭다.",
     },
   },
 
@@ -123,6 +132,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Путешествие сначала лишает тебя слов, а потом делает рассказчиком.",
       ro: "Călătoria te lasă mai întâi fără cuvinte, apoi te transformă într-un povestitor.",
       hu: "Az utazás előbb elnémít, aztán mesélővé tesz.",
+      ja: "旅はあなたを言葉を失わせ、それから語り部に変える。",
+      zh: "旅行先让你无言以对，然后把你变成一个讲故事的人。",
+      ko: "여행은 당신을 말문이 막히게 하고, 그런 다음 이야기꾼으로 만든다.",
     },
   },
 
@@ -149,6 +161,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "В пути я болен, но мои сны блуждают по увядшим полям.",
       ro: "Bolnav în drumul meu, visele mele rătăcesc totuși pe câmpuri ofilite.",
       hu: "Betegen az úton, álmaim mégis hervadt mezőkön bolyonganak.",
+      ja: "旅に病んで夢は枯野をかけめぐる。",
+      zh: "羁旅卧病，梦魂仍在枯野上奔驰。",
+      ko: "여행길에 병들었으나, 내 꿈은 마른 들판을 헤맨다.",
     },
   },
 
@@ -175,6 +190,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Хороший колокол слышен издалека, плохой — ещё дальше.",
       ro: "Un clopot bun se aude departe, unul rău și mai departe.",
       hu: "A jó harang messzire hallatszik, a rossz még messzebbre.",
+      ja: "良い鐘は遠くまで響き、悪い鐘はさらに遠くまで響く。",
+      zh: "好钟传得远，坏钟传得更远。",
+      ko: "좋은 종소리는 멀리 들리고, 나쁜 종소리는 더 멀리 들린다.",
     },
   },
 
@@ -201,6 +219,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Я есмь Брахман — я есть высшая реальность.",
       ro: "Eu sunt Brahman — eu sunt realitatea supremă.",
       hu: "Én vagyok Brahman — én vagyok a végső valóság.",
+      ja: "我はブラフマンなり——我は究極の実在なり。",
+      zh: "我即梵——我即终极的实在。",
+      ko: "나는 브라만이다——나는 궁극의 실재이다.",
     },
   },
 
@@ -227,6 +248,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Судите о человеке по его вопросам, а не по ответам.",
       ro: "Judecă un om după întrebările sale, nu după răspunsurile sale.",
       hu: "Egy embert a kérdései alapján ítélj meg, nem a válaszai alapján.",
+      ja: "人を判断するには、その答えよりもその問いによってせよ。",
+      zh: "评判一个人，要看他的问题，而不是他的回答。",
+      ko: "사람을 판단할 때는 그의 답이 아니라 그의 질문으로 하라.",
     },
   },
 
@@ -253,6 +277,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Спешка, спешка — без благодати.",
       ro: "Graba, graba nu are binecuvântare.",
       hu: "A sietség sietségnek nincs áldása.",
+      ja: "急ぎに急ぎても、そこに恵みはない。",
+      zh: "匆匆忙忙，没有福气。",
+      ko: "서두르고 서둘러도 복은 없다.",
     },
   },
 
@@ -279,6 +306,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Всё течёт.",
       ro: "Totul curge.",
       hu: "Minden folyik.",
+      ja: "万物は流転する。",
+      zh: "万物皆流。",
+      ko: "만물은 흐른다.",
     },
   },
 
@@ -305,6 +335,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Знание только тогда знание, когда оно приобретено усилиями своей мысли.",
       ro: "Cunoașterea este cunoaștere doar când este dobândită prin propriul efort de gândire.",
       hu: "A tudás csak akkor tudás, ha saját gondolkodás erőfeszítésével szereztük.",
+      ja: "知識は、自らの思考の努力によって得られたときにのみ、真の知識となる。",
+      zh: "只有通过自己思考的努力获得的知识，才是真正的知识。",
+      ko: "지식은 스스로의 사고의 노력으로 얻었을 때에만 비로소 지식이다.",
     },
   },
 
@@ -331,6 +364,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Вода, которая хочет течь, всегда найдёт путь.",
       ro: "Apa care vrea să curgă își găsește întotdeauna o cale.",
       hu: "A víz, amely folyni akar, mindig talál utat.",
+      ja: "流れようとする水は、必ず道を見つける。",
+      zh: "想要流动的水，总会找到出路。",
+      ko: "흐르고자 하는 물은 언제나 길을 찾는다.",
     },
   },
 
@@ -357,6 +393,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Странник, твои следы — это и есть путь, и ничего более.",
       ro: "Călătorule, urmele tale sunt calea și nimic altceva.",
       hu: "Vándor, a te lábnyomaid az út, és semmi más.",
+      ja: "旅人よ、君の足跡こそが道であり、それ以外の何ものでもない。",
+      zh: "行路人啊，你的足迹就是道路，别无其他。",
+      ko: "나그네여, 그대의 발자국이 곧 길이며 그 외에는 아무것도 아니다.",
     },
   },
 
@@ -383,6 +422,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Любовь, что движет солнцем и другими звёздами.",
       ro: "Iubirea care mișcă soarele și celelalte stele.",
       hu: "A szeretet, amely mozgatja a napot és a többi csillagot.",
+      ja: "太陽と他のすべての星々を動かす愛。",
+      zh: "那推动太阳和其他群星的爱。",
+      ko: "태양과 다른 모든 별들을 움직이는 사랑.",
     },
   },
 
@@ -409,6 +451,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Плавать необходимо; жить — нет.",
       ro: "A naviga este necesar; a trăi nu este necesar.",
       hu: "Hajózni szükséges; élni nem szükséges.",
+      ja: "航海することは必要だ。生きることは必要ではない。",
+      zh: "航行是必要的；活着并非必要。",
+      ko: "항해하는 것은 필요하다; 사는 것은 필요하지 않다.",
     },
   },
 
@@ -435,6 +480,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Язык — зеркало сердца.",
       ro: "Limba este oglinda inimii.",
       hu: "A nyelv a szív tükre.",
+      ja: "言葉は心の鏡である。",
+      zh: "语言是心灵的镜子。",
+      ko: "언어는 마음의 거울이다.",
     },
   },
 
@@ -461,6 +509,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Печать Святого — это истина.",
       ro: "Pecetea Sfântului este adevărul.",
       hu: "A Szentnek pecsétje az igazság.",
+      ja: "聖なる御方の印は真実である。",
+      zh: "至圣者的印记是真理。",
+      ko: "거룩하신 분의 인장은 진리이다.",
     },
   },
 
@@ -487,6 +538,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Тишина — это бесконечный океан.",
       ro: "Tăcerea este un ocean fără sfârșit.",
       hu: "A csend végtelen óceán.",
+      ja: "沈黙は果てしない海である。",
+      zh: "沉默是一片无边无际的海洋。",
+      ko: "침묵은 끝없는 바다이다.",
     },
   },
 
@@ -513,6 +567,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Одно слово может погасить долг в тысячу монет.",
       ro: "Un singur cuvânt poate achita o datorie de o mie de monede.",
       hu: "Egyetlen szó ezer arany adósságot törleszthet.",
+      ja: "一言で千両の借金を返すこともできる。",
+      zh: "一句话能偿还千两的债务。",
+      ko: "말 한마디로 천 냥 빚을 갚는다.",
     },
   },
 
@@ -539,6 +596,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Что есть величайшее в мире? Это люди, люди, люди.",
       ro: "Care este cel mai mare lucru din lume? Sunt oamenii, oamenii, oamenii.",
       hu: "Mi a világ legnagyobb dolga? Az emberek, az emberek, az emberek.",
+      ja: "この世で最も大切なものは何か。それは人、人、そして人である。",
+      zh: "世界上最重要的是什么？是人，是人，还是人。",
+      ko: "세상에서 가장 위대한 것은 무엇인가? 그것은 사람이요, 사람이요, 사람이다.",
     },
   },
 
@@ -565,6 +625,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Терпение всегда приносит свою награду.",
       ro: "Răbdarea îți aduce întotdeauna propria recompensă.",
       hu: "A türelem mindig meghozza a maga jutalmát.",
+      ja: "忍耐は常にそれ自身の報いをもたらす。",
+      zh: "耐心总会带来它自己的回报。",
+      ko: "인내는 언제나 그 자체의 보상을 가져온다.",
     },
   },
 
@@ -591,6 +654,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Учись, учись ещё, учись всегда.",
       ro: "Învață, învață mai mult, învață mereu.",
       hu: "Tanulj, tanulj többet, tanulj mindig.",
+      ja: "学べ、もっと学べ、学び続けよ。",
+      zh: "学习，再学习，永远学习。",
+      ko: "배우고, 더 배우고, 영원히 배우라.",
     },
   },
 
@@ -617,6 +683,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Кто не работает, тот не ест.",
       ro: "Cine nu muncește nu va mânca.",
       hu: "Aki nem dolgozik, nem eszik.",
+      ja: "働かざる者、食うべからず。",
+      zh: "不劳动者，不得食。",
+      ko: "일하지 않는 자는 먹지도 말라.",
     },
   },
 
@@ -643,6 +712,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Судьба совершенно неотвратима.",
       ro: "Soarta este cu totul inexorabilă.",
       hu: "A sors teljességgel megmásíthatatlan.",
+      ja: "運命はまったく避けがたいものである。",
+      zh: "命运是完全无法抗拒的。",
+      ko: "운명은 전적으로 피할 수 없는 것이다.",
     },
   },
 
@@ -669,6 +741,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "В словах есть магия, и если правильно их расставить, они могут изменить мир.",
       ro: "Există magie în cuvinte, și dacă le pui bine, ele pot schimba lumea.",
       hu: "Varázslat rejlik a szavakban, és ha helyesen helyezed el őket, megváltoztathatják a világot.",
+      ja: "言葉には魔法がある。正しく並べれば、それは世界を変えることができる。",
+      zh: "文字中蕴含着魔力，若你恰当地运用它们，便能改变世界。",
+      ko: "말에는 마법이 있어, 그것을 올바르게 놓으면 세상을 바꿀 수 있다.",
     },
   },
 
@@ -695,6 +770,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Жизнь можно понять, только оглядываясь назад, но прожить её нужно, смотря вперёд.",
       ro: "Viața poate fi înțeleasă doar privind înapoi, dar trebuie trăită privind înainte.",
       hu: "Az élet csak visszafelé tekintve érthető meg, de előre tekintve kell megélni.",
+      ja: "人生は振り返ってのみ理解できるが、前を向いて生きなければならない。",
+      zh: "人生只能向后理解，但必须向前去活。",
+      ko: "인생은 거꾸로 돌아볼 때에만 이해할 수 있지만, 앞을 향해 살아야 한다.",
     },
   },
 
@@ -721,6 +799,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Мягкое слово многое приносит.",
       ro: "Vorba dulce mult aduce.",
       hu: "Az édes szó sokat hoz.",
+      ja: "優しい言葉は多くをもたらす。",
+      zh: "良言一句暖人心，益处多多。",
+      ko: "다정한 말 한마디가 많은 것을 가져온다.",
     },
   },
 
@@ -747,6 +828,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Иди медленно — дойдёшь дальше.",
       ro: "Mergi încet și vei ajunge mai departe.",
       hu: "Lassan járj, tovább érsz.",
+      ja: "ゆっくり進めば、より遠くまで行ける。",
+      zh: "走得慢，才能走得更远。",
+      ko: "천천히 가면 더 멀리 간다.",
     },
   },
 
@@ -773,6 +857,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Пришёл, увидел, победил.",
       ro: "Am venit, am văzut, am cucerit.",
       hu: "Jöttem, láttam, győztem.",
+      ja: "来た、見た、勝った。",
+      zh: "我来，我见，我征服。",
+      ko: "왔노라, 보았노라, 이겼노라.",
     },
   },
 
@@ -799,6 +886,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Путь в тысячу ли начинается с первого шага.",
       ro: "O călătorie de o mie de mile începe cu un singur pas.",
       hu: "Az ezer mérföldes út egyetlen lépéssel kezdődik.",
+      ja: "千里の道も一歩から始まる。",
+      zh: "千里之行，始于足下。",
+      ko: "천 리 길도 한 걸음부터 시작된다.",
     },
   },
 
@@ -825,6 +915,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Познай самого себя.",
       ro: "Cunoaște-te pe tine însuți.",
       hu: "Ismerd meg önmagad.",
+      ja: "汝自身を知れ。",
+      zh: "认识你自己。",
+      ko: "너 자신을 알라.",
     },
   },
 
@@ -851,6 +944,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Никогда не забывай ум новичка.",
       ro: "Nu uita niciodată mintea începătorului.",
       hu: "Soha ne felejtsd el a kezdő szellemét.",
+      ja: "初心忘るべからず。",
+      zh: "莫忘初心。",
+      ko: "초심을 결코 잊지 말라.",
     },
   },
 
@@ -877,6 +973,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Язык — острый меч; молчание — защитный щит.",
       ro: "Limba este o sabie ascuțită; tăcerea este un scut protector.",
       hu: "A nyelv éles kard; a hallgatás védőpajzs.",
+      ja: "舌は鋭い剣であり、沈黙は身を守る盾である。",
+      zh: "舌头是一把利剑，沉默是一面护盾。",
+      ko: "혀는 날카로운 칼이요, 침묵은 보호하는 방패이다.",
     },
   },
 
@@ -903,6 +1002,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Настоящее путешествие открытия состоит не в поиске новых пейзажей, а в обретении нового взгляда.",
       ro: "Adevărata călătorie a descoperirii nu constă în căutarea unor peisaje noi, ci în a avea ochi noi.",
       hu: "Az igazi felfedező utazás nem új tájak kereséséből áll, hanem abból, hogy új szemünk legyen.",
+      ja: "真の発見の旅とは、新しい風景を探すことではなく、新しい目を持つことにある。",
+      zh: "真正的发现之旅不在于寻找新的风景，而在于拥有新的眼光。",
+      ko: "진정한 발견의 여정은 새로운 풍경을 찾는 데 있지 않고, 새로운 눈을 갖는 데 있다.",
     },
   },
 
@@ -929,6 +1031,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "С знанием растёт сомнение.",
       ro: "Odată cu cunoașterea crește îndoiala.",
       hu: "A tudással együtt nő a kétség.",
+      ja: "知識が増すにつれて、疑いも増す。",
+      zh: "知识越多，疑虑越增。",
+      ko: "지식이 자라남에 따라 의심도 자란다.",
     },
   },
 
@@ -955,6 +1060,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Лови мгновение, как можно меньше полагаясь на завтра.",
       ro: "Profită de ziua de azi, încredințându-te cât mai puțin zilei de mâine.",
       hu: "Ragadd meg a napot, és bízz a holnapban a lehető legkevésbé.",
+      ja: "今日という日をつかめ。明日をできるだけ当てにするな。",
+      zh: "把握今日，尽量不要寄望于明天。",
+      ko: "오늘을 붙잡으라, 내일은 가능한 한 믿지 말고.",
     },
   },
 
@@ -981,6 +1089,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Сердце — это море без видимого берега.",
       ro: "Inima este o mare fără țărm vizibil.",
       hu: "A szív egy tenger látható part nélkül.",
+      ja: "心は岸の見えない海である。",
+      zh: "心是一片望不见岸的海。",
+      ko: "마음은 보이는 기슭이 없는 바다이다.",
     },
   },
 
@@ -1007,6 +1118,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Человек становится человеком через других людей.",
       ro: "O persoană este o persoană prin intermediul celorlalte persoane.",
       hu: "Az ember más emberek által válik emberré.",
+      ja: "人は他者を通して人となる。",
+      zh: "人因他人而成其为人。",
+      ko: "사람은 다른 사람들을 통해 사람이 된다.",
     },
   },
 
@@ -1033,6 +1147,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Математика — алфавит, которым Бог написал вселенную.",
       ro: "Matematica este alfabetul cu care Dumnezeu a scris universul.",
       hu: "A matematika az az ábécé, amellyel Isten megírta a világegyetemet.",
+      ja: "数学は、神が宇宙を書き記したアルファベットである。",
+      zh: "数学是上帝书写宇宙所用的字母。",
+      ko: "수학은 신이 우주를 써 내려간 알파벳이다.",
     },
   },
 
@@ -1059,6 +1176,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Все счастливые семьи похожи друг на друга, каждая несчастливая семья несчастлива по-своему.",
       ro: "Toate familiile fericite seamănă între ele; fiecare familie nefericită este nefericită în felul ei.",
       hu: "Minden boldog család egyforma; minden boldogtalan család a maga módján boldogtalan.",
+      ja: "幸福な家庭はどれも似たものだが、不幸な家庭はそれぞれに不幸である。",
+      zh: "幸福的家庭都是相似的，不幸的家庭各有各的不幸。",
+      ko: "행복한 가정은 모두 비슷하지만, 불행한 가정은 저마다의 이유로 불행하다.",
     },
   },
 
@@ -1085,6 +1205,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Единство — сила, разобщённость — слабость.",
       ro: "Unitatea este putere, dezbinarea este slăbiciune.",
       hu: "Az egység erő, a megosztottság gyengeség.",
+      ja: "団結は力であり、分裂は弱さである。",
+      zh: "团结就是力量，分裂就是软弱。",
+      ko: "단결은 힘이요, 분열은 약함이다.",
     },
   },
 
@@ -1111,6 +1234,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Жизнь — это не то, что ты прожил, а то, что ты помнишь, и то, как ты это помнишь, чтобы рассказать.",
       ro: "Viața nu este cea trăită, ci cea amintită și cum este amintită pentru a fi povestită.",
       hu: "Az élet nem az, amit megéltünk, hanem amit emlékezetünkbe vésünk és ahogyan elmondjuk.",
+      ja: "人生とは、人が生きたものではなく、人が覚えているもの、そしてそれを語るためにどう覚えているかである。",
+      zh: "生活不是一个人所经历的，而是他所记得的，以及他如何记得它去讲述。",
+      ko: "인생은 우리가 산 것이 아니라, 우리가 기억하는 것, 그리고 그것을 이야기하기 위해 어떻게 기억하느냐이다.",
     },
   },
 
@@ -1137,6 +1263,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Мы — то, что мы повторяем снова и снова.",
       ro: "Suntem ceea ce facem în mod repetat.",
       hu: "Azok vagyunk, amit ismételten cselekszünk.",
+      ja: "我々は繰り返し行うことそのものである。",
+      zh: "我们由我们反复做的事所造就。",
+      ko: "우리는 우리가 반복해서 행하는 것 그 자체이다.",
     },
   },
 
@@ -1163,6 +1292,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Жить в чужой стране — значит учить два языка.",
       ro: "A trăi într-o țară străină înseamnă a învăța două limbi.",
       hu: "Idegen földön élni két nyelv tanulását jelenti.",
+      ja: "異国の地で暮らすことは、二つの言語を学ぶことである。",
+      zh: "生活在异乡，就是学习两种语言。",
+      ko: "낯선 땅에서 사는 것은 두 개의 언어를 배우는 것이다.",
     },
   },
 
@@ -1189,6 +1321,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Народ без языка — народ без сердца.",
       ro: "O națiune fără limbă este o națiune fără inimă.",
       hu: "A nyelv nélküli nép szív nélküli nép.",
+      ja: "言語を持たない民族は、心を持たない民族である。",
+      zh: "没有语言的民族，是没有心的民族。",
+      ko: "언어가 없는 민족은 마음이 없는 민족이다.",
     },
   },
 
@@ -1215,6 +1350,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Говори мало — делай много.",
       ro: "Spune puțin și fă mult.",
       hu: "Keveset mondj és sokat tégy.",
+      ja: "言葉は少なく、行いは多く。",
+      zh: "少说多做。",
+      ko: "말은 적게 하고 행동은 많이 하라.",
     },
   },
 
@@ -1241,6 +1379,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Слово может остановить войну; слово может и голову снять.",
       ro: "Un cuvânt poate opri un război; un cuvânt poate și lua un cap.",
       hu: "Egy szó megállíthat egy háborút; egy szó fejet is vehet.",
+      ja: "一言が戦を終わらせ、一言が首をも落とす。",
+      zh: "一句话能止息战争，一句话也能取人首级。",
+      ko: "말 한마디가 전쟁을 끝낼 수도 있고, 말 한마디가 목을 벨 수도 있다.",
     },
   },
 
@@ -1267,6 +1408,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Фортуна благоволит смелым.",
       ro: "Norocul îi ajută pe îndrăzneți.",
       hu: "A szerencse a bátraknak kedvez.",
+      ja: "幸運は勇者に味方する。",
+      zh: "命运眷顾勇者。",
+      ko: "운명은 용감한 자의 편이다.",
     },
   },
 
@@ -1293,6 +1437,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Тот, кто приносит колу, приносит жизнь.",
       ro: "Cel care aduce nuca de cola aduce viața.",
       hu: "Aki kolát hoz, életet hoz.",
+      ja: "コーラの実をもたらす者は、命をもたらす。",
+      zh: "带来可乐果的人，带来生命。",
+      ko: "콜라 열매를 가져오는 이는 생명을 가져온다.",
     },
   },
 
@@ -1319,6 +1466,9 @@ export const DAILY_QUOTES: readonly DailyQuote[] = [
       ru: "Ты имеешь право действовать, но никогда — на плоды своих действий.",
       ro: "Ai dreptul să-ți îndeplinești acțiunile, dar niciodată la roadele lor.",
       hu: "Jogod van cselekedni, de soha a tetteid gyümölcseire.",
+      ja: "あなたには行為をなす権利はあるが、その果実に対する権利は決してない。",
+      zh: "你有权履行你的行动，但永远无权索取其果实。",
+      ko: "그대에게는 행위를 할 권리가 있을 뿐, 그 결실에 대한 권리는 결코 없다.",
     },
   },
 ];

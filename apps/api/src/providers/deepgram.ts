@@ -37,14 +37,24 @@ export function createDeepgram(env: Env): DeepgramClient {
   return new DeepgramClientCtor({ apiKey: env.DEEPGRAM_API_KEY });
 }
 
+// Deepgram nova-3 covers most languages, incl. Japanese + Korean, but NOT
+// Mandarin Chinese. Route zh to nova-2 (36 languages, incl. zh); everything
+// else stays on nova-3. Verified against Deepgram docs 2026-06-03.
+const NOVA2_LANGUAGES = new Set<string>(["zh"]);
+
+export function deepgramModelForLanguage(languageCode: string): string {
+  return NOVA2_LANGUAGES.has(languageCode.toLowerCase()) ? "nova-2" : "nova-3";
+}
+
 export async function transcribeAudio(
   client: DeepgramClient,
   input: TranscribeInput,
 ): Promise<TranscribeResult> {
+  const model = deepgramModelForLanguage(input.languageCode);
   let response;
   try {
     response = await client.listen.v1.media.transcribeFile(input.audioBuffer, {
-      model: "nova-3",
+      model,
       language: input.languageCode,
       smart_format: true,
       punctuate: true,
@@ -81,7 +91,7 @@ export async function transcribeAudio(
     void Promise.resolve(
       input.onUsage({
         provider: "deepgram",
-        operation: "transcribe:nova-3",
+        operation: `transcribe:${model}`,
         seconds: durationSeconds,
       }),
     ).catch(() => {
