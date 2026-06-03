@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — A coach that remembers you. Feedback after every chat.",
-    "description": "Your AI language coach remembers what you've discussed, gives you a feedback report after every conversation, and lets you role-play real-life scenarios. In 12 languages."
+    "description": "Your AI language coach remembers what you've discussed, gives you a feedback report after every conversation, and lets you role-play real-life scenarios. In 15 languages."
   },
   "hero": {
     "eyebrow": "Now in open beta",
     "headline": "Practice languages.",
     "headlineAccent": "Build confidence.",
-    "subheadline": "An AI coach who remembers you, gives you feedback after every chat, and lets you step into real-life role-plays — in 12 languages.",
+    "subheadline": "An AI coach who remembers you, gives you feedback after every chat, and lets you step into real-life role-plays — in 15 languages.",
     "scanToInstall": "Scan to install",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Open beta",
@@ -19,7 +19,7 @@
     "v1": "Remembers you",
     "v2": "10 real-life scenarios",
     "v3": "Feedback after every chat",
-    "v4": "12 languages"
+    "v4": "15 languages"
   },
   "features": {
     "title": "Why this is different",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Pick a language",
-      "body": "Twelve to choose from — French, German, Italian, Spanish, Turkish, Portuguese, and more."
+      "body": "Fifteen to choose from — French, German, Italian, Spanish, Turkish, Portuguese, and more."
     },
     "s2": {
       "n": "2",

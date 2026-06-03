@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "My Language Coach — Un coach che si ricorda di te. Feedback dopo ogni conversazione.",
-    "description": "Il tuo coach linguistico IA ricorda di cosa avete parlato, ti dà un report di feedback dopo ogni conversazione e ti fa interpretare scenari di vita reale. In 12 lingue."
+    "description": "Il tuo coach linguistico IA ricorda di cosa avete parlato, ti dà un report di feedback dopo ogni conversazione e ti fa interpretare scenari di vita reale. In 15 lingue."
   },
   "hero": {
     "eyebrow": "Ora in beta aperta",
     "headline": "Pratica le lingue.",
     "headlineAccent": "Guadagna fiducia.",
-    "subheadline": "Un coach IA che si ricorda di te, ti dà feedback dopo ogni chat e ti fa entrare in scenari di vita reale — in 12 lingue.",
+    "subheadline": "Un coach IA che si ricorda di te, ti dà feedback dopo ogni chat e ti fa entrare in scenari di vita reale — in 15 lingue.",
     "scanToInstall": "Scansiona per installare",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Beta aperta",
@@ -19,7 +19,7 @@
     "v1": "Si ricorda di te",
     "v2": "10 scenari reali",
     "v3": "Feedback dopo ogni chat",
-    "v4": "12 lingue"
+    "v4": "15 lingue"
   },
   "features": {
     "title": "Cosa ci rende diversi",
@@ -41,7 +41,7 @@
     "s1": {
       "n": "1",
       "title": "Scegli una lingua",
-      "body": "Dodici tra cui scegliere — francese, tedesco, italiano, spagnolo, turco, portoghese e altre."
+      "body": "Quindici tra cui scegliere — francese, tedesco, italiano, spagnolo, turco, portoghese e altre."
     },
     "s2": {
       "n": "2",
