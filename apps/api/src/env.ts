@@ -13,6 +13,8 @@ const EnvSchema = z.object({
   OPENAI_API_KEY: z.string().min(1),
   DEEPGRAM_API_KEY: z.string().min(1),
   ELEVENLABS_API_KEY: z.string().min(1),
+  GEMINI_API_KEY: z.string().optional(),
+  INWORLD_API_KEY: z.string().optional(),
   ADMIN_USER_IDS: z.string().default(""), // comma-separated Supabase user IDs
   ADMIN_ALLOWED_ORIGINS: z.string().default(""), // comma-separated origins allowed to call /admin/* (CORS)
   INTERNAL_CRON_SECRET: z.string().min(16),

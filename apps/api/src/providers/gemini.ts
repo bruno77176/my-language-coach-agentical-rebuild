@@ -67,7 +67,7 @@ export async function synthesizeSpeechGemini(
       const detail = await res.text().catch(() => "");
       throw new Error(`HTTP ${res.status} ${detail}`);
     }
-    json = await res.json();
+    json = (await res.json()) as typeof json;
   } catch (err) {
     throw new ProviderError(
       "TTS_PROVIDER_FAILURE",
