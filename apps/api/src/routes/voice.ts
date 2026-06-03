@@ -474,6 +474,178 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     });
   });
 
+  // POST /sessions/:id/opening — scenario-only coach opener. The coach speaks
+  // the first line in character. This turn is FREE: no transcription, no quota
+  // check, no usage/seconds counting. Reuses the reply-chunk → TTS pipeline.
+  routes.post("/sessions/:id/opening", async (c) => {
+    const userId = c.get("userId");
+    const conversationId = c.req.param("id");
+    const platform = platformFromHeader(c.req.header("X-Client-Platform"));
+    const onUsage = makeOnUsage(deps.db, { userId, platform, conversationId });
+
+    const conversation = await deps.db.query.conversations.findFirst({
+      where: (t, { eq: e, and: a }) =>
+        a(e(t.id, conversationId), e(t.userId, userId)),
+    });
+    if (!conversation) {
+      return c.json(
+        { error: { code: "NOT_FOUND", message: "Conversation not found" } },
+        404,
+      );
+    }
+    if (!conversation.scenarioId) {
+      return c.json(
+        {
+          error: {
+            code: "BAD_REQUEST",
+            message: "Opening is only available for scenarios",
+          },
+        },
+        400,
+      );
+    }
+    const scenario = ROLE_PLAY_SCENARIOS.find(
+      (s) => s.id === conversation.scenarioId,
+    );
+    if (!scenario) {
+      return c.json(
+        { error: { code: "BAD_REQUEST", message: "Unknown scenario" } },
+        400,
+      );
+    }
+
+    const profile = await deps.db.query.profiles.findFirst({
+      where: (t, { eq: e }) => e(t.userId, userId),
+    });
+    if (!profile) {
+      return c.json(
+        { error: { code: "INTERNAL", message: "No profile" } },
+        500,
+      );
+    }
+
+    // Idempotency: if this conversation already has messages, the opener was
+    // already produced (double mount / retry). Emit done without regenerating.
+    const existing = await deps.db.query.messages.findMany({
+      where: (t, { eq: e }) => e(t.conversationId, conversationId),
+      orderBy: (t, { asc: a }) => [a(t.createdAt)],
+    });
+    if (existing.length > 0) {
+      return streamSSE(c, async (stream) => {
+        await stream.writeSSE({
+          event: "done",
+          data: JSON.stringify({
+            messageId: existing[existing.length - 1]?.id ?? "",
+          }),
+        });
+      });
+    }
+
+    const sysPrompt = buildCoachSystemPrompt({
+      targetLanguage: conversation.language,
+      userDisplayName: profile.displayName,
+      memory: null,
+      scenario: {
+        id: scenario.id,
+        systemPromptFragment: scenario.systemPromptFragment,
+      },
+    });
+
+    const languageCode = conversation.language;
+
+    return streamSSE(c, async (stream) => {
+      try {
+        // System-only context: the model produces the opener because there is
+        // no prior user turn.
+        const gptStream = deps.streamChatCompletion({
+          messages: [{ role: "system" as const, content: sysPrompt }],
+          model: "gpt-4o-mini",
+          onUsage,
+        });
+
+        const sentenceBuf = new SentenceBuffer();
+        let chunkIndex = 0;
+        const ttsPromises: Promise<void>[] = [];
+        let fullCoachText = "";
+        const turnSeq = Date.now();
+
+        async function emitChunk(text: string, idx: number): Promise<void> {
+          let audio: TtsResult;
+          try {
+            audio = await deps.synthesizeSpeech({
+              text,
+              languageCode,
+              onUsage,
+            });
+          } catch {
+            await stream.writeSSE({
+              event: "error",
+              data: JSON.stringify({
+                code: "TTS_PROVIDER_FAILURE",
+                message: "TTS failed for chunk " + idx,
+                retryable: true,
+              }),
+            });
+            return;
+          }
+          const { audioUrl } = await deps.uploadCoachAudioChunk({
+            userId,
+            conversationId,
+            messageId: `pending-${conversationId}-${turnSeq}`,
+            chunkIndex: idx,
+            audioBuffer: audio.audioBuffer,
+            contentType: audio.contentType,
+          });
+          await stream.writeSSE({
+            event: "reply-chunk",
+            data: JSON.stringify({ index: idx, text, audioUrl, durationMs: 0 }),
+          });
+        }
+
+        for await (const delta of gptStream) {
+          fullCoachText += delta;
+          const sentences = sentenceBuf.push(delta);
+          for (const s of sentences) {
+            const idx = chunkIndex++;
+            ttsPromises.push(emitChunk(s, idx));
+          }
+        }
+        const tail = sentenceBuf.flush();
+        if (tail) {
+          const idx = chunkIndex++;
+          ttsPromises.push(emitChunk(tail, idx));
+        }
+        await Promise.all(ttsPromises);
+
+        const [coachRow] = await deps.db
+          .insert(messages)
+          .values({
+            conversationId,
+            role: "coach",
+            text: fullCoachText,
+            audioStoragePath: null,
+          })
+          .returning();
+
+        await stream.writeSSE({
+          event: "done",
+          data: JSON.stringify({ messageId: coachRow!.id }),
+        });
+      } catch (err) {
+        const code = err instanceof ProviderError ? err.code : "INTERNAL";
+        const message = (err as Error).message ?? "Unexpected error";
+        await stream.writeSSE({
+          event: "error",
+          data: JSON.stringify({
+            code,
+            message,
+            retryable: code !== "QUOTA_EXCEEDED",
+          }),
+        });
+      }
+    });
+  });
+
   routes.post("/sessions/:id/end", async (c) => {
     const userId = c.get("userId");
     const conversationId = c.req.param("id");

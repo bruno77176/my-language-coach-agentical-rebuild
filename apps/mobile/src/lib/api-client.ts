@@ -310,3 +310,144 @@ export function streamTurn(
     close: endStream,
   };
 }
+
+/**
+ * POST to the scenario opening endpoint and consume the SSE response as an
+ * AsyncIterable of TurnEvents. Same protocol as streamTurn but with NO request
+ * body (no audio) and NO transcription event — the coach simply speaks first.
+ */
+export function streamOpening(conversationId: string): {
+  events: AsyncIterable<TurnEvent>;
+  close: () => void;
+} {
+  const url = `${API_BASE_URL}/v1/voice/sessions/${conversationId}/opening`;
+
+  let es: EventSource<TurnEventName> | null = null;
+  let open = true;
+  const queue: TurnEvent[] = [];
+  let resolveNext: ((e: TurnEvent | null) => void) | null = null;
+
+  function push(e: TurnEvent) {
+    if (!open) return;
+    if (resolveNext) {
+      resolveNext(e);
+      resolveNext = null;
+    } else queue.push(e);
+  }
+
+  function endStream() {
+    open = false;
+    es?.close();
+    if (resolveNext) {
+      resolveNext(null);
+      resolveNext = null;
+    }
+  }
+
+  void (async () => {
+    let auth: string;
+    try {
+      auth = await authHeader();
+    } catch (err) {
+      push({
+        type: "error",
+        code: "UNAUTHORIZED",
+        message: (err as Error).message,
+        retryable: false,
+      });
+      endStream();
+      return;
+    }
+
+    es = new EventSource<TurnEventName>(url, {
+      method: "POST",
+      headers: { authorization: auth, ...clientPlatformHeader() },
+    });
+
+    es.addEventListener("reply-chunk", (e) => {
+      if (!e.data) return;
+      const data = JSON.parse(e.data) as {
+        index: number;
+        text: string;
+        audioUrl: string;
+        durationMs: number;
+      };
+      push({
+        type: "reply-chunk",
+        index: data.index,
+        text: data.text,
+        audioUrl: data.audioUrl,
+        durationMs: data.durationMs,
+      });
+    });
+    es.addEventListener("done", (e) => {
+      if (e.data) {
+        const data = JSON.parse(e.data) as { messageId: string };
+        push({ type: "done", messageId: data.messageId });
+      } else {
+        push({ type: "done", messageId: "" });
+      }
+      endStream();
+    });
+    es.addEventListener("error", (e) => {
+      const maybeData = (e as { data?: string | null }).data;
+      if (maybeData) {
+        try {
+          const raw = JSON.parse(maybeData) as
+            | { code?: string; message?: string; retryable?: boolean }
+            | {
+                error?: {
+                  code?: string;
+                  message?: string;
+                  retryable?: boolean;
+                };
+              };
+          const flat =
+            "error" in raw && raw.error
+              ? raw.error
+              : (raw as {
+                  code?: string;
+                  message?: string;
+                  retryable?: boolean;
+                });
+          push({
+            type: "error",
+            code: flat.code ?? "INTERNAL",
+            message: flat.message ?? "Stream error",
+            retryable: flat.retryable ?? false,
+          });
+        } catch {
+          push({
+            type: "error",
+            code: "INTERNAL",
+            message: "Stream error",
+            retryable: true,
+          });
+        }
+      } else {
+        const message = (e as { message?: string }).message ?? "Stream error";
+        push({ type: "error", code: "INTERNAL", message, retryable: true });
+      }
+      endStream();
+    });
+  })();
+
+  async function* events(): AsyncIterable<TurnEvent> {
+    while (open || queue.length) {
+      if (queue.length) {
+        const next = queue.shift()!;
+        yield next;
+        if (next.type === "done" || next.type === "error") return;
+        continue;
+      }
+      const next = await new Promise<TurnEvent | null>(
+        (r) => (resolveNext = r),
+      );
+      if (!next) return;
+      yield next;
+      if (next.type === "done" || next.type === "error") return;
+    }
+  }
+
+  return { events: events(), close: endStream };
+}

@@ -14,7 +14,13 @@ import {
 } from "@language-coach/shared";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { configureForRecording } from "@/src/lib/audio-session";
-import { startSession, streamTurn, endSession } from "@/src/lib/api-client";
+import {
+  startSession,
+  streamTurn,
+  streamOpening,
+  endSession,
+  type TurnEvent,
+} from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
@@ -123,12 +129,11 @@ export function useConversation(
         if (cancelled) return;
         conversationIdRef.current = conversation_id;
 
-        // Scenarios skip the Lisa-coach greeting entirely — the user walks
-        // into the role (café, hotel, police station, …) and opens by
-        // speaking. The coach responds in-character on the first /turns.
+        // Scenarios: the coach speaks first, in character. Play the opener
+        // through the same reply-chunk/audio pipeline as a normal turn.
         if (scenarioId) {
           setMessages([]);
-          setState({ phase: "idle", conversationId: conversation_id });
+          await runOpening(conversation_id, () => cancelled);
           return;
         }
 
@@ -210,6 +215,124 @@ export function useConversation(
     [userTurnCount],
   );
 
+  // Single place that turns a coach SSE stream's reply-chunks into the growing
+  // coach message + queued audio, and resolves the server message id on done.
+  // Shared by user turns (stop) and the scenario opener (runOpening).
+  function createAudioQueue() {
+    return new AudioQueue({
+      playChunk: async (chunk) => {
+        await playOnce({
+          source: { uri: chunk.audioUrl },
+          text: chunk.text,
+          durationMs: chunk.durationMs,
+        });
+      },
+    });
+  }
+
+  type CoachStreamOutcome =
+    | { kind: "ok" }
+    | { kind: "paywall" }
+    | { kind: "soft-error"; code: SoftErrorCode }
+    | { kind: "fatal-error"; code: string; message: string };
+
+  async function consumeCoachStream(
+    events: AsyncIterable<TurnEvent>,
+    audioQueue: ReturnType<typeof createAudioQueue>,
+    onTranscription?: (text: string) => void,
+  ): Promise<CoachStreamOutcome> {
+    let coachMessageId: string | null = null;
+    const chunkTexts: string[] = [];
+
+    for await (const event of events) {
+      if (event.type === "transcription") {
+        onTranscription?.(event.text);
+      } else if (event.type === "reply-chunk") {
+        chunkTexts[event.index] = event.text;
+        const accumText = chunkTexts.filter(Boolean).join(" ");
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (
+            last &&
+            last.role === "coach" &&
+            coachMessageId !== null &&
+            last.id === coachMessageId
+          ) {
+            return [
+              ...prev.slice(0, -1),
+              { ...last, text: accumText, audioUrl: event.audioUrl },
+            ];
+          }
+          const newId = `c-${Date.now()}`;
+          coachMessageId = newId;
+          return [
+            ...prev,
+            {
+              id: newId,
+              role: "coach",
+              text: accumText,
+              audioUrl: event.audioUrl,
+            },
+          ];
+        });
+        audioQueue.enqueue({
+          index: event.index,
+          text: event.text,
+          audioUrl: event.audioUrl,
+          durationMs: event.durationMs,
+        });
+      } else if (event.type === "done") {
+        if (coachMessageId && event.messageId) {
+          const serverId = event.messageId;
+          const localId = coachMessageId;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === localId ? { ...m, id: serverId } : m)),
+          );
+        }
+        setLastActivityAt(Date.now());
+      } else if (event.type === "error") {
+        if (event.code === "DAILY_QUOTA_EXCEEDED") {
+          return { kind: "paywall" };
+        }
+        const code = event.code as SoftErrorCode;
+        if (SOFT_ERROR_CODES.has(code)) {
+          pushSoftErrorAsCoachMessage(code);
+          return { kind: "soft-error", code };
+        }
+        return {
+          kind: "fatal-error",
+          code: event.code,
+          message: event.message,
+        };
+      }
+    }
+    return { kind: "ok" };
+  }
+
+  // Scenario opener: the coach speaks first. Non-fatal — whatever happens we
+  // land on idle so the user can start talking. Free turn (no quota).
+  async function runOpening(
+    conversationId: string,
+    isCancelled: () => boolean,
+  ) {
+    setState({ phase: "processing", conversationId });
+    const audioQueue = createAudioQueue();
+    try {
+      const { events } = streamOpening(conversationId);
+      const outcome = await consumeCoachStream(events, audioQueue);
+      await audioQueue.waitForDrain();
+      // Opener is soft-fail (we still land on idle), but surface a coach-side
+      // error so a broken /opening endpoint isn't invisible in the field.
+      if (outcome.kind === "fatal-error" || outcome.kind === "soft-error") {
+        console.warn(`[OPENING] coach stream error: ${outcome.code}`);
+      }
+    } catch (err) {
+      console.warn("[OPENING] failed:", err);
+    }
+    if (isCancelled()) return;
+    setState({ phase: "idle", conversationId });
+  }
+
   async function start() {
     if (state.phase !== "idle") return;
     const conversationId = state.conversationId;
@@ -268,101 +391,39 @@ export function useConversation(
       const vl = useVoiceLab.getState();
       const voiceOverride = vl.config;
       const { events } = streamTurn(conversationId, uri, voiceOverride);
-      const audioQueue = new AudioQueue({
-        playChunk: async (chunk) => {
-          await playOnce({
-            source: { uri: chunk.audioUrl },
-            text: chunk.text,
-            durationMs: chunk.durationMs,
-          });
-        },
+      const audioQueue = createAudioQueue();
+
+      const outcome = await consumeCoachStream(events, audioQueue, (text) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `u-${Date.now()}`,
+            role: "user",
+            text,
+            audioUrl: uri,
+            audioDurationMs: durationMs,
+          },
+        ]);
+        setUserTurnCount((n) => n + 1);
+        setLastActivityAt(Date.now());
       });
 
-      let coachMessageId: string | null = null;
-      const chunkTexts: string[] = [];
-
-      for await (const event of events) {
-        if (event.type === "transcription") {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `u-${Date.now()}`,
-              role: "user",
-              text: event.text,
-              audioUrl: uri,
-              audioDurationMs: durationMs,
-            },
-          ]);
-          setUserTurnCount((n) => n + 1);
-          setLastActivityAt(Date.now());
-        } else if (event.type === "reply-chunk") {
-          chunkTexts[event.index] = event.text;
-          const accumText = chunkTexts.filter(Boolean).join(" ");
-
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (
-              last &&
-              last.role === "coach" &&
-              coachMessageId !== null &&
-              last.id === coachMessageId
-            ) {
-              return [
-                ...prev.slice(0, -1),
-                { ...last, text: accumText, audioUrl: event.audioUrl },
-              ];
-            }
-            const newId = `c-${Date.now()}`;
-            coachMessageId = newId;
-            return [
-              ...prev,
-              {
-                id: newId,
-                role: "coach",
-                text: accumText,
-                audioUrl: event.audioUrl,
-              },
-            ];
-          });
-
-          audioQueue.enqueue({
-            index: event.index,
-            text: event.text,
-            audioUrl: event.audioUrl,
-            durationMs: event.durationMs,
-          });
-        } else if (event.type === "done") {
-          if (coachMessageId && event.messageId) {
-            const serverId = event.messageId;
-            const localId = coachMessageId;
-            setMessages((prev) =>
-              prev.map((m) => (m.id === localId ? { ...m, id: serverId } : m)),
-            );
-          }
-          setLastActivityAt(Date.now());
-        } else if (event.type === "error") {
-          // Plan 8 M4: free-tier daily cap — open paywall instead of the
-          // generic error screen. The backend returns HTTP 429 with
-          // `{ error: { code: "DAILY_QUOTA_EXCEEDED" } }` which api-client
-          // normalizes into this event shape.
-          if (event.code === "DAILY_QUOTA_EXCEEDED") {
-            await audioQueue.waitForDrain();
-            if (!paywallShownRef.current) {
-              paywallShownRef.current = true;
-              router.push("/(modals)/paywall");
-            }
-            setState({ phase: "idle", conversationId });
-            return;
-          }
-          const code = event.code as SoftErrorCode;
-          if (SOFT_ERROR_CODES.has(code)) {
-            pushSoftErrorAsCoachMessage(code);
-            await audioQueue.waitForDrain();
-            setState({ phase: "idle", conversationId });
-            return;
-          }
-          throw new Error(`${event.code}: ${event.message}`);
+      if (outcome.kind === "paywall") {
+        await audioQueue.waitForDrain();
+        if (!paywallShownRef.current) {
+          paywallShownRef.current = true;
+          router.push("/(modals)/paywall");
         }
+        setState({ phase: "idle", conversationId });
+        return;
+      }
+      if (outcome.kind === "soft-error") {
+        await audioQueue.waitForDrain();
+        setState({ phase: "idle", conversationId });
+        return;
+      }
+      if (outcome.kind === "fatal-error") {
+        throw new Error(`${outcome.code}: ${outcome.message}`);
       }
 
       await audioQueue.waitForDrain();
