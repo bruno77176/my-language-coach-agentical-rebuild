@@ -5,7 +5,7 @@
 // `recordUsage(db, ...)` via fire-and-forget.
 
 export type UsageReport = {
-  provider: "openai" | "deepgram" | "elevenlabs";
+  provider: "openai" | "deepgram" | "elevenlabs" | "gemini" | "inworld";
   operation: string; // e.g. "chat:gpt-4o-mini", "transcribe:nova-3", "tts:tts-1"
   inputTokens?: number;
   outputTokens?: number;

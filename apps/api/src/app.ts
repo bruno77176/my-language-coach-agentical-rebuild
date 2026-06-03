@@ -202,7 +202,12 @@ export function createApp(
   const eleven = createElevenLabs(env);
   // Provider-agnostic TTS: no config (or default config) reproduces today's
   // OpenAI/nova behavior; the dev Voice Lab can pass a per-turn override.
-  const synthesizeSpeech = makeSynthesizeSpeech(openai, eleven);
+  const synthesizeSpeech = makeSynthesizeSpeech({
+    openai,
+    eleven,
+    geminiKey: env.GEMINI_API_KEY,
+    inworldKey: env.INWORLD_API_KEY,
+  });
   const storage = createStorageClient(env);
 
   app.route(

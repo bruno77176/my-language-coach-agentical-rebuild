@@ -22,6 +22,23 @@ describe("parseTtsConfig", () => {
     expect(parseTtsConfig({ provider: "google" })).toEqual(DEFAULT_TTS_CONFIG);
     expect(parseTtsConfig("not json")).toEqual(DEFAULT_TTS_CONFIG);
   });
+  it("accepts gemini and inworld providers", () => {
+    const gemini = parseTtsConfig({
+      provider: "gemini",
+      voiceId: "Kore",
+      speed: 1.0,
+      style: "warm",
+    });
+    expect(gemini.provider).toBe("gemini");
+
+    const inworld = parseTtsConfig({
+      provider: "inworld",
+      voiceId: "Ashley",
+      speed: 1.0,
+      style: "warm",
+    });
+    expect(inworld.provider).toBe("inworld");
+  });
 });
 
 describe("style + pace mappings", () => {

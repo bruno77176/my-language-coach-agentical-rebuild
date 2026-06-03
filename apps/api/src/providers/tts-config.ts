@@ -7,7 +7,7 @@ import {
 } from "@language-coach/shared";
 
 export const TtsConfigSchema = z.object({
-  provider: z.enum(["openai", "elevenlabs"]),
+  provider: z.enum(["openai", "elevenlabs", "gemini", "inworld"]),
   voiceId: z.string().min(1).max(64),
   speed: z.number().min(0.5).max(2.0),
   style: z.enum(TTS_STYLES as [TtsStyle, ...TtsStyle[]]),

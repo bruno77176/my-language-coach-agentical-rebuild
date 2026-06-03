@@ -10,6 +10,8 @@ import {
   synthesizeSpeech as synthesizeSpeechElevenLabs,
   type SynthesizeInput,
 } from "./elevenlabs";
+import { synthesizeSpeechGemini } from "./gemini";
+import { synthesizeSpeechInworld } from "./inworld";
 import type { OnUsage } from "./usage";
 
 export type RoutedTtsInput = {
@@ -19,20 +21,32 @@ export type RoutedTtsInput = {
   onUsage?: OnUsage;
 };
 
-// The two `synth*` params are injected so tests can stub them; production
-// passes the real provider functions.
-export function makeSynthesizeSpeech(
-  openai: OpenAI,
-  eleven: ElevenLabsClient,
-  openAiSynth: (
-    c: OpenAI,
-    i: TtsInput,
-  ) => Promise<TtsResult> = synthesizeSpeechOpenAI,
-  elevenSynth: (
-    c: ElevenLabsClient,
-    i: SynthesizeInput,
-  ) => Promise<TtsResult> = synthesizeSpeechElevenLabs,
-) {
+export type TtsDeps = {
+  openai: OpenAI;
+  eleven: ElevenLabsClient;
+  geminiKey?: string;
+  inworldKey?: string;
+  // Injected so tests can stub providers; production uses the real fns.
+  synth?: {
+    openai?: (c: OpenAI, i: TtsInput) => Promise<TtsResult>;
+    eleven?: (c: ElevenLabsClient, i: SynthesizeInput) => Promise<TtsResult>;
+    gemini?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
+    inworld?: (
+      key: string | undefined,
+      i: SynthesizeInput,
+    ) => Promise<TtsResult>;
+  };
+};
+
+export function makeSynthesizeSpeech(deps: TtsDeps) {
+  const openAiSynth = deps.synth?.openai ?? synthesizeSpeechOpenAI;
+  const elevenSynth = deps.synth?.eleven ?? synthesizeSpeechElevenLabs;
+  const geminiSynth = deps.synth?.gemini ?? synthesizeSpeechGemini;
+  const inworldSynth = deps.synth?.inworld ?? synthesizeSpeechInworld;
+
   return async (input: RoutedTtsInput): Promise<TtsResult> => {
     const config = input.config ?? DEFAULT_TTS_CONFIG;
     const shared = {
@@ -43,9 +57,15 @@ export function makeSynthesizeSpeech(
       style: config.style,
       onUsage: input.onUsage,
     };
-    if (config.provider === "elevenlabs") {
-      return elevenSynth(eleven, shared);
+    switch (config.provider) {
+      case "elevenlabs":
+        return elevenSynth(deps.eleven, shared);
+      case "gemini":
+        return geminiSynth(deps.geminiKey, shared);
+      case "inworld":
+        return inworldSynth(deps.inworldKey, shared);
+      default:
+        return openAiSynth(deps.openai, shared);
     }
-    return openAiSynth(openai, shared);
   };
 }

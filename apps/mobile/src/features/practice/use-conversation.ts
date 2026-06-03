@@ -266,7 +266,7 @@ export function useConversation(
       // override imperatively (not as a reactive hook) so it never lands in a
       // dependency array; when disabled, undefined => backend defaults.
       const vl = useVoiceLab.getState();
-      const voiceOverride = vl.overrideEnabled ? vl.config : undefined;
+      const voiceOverride = vl.config;
       const { events } = streamTurn(conversationId, uri, voiceOverride);
       const audioQueue = new AudioQueue({
         playChunk: async (chunk) => {

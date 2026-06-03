@@ -14,6 +14,8 @@ import {
   TTS_STYLES,
   OPENAI_TTS_VOICES,
   ELEVENLABS_TTS_VOICES,
+  GEMINI_TTS_VOICES,
+  INWORLD_TTS_VOICES,
   TTS_SPEED_OPTIONS,
   type TtsProvider,
 } from "@language-coach/shared";
@@ -21,13 +23,35 @@ import { EditorialText, Screen } from "@/src/design";
 import { previewVoice } from "@/src/lib/api-client";
 import { playOnce } from "@/src/features/practice/audio-controller";
 import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
+import {
+  PROVIDER_LABELS,
+  PROVIDER_TAGLINES,
+  VOICE_DESCRIPTORS,
+} from "@/src/features/voice-lab/voice-meta";
+
+const PROVIDERS: TtsProvider[] = ["openai", "elevenlabs", "gemini", "inworld"];
+
+function voicesFor(provider: TtsProvider): { id: string; name: string }[] {
+  switch (provider) {
+    case "elevenlabs":
+      return ELEVENLABS_TTS_VOICES.map((v) => ({ id: v.id, name: v.name }));
+    case "gemini":
+      return GEMINI_TTS_VOICES.map((v) => ({ id: v.id, name: v.name }));
+    case "inworld":
+      return INWORLD_TTS_VOICES.map((v) => ({ id: v.id, name: v.name }));
+    default:
+      return OPENAI_TTS_VOICES.map((v) => ({ id: v, name: v }));
+  }
+}
 
 function Chip({
   label,
+  caption,
   active,
   onPress,
 }: {
   label: string;
+  caption?: string;
   active: boolean;
   onPress: () => void;
 }) {
@@ -39,29 +63,34 @@ function Chip({
       <EditorialText kind="bodySm" color={active ? palette.cream : palette.ink}>
         {label}
       </EditorialText>
+      {caption ? (
+        <EditorialText
+          kind="caps"
+          color={active ? palette.cream : palette.inkSoft}
+        >
+          {caption}
+        </EditorialText>
+      ) : null}
     </Pressable>
   );
 }
 
-export default function VoiceLabScreen() {
-  const { overrideEnabled, config, setOverrideEnabled, setConfig, reset } =
-    useVoiceLab();
+export default function CoachVoiceScreen() {
+  const { config, setConfig, reset } = useVoiceLab();
   const [previewLang, setPreviewLang] = useState("es");
   const [status, setStatus] = useState<string>("");
 
-  const voices =
-    config.provider === "openai"
-      ? OPENAI_TTS_VOICES.map((v) => ({ id: v, name: v }))
-      : ELEVENLABS_TTS_VOICES.map((v) => ({ id: v.id, name: v.name }));
+  const voices = voicesFor(config.provider);
 
   async function onPreview() {
     setStatus("Synthesizing…");
     try {
-      const { audioBase64 } = await previewVoice({
+      const { audioBase64, contentType } = await previewVoice({
         languageCode: previewLang,
         config,
       });
-      const uri = (cacheDirectory ?? "") + "voice-lab-preview.mp3";
+      const ext = contentType === "audio/wav" ? "wav" : "mp3";
+      const uri = (cacheDirectory ?? "") + `coach-voice-preview.${ext}`;
       await writeAsStringAsync(uri, audioBase64, {
         encoding: EncodingType.Base64,
       });
@@ -76,7 +105,7 @@ export default function VoiceLabScreen() {
     <Screen variant="gradient">
       <Stack.Screen
         options={{
-          title: "🎛 Voice Lab",
+          title: "Coach's voice",
           headerShown: true,
           headerStyle: { backgroundColor: palette.cream },
           headerTintColor: palette.ink,
@@ -90,36 +119,24 @@ export default function VoiceLabScreen() {
           color={palette.inkSoft}
           style={styles.note}
         >
-          Dev tool — pick a provider, voice, speed and tone, then Preview.
-          Toggle “Apply to live conversation” to use the config in real practice
-          turns.
+          Pick how your coach sounds. Preview a sample, then it's used in every
+          conversation.
         </EditorialText>
-
-        <EditorialText kind="caps" color={palette.inkSoft} style={styles.label}>
-          Apply to live conversation
-        </EditorialText>
-        <View style={styles.row}>
-          <Chip
-            label={overrideEnabled ? "ON" : "OFF"}
-            active={overrideEnabled}
-            onPress={() => setOverrideEnabled(!overrideEnabled)}
-          />
-        </View>
 
         <EditorialText kind="caps" color={palette.inkSoft} style={styles.label}>
           Provider
         </EditorialText>
         <View style={styles.row}>
-          {(["openai", "elevenlabs"] as TtsProvider[]).map((p) => (
+          {PROVIDERS.map((p) => (
             <Chip
               key={p}
-              label={p}
+              label={PROVIDER_LABELS[p]}
+              caption={PROVIDER_TAGLINES[p]}
               active={config.provider === p}
               onPress={() =>
                 setConfig({
                   provider: p,
-                  voiceId:
-                    p === "openai" ? "nova" : ELEVENLABS_TTS_VOICES[0]!.id,
+                  voiceId: voicesFor(p)[0]!.id,
                 })
               }
             />
@@ -134,6 +151,7 @@ export default function VoiceLabScreen() {
             <Chip
               key={v.id}
               label={v.name}
+              caption={VOICE_DESCRIPTORS[v.id]}
               active={config.voiceId === v.id}
               onPress={() => setConfig({ voiceId: v.id })}
             />

@@ -20,6 +20,7 @@ export class ProviderError extends Error {
       | "STT_PROVIDER_FAILURE"
       | "LLM_PROVIDER_FAILURE"
       | "TTS_PROVIDER_FAILURE"
+      | "TTS_PROVIDER_NOT_CONFIGURED"
       | "AUDIO_SILENT"
       | "AUDIO_TOO_SHORT"
       | "AUDIO_TOO_LONG"

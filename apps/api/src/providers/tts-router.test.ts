@@ -4,15 +4,20 @@ import { makeSynthesizeSpeech } from "./tts-router";
 describe("makeSynthesizeSpeech", () => {
   const result = { audioBuffer: Buffer.from([1]), contentType: "audio/mpeg" };
 
-  it("default config (no override) routes to OpenAI with nova", async () => {
+  function deps(overrides: Record<string, unknown>) {
+    return {
+      openai: {} as never,
+      eleven: {} as never,
+      geminiKey: "gk",
+      inworldKey: "ik",
+      synth: overrides,
+    };
+  }
+
+  it("default config routes to OpenAI with nova", async () => {
     const openai = vi.fn().mockResolvedValue(result);
     const eleven = vi.fn().mockResolvedValue(result);
-    const synth = makeSynthesizeSpeech(
-      {} as never,
-      {} as never,
-      openai,
-      eleven,
-    );
+    const synth = makeSynthesizeSpeech(deps({ openai, eleven }));
     await synth({ text: "hi", languageCode: "es" });
     expect(eleven).not.toHaveBeenCalled();
     expect(openai).toHaveBeenCalledWith(
@@ -24,12 +29,7 @@ describe("makeSynthesizeSpeech", () => {
   it("elevenlabs config routes to ElevenLabs", async () => {
     const openai = vi.fn().mockResolvedValue(result);
     const eleven = vi.fn().mockResolvedValue(result);
-    const synth = makeSynthesizeSpeech(
-      {} as never,
-      {} as never,
-      openai,
-      eleven,
-    );
+    const synth = makeSynthesizeSpeech(deps({ openai, eleven }));
     await synth({
       text: "ciao",
       languageCode: "it",
@@ -48,6 +48,44 @@ describe("makeSynthesizeSpeech", () => {
         languageCode: "it",
         speed: 1.1,
       }),
+    );
+  });
+
+  it("gemini config routes to Gemini with the key", async () => {
+    const gemini = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ gemini }));
+    await synth({
+      text: "hola",
+      languageCode: "es",
+      config: {
+        provider: "gemini",
+        voiceId: "Kore",
+        speed: 1.0,
+        style: "warm",
+      },
+    });
+    expect(gemini).toHaveBeenCalledWith(
+      "gk",
+      expect.objectContaining({ voiceId: "Kore", languageCode: "es" }),
+    );
+  });
+
+  it("inworld config routes to Inworld with the key", async () => {
+    const inworld = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ inworld }));
+    await synth({
+      text: "hola",
+      languageCode: "es",
+      config: {
+        provider: "inworld",
+        voiceId: "Ashley",
+        speed: 1.0,
+        style: "warm",
+      },
+    });
+    expect(inworld).toHaveBeenCalledWith(
+      "ik",
+      expect.objectContaining({ voiceId: "Ashley", languageCode: "es" }),
     );
   });
 });
