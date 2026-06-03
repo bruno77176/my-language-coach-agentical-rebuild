@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { transcribeAudio } from "./deepgram";
+import { deepgramModelForLanguage, transcribeAudio } from "./deepgram";
 
 describe("transcribeAudio", () => {
   it("returns transcript text + duration on success", async () => {
@@ -157,5 +157,48 @@ describe("transcribeAudio", () => {
     });
     expect(result.text).toBe("Hi");
     expect(result.durationSeconds).toBe(2.5);
+  });
+
+  it("routes Chinese (zh) to nova-2 and reports it in usage", async () => {
+    const transcribeFile = vi.fn().mockResolvedValue({
+      results: { channels: [{ alternatives: [{ transcript: "你好" }] }] },
+      metadata: { duration: 2.0 },
+    });
+    const onUsage = vi.fn();
+    const fakeClient = { listen: { v1: { media: { transcribeFile } } } };
+    await transcribeAudio(fakeClient as never, {
+      audioBuffer: Buffer.from("fake"),
+      languageCode: "zh",
+      onUsage,
+    });
+    expect(transcribeFile).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ model: "nova-2", language: "zh" }),
+    );
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ operation: "transcribe:nova-2" }),
+    );
+  });
+
+  it("keeps Japanese (ja) on nova-3", async () => {
+    const transcribeFile = vi.fn().mockResolvedValue({
+      results: { channels: [{ alternatives: [{ transcript: "こんにちは" }] }] },
+      metadata: { duration: 2.0 },
+    });
+    const fakeClient = { listen: { v1: { media: { transcribeFile } } } };
+    await transcribeAudio(fakeClient as never, {
+      audioBuffer: Buffer.from("fake"),
+      languageCode: "ja",
+    });
+    expect(transcribeFile).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ model: "nova-3", language: "ja" }),
+    );
+  });
+
+  it("normalizes language case when selecting the model", () => {
+    expect(deepgramModelForLanguage("ZH")).toBe("nova-2");
+    expect(deepgramModelForLanguage("zh")).toBe("nova-2");
+    expect(deepgramModelForLanguage("en")).toBe("nova-3");
   });
 });
