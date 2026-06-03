@@ -72,7 +72,11 @@ describe("synthesizeSpeechGemini", () => {
       onUsage,
     });
     expect(onUsage).toHaveBeenCalledWith(
-      expect.objectContaining({ provider: "gemini", characters: 4 }),
+      expect.objectContaining({
+        provider: "gemini",
+        operation: "tts:gemini-3.1-flash-tts",
+        characters: 4,
+      }),
     );
   });
 
