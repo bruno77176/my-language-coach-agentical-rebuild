@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { streamSSE } from "hono/streaming";
+import { streamSSE, type SSEStreamingApi } from "hono/streaming";
 import { eq, sql, and, desc, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -95,6 +95,58 @@ const MIN_AUDIO_BYTES = 4_000; // ~< 1s of speech in any reasonable codec
 // last 10 exchanges.
 const MAX_HISTORY_MESSAGES = 20;
 
+// Build-23+ clients send `X-Client-Capabilities: inline-audio` to opt into
+// receiving coach audio bytes inline (base64) in the reply-chunk event,
+// playing them immediately instead of fetching a signed Storage URL. This
+// removes a Storage upload + signed-URL round-trip on the server AND the
+// client re-download from the latency-critical path. Older builds omit the
+// header and keep the legacy signed-URL path, so installed clients still work.
+function clientSupportsInlineAudio(header: string | undefined): boolean {
+  return (header ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .includes("inline-audio");
+}
+
+// Emit one coach audio chunk over SSE, choosing the inline-base64 path or the
+// legacy signed-URL path based on the client's advertised capability. The
+// upload thunk is only invoked on the legacy path, so inline clients never
+// touch Storage.
+async function writeReplyChunk(
+  stream: SSEStreamingApi,
+  opts: {
+    index: number;
+    text: string;
+    audio: TtsResult;
+    inlineAudio: boolean;
+    upload: () => Promise<{ audioUrl: string }>;
+  },
+): Promise<void> {
+  if (opts.inlineAudio) {
+    await stream.writeSSE({
+      event: "reply-chunk",
+      data: JSON.stringify({
+        index: opts.index,
+        text: opts.text,
+        audioBase64: opts.audio.audioBuffer.toString("base64"),
+        contentType: opts.audio.contentType,
+        durationMs: 0,
+      }),
+    });
+    return;
+  }
+  const { audioUrl } = await opts.upload();
+  await stream.writeSSE({
+    event: "reply-chunk",
+    data: JSON.stringify({
+      index: opts.index,
+      text: opts.text,
+      audioUrl,
+      durationMs: 0,
+    }),
+  });
+}
+
 export function createVoiceRoutes(deps: VoiceDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
 
@@ -154,6 +206,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     const userId = c.get("userId");
     const conversationId = c.req.param("id");
     const platform = platformFromHeader(c.req.header("X-Client-Platform"));
+    const inlineAudio = clientSupportsInlineAudio(
+      c.req.header("X-Client-Capabilities"),
+    );
     const onUsage = makeOnUsage(deps.db, {
       userId,
       platform,
@@ -391,22 +446,20 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             });
             return;
           }
-          const { audioUrl } = await deps.uploadCoachAudioChunk({
-            userId,
-            conversationId,
-            messageId: `pending-${conversationId}-${turnSeq}`,
-            chunkIndex: idx,
-            audioBuffer: audio.audioBuffer,
-            contentType: audio.contentType,
-          });
-          await stream.writeSSE({
-            event: "reply-chunk",
-            data: JSON.stringify({
-              index: idx,
-              text,
-              audioUrl,
-              durationMs: 0,
-            }),
+          await writeReplyChunk(stream, {
+            index: idx,
+            text,
+            audio,
+            inlineAudio,
+            upload: () =>
+              deps.uploadCoachAudioChunk({
+                userId,
+                conversationId,
+                messageId: `pending-${conversationId}-${turnSeq}`,
+                chunkIndex: idx,
+                audioBuffer: audio.audioBuffer,
+                contentType: audio.contentType,
+              }),
           });
         }
 
@@ -560,6 +613,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     // we skip the LLM round-trip. Falls back to live generation if a scenario
     // has no saved line for this language.
     const savedOpener = getOpeningLine(scenario.id, languageCode);
+    const inlineAudio = clientSupportsInlineAudio(
+      c.req.header("X-Client-Capabilities"),
+    );
 
     return streamSSE(c, async (stream) => {
       try {
@@ -588,17 +644,20 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             });
             return;
           }
-          const { audioUrl } = await deps.uploadCoachAudioChunk({
-            userId,
-            conversationId,
-            messageId: `pending-${conversationId}-${turnSeq}`,
-            chunkIndex: idx,
-            audioBuffer: audio.audioBuffer,
-            contentType: audio.contentType,
-          });
-          await stream.writeSSE({
-            event: "reply-chunk",
-            data: JSON.stringify({ index: idx, text, audioUrl, durationMs: 0 }),
+          await writeReplyChunk(stream, {
+            index: idx,
+            text,
+            audio,
+            inlineAudio,
+            upload: () =>
+              deps.uploadCoachAudioChunk({
+                userId,
+                conversationId,
+                messageId: `pending-${conversationId}-${turnSeq}`,
+                chunkIndex: idx,
+                audioBuffer: audio.audioBuffer,
+                contentType: audio.contentType,
+              }),
           });
         }
 

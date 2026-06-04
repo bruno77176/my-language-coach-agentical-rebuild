@@ -304,6 +304,38 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
     expect(uploadCoachAudioChunk).toHaveBeenCalledTimes(2);
   });
 
+  it("emits inline audioBase64 (and skips Storage upload) when client advertises inline-audio", async () => {
+    // Build-23+ clients send `X-Client-Capabilities: inline-audio` and play the
+    // audio bytes straight from the SSE event — no Storage upload, no signed
+    // URL, no client re-download. This removes a full network round-trip per
+    // chunk from the latency-critical path.
+    const { app, uploadCoachAudioChunk } = setupRoute();
+    const res = await app.request(
+      `/v1/voice/sessions/${conversationId}/turns`,
+      {
+        method: "POST",
+        body: makeAudioFormData(50_000),
+        headers: { "X-Client-Capabilities": "inline-audio" },
+      },
+    );
+    expect(res.status).toBe(200);
+
+    const events = await readSseEvents(res.body!);
+    const chunks = events.filter((e) => e.event === "reply-chunk");
+    expect(chunks).toHaveLength(2);
+
+    const chunk0 = JSON.parse(chunks[0]!.data);
+    expect(chunk0.index).toBe(0);
+    expect(chunk0.text).toBe("Hello world.");
+    // synthesizeSpeech stub returns Buffer.from([1,2,3,4]) → base64 "AQIDBA=="
+    expect(chunk0.audioBase64).toBe("AQIDBA==");
+    expect(chunk0.contentType).toBe("audio/mpeg");
+    expect(chunk0.audioUrl).toBeUndefined();
+
+    // The Storage upload is bypassed entirely on the inline path.
+    expect(uploadCoachAudioChunk).not.toHaveBeenCalled();
+  });
+
   it("emits a single reply-chunk for a single-sentence GPT response", async () => {
     async function* singleSentenceStream() {
       yield "Hola amigo.";
