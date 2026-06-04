@@ -27,6 +27,14 @@ import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
 import { playOnce } from "./audio-controller";
 import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
+// expo-file-system v19's default export is the new File/Paths API; the simple
+// string-path helpers used for the inline-audio cache files live under
+// /legacy (same import the Voice Lab uses for preview playback).
+import {
+  cacheDirectory,
+  writeAsStringAsync,
+  EncodingType,
+} from "expo-file-system/legacy";
 
 export const ACTIVE_SESSION_KEY = "active-session.v1";
 
@@ -256,6 +264,25 @@ export function useConversation(
       if (event.type === "transcription") {
         onTranscription?.(event.text);
       } else if (event.type === "reply-chunk") {
+        // Resolve the playable audio URI. Inline-audio events carry the bytes
+        // as base64 (no Storage round-trip / re-download) — write them to a
+        // cache file and play that. Legacy events carry a signed URL directly.
+        // On a write failure we keep the text and just skip this chunk's audio.
+        let chunkUri = event.audioUrl;
+        if (event.audioBase64) {
+          try {
+            const ext = event.contentType === "audio/wav" ? "wav" : "mp3";
+            const uri =
+              (cacheDirectory ?? "") +
+              `coach-chunk-${Date.now()}-${event.index}.${ext}`;
+            await writeAsStringAsync(uri, event.audioBase64, {
+              encoding: EncodingType.Base64,
+            });
+            chunkUri = uri;
+          } catch {
+            chunkUri = undefined;
+          }
+        }
         chunkTexts[event.index] = event.text;
         const accumText = chunkTexts.filter(Boolean).join(" ");
         setMessages((prev) => {
@@ -268,7 +295,7 @@ export function useConversation(
           ) {
             return [
               ...prev.slice(0, -1),
-              { ...last, text: accumText, audioUrl: event.audioUrl },
+              { ...last, text: accumText, audioUrl: chunkUri },
             ];
           }
           const newId = `c-${Date.now()}`;
@@ -279,16 +306,18 @@ export function useConversation(
               id: newId,
               role: "coach",
               text: accumText,
-              audioUrl: event.audioUrl,
+              audioUrl: chunkUri,
             },
           ];
         });
-        audioQueue.enqueue({
-          index: event.index,
-          text: event.text,
-          audioUrl: event.audioUrl,
-          durationMs: event.durationMs,
-        });
+        if (chunkUri) {
+          audioQueue.enqueue({
+            index: event.index,
+            text: event.text,
+            audioUrl: chunkUri,
+            durationMs: event.durationMs,
+          });
+        }
       } else if (event.type === "done") {
         if (coachMessageId && event.messageId) {
           const serverId = event.messageId;

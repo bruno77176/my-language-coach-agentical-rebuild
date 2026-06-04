@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { streamSSE } from "hono/streaming";
+import { streamSSE, type SSEStreamingApi } from "hono/streaming";
 import { eq, sql, and, desc, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -88,6 +88,65 @@ const StartSessionBody = z.object({
 const MAX_AUDIO_BYTES = 1_500_000; // ~60s of mp3 @ 192kbps
 const MIN_AUDIO_BYTES = 4_000; // ~< 1s of speech in any reasonable codec
 
+// Cap how many prior messages we forward to the LLM each turn. Sending the
+// full unbounded history bloats the prompt → higher time-to-first-token and
+// cost as a conversation grows. Older context is preserved via coach memory
+// (the rolling summary injected into the system prompt). ~20 messages ≈ the
+// last 10 exchanges.
+const MAX_HISTORY_MESSAGES = 20;
+
+// Build-23+ clients send `X-Client-Capabilities: inline-audio` to opt into
+// receiving coach audio bytes inline (base64) in the reply-chunk event,
+// playing them immediately instead of fetching a signed Storage URL. This
+// removes a Storage upload + signed-URL round-trip on the server AND the
+// client re-download from the latency-critical path. Older builds omit the
+// header and keep the legacy signed-URL path, so installed clients still work.
+function clientSupportsInlineAudio(header: string | undefined): boolean {
+  return (header ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .includes("inline-audio");
+}
+
+// Emit one coach audio chunk over SSE, choosing the inline-base64 path or the
+// legacy signed-URL path based on the client's advertised capability. The
+// upload thunk is only invoked on the legacy path, so inline clients never
+// touch Storage.
+async function writeReplyChunk(
+  stream: SSEStreamingApi,
+  opts: {
+    index: number;
+    text: string;
+    audio: TtsResult;
+    inlineAudio: boolean;
+    upload: () => Promise<{ audioUrl: string }>;
+  },
+): Promise<void> {
+  if (opts.inlineAudio) {
+    await stream.writeSSE({
+      event: "reply-chunk",
+      data: JSON.stringify({
+        index: opts.index,
+        text: opts.text,
+        audioBase64: opts.audio.audioBuffer.toString("base64"),
+        contentType: opts.audio.contentType,
+        durationMs: 0,
+      }),
+    });
+    return;
+  }
+  const { audioUrl } = await opts.upload();
+  await stream.writeSSE({
+    event: "reply-chunk",
+    data: JSON.stringify({
+      index: opts.index,
+      text: opts.text,
+      audioUrl,
+      durationMs: 0,
+    }),
+  });
+}
+
 export function createVoiceRoutes(deps: VoiceDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
 
@@ -147,6 +206,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     const userId = c.get("userId");
     const conversationId = c.req.param("id");
     const platform = platformFromHeader(c.req.header("X-Client-Platform"));
+    const inlineAudio = clientSupportsInlineAudio(
+      c.req.header("X-Client-Capabilities"),
+    );
     const onUsage = makeOnUsage(deps.db, {
       userId,
       platform,
@@ -190,10 +252,27 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
+    // Fetch the three independent per-turn reads concurrently. These were
+    // previously three serial DB round-trips on the request hot path; the
+    // coach-memory row only depends on userId + language (already known from
+    // the conversation), so it's safe to load alongside entitlement + profile.
+    const [entitlement, profile, memoryRow] = await Promise.all([
+      deps.db.query.entitlements.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+      deps.db.query.profiles.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+      // Consent is global (profiles.memory_enabled); when off we degrade to
+      // "no memory" below. parseCoachMemoryRow defensively returns null on
+      // corrupt data so we never crash or pass junk to the model.
+      deps.db.query.coachMemory.findFirst({
+        where: (t, { eq: e, and: a }) =>
+          a(e(t.userId, userId), e(t.languageCode, conversation.language)),
+      }),
+    ]);
+
     // Quota
-    const entitlement = await deps.db.query.entitlements.findFirst({
-      where: (t, { eq: e }) => e(t.userId, userId),
-    });
     if (!entitlement) {
       return c.json(
         { error: { code: "INTERNAL", message: "No entitlement" } },
@@ -223,24 +302,12 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
-    const profile = await deps.db.query.profiles.findFirst({
-      where: (t, { eq: e }) => e(t.userId, userId),
-    });
     if (!profile) {
       return c.json(
         { error: { code: "INTERNAL", message: "No profile" } },
         500,
       );
     }
-
-    // Load coach memory for this user × language (Plan 8 M1).
-    // Consent is global (profiles.memory_enabled); when off we degrade to "no
-    // memory" for every language. parseCoachMemoryRow defensively returns null
-    // on corrupt data so we never crash or pass junk to the model.
-    const memoryRow = await deps.db.query.coachMemory.findFirst({
-      where: (t, { eq: e, and: a }) =>
-        a(e(t.userId, userId), e(t.languageCode, conversation.language)),
-    });
     const memory =
       memoryRow && profile.memoryEnabled
         ? parseCoachMemoryRow(memoryRow)
@@ -319,9 +386,10 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           memoryDepth,
           scenario: scenarioFragment,
         });
+        const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
         const promptMessages: ChatMessage[] = [
           { role: "system" as const, content: sysPrompt },
-          ...history.map((m) => ({
+          ...recentHistory.map((m) => ({
             role: (m.role === "coach" ? "assistant" : m.role) as
               | "user"
               | "assistant"
@@ -378,22 +446,20 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             });
             return;
           }
-          const { audioUrl } = await deps.uploadCoachAudioChunk({
-            userId,
-            conversationId,
-            messageId: `pending-${conversationId}-${turnSeq}`,
-            chunkIndex: idx,
-            audioBuffer: audio.audioBuffer,
-            contentType: audio.contentType,
-          });
-          await stream.writeSSE({
-            event: "reply-chunk",
-            data: JSON.stringify({
-              index: idx,
-              text,
-              audioUrl,
-              durationMs: 0,
-            }),
+          await writeReplyChunk(stream, {
+            index: idx,
+            text,
+            audio,
+            inlineAudio,
+            upload: () =>
+              deps.uploadCoachAudioChunk({
+                userId,
+                conversationId,
+                messageId: `pending-${conversationId}-${turnSeq}`,
+                chunkIndex: idx,
+                audioBuffer: audio.audioBuffer,
+                contentType: audio.contentType,
+              }),
           });
         }
 
@@ -547,6 +613,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     // we skip the LLM round-trip. Falls back to live generation if a scenario
     // has no saved line for this language.
     const savedOpener = getOpeningLine(scenario.id, languageCode);
+    const inlineAudio = clientSupportsInlineAudio(
+      c.req.header("X-Client-Capabilities"),
+    );
 
     return streamSSE(c, async (stream) => {
       try {
@@ -575,17 +644,20 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             });
             return;
           }
-          const { audioUrl } = await deps.uploadCoachAudioChunk({
-            userId,
-            conversationId,
-            messageId: `pending-${conversationId}-${turnSeq}`,
-            chunkIndex: idx,
-            audioBuffer: audio.audioBuffer,
-            contentType: audio.contentType,
-          });
-          await stream.writeSSE({
-            event: "reply-chunk",
-            data: JSON.stringify({ index: idx, text, audioUrl, durationMs: 0 }),
+          await writeReplyChunk(stream, {
+            index: idx,
+            text,
+            audio,
+            inlineAudio,
+            upload: () =>
+              deps.uploadCoachAudioChunk({
+                userId,
+                conversationId,
+                messageId: `pending-${conversationId}-${turnSeq}`,
+                chunkIndex: idx,
+                audioBuffer: audio.audioBuffer,
+                contentType: audio.contentType,
+              }),
           });
         }
 
