@@ -88,6 +88,13 @@ const StartSessionBody = z.object({
 const MAX_AUDIO_BYTES = 1_500_000; // ~60s of mp3 @ 192kbps
 const MIN_AUDIO_BYTES = 4_000; // ~< 1s of speech in any reasonable codec
 
+// Cap how many prior messages we forward to the LLM each turn. Sending the
+// full unbounded history bloats the prompt → higher time-to-first-token and
+// cost as a conversation grows. Older context is preserved via coach memory
+// (the rolling summary injected into the system prompt). ~20 messages ≈ the
+// last 10 exchanges.
+const MAX_HISTORY_MESSAGES = 20;
+
 export function createVoiceRoutes(deps: VoiceDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
 
@@ -190,10 +197,27 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
+    // Fetch the three independent per-turn reads concurrently. These were
+    // previously three serial DB round-trips on the request hot path; the
+    // coach-memory row only depends on userId + language (already known from
+    // the conversation), so it's safe to load alongside entitlement + profile.
+    const [entitlement, profile, memoryRow] = await Promise.all([
+      deps.db.query.entitlements.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+      deps.db.query.profiles.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+      // Consent is global (profiles.memory_enabled); when off we degrade to
+      // "no memory" below. parseCoachMemoryRow defensively returns null on
+      // corrupt data so we never crash or pass junk to the model.
+      deps.db.query.coachMemory.findFirst({
+        where: (t, { eq: e, and: a }) =>
+          a(e(t.userId, userId), e(t.languageCode, conversation.language)),
+      }),
+    ]);
+
     // Quota
-    const entitlement = await deps.db.query.entitlements.findFirst({
-      where: (t, { eq: e }) => e(t.userId, userId),
-    });
     if (!entitlement) {
       return c.json(
         { error: { code: "INTERNAL", message: "No entitlement" } },
@@ -223,24 +247,12 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
-    const profile = await deps.db.query.profiles.findFirst({
-      where: (t, { eq: e }) => e(t.userId, userId),
-    });
     if (!profile) {
       return c.json(
         { error: { code: "INTERNAL", message: "No profile" } },
         500,
       );
     }
-
-    // Load coach memory for this user × language (Plan 8 M1).
-    // Consent is global (profiles.memory_enabled); when off we degrade to "no
-    // memory" for every language. parseCoachMemoryRow defensively returns null
-    // on corrupt data so we never crash or pass junk to the model.
-    const memoryRow = await deps.db.query.coachMemory.findFirst({
-      where: (t, { eq: e, and: a }) =>
-        a(e(t.userId, userId), e(t.languageCode, conversation.language)),
-    });
     const memory =
       memoryRow && profile.memoryEnabled
         ? parseCoachMemoryRow(memoryRow)
@@ -319,9 +331,10 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           memoryDepth,
           scenario: scenarioFragment,
         });
+        const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
         const promptMessages: ChatMessage[] = [
           { role: "system" as const, content: sysPrompt },
-          ...history.map((m) => ({
+          ...recentHistory.map((m) => ({
             role: (m.role === "coach" ? "assistant" : m.role) as
               | "user"
               | "assistant"

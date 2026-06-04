@@ -333,6 +333,41 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
     expect(chunk.audioUrl).toBe("https://signed.example/chunk-0.mp3");
   });
 
+  it("caps the conversation history sent to the LLM to the last 20 messages", async () => {
+    // A long conversation: 30 prior messages. Sending the full history every
+    // turn bloats the prompt → higher time-to-first-token + cost. Only the most
+    // recent 20 should reach the LLM (older context lives in coach memory).
+    const history = Array.from({ length: 30 }, (_, i) => ({
+      role: (i % 2 === 0 ? "user" : "coach") as "user" | "coach",
+      text: `msg-${i}`,
+    }));
+    let captured: Array<{ role: string; content: string }> | null = null;
+    async function* stream() {
+      yield "Ok.";
+    }
+    const streamChatCompletion = vi.fn(
+      (input: { messages: Array<{ role: string; content: string }> }) => {
+        captured = input.messages;
+        return stream();
+      },
+    ) as unknown as VoiceDeps["streamChatCompletion"];
+
+    const { app } = setupRoute({ history, streamChatCompletion });
+    const res = await app.request(
+      `/v1/voice/sessions/${conversationId}/turns`,
+      { method: "POST", body: makeAudioFormData(50_000) },
+    );
+    expect(res.status).toBe(200);
+    await readSseEvents(res.body!);
+
+    expect(captured).not.toBeNull();
+    const historyPart = captured!.filter((m) => m.role !== "system");
+    expect(historyPart).toHaveLength(20);
+    // Oldest forwarded message is msg-10 (msg-10 .. msg-29 kept).
+    expect(historyPart[0]!.content).toBe("msg-10");
+    expect(historyPart[19]!.content).toBe("msg-29");
+  });
+
   it("returns 422 AUDIO_TOO_SHORT when audio < 4KB", async () => {
     const { app } = setupRoute();
     const res = await app.request(
