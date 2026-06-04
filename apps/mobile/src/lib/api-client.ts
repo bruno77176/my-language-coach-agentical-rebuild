@@ -21,6 +21,17 @@ export function clientPlatformHeader(): { "X-Client-Platform": string } {
   return { "X-Client-Platform": Platform.OS };
 }
 
+// Advertise that this build can play coach audio delivered inline (base64) in
+// the reply-chunk SSE event. The backend then skips the Supabase Storage
+// upload + signed-URL round-trip and the client skips the re-download — a full
+// network round-trip removed from the latency-critical path per chunk. Older
+// builds omit this header and transparently get the legacy signed-URL path.
+export function clientCapabilitiesHeader(): {
+  "X-Client-Capabilities": string;
+} {
+  return { "X-Client-Capabilities": "inline-audio" };
+}
+
 export type StartSessionResponse = { conversation_id: string };
 
 export async function startSession(
@@ -118,7 +129,11 @@ export type TurnEvent =
       type: "reply-chunk";
       index: number;
       text: string;
-      audioUrl: string;
+      // Legacy signed-URL path (older backend / non-inline clients).
+      audioUrl?: string;
+      // Inline-audio path: the synthesized bytes, base64-encoded.
+      audioBase64?: string;
+      contentType?: string;
       durationMs: number;
     }
   | { type: "done"; messageId: string }
@@ -199,7 +214,11 @@ export function streamTurn(
 
     es = new EventSource<TurnEventName>(url, {
       method: "POST",
-      headers: { authorization: auth, ...clientPlatformHeader() },
+      headers: {
+        authorization: auth,
+        ...clientPlatformHeader(),
+        ...clientCapabilitiesHeader(),
+      },
       body: form,
     });
 
@@ -213,7 +232,9 @@ export function streamTurn(
       const data = JSON.parse(e.data) as {
         index: number;
         text: string;
-        audioUrl: string;
+        audioUrl?: string;
+        audioBase64?: string;
+        contentType?: string;
         durationMs: number;
       };
       push({
@@ -221,6 +242,8 @@ export function streamTurn(
         index: data.index,
         text: data.text,
         audioUrl: data.audioUrl,
+        audioBase64: data.audioBase64,
+        contentType: data.contentType,
         durationMs: data.durationMs,
       });
     });
@@ -361,7 +384,11 @@ export function streamOpening(conversationId: string): {
 
     es = new EventSource<TurnEventName>(url, {
       method: "POST",
-      headers: { authorization: auth, ...clientPlatformHeader() },
+      headers: {
+        authorization: auth,
+        ...clientPlatformHeader(),
+        ...clientCapabilitiesHeader(),
+      },
     });
 
     es.addEventListener("reply-chunk", (e) => {
@@ -369,7 +396,9 @@ export function streamOpening(conversationId: string): {
       const data = JSON.parse(e.data) as {
         index: number;
         text: string;
-        audioUrl: string;
+        audioUrl?: string;
+        audioBase64?: string;
+        contentType?: string;
         durationMs: number;
       };
       push({
@@ -377,6 +406,8 @@ export function streamOpening(conversationId: string): {
         index: data.index,
         text: data.text,
         audioUrl: data.audioUrl,
+        audioBase64: data.audioBase64,
+        contentType: data.contentType,
         durationMs: data.durationMs,
       });
     });
