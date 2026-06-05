@@ -27,7 +27,7 @@ export function LiveConversation({ scenarioId }: { scenarioId?: string }) {
   const insets = useSafeAreaInsets();
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
-  const { state, start, stop, toggleMute } = useLiveConversation(
+  const { state, debug, start, stop, toggleMute } = useLiveConversation(
     targetLang,
     scenarioId,
   );
@@ -72,6 +72,17 @@ export function LiveConversation({ scenarioId }: { scenarioId?: string }) {
               : (PHASE_LABEL[state.phase] ?? state.phase)}
           </EditorialText>
         </GlassCard>
+
+        {running && (
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.diag}
+          >
+            mic: {debug.frames} frames · lvl {debug.level.toFixed(2)}
+            {debug.err ? ` · ⚠️ ${debug.err}` : ""}
+          </EditorialText>
+        )}
 
         <View style={styles.transcript}>
           {!!state.userTranscript && (
@@ -150,6 +161,7 @@ const styles = StyleSheet.create({
   hint: { marginBottom: spacing.lg },
   statusCard: { padding: spacing.md, alignItems: "center" },
   status: { textAlign: "center" },
+  diag: { textAlign: "center", marginTop: spacing.sm },
   transcript: { flex: 1, marginTop: spacing.lg, gap: spacing.md },
   you: {},
   coach: {},
