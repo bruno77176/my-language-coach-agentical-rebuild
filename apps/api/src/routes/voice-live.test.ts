@@ -25,10 +25,7 @@ async function* oneSentence() {
 
 const ctx: LiveTurnContext = {
   languageCode: "es",
-  buildMessages: (transcript) => [
-    { role: "system", content: "sys" },
-    { role: "user", content: transcript },
-  ],
+  baseMessages: [{ role: "system", content: "sys" }],
 };
 
 function makeDeps(raw: ReturnType<typeof fakeRawSocket>) {

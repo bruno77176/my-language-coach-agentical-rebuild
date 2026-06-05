@@ -10,13 +10,13 @@ import { canUseLiveVoice } from "../lib/voice-entitlement";
 import type { Verifier } from "../middleware/auth";
 import type { ChatMessage } from "../providers/openai";
 
-// Everything the route needs to run one Live turn for a given connection: the
-// target language and a function that turns the user's utterance into the full
-// LLM message list (system prompt + history + utterance). Loaded per-connection
-// after auth so the relay stays generic.
+// Everything the route needs to run Live turns for a connection: the target
+// language and the seed message list (system prompt + pre-session history).
+// The connection appends each user utterance and coach reply to its own running
+// copy, so the coach remembers earlier exchanges within the live session.
 export type LiveTurnContext = {
   languageCode: string;
-  buildMessages: (transcript: string) => ChatMessage[];
+  baseMessages: ChatMessage[];
 };
 
 export type LiveConnectionDeps = {
@@ -41,17 +41,21 @@ export function createLiveConnection(
   let transcriptParts: string[] = [];
   let currentTurn: AbortController | null = null;
   let ws: WsLike | null = null;
+  // Running conversation for this live session — appended each turn so the
+  // coach remembers what was said earlier in the session.
+  const convo: ChatMessage[] = [...params.ctx.baseMessages];
 
   const send = (msg: unknown) => ws?.send(JSON.stringify(msg));
 
   const runOneTurn = async (utterance: string) => {
     const turn = new AbortController();
     currentTurn = turn;
+    convo.push({ role: "user", content: utterance });
     send({ type: "user-transcript", text: utterance });
-    await runTurn(
+    const { fullText } = await runTurn(
       deps.runTurnDeps,
       {
-        messages: params.ctx.buildMessages(utterance),
+        messages: [...convo],
         languageCode: params.ctx.languageCode,
         signal: turn.signal,
       },
@@ -69,7 +73,10 @@ export function createLiveConnection(
         send({ type: "error", code: "TTS_PROVIDER_FAILURE", index });
       },
     );
-    if (!turn.signal.aborted) send({ type: "turn-done" });
+    if (!turn.signal.aborted) {
+      convo.push({ role: "assistant", content: fullText });
+      send({ type: "turn-done" });
+    }
   };
 
   return {
