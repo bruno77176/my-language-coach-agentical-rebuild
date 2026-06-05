@@ -21,6 +21,7 @@ const EnvSchema = z.object({
   GOOGLE_TTS_SA_JSON_B64: z.string().optional(),
   INWORLD_API_KEY: z.string().optional(),
   ADMIN_USER_IDS: z.string().default(""), // comma-separated Supabase user IDs
+  VOICE_LIVE_USER_IDS: z.string().default(""), // comma-separated user IDs allowed to use Live voice mode
   ADMIN_ALLOWED_ORIGINS: z.string().default(""), // comma-separated origins allowed to call /admin/* (CORS)
   INTERNAL_CRON_SECRET: z.string().min(16),
   ACCOUNT_DELETION_SECRET: z.string().min(32), // 32+ random bytes hex for JWT HMAC
