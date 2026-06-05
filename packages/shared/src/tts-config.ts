@@ -16,11 +16,16 @@ export const TTS_STYLES: TtsStyle[] = [
   "energetic",
 ];
 
-// The default coach voice for everyone. Gemini "Kore" with a warm tone —
-// requires Gemini Cloud billing on the key's project (free-tier quota is tiny).
+// The default coach voice for everyone: ElevenLabs "Sarah" (a warm, friendly
+// female voice) on the Flash v2.5 model (the elevenlabs provider's default
+// modelId). Switched off Gemini "Kore" on 2026-06-05: Gemini's GA Cloud TTS is
+// a non-streaming REST call that intermittently exceeded its 8s timeout under
+// per-turn synthesis, degrading mid-message to the OpenAI "nova" fallback.
+// ElevenLabs Flash streams with sub-second TTFA and is far more reliable.
+// Kore stays available as a selectable voice (premium option) via the Lab.
 export const DEFAULT_TTS_CONFIG: TtsConfig = {
-  provider: "gemini",
-  voiceId: "Kore",
+  provider: "elevenlabs",
+  voiceId: "EXAVITQu4vr4xnSDxMaL", // Sarah
   speed: 1.0,
   style: "warm",
 };

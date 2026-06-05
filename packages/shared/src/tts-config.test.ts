@@ -8,10 +8,10 @@ import {
 } from "./tts-config";
 
 describe("tts-config", () => {
-  it("defaults everyone to the Gemini Kore warm voice", () => {
+  it("defaults everyone to the ElevenLabs Flash warm voice (Sarah)", () => {
     expect(DEFAULT_TTS_CONFIG).toEqual({
-      provider: "gemini",
-      voiceId: "Kore",
+      provider: "elevenlabs",
+      voiceId: "EXAVITQu4vr4xnSDxMaL", // Sarah
       speed: 1.0,
       style: "warm",
     });
