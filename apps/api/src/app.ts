@@ -8,7 +8,7 @@ import { reportError } from "./lib/sentry";
 import { createLoggingMiddleware } from "./middleware/logging";
 import { errorHandler } from "./middleware/error";
 import { createAuthMiddleware, type Verifier } from "./middleware/auth";
-import { createSupabaseVerifier } from "./lib/supabase-verifier";
+import { createSupabaseLocalVerifier } from "./lib/local-jwt-verifier";
 import { parseAdminIds } from "./lib/require-admin";
 import { createHealthRoutes } from "./routes/health";
 import { createAdminRoutes } from "./routes/admin";
@@ -59,7 +59,7 @@ export function createApp(
 ) {
   const app = new Hono<AppEnv>();
   const logger = createLogger(env);
-  const verifier = overrides?.verifier ?? createSupabaseVerifier(env);
+  const verifier = overrides?.verifier ?? createSupabaseLocalVerifier(env);
 
   app.use("*", async (c, next) => {
     c.set("env", env);
