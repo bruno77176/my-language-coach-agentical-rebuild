@@ -35,12 +35,33 @@ export interface WebSocketLike {
 
 export type LiveWsFactory = (url: string) => WebSocketLike;
 
+// Decode base64 -> bytes WITHOUT atob: React Native's Hermes engine has no
+// global atob (Node does, which is why this passed in tests but failed on
+// device — every mic frame threw, so nothing was ever sent). Lookup-table
+// decoder works on any JS engine and is fast enough for ~50 frames/sec.
+const B64_LOOKUP = (() => {
+  const t = new Uint8Array(256).fill(255);
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  for (let i = 0; i < chars.length; i++) t[chars.charCodeAt(i)] = i;
+  return t;
+})();
+
 function base64ToArrayBuffer(b64: string): ArrayBuffer {
-  const bin = (globalThis as unknown as { atob: (s: string) => string }).atob(
-    b64,
-  );
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  let len = b64.length;
+  while (len > 0 && b64.charCodeAt(len - 1) === 61 /* '=' */) len--;
+  const outLen = (len * 3) >> 2;
+  const bytes = new Uint8Array(outLen);
+  let o = 0;
+  for (let i = 0; i < len; i += 4) {
+    const a = B64_LOOKUP[b64.charCodeAt(i)]!;
+    const b = B64_LOOKUP[b64.charCodeAt(i + 1)]!;
+    const c = i + 2 < len ? B64_LOOKUP[b64.charCodeAt(i + 2)]! : 0;
+    const d = i + 3 < len ? B64_LOOKUP[b64.charCodeAt(i + 3)]! : 0;
+    bytes[o++] = (a << 2) | (b >> 4);
+    if (o < outLen) bytes[o++] = ((b & 15) << 4) | (c >> 2);
+    if (o < outLen) bytes[o++] = ((c & 3) << 6) | d;
+  }
   return bytes.buffer;
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useRef } from "react";
+import { useCallback, useReducer, useRef, useState } from "react";
 import * as StreamAudio from "expo-stream-audio";
 import {
   cacheDirectory,
@@ -28,6 +28,14 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
   const frameSubRef = useRef<{ remove: () => void } | null>(null);
   // Read inside the frame listener (avoids a stale closure on state.muted).
   const mutedRef = useRef(false);
+  // On-screen mic diagnostics (frames sent + last level/error) so a "nothing
+  // happens" report is conclusive: frames>0 ⇒ capture+send work.
+  const framesSentRef = useRef(0);
+  const [debug, setDebug] = useState<{
+    frames: number;
+    level: number;
+    err: string | null;
+  }>({ frames: 0, level: 0, err: null });
 
   const start = useCallback(async () => {
     const perm = await StreamAudio.requestPermission();
@@ -100,9 +108,28 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
 
     dispatch({ type: "START" });
     mutedRef.current = false;
+    framesSentRef.current = 0;
+    setDebug({ frames: 0, level: 0, err: null });
 
     frameSubRef.current = StreamAudio.addFrameListener((frame) => {
-      if (!mutedRef.current) socket.sendAudio(frame.pcmBase64);
+      if (mutedRef.current) return;
+      try {
+        socket.sendAudio(frame.pcmBase64);
+        framesSentRef.current++;
+        if (framesSentRef.current % 25 === 0) {
+          setDebug({
+            frames: framesSentRef.current,
+            level: frame.level ?? 0,
+            err: null,
+          });
+        }
+      } catch (e) {
+        setDebug({
+          frames: framesSentRef.current,
+          level: 0,
+          err: (e as Error).message,
+        });
+      }
     });
     // iOS needs the audio session in record (playAndRecord) mode or the mic
     // captures nothing — push-to-talk does this before every recording. Live
@@ -136,5 +163,5 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
     dispatch({ type: "TOGGLE_MUTE" });
   }, []);
 
-  return { state, start, stop, toggleMute };
+  return { state, debug, start, stop, toggleMute };
 }
