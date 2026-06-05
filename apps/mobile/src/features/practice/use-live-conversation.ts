@@ -6,6 +6,7 @@ import {
   EncodingType,
 } from "expo-file-system/legacy";
 import { supabase } from "@/src/lib/supabase";
+import { startSession } from "@/src/lib/api-client";
 import { AudioQueue } from "./audio-queue";
 import { playOnce } from "./audio-controller";
 import { createLiveSocket } from "@/src/lib/live-socket";
@@ -16,7 +17,7 @@ import { liveReducer, initialLiveState } from "./live-machine";
 // through the shared AudioQueue. Pure state lives in liveReducer (unit-tested);
 // this hook is the device-side wiring (mic + socket + playback) and is
 // validated on-device. Barge-in/mute-VAD polish lands in Plan C.
-export function useLiveConversation(conversationId: string) {
+export function useLiveConversation(targetLang: string, scenarioId?: string) {
   const [state, dispatch] = useReducer(liveReducer, initialLiveState);
   const socketRef = useRef<ReturnType<typeof createLiveSocket> | null>(null);
   const queueRef = useRef<AudioQueue | null>(null);
@@ -35,6 +36,15 @@ export function useLiveConversation(conversationId: string) {
     const token = data.session?.access_token;
     if (!token) {
       dispatch({ type: "ERROR", code: "NO_SESSION" });
+      return;
+    }
+
+    let conversationId: string;
+    try {
+      const session = await startSession(targetLang, scenarioId);
+      conversationId = session.conversation_id;
+    } catch {
+      dispatch({ type: "ERROR", code: "SESSION_FAIL" });
       return;
     }
 
@@ -95,7 +105,7 @@ export function useLiveConversation(conversationId: string) {
       channels: 1,
       enableLevelMeter: true,
     });
-  }, [conversationId]);
+  }, [targetLang, scenarioId]);
 
   const stop = useCallback(async () => {
     frameSubRef.current?.remove();

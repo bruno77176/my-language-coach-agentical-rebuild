@@ -46,6 +46,9 @@ import {
 } from "@/src/features/practice/use-recent-sessions";
 import { supabase } from "@/src/lib/supabase";
 import { useActiveSession } from "@/src/features/practice/active-session-store";
+import { LiveConversation } from "@/src/features/practice/live-conversation";
+import { useVoiceModeSetting } from "@/src/features/practice/use-voice-mode-setting";
+import { useAllowedVoiceModes } from "@/src/features/practice/use-allowed-voice-modes";
 
 function useCurrentStreak() {
   return useQuery<number>({
@@ -89,13 +92,22 @@ export default function PracticeScreen() {
     }, [setCurrentTab]),
   );
 
+  // Voice mode (push-to-talk vs Live). Live is gated server-side; when the user
+  // has selected it AND is entitled, render the Live flow instead of the
+  // push-to-talk ActiveConversation (which is otherwise untouched).
+  const { mode: voiceMode, loaded: voiceModeLoaded } = useVoiceModeSetting();
+  const { data: allowedModes } = useAllowedVoiceModes();
+  const canLive = allowedModes?.voiceModes.includes("live") ?? false;
+
   if (!isActive) {
     return <PracticeChooser />;
   }
-  // key forces a fresh ActiveConversation (and thus a fresh useConversation
-  // session) when scenarioId changes — picking a new scenario mid-day
-  // should not reuse a stale conversation_id.
+  // key forces a fresh session when scenarioId changes — picking a new scenario
+  // mid-day should not reuse a stale conversation_id.
   const k = scenarioId ?? "free";
+  if (voiceModeLoaded && voiceMode === "live" && canLive) {
+    return <LiveConversation key={`live-${k}`} scenarioId={scenarioId} />;
+  }
   return <ActiveConversation key={k} scenarioId={scenarioId} />;
 }
 
@@ -108,6 +120,9 @@ function PracticeChooser() {
   const { data: profile } = useProfile();
   const nativeLang = (profile?.native_lang ?? "en") as "en" | "fr";
   const { data, isLoading } = useRecentSessions();
+  const { mode: voiceMode, setMode: setVoiceMode } = useVoiceModeSetting();
+  const { data: allowedModes } = useAllowedVoiceModes();
+  const canLive = allowedModes?.voiceModes.includes("live") ?? false;
 
   const onScenario = () => router.push("/(modals)/role-play-picker");
   const onFree = () => router.replace("/(tabs)/practice?start=free");
@@ -136,6 +151,35 @@ function PracticeChooser() {
           Talk to your coach about anything, or step into a real-life scenario
           and practice with someone in role.
         </EditorialText>
+
+        {canLive && (
+          <View
+            style={{
+              flexDirection: "row",
+              gap: spacing.md,
+              marginBottom: spacing.lg,
+            }}
+          >
+            {(["push_to_talk", "live"] as const).map((m) => (
+              <Pressable
+                key={m}
+                onPress={() => void setVoiceMode(m)}
+                style={{
+                  flex: 1,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radius.lg,
+                  alignItems: "center",
+                  backgroundColor:
+                    voiceMode === m ? palette.accent : "rgba(0,0,0,0.06)",
+                }}
+              >
+                <EditorialText kind="bodySm">
+                  {m === "live" ? "⚡ Live (beta)" : "Push-to-talk"}
+                </EditorialText>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
         {/* Free conversation first — main functionality. */}
         <Pressable onPress={onFree} style={chooserStyles.card}>
