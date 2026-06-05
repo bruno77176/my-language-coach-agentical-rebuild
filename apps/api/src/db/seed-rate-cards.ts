@@ -87,6 +87,15 @@ const SEEDS: Seed[] = [
     pricePerUnit: "0.0000072", // mirror nova-3 PAYG; verify against billing
     // NOTE: verify the nova-2 pre-recorded PAYG rate — Deepgram tiers change.
   },
+  // Deepgram streaming STT (Live voice mode). Billed per connection-second
+  // (the whole session is open, incl. silence + coach speech), so it's pricier
+  // per session than the batch cards above — Live is a paid tier.
+  {
+    provider: "deepgram",
+    operation: "transcribe:streaming",
+    unitType: "seconds",
+    pricePerUnit: "0.0000128", // ~$0.0077/min nova streaming PAYG; verify billing
+  },
   // ElevenLabs TTS (when re-enabled). Operation name must match the provider's
   // active default in providers/elevenlabs.ts so recordUsage finds a rate card.
   {
