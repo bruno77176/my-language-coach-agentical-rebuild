@@ -1,7 +1,8 @@
 // Allowlist gating for advanced voice modes (Live / speech-to-speech). For now
 // an explicit list of user IDs (Bruno's, while testing); later this is driven
 // by subscription tier. Mirrors the ADMIN_USER_IDS pattern.
-export function parseLiveVoiceIds(raw: string): string[] {
+export function parseLiveVoiceIds(raw: string | undefined | null): string[] {
+  if (!raw) return [];
   return raw
     .split(",")
     .map((s) => s.trim())

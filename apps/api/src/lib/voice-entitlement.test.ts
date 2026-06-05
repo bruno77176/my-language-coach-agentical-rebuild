@@ -9,6 +9,7 @@ describe("voice-entitlement", () => {
   it("parses a comma-separated allowlist, trimming blanks", () => {
     expect(parseLiveVoiceIds(" a , b ,, c ")).toEqual(["a", "b", "c"]);
     expect(parseLiveVoiceIds("")).toEqual([]);
+    expect(parseLiveVoiceIds(undefined)).toEqual([]);
   });
 
   it("allows only allowlisted user ids", () => {
