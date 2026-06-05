@@ -34,6 +34,7 @@ import type {
   SupportedLang,
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
+import { runTurn } from "./run-turn";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
@@ -398,20 +399,10 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           })),
         ];
 
-        // 4. Stream GPT with per-sentence TTS
-        const gptStream = deps.streamChatCompletion({
-          messages: promptMessages,
-          model: "gpt-4o-mini",
-          onUsage,
-        });
-
-        const sentenceBuf = new SentenceBuffer();
-        let chunkIndex = 0;
-        const ttsPromises: Promise<void>[] = [];
-        let fullCoachText = "";
+        // 4. Stream GPT with per-sentence TTS. The LLM→sentence→TTS loop lives
+        // in runTurn (shared with the Live WS route); transport-specific
+        // delivery (inline base64 vs signed-URL upload) stays here in onChunk.
         const turnSeq = Date.now(); // unique-per-turn for chunk paths
-        // Capture outside the closure: TS drops the `conversation` non-null
-        // narrowing inside emitChunk.
         const languageCode = conversation.language;
         // Optional per-turn voice override from the dev Voice Lab; junk →
         // undefined so the router falls back to DEFAULT_TTS_CONFIG (production
@@ -426,60 +417,46 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           }
         }
 
-        async function emitChunk(text: string, idx: number): Promise<void> {
-          let audio: TtsResult;
-          try {
-            audio = await deps.synthesizeSpeech({
+        const { fullText: fullCoachText } = await runTurn(
+          {
+            streamChatCompletion: deps.streamChatCompletion,
+            synthesizeSpeech: deps.synthesizeSpeech,
+          },
+          {
+            messages: promptMessages,
+            languageCode,
+            ttsConfig: voiceConfig,
+            model: "gpt-4o-mini",
+            onUsage,
+          },
+          async ({ index, text, audio }) => {
+            await writeReplyChunk(stream, {
+              index,
               text,
-              languageCode,
-              config: voiceConfig,
-              onUsage,
+              audio,
+              inlineAudio,
+              upload: () =>
+                deps.uploadCoachAudioChunk({
+                  userId,
+                  conversationId,
+                  messageId: `pending-${conversationId}-${turnSeq}`,
+                  chunkIndex: index,
+                  audioBuffer: audio.audioBuffer,
+                  contentType: audio.contentType,
+                }),
             });
-          } catch {
+          },
+          async (index) => {
             await stream.writeSSE({
               event: "error",
               data: JSON.stringify({
                 code: "TTS_PROVIDER_FAILURE",
-                message: "TTS failed for chunk " + idx,
+                message: "TTS failed for chunk " + index,
                 retryable: true,
               }),
             });
-            return;
-          }
-          await writeReplyChunk(stream, {
-            index: idx,
-            text,
-            audio,
-            inlineAudio,
-            upload: () =>
-              deps.uploadCoachAudioChunk({
-                userId,
-                conversationId,
-                messageId: `pending-${conversationId}-${turnSeq}`,
-                chunkIndex: idx,
-                audioBuffer: audio.audioBuffer,
-                contentType: audio.contentType,
-              }),
-          });
-        }
-
-        for await (const delta of gptStream) {
-          fullCoachText += delta;
-          const sentences = sentenceBuf.push(delta);
-          for (const s of sentences) {
-            const idx = chunkIndex++;
-            ttsPromises.push(emitChunk(s, idx));
-          }
-        }
-
-        // Flush any remaining buffer
-        const tail = sentenceBuf.flush();
-        if (tail) {
-          const idx = chunkIndex++;
-          ttsPromises.push(emitChunk(tail, idx));
-        }
-
-        await Promise.all(ttsPromises);
+          },
+        );
 
         // 5. Insert the full coach message (single row, full text)
         const [coachRow] = await deps.db
