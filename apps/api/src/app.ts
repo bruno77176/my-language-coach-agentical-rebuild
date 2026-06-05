@@ -14,6 +14,8 @@ import { createHealthRoutes } from "./routes/health";
 import { createAdminRoutes } from "./routes/admin";
 import { createAdminInternalRoutes } from "./routes/admin-internal";
 import { createVoiceRoutes } from "./routes/voice";
+import { createVoiceModesRoute } from "./routes/voice-modes";
+import { parseLiveVoiceIds } from "./lib/voice-entitlement";
 import { createDeepgram, transcribeAudio } from "./providers/deepgram";
 import {
   createOpenAI,
@@ -258,6 +260,12 @@ export function createApp(
   app.route("/v1/memory", createMemoryRoutes({ db }));
 
   app.route("/v1", createFeedbackRoutes({ db }));
+  app.route(
+    "/v1",
+    createVoiceModesRoute({
+      liveUserIds: parseLiveVoiceIds(env.VOICE_LIVE_USER_IDS),
+    }),
+  );
 
   app.route("/v1/progress", createWeeklySummaryRoutes({ db }));
 
