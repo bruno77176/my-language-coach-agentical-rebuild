@@ -11,6 +11,7 @@ import {
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useLiveConversation } from "./use-live-conversation";
+import { useActiveSession } from "./active-session-store";
 
 const PHASE_LABEL: Record<string, string> = {
   idle: "Tap Start to begin",
@@ -30,6 +31,7 @@ export function LiveConversation({ scenarioId }: { scenarioId?: string }) {
     targetLang,
     scenarioId,
   );
+  const clearActive = useActiveSession((s) => s.clearActive);
 
   // Stop the mic + socket when leaving the screen.
   useEffect(
@@ -126,6 +128,9 @@ export function LiveConversation({ scenarioId }: { scenarioId?: string }) {
         <Pressable
           onPress={() => {
             void stop();
+            // Clear any active-session params so we land on the chooser (with
+            // the mode switcher) instead of being restored back into Live.
+            clearActive();
             router.replace("/(tabs)/practice");
           }}
           style={styles.leave}

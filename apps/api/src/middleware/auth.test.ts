@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
-import { createAuthMiddleware } from "./auth";
+import { createAuthMiddleware, skipForWebSocket } from "./auth";
 
 describe("authMiddleware", () => {
   it("returns 401 when Authorization header is missing", async () => {
@@ -39,5 +39,42 @@ describe("authMiddleware", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { userId: string };
     expect(body.userId).toBe("user-123");
+  });
+});
+
+describe("skipForWebSocket", () => {
+  function appWith() {
+    const app = new Hono();
+    // Stand-in auth that always rejects (no Bearer header).
+    app.use(
+      "*",
+      skipForWebSocket(async (c) =>
+        c.json({ error: { code: "UNAUTHORIZED" } }, 401),
+      ),
+    );
+    app.get("/x", (c) => c.text("reached"));
+    return app;
+  }
+
+  it("applies the wrapped middleware to normal requests", async () => {
+    const res = await appWith().request("/x");
+    expect(res.status).toBe(401);
+  });
+
+  it("bypasses the wrapped middleware for WebSocket upgrade requests", async () => {
+    // A WS upgrade can't send Authorization headers; it authenticates via the
+    // route's own query token, so the header-based auth must not block it.
+    const res = await appWith().request("/x", {
+      headers: { upgrade: "websocket" },
+    });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("reached");
+  });
+
+  it("matches the Upgrade header case-insensitively", async () => {
+    const res = await appWith().request("/x", {
+      headers: { Upgrade: "WebSocket" },
+    });
+    expect(res.status).toBe(200);
   });
 });

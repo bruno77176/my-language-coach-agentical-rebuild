@@ -3,6 +3,19 @@ import type { MiddlewareHandler } from "hono";
 export type VerifyResult = { userId: string };
 export type Verifier = (token: string) => Promise<VerifyResult>;
 
+// Wraps a middleware so it is skipped for WebSocket upgrade requests. WS
+// handshakes can't carry an Authorization header (so the header-based auth
+// would 401 them before the upgrade); the WS route authenticates via its own
+// query token instead. Without this, /v1/voice/live is rejected with 401.
+export function skipForWebSocket(mw: MiddlewareHandler): MiddlewareHandler {
+  return async (c, next) => {
+    if (c.req.header("upgrade")?.toLowerCase() === "websocket") {
+      return next();
+    }
+    return mw(c, next);
+  };
+}
+
 export function createAuthMiddleware(verify: Verifier): MiddlewareHandler<{
   Variables: { userId: string };
 }> {
