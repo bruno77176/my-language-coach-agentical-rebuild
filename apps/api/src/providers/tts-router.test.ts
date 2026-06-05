@@ -15,15 +15,19 @@ describe("makeSynthesizeSpeech", () => {
     };
   }
 
-  it("default config routes to Gemini with Kore", async () => {
-    const gemini = vi.fn().mockResolvedValue(result);
+  it("default config routes to ElevenLabs (Sarah) when none is provided", async () => {
+    const eleven = vi.fn().mockResolvedValue(result);
     const openai = vi.fn().mockResolvedValue(result);
-    const synth = makeSynthesizeSpeech(deps({ gemini, openai }));
+    const synth = makeSynthesizeSpeech(deps({ eleven, openai }));
     await synth({ text: "hi", languageCode: "es" });
     expect(openai).not.toHaveBeenCalled();
-    expect(gemini).toHaveBeenCalledWith(
-      GEMINI_AUTH,
-      expect.objectContaining({ voiceId: "Kore", languageCode: "es" }),
+    // DEFAULT_TTS_CONFIG is ElevenLabs "Sarah" on Flash v2.5.
+    expect(eleven).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        voiceId: "EXAVITQu4vr4xnSDxMaL",
+        languageCode: "es",
+      }),
     );
   });
 
