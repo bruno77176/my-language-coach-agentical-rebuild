@@ -14,6 +14,7 @@ const baseEnv = {
   DEEPGRAM_API_KEY: "d",
   ELEVENLABS_API_KEY: "e",
   ADMIN_USER_IDS: "admin-1",
+  VOICE_LIVE_USER_IDS: "",
   ADMIN_ALLOWED_ORIGINS: "https://my-language-coach-admin.vercel.app",
   INTERNAL_CRON_SECRET: "test-cron-secret-1234567890",
   ACCOUNT_DELETION_SECRET:

@@ -14,6 +14,7 @@ const env = {
   DEEPGRAM_API_KEY: "d",
   ELEVENLABS_API_KEY: "e",
   ADMIN_USER_IDS: "",
+  VOICE_LIVE_USER_IDS: "",
   ADMIN_ALLOWED_ORIGINS: "",
   INTERNAL_CRON_SECRET: "super-secret-cron-token-1234",
   ACCOUNT_DELETION_SECRET:
