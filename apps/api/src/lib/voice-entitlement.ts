@@ -11,3 +11,14 @@ export function parseLiveVoiceIds(raw: string): string[] {
 export function canUseLiveVoice(userId: string, allowlist: string[]): boolean {
   return allowlist.includes(userId);
 }
+
+// The voice modes a user may select. Push-to-talk is always available; Live is
+// gated by the allowlist. (Speech-to-speech is added here when that tier ships.)
+export function allowedVoiceModes(
+  userId: string,
+  liveAllowlist: string[],
+): string[] {
+  return canUseLiveVoice(userId, liveAllowlist)
+    ? ["push_to_talk", "live"]
+    : ["push_to_talk"];
+}
