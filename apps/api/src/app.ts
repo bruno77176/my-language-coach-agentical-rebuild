@@ -7,7 +7,11 @@ import { createLogger, type Logger } from "./lib/logger";
 import { reportError } from "./lib/sentry";
 import { createLoggingMiddleware } from "./middleware/logging";
 import { errorHandler } from "./middleware/error";
-import { createAuthMiddleware, type Verifier } from "./middleware/auth";
+import {
+  createAuthMiddleware,
+  skipForWebSocket,
+  type Verifier,
+} from "./middleware/auth";
 import { createSupabaseLocalVerifier } from "./lib/local-jwt-verifier";
 import { parseAdminIds } from "./lib/require-admin";
 import { createHealthRoutes } from "./routes/health";
@@ -193,7 +197,10 @@ export function createApp(
 
   // Auth-required routes: /v1/* requires a valid Supabase JWT.
   const auth = createAuthMiddleware(verifier);
-  app.use("/v1/*", auth);
+  // Skip the header-based auth for WebSocket upgrades (e.g. /v1/voice/live):
+  // they can't send an Authorization header and authenticate via query token
+  // inside their own route. Without this they'd be 401'd before upgrading.
+  app.use("/v1/*", skipForWebSocket(auth));
 
   app.route(
     "/v1/account-deletion",
