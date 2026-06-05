@@ -41,6 +41,7 @@ export function createLiveConnection(
   let transcriptParts: string[] = [];
   let currentTurn: AbortController | null = null;
   let ws: WsLike | null = null;
+  let frameCount = 0;
   // Running conversation for this live session — appended each turn so the
   // coach remembers what was said earlier in the session.
   const convo: ChatMessage[] = [...params.ctx.baseMessages];
@@ -82,22 +83,38 @@ export function createLiveConnection(
   return {
     onOpen: async (socket: WsLike) => {
       ws = socket;
-      live = await openLiveTranscription(
-        { connect: deps.connectDeepgram },
-        { languageCode: params.ctx.languageCode },
+      console.warn(
+        `[live] ws open; connecting Deepgram (lang=${params.ctx.languageCode})`,
       );
+      try {
+        live = await openLiveTranscription(
+          { connect: deps.connectDeepgram },
+          { languageCode: params.ctx.languageCode },
+        );
+      } catch (err) {
+        console.warn(
+          `[live] Deepgram connect failed: ${(err as Error).message}`,
+        );
+        send({ type: "error", code: "STT_CONNECT_FAILED" });
+        return;
+      }
+      live.on("open", () => console.warn("[live] Deepgram socket open"));
+      live.on("close", () => console.warn("[live] Deepgram socket closed"));
       live.on("transcript", (p) => {
         const text = (p as { text: string }).text;
+        console.warn(`[live] transcript: ${text}`);
         if (text) transcriptParts.push(text);
       });
       live.on("utteranceEnd", () => {
         const utterance = transcriptParts.join(" ").trim();
         transcriptParts = [];
+        console.warn(`[live] utteranceEnd -> turn (utterance="${utterance}")`);
         if (utterance) void runOneTurn(utterance);
       });
-      live.on("error", () =>
-        send({ type: "error", code: "STT_PROVIDER_FAILURE" }),
-      );
+      live.on("error", (p) => {
+        console.warn(`[live] Deepgram error: ${JSON.stringify(p)}`);
+        send({ type: "error", code: "STT_PROVIDER_FAILURE" });
+      });
     },
     onMessage: (data: unknown, socket: WsLike) => {
       ws = socket;
@@ -111,9 +128,17 @@ export function createLiveConnection(
         return;
       }
       // Binary audio frame → Deepgram
-      if (data instanceof ArrayBuffer) live?.sendAudio(data);
-      else if (ArrayBuffer.isView(data))
-        live?.sendAudio(data as ArrayBufferView);
+      if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+        frameCount++;
+        if (frameCount === 1) console.warn("[live] first audio frame received");
+        if (frameCount % 100 === 0)
+          console.warn(`[live] ${frameCount} audio frames received`);
+        live?.sendAudio(data as ArrayBuffer | ArrayBufferView);
+      } else {
+        console.warn(
+          `[live] unhandled binary frame type: ${Object.prototype.toString.call(data)}`,
+        );
+      }
     },
     onClose: () => {
       currentTurn?.abort();

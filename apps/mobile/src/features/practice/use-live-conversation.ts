@@ -6,6 +6,10 @@ import {
   EncodingType,
 } from "expo-file-system/legacy";
 import { supabase } from "@/src/lib/supabase";
+import {
+  configureForRecording,
+  configureForPlayback,
+} from "@/src/lib/audio-session";
 import { startSession } from "@/src/lib/api-client";
 import { AudioQueue } from "./audio-queue";
 import { playOnce } from "./audio-controller";
@@ -100,6 +104,10 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
     frameSubRef.current = StreamAudio.addFrameListener((frame) => {
       if (!mutedRef.current) socket.sendAudio(frame.pcmBase64);
     });
+    // iOS needs the audio session in record (playAndRecord) mode or the mic
+    // captures nothing — push-to-talk does this before every recording. Live
+    // stays in record mode for the whole session (continuous mic + playback).
+    await configureForRecording();
     await StreamAudio.start({
       sampleRate: 16000,
       channels: 1,
@@ -119,6 +127,7 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
     socketRef.current = null;
     queueRef.current?.reset();
     queueRef.current = null;
+    void configureForPlayback();
     dispatch({ type: "STOP" });
   }, []);
 
