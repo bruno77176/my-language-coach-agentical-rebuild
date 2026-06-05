@@ -31,5 +31,9 @@ primary_region = "arn"  # Stockholm — co-located with Supabase eu-north-1
     path = "/health"
 
 [vm]
-  size = "shared-cpu-1x"
-  memory_mb = 256
+  # Bumped from shared-cpu-1x/256MB on 2026-06-05: the 256MB box went
+  # unresponsive (failed Fly health checks) under the per-turn TTS synthesis +
+  # in-memory inline audio, which starved the event loop and made Gemini Cloud
+  # TTS calls exceed their 8s timeout (→ nova fallback voice + long waits).
+  size = "shared-cpu-2x"
+  memory_mb = 1024
