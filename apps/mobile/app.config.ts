@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "expo-secure-store",
     "expo-notifications",
     "expo-audio",
+    "expo-stream-audio",
     "expo-apple-authentication",
     withStripBootCompleted,
   ] as unknown as NonNullable<ExpoConfig["plugins"]>;
@@ -48,7 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "23",
+      buildNumber: "24",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -59,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 61,
+      versionCode: 62,
       // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
       // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
       edgeToEdgeEnabled: true,
