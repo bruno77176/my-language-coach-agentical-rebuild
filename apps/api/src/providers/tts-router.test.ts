@@ -15,19 +15,38 @@ describe("makeSynthesizeSpeech", () => {
     };
   }
 
-  it("default config routes to ElevenLabs (Sarah) when none is provided", async () => {
+  it("falls back to the default voice for a language with no native voice", async () => {
     const eleven = vi.fn().mockResolvedValue(result);
     const openai = vi.fn().mockResolvedValue(result);
     const synth = makeSynthesizeSpeech(deps({ eleven, openai }));
-    await synth({ text: "hi", languageCode: "es" });
+    // "it" (Italian) has no dedicated native voice yet → DEFAULT_TTS_CONFIG.
+    await synth({ text: "ciao", languageCode: "it" });
     expect(openai).not.toHaveBeenCalled();
     // DEFAULT_TTS_CONFIG is ElevenLabs "Sarah" on Flash v2.5.
     expect(eleven).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         voiceId: "EXAVITQu4vr4xnSDxMaL",
-        languageCode: "es",
+        languageCode: "it",
       }),
+    );
+  });
+
+  it("picks the per-language native voice when no per-user config is given", async () => {
+    const eleven = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ eleven }));
+    // German → native "Lea - Clear and Feminine"; Spanish → native "Sara Martin".
+    await synth({ text: "hallo", languageCode: "de" });
+    await synth({ text: "hola", languageCode: "es" });
+    expect(eleven).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      expect.objectContaining({ voiceId: "7eVMgwCnXydb3CikjV7a" }),
+    );
+    expect(eleven).toHaveBeenNthCalledWith(
+      2,
+      expect.anything(),
+      expect.objectContaining({ voiceId: "Ir1QNHvhaJXbAGhT50w3" }),
     );
   });
 

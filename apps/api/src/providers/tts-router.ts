@@ -1,6 +1,6 @@
 import type OpenAI from "openai";
 import type { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import { DEFAULT_TTS_CONFIG, type TtsConfig } from "@language-coach/shared";
+import { type TtsConfig } from "@language-coach/shared";
 import {
   synthesizeSpeechOpenAI,
   type TtsResult,
@@ -12,6 +12,7 @@ import {
 } from "./elevenlabs";
 import { synthesizeSpeechGemini } from "./gemini";
 import { synthesizeSpeechInworld } from "./inworld";
+import { voiceConfigForLanguage } from "./voice-map";
 import type { AccessTokenProvider } from "../lib/google-tts-auth";
 import type { OnUsage } from "./usage";
 
@@ -56,7 +57,10 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
   const inworldSynth = deps.synth?.inworld ?? synthesizeSpeechInworld;
 
   return async (input: RoutedTtsInput): Promise<TtsResult> => {
-    const config = input.config ?? DEFAULT_TTS_CONFIG;
+    // Priority: an explicit per-user voice config wins; otherwise pick the
+    // per-language native voice (which itself falls back to DEFAULT_TTS_CONFIG
+    // for languages without a dedicated voice).
+    const config = input.config ?? voiceConfigForLanguage(input.languageCode);
     const shared = {
       text: input.text,
       voiceId: config.voiceId,
