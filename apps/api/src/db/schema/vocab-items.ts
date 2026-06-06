@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   unique,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { profiles } from "./profiles";
 import { messages } from "./messages";
@@ -26,6 +27,7 @@ export const vocabItems = pgTable(
       },
     ),
     mastery: integer("mastery").notNull().default(0),
+    starred: boolean("starred").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -272,6 +272,7 @@ export function createApp(
     createVocabRoutes({
       db,
       translate: (input) => translateMessage(openai, input),
+      transcribe: (input) => transcribeAudio(deepgram, input),
     }),
   );
 
