@@ -26,6 +26,11 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
   const socketRef = useRef<ReturnType<typeof createLiveSocket> | null>(null);
   const queueRef = useRef<AudioQueue | null>(null);
   const frameSubRef = useRef<{ remove: () => void } | null>(null);
+  // Native error events (mic-permission / audio-session / audio-engine
+  // failures) — the module emits these on "onError" independent of whether
+  // start() also rejects. Wiring it is how a silent device failure becomes
+  // visible. See live-socket sendLog for the server-side copy.
+  const errorSubRef = useRef<{ remove: () => void } | null>(null);
   // Read inside the frame listener (avoids a stale closure on state.muted).
   const mutedRef = useRef(false);
   // On-screen mic diagnostics (frames sent + last level/error) so a "nothing
@@ -111,12 +116,24 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
     framesSentRef.current = 0;
     setDebug({ frames: 0, level: 0, err: null });
 
+    // Surface native mic failures (permission / session / engine) on-screen and
+    // in the server log. Without this the module's onError is dropped and a
+    // device-only failure looks like "0 frames, no error".
+    errorSubRef.current = StreamAudio.addErrorListener((e) => {
+      const msg = `native: ${e.message}`;
+      setDebug((d) => ({ ...d, err: msg }));
+      socket.sendLog(msg);
+    });
+
     frameSubRef.current = StreamAudio.addFrameListener((frame) => {
       if (mutedRef.current) return;
       try {
         socket.sendAudio(frame.pcmBase64);
         framesSentRef.current++;
-        if (framesSentRef.current % 25 === 0) {
+        // Repaint on the very first frame (not just every 25th) so a single
+        // frame is enough to prove capture+send work — the previous readout
+        // sat at 0 for the first 24 frames, blurring "never fired" with "fired".
+        if (framesSentRef.current === 1 || framesSentRef.current % 25 === 0) {
           setDebug({
             frames: framesSentRef.current,
             level: frame.level ?? 0,
@@ -124,27 +141,46 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
           });
         }
       } catch (e) {
-        setDebug({
+        setDebug((d) => ({
+          ...d,
           frames: framesSentRef.current,
-          level: 0,
-          err: (e as Error).message,
-        });
+          err: `send: ${(e as Error).message}`,
+        }));
       }
     });
+
     // iOS needs the audio session in record (playAndRecord) mode or the mic
     // captures nothing — push-to-talk does this before every recording. Live
     // stays in record mode for the whole session (continuous mic + playback).
-    await configureForRecording();
-    await StreamAudio.start({
-      sampleRate: 16000,
-      channels: 1,
-      enableLevelMeter: true,
-    });
+    // The native module ALSO sets the AVAudioSession category on start(); a
+    // throw here (session/engine failure) was previously swallowed, so capture
+    // its message into the on-screen readout + server log to pin the layer.
+    try {
+      await configureForRecording();
+      await StreamAudio.start({
+        sampleRate: 16000,
+        channels: 1,
+        enableLevelMeter: true,
+      });
+      const status = await StreamAudio.getStatus();
+      socket.sendLog(`start ok status=${status} perm=${perm}`);
+      setDebug((d) => ({
+        ...d,
+        err: status === "recording" ? d.err : "not-recording",
+      }));
+    } catch (e) {
+      const msg = `start: ${(e as Error).message}`;
+      setDebug((d) => ({ ...d, err: msg }));
+      socket.sendLog(msg);
+      dispatch({ type: "ERROR", code: msg });
+    }
   }, [targetLang, scenarioId]);
 
   const stop = useCallback(async () => {
     frameSubRef.current?.remove();
     frameSubRef.current = null;
+    errorSubRef.current?.remove();
+    errorSubRef.current = null;
     try {
       await StreamAudio.stop();
     } catch {

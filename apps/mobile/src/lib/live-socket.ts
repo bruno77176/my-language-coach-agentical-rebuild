@@ -116,6 +116,17 @@ export function createLiveSocket(opts: {
     cancel() {
       ws.send(JSON.stringify({ type: "cancel" }));
     },
+    // Best-effort client diagnostics surfaced in the backend (Fly) logs. The
+    // socket may still be CONNECTING when early start()-phase logs fire, so a
+    // failed send is swallowed — the on-screen mic readout is the source of
+    // truth; this is the bonus server-side copy.
+    sendLog(msg: string) {
+      try {
+        ws.send(JSON.stringify({ type: "client-log", msg }));
+      } catch {
+        // socket not open yet / already closed — ignore
+      }
+    },
     close() {
       ws.close();
     },
