@@ -7,11 +7,16 @@
  *   pnpm tsx src/db/backfill-vocab.ts
  */
 import postgres from "postgres";
-import { loadEnv } from "../env";
 
 async function main() {
-  const env = loadEnv();
-  const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false });
+  // Read DATABASE_URL directly rather than via loadEnv(): this maintenance
+  // script only touches the database and shouldn't require the full prod env
+  // schema (RevenueCat/Sentry/etc.) just to run a single backfill query.
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is not set (pass --env-file=.env)");
+  }
+  const sql = postgres(databaseUrl, { max: 1, prepare: false });
   try {
     const result = await sql`
       INSERT INTO vocab_items (user_id, language, term, translation)
