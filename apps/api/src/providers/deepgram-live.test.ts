@@ -10,6 +10,7 @@ function fakeSocket() {
     connect: vi.fn(),
     sendMedia: vi.fn(),
     sendFinalize: vi.fn(),
+    sendKeepAlive: vi.fn(),
     close: vi.fn(),
     emit: (e: string, m?: unknown) => (handlers[e] ?? []).forEach((h) => h(m)),
   };

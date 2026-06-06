@@ -12,6 +12,7 @@ function fakeRawSocket() {
     connect: vi.fn(),
     sendMedia: vi.fn(),
     sendFinalize: vi.fn(),
+    sendKeepAlive: vi.fn(),
     close: vi.fn(),
     // Mirror real readyState transitions so live.isOpen() reflects the socket.
     emit: (e: string, m?: unknown) => {
