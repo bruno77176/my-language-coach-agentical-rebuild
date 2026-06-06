@@ -50,6 +50,11 @@ export function createLiveConnection(
   // frame (Deepgram then idle-closes with code 1000). Counters are for logging.
   let droppedBeforeOpen = 0;
   let forwarded = 0;
+  // KeepAlive: hold the Deepgram socket open while no audio is flowing (the
+  // coach's turn in half-duplex). Without this it idle-closes (1011) ~10s after
+  // the mic pauses, breaking the next turn.
+  let lastAudioAt = Date.now();
+  let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
   // Running conversation for this live session — appended each turn so the
   // coach remembers what was said earlier in the session.
   const convo: ChatMessage[] = [...params.ctx.baseMessages];
@@ -138,6 +143,16 @@ export function createLiveConnection(
         console.warn(`[live] Deepgram error: ${detail}`);
         send({ type: "error", code: "STT_PROVIDER_FAILURE" });
       });
+      // Hold the socket open during silence (coach's turn). Deepgram resets its
+      // idle timer on any audio, so only send KeepAlive when no audio has been
+      // forwarded recently.
+      keepAliveTimer = setInterval(() => {
+        if (live?.isOpen() && Date.now() - lastAudioAt > 4000) {
+          live.keepAlive();
+        }
+      }, 4000);
+      // Don't let the interval keep the process/test event loop alive.
+      (keepAliveTimer as { unref?: () => void }).unref?.();
     },
     onMessage: (data: unknown, socket: WsLike) => {
       ws = socket;
@@ -167,6 +182,7 @@ export function createLiveConnection(
           if (forwarded === 0)
             console.warn("[live] forwarding audio to Deepgram");
           forwarded++;
+          lastAudioAt = Date.now();
           live.sendAudio(data as ArrayBuffer | ArrayBufferView);
         } else {
           droppedBeforeOpen++;
@@ -178,6 +194,8 @@ export function createLiveConnection(
       }
     },
     onClose: () => {
+      if (keepAliveTimer) clearInterval(keepAliveTimer);
+      keepAliveTimer = null;
       currentTurn?.abort();
       live?.close();
     },

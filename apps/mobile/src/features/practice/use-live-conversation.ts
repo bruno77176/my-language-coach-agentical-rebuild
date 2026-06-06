@@ -36,6 +36,14 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
   // On-screen mic diagnostics (frames sent + last level/error) so a "nothing
   // happens" report is conclusive: frames>0 ⇒ capture+send work.
   const framesSentRef = useRef(0);
+  // Half-duplex turn-taking: playing the coach's reply kills the iOS mic tap
+  // (expo-audio's player interrupts expo-stream-audio's engine), so after each
+  // coach turn we restart capture for the user's next turn. pendingWrites tracks
+  // in-flight chunk file writes so we only revive once the reply has truly
+  // finished playing; runningRef guards against reviving after the user leaves.
+  const pendingWritesRef = useRef(0);
+  const runningRef = useRef(false);
+  const revivingRef = useRef(false);
   const [debug, setDebug] = useState<{
     frames: number;
     level: number;
@@ -80,6 +88,39 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
     });
     queueRef.current = queue;
 
+    // After the coach's reply has finished playing, restart mic capture so the
+    // user can speak again (the playback interrupted the iOS input tap). Waits
+    // for the queue to drain AND all chunk writes to settle so we don't revive
+    // mid-reply (which would let a late chunk kill the freshly-revived mic).
+    const reviveMicAfterCoach = async () => {
+      if (revivingRef.current) return;
+      revivingRef.current = true;
+      try {
+        for (let i = 0; i < 200; i++) {
+          await queue.waitForDrain();
+          if (pendingWritesRef.current === 0 && !queue.isPlaying()) break;
+          await new Promise((r) => setTimeout(r, 50));
+        }
+        if (!runningRef.current) return; // user left while the coach was talking
+        try {
+          await StreamAudio.stop();
+        } catch {
+          // already stopped
+        }
+        if (!runningRef.current) return;
+        await configureForRecording();
+        await StreamAudio.start({
+          sampleRate: 16000,
+          channels: 1,
+          enableLevelMeter: true,
+        });
+      } catch (e) {
+        setDebug((d) => ({ ...d, err: `revive: ${(e as Error).message}` }));
+      } finally {
+        revivingRef.current = false;
+      }
+    };
+
     const socket = createLiveSocket({
       token,
       conversationId,
@@ -93,6 +134,7 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
           const uri =
             (cacheDirectory ?? "") +
             `live-chunk-${Date.now()}-${chunk.index}.${ext}`;
+          pendingWritesRef.current++;
           writeAsStringAsync(uri, chunk.audioBase64, {
             encoding: EncodingType.Base64,
           })
@@ -106,9 +148,15 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
             })
             .catch(() => {
               // Write failed — keep the transcript, skip this chunk's audio.
+            })
+            .finally(() => {
+              pendingWritesRef.current--;
             });
         },
-        onTurnDone: () => dispatch({ type: "TURN_DONE" }),
+        onTurnDone: () => {
+          dispatch({ type: "TURN_DONE" });
+          void reviveMicAfterCoach();
+        },
         onError: (code) => dispatch({ type: "ERROR", code }),
         onClose: () => dispatch({ type: "CLOSED" }),
       },
@@ -118,6 +166,9 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
     dispatch({ type: "START" });
     mutedRef.current = false;
     framesSentRef.current = 0;
+    runningRef.current = true;
+    pendingWritesRef.current = 0;
+    revivingRef.current = false;
     setDebug({ frames: 0, level: 0, err: null });
 
     // Surface native mic failures (permission / session / engine) on-screen and
@@ -181,6 +232,8 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
   }, [targetLang, scenarioId]);
 
   const stop = useCallback(async () => {
+    // Stop any in-flight mic revival from restarting capture after we tear down.
+    runningRef.current = false;
     frameSubRef.current?.remove();
     frameSubRef.current = null;
     errorSubRef.current?.remove();

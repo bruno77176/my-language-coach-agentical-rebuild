@@ -18,6 +18,10 @@ export interface RawLiveSocket {
   connect(): void;
   sendMedia(bytes: ArrayBuffer | ArrayBufferView): void;
   sendFinalize(msg?: unknown): void;
+  // Deepgram closes a streaming socket after ~10s of no audio (NET-0001 / 1011).
+  // During the coach's turn the mic is paused (half-duplex), so we send periodic
+  // KeepAlive control frames to hold the socket open across turns.
+  sendKeepAlive(msg?: unknown): void;
   close(): void;
 }
 
@@ -39,6 +43,8 @@ export interface LiveSocket {
   isOpen(): boolean;
   sendAudio(bytes: ArrayBuffer | ArrayBufferView): void;
   finalize(): void;
+  // Hold the Deepgram socket open during silence (e.g. the coach's turn).
+  keepAlive(): void;
   close(): void;
 }
 
@@ -103,6 +109,7 @@ export async function openLiveTranscription(
     isOpen: () => sock.readyState === 1, // 1 === WebSocket.OPEN
     sendAudio: (bytes) => sock.sendMedia(bytes),
     finalize: () => sock.sendFinalize(),
+    keepAlive: () => sock.sendKeepAlive({ type: "KeepAlive" }),
     close: () => sock.close(),
   };
 }
