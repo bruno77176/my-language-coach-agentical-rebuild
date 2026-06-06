@@ -1,0 +1,22 @@
+diff --git a/ios/ExpoStreamAudioModule.swift b/ios/ExpoStreamAudioModule.swift
+index 50753e4b5ef2bf41a721b3e8cadadbc3f6a9335f..c61bcda1c3df207cb5098c8c4501449f1bcca061 100644
+--- a/ios/ExpoStreamAudioModule.swift
++++ b/ios/ExpoStreamAudioModule.swift	
+@@ -267,7 +267,16 @@ public class ExpoStreamAudioModule: Module {
+ 
+   private func startRecordingInternal(options: [String: Any]) async throws {
+     do {
+-      try audioSession.setCategory(.record, mode: .voiceChat, options: [])
++      // Patched (my-language-coach): upstream sets `.record`, but `.voiceChat`
++      // mode is only valid with `.playAndRecord` — pairing it with `.record`
++      // makes setCategory fail with OSStatus -50 on iOS. `.playAndRecord` also
++      // lets the coach reply audio play back through the same session while the
++      // mic stays live (the whole point of Live mode).
++      try audioSession.setCategory(
++        .playAndRecord,
++        mode: .voiceChat,
++        options: [.defaultToSpeaker, .allowBluetooth]
++      )
+ 
+       if let requestedSampleRate = options["sampleRate"] as? Double {
+         try? audioSession.setPreferredSampleRate(requestedSampleRate)

@@ -28,6 +28,9 @@
     "overrides": {
       "@types/react": "19.1.17",
       "@types/react-dom": "19.1.10"
+    },
+    "patchedDependencies": {
+      "expo-stream-audio@0.1.3": "patches/expo-stream-audio@0.1.3.patch"
     }
   },
   "lint-staged": {
