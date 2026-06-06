@@ -8,6 +8,10 @@ export interface RawLiveSocket {
     event: "open" | "message" | "close" | "error",
     cb: (m: unknown) => void,
   ): void;
+  // WebSocket readyState (1 === OPEN). The SDK's V1Socket exposes this; we read
+  // it live before each send rather than trusting the one-shot "open" event,
+  // which the SDK fires into a single handler that can be registered too late.
+  readonly readyState?: number;
   sendMedia(bytes: ArrayBuffer | ArrayBufferView): void;
   sendFinalize(msg?: unknown): void;
   close(): void;
@@ -26,6 +30,9 @@ export type LiveEvent =
 
 export interface LiveSocket {
   on(event: LiveEvent, cb: (payload: unknown) => void): void;
+  // True when the underlying socket's readyState is OPEN. Gate audio forwarding
+  // on this (not the "open" event) so a missed/late open event can't deadlock.
+  isOpen(): boolean;
   sendAudio(bytes: ArrayBuffer | ArrayBufferView): void;
   finalize(): void;
   close(): void;
@@ -84,6 +91,7 @@ export async function openLiveTranscription(
     on: (e, cb) => {
       (handlers[e] ??= []).push(cb);
     },
+    isOpen: () => sock.readyState === 1, // 1 === WebSocket.OPEN
     sendAudio: (bytes) => sock.sendMedia(bytes),
     finalize: () => sock.sendFinalize(),
     close: () => sock.close(),

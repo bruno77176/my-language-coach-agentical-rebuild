@@ -43,12 +43,13 @@ export function createLiveConnection(
   let currentTurn: AbortController | null = null;
   let ws: WsLike | null = null;
   let frameCount = 0;
-  // Only forward mic audio once Deepgram's socket is actually OPEN. The SDK's
-  // sendMedia throws "Socket is not open" if we send while it's still
-  // connecting (or after it closed), which floods the logs and tells us
-  // nothing. Gating on this also lets us count frames dropped pre-open.
-  let dgOpen = false;
+  // Forward mic audio only while Deepgram's socket readyState is OPEN. We check
+  // readyState live (live.isOpen()) rather than trusting the one-shot "open"
+  // event — the SDK fires that into a single handler that can be registered
+  // after the event already fired, which would deadlock us into dropping every
+  // frame (Deepgram then idle-closes with code 1000). Counters are for logging.
   let droppedBeforeOpen = 0;
+  let forwarded = 0;
   // Running conversation for this live session — appended each turn so the
   // coach remembers what was said earlier in the session.
   const convo: ChatMessage[] = [...params.ctx.baseMessages];
@@ -106,14 +107,12 @@ export function createLiveConnection(
         return;
       }
       live.on("open", () => {
-        dgOpen = true;
         console.warn("[live] Deepgram socket open");
       });
       live.on("close", (p) => {
-        dgOpen = false;
         const ce = p as { code?: number; reason?: string } | undefined;
         console.warn(
-          `[live] Deepgram socket closed (code=${ce?.code ?? "?"} reason="${ce?.reason ?? ""}" droppedBeforeOpen=${droppedBeforeOpen})`,
+          `[live] Deepgram socket closed (code=${ce?.code ?? "?"} reason="${ce?.reason ?? ""}" forwarded=${forwarded} droppedBeforeOpen=${droppedBeforeOpen})`,
         );
         // Tell the client so the UI doesn't sit in "Listening…" forever when
         // Deepgram refuses or drops the connection.
@@ -161,10 +160,14 @@ export function createLiveConnection(
         if (frameCount === 1) console.warn("[live] first audio frame received");
         if (frameCount % 100 === 0)
           console.warn(`[live] ${frameCount} audio frames received`);
-        // Drop frames until Deepgram is open — sending into a connecting/closed
-        // socket throws "Socket is not open" on every frame.
-        if (dgOpen) {
-          live?.sendAudio(data as ArrayBuffer | ArrayBufferView);
+        // Forward only while the socket readyState is OPEN. Checking it live
+        // (not a captured "open" event) avoids the deadlock where a missed open
+        // event leaves us dropping every frame until Deepgram idle-closes.
+        if (live?.isOpen()) {
+          if (forwarded === 0)
+            console.warn("[live] forwarding audio to Deepgram");
+          forwarded++;
+          live.sendAudio(data as ArrayBuffer | ArrayBufferView);
         } else {
           droppedBeforeOpen++;
         }
