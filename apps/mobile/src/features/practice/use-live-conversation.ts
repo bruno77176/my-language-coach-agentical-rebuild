@@ -71,6 +71,10 @@ export function useLiveConversation(targetLang: string, scenarioId?: string) {
           source: { uri: chunk.audioUrl },
           text: chunk.text,
           durationMs: chunk.durationMs,
+          // Keep the playAndRecord session — switching to playback-only would
+          // kill the always-on mic, so the user couldn't be heard after the
+          // coach's first reply (Deepgram then idle-closes with 1011).
+          keepSession: true,
         });
       },
     });
