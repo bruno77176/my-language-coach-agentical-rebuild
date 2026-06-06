@@ -4,15 +4,22 @@ import { createLiveConnection, type LiveTurnContext } from "./voice-live";
 // A fake Deepgram raw socket we can drive from the test.
 function fakeRawSocket() {
   const handlers: Record<string, ((m: unknown) => void)[]> = {};
-  return {
+  const sock = {
+    readyState: 0, // 0 = CONNECTING, 1 = OPEN, 3 = CLOSED
     on: (e: string, cb: (m: unknown) => void) => {
       (handlers[e] ??= []).push(cb);
     },
     sendMedia: vi.fn(),
     sendFinalize: vi.fn(),
     close: vi.fn(),
-    emit: (e: string, m?: unknown) => (handlers[e] ?? []).forEach((h) => h(m)),
+    // Mirror real readyState transitions so live.isOpen() reflects the socket.
+    emit: (e: string, m?: unknown) => {
+      if (e === "open") sock.readyState = 1;
+      if (e === "close") sock.readyState = 3;
+      (handlers[e] ?? []).forEach((h) => h(m));
+    },
   };
+  return sock;
 }
 
 function fakeWs() {
