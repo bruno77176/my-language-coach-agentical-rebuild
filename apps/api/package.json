@@ -16,7 +16,8 @@
     "db:verify": "node --env-file=.env --import tsx src/db/verify-migrations.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "seed:rate-cards": "node --env-file=.env --import tsx src/db/seed-rate-cards.ts"
+    "seed:rate-cards": "node --env-file=.env --import tsx src/db/seed-rate-cards.ts",
+    "backfill:vocab": "node --env-file=.env --import tsx src/db/backfill-vocab.ts"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.1.0",
