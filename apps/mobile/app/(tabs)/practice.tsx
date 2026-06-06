@@ -613,6 +613,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             listeningMode={listeningMode}
             revealed={revealedIds.has(item.id)}
             onReveal={revealMessage}
+            languageCode={targetLang}
           />
         )}
         onContentSizeChange={scrollToLatest}

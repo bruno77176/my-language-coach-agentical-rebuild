@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Bubble, EditorialText } from "@/src/design";
 import { palette, spacing } from "@language-coach/design-tokens";
@@ -13,6 +14,7 @@ type Props = {
   listeningMode: boolean;
   revealed: boolean;
   onReveal: (id: string) => void;
+  languageCode: string;
 };
 
 function formatDuration(ms?: number): string {
@@ -28,6 +30,7 @@ export function MessageBubble({
   listeningMode,
   revealed,
   onReveal,
+  languageCode,
 }: Props) {
   const isUser = message.role === "user";
   const [translation, setTranslation] = useState<string | null>(null);
@@ -110,6 +113,15 @@ export function MessageBubble({
     void playAudio();
   }
 
+  function handleLongPress() {
+    // Long-press any real bubble to save the word/phrase to the vocab deck.
+    if (isSoftError || showsAsListening) return;
+    router.push({
+      pathname: "/(modals)/add-vocab",
+      params: { prefill: message.text, language: languageCode },
+    });
+  }
+
   const textColor = isUser ? palette.peach : palette.ink;
   const listeningColor = isUser ? palette.peach : palette.inkSoft;
 
@@ -186,7 +198,12 @@ export function MessageBubble({
   );
 
   return (
-    <Pressable onPress={handleBubblePress} style={styles.messageRow}>
+    <Pressable
+      onPress={handleBubblePress}
+      onLongPress={handleLongPress}
+      delayLongPress={350}
+      style={styles.messageRow}
+    >
       {Inner}
     </Pressable>
   );
