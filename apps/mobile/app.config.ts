@@ -49,7 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "31",
+      buildNumber: "32",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
