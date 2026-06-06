@@ -9,6 +9,7 @@ function fakeRawSocket() {
     on: (e: string, cb: (m: unknown) => void) => {
       (handlers[e] ??= []).push(cb);
     },
+    connect: vi.fn(),
     sendMedia: vi.fn(),
     sendFinalize: vi.fn(),
     close: vi.fn(),

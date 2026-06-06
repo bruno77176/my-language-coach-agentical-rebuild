@@ -7,6 +7,7 @@ function fakeSocket() {
     on: (e: string, cb: (m: unknown) => void) => {
       (handlers[e] ??= []).push(cb);
     },
+    connect: vi.fn(),
     sendMedia: vi.fn(),
     sendFinalize: vi.fn(),
     close: vi.fn(),
@@ -41,6 +42,13 @@ describe("openLiveTranscription", () => {
 
     expect(transcripts).toEqual(["hola mundo"]);
     expect(ended).toBe(true);
+  });
+
+  it("starts the socket by calling connect() (SDK sockets are inert otherwise)", async () => {
+    const sock = fakeSocket();
+    const connect = vi.fn().mockResolvedValue(sock);
+    await openLiveTranscription({ connect }, { languageCode: "de" });
+    expect(sock.connect).toHaveBeenCalledTimes(1);
   });
 
   it("ignores interim (non-final) results", async () => {

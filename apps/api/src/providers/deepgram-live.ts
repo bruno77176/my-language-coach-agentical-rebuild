@@ -12,6 +12,10 @@ export interface RawLiveSocket {
   // it live before each send rather than trusting the one-shot "open" event,
   // which the SDK fires into a single handler that can be registered too late.
   readonly readyState?: number;
+  // Starts the connection. @deepgram/sdk's listen.v1.connect() returns a socket
+  // that is NOT auto-started (readyState stays CLOSED until you call this) —
+  // without it the socket never opens, so no audio is ever transcribed.
+  connect(): void;
   sendMedia(bytes: ArrayBuffer | ArrayBufferView): void;
   sendFinalize(msg?: unknown): void;
   close(): void;
@@ -86,6 +90,11 @@ export async function openLiveTranscription(
       if (text.trim()) fire("transcript", { text });
     }
   });
+
+  // Start the socket AFTER the message/open/close/error handlers above are
+  // wired, so the "open" event and the first transcripts aren't missed. The SDK
+  // socket is inert until this is called — the bug that made Live never respond.
+  sock.connect();
 
   return {
     on: (e, cb) => {
