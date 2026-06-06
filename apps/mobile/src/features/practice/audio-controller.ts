@@ -76,15 +76,23 @@ export async function playOnce(input: {
   source: { uri: string } | number;
   text?: string;
   durationMs?: number;
+  // Live mode: keep the existing record+playback (playAndRecord) audio session.
+  // The default configureForPlayback() sets allowsRecording:false, which on iOS
+  // switches the category to .playback and KILLS the always-on mic capture —
+  // so after the first coach reply no more audio reaches Deepgram and it
+  // idle-closes (NET-0001 / 1011). Live passes true to keep the mic alive.
+  keepSession?: boolean;
 }): Promise<void> {
   // If playback was hard-stopped (navigated away), don't start anything.
   if (playbackStopped) return;
   // Stop any prior playback before creating a new player.
   stopActivePlayer();
-  try {
-    await configureForPlayback();
-  } catch {
-    // best-effort
+  if (!input.keepSession) {
+    try {
+      await configureForPlayback();
+    } catch {
+      // best-effort
+    }
   }
   // Re-check: a stop may have landed while we awaited the session config.
   if (playbackStopped) return;
