@@ -1,0 +1,39 @@
+---
+title: Voice modes — data flow (push-to-talk vs live vs speech-to-speech)
+---
+%% Last updated: 2026-06-06
+%% Scope: how each of the 3 VoiceMode values captures audio and which use Deepgram
+
+flowchart LR
+    classDef internal fill:#1168BD,stroke:#0B4884,color:#fff
+    classDef provider fill:#438DD5,stroke:#0B4884,color:#fff
+    classDef external fill:#999,stroke:#666,color:#fff
+    classDef notbuilt fill:#eeeeee,stroke:#999,color:#666,stroke-dasharray: 5 5
+
+    Mic([Mic / User]):::external
+    Coach([Coach voice]):::external
+
+    subgraph PTT["1 - Push-to-talk (default, everyone)"]
+        direction LR
+        P1[Record full clip]:::internal -->|whole file| PDG["Deepgram BATCH (transcribeFile)"]:::provider
+        PDG --> P3[GPT]:::internal --> P4[TTS]:::internal
+    end
+
+    subgraph LIVE["2 - Live (gated)"]
+        direction LR
+        L1[Stream PCM frames]:::internal -->|WebSocket| LDG["Deepgram STREAMING (deepgram-live)"]:::provider
+        LDG --> L3[GPT]:::internal --> L4[TTS]:::internal
+    end
+
+    subgraph S2S["3 - Speech-to-speech (NOT built)"]
+        direction LR
+        S1[Stream audio]:::notbuilt -->|WebRTC| S2M["Single realtime model (gpt-4o-realtime)"]:::notbuilt
+        S2M --> S2O[Audio out]:::notbuilt
+    end
+
+    Mic -->|hold button| P1
+    Mic -->|always listening| L1
+    Mic -.planned.-> S1
+    P4 --> Coach
+    L4 --> Coach
+    S2O -.-> Coach

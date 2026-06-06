@@ -1,17 +1,41 @@
-// Mapping of target language -> TTS voice name.
-//
-// We use OpenAI TTS (not ElevenLabs) — ElevenLabs Creator subscription
-// ($22/mo) is required to use library voices via API. Bruno is on free +
-// pay-as-you-go credits which don't qualify. OpenAI TTS works on any paid
-// OpenAI account and supports all 12 languages we ship via the same model.
-//
-// Available OpenAI TTS voices: alloy, echo, fable, onyx, nova, shimmer.
-// "nova" is a friendly female narrator that works well for a language coach.
+import { DEFAULT_TTS_CONFIG, type TtsConfig } from "@language-coach/shared";
 
-const DEFAULT_VOICE = "nova";
+// One TTS voice per target language.
+//
+// All entries use ElevenLabs (model `eleven_flash_v2_5`, which is multilingual
+// and pins pronunciation via the `languageCode` we already pass to the provider).
+// The lever here is the **voice ID** — pick a voice recorded by a NATIVE speaker
+// of the language for a natural accent. English-recorded voices speaking e.g.
+// German carry an English accent even with the language pinned.
+//
+// To add a language: in ElevenLabs → Voices (or the Voice Library, filter by the
+// target language) → open the voice → copy its Voice ID → add a line below.
+// Available voices in the account + how to find IDs: docs/voice-per-language.md.
+//
+// Languages NOT listed here fall back to DEFAULT_TTS_CONFIG. Today only de/es/en
+// have native voices in the account; the other supported languages still need a
+// native voice added to the ElevenLabs account before they can be wired here.
+const el = (voiceId: string): TtsConfig => ({
+  provider: "elevenlabs",
+  voiceId,
+  speed: 1.0,
+  style: "warm",
+});
 
-export function voiceIdForLanguage(_languageCode: string): string {
-  // For v1, all languages use the same voice. Customize later if specific
-  // languages benefit from a different voice (e.g. deeper voice for German).
-  return DEFAULT_VOICE;
+const VOICE_BY_LANGUAGE: Record<string, TtsConfig> = {
+  en: el("EXAVITQu4vr4xnSDxMaL"), // Sarah — native English (American)
+  de: el("7eVMgwCnXydb3CikjV7a"), // Lea - Clear and Feminine — native German
+  es: el("Ir1QNHvhaJXbAGhT50w3"), // Sara Martin — native Spanish (peninsular)
+  fr: el("ucMmKRQbfDEYyb2IIGax"), // Aurore — native French (parisian)
+  it: el("kAzI34nYjizE0zON6rXv"), // Sami — native Italian
+};
+
+// Resolve the TTS voice for a target language. Falls back to the global default
+// when the language has no dedicated native voice yet (so unknown/unconfigured
+// languages still produce audio rather than erroring).
+export function voiceConfigForLanguage(
+  languageCode: string | undefined,
+): TtsConfig {
+  if (!languageCode) return DEFAULT_TTS_CONFIG;
+  return VOICE_BY_LANGUAGE[languageCode] ?? DEFAULT_TTS_CONFIG;
 }
