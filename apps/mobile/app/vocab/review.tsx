@@ -85,10 +85,14 @@ export default function VocabReviewScreen() {
   const progress = useSharedValue(0);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Opacity hard-cut at 90° backs up backfaceVisibility, which Android doesn't
+  // reliably honour for 3D transforms — without it both faces can show.
   const frontStyle = useAnimatedStyle(() => ({
+    opacity: spin.value < 90 ? 1 : 0,
     transform: [{ perspective: 1000 }, { rotateY: `${spin.value}deg` }],
   }));
   const backStyle = useAnimatedStyle(() => ({
+    opacity: spin.value >= 90 ? 1 : 0,
     transform: [{ perspective: 1000 }, { rotateY: `${spin.value + 180}deg` }],
   }));
   const progressStyle = useAnimatedStyle(() => ({
@@ -159,10 +163,10 @@ export default function VocabReviewScreen() {
     });
     setPhase("result");
     spin.value = withTiming(180, { duration: 450 });
-    if (next === "wrong") Vibration.vibrate(120);
+    // Per-card haptic feedback; the victory sound is reserved for a perfect run.
+    Vibration.vibrate(next === "wrong" ? 120 : 35);
     if (next === "correct") {
-      void playOnce({ source: VICTORY_SOUND, durationMs: 900 });
-      advanceTimer.current = setTimeout(advance, 1600);
+      advanceTimer.current = setTimeout(advance, 1400);
     }
   }
 
