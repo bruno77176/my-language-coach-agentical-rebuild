@@ -1,6 +1,6 @@
 import type OpenAI from "openai";
 import type { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import { type TtsConfig } from "@language-coach/shared";
+import { DEFAULT_TTS_CONFIG, type TtsConfig } from "@language-coach/shared";
 import {
   synthesizeSpeechOpenAI,
   type TtsResult,
@@ -50,6 +50,19 @@ export type TtsDeps = {
 // Inworld, so we can't reuse the requested voiceId on the fallback path.
 const FALLBACK_VOICE_ID = "nova";
 
+// The mobile Voice Lab always sends a config, defaulting to DEFAULT_TTS_CONFIG
+// (one English voice). Treat a config equal to the default as "no explicit
+// choice" so the per-language native voice wins — only a Voice Lab config the
+// user actually changed counts as a real override.
+function isDefaultTtsConfig(c: TtsConfig): boolean {
+  return (
+    c.provider === DEFAULT_TTS_CONFIG.provider &&
+    c.voiceId === DEFAULT_TTS_CONFIG.voiceId &&
+    c.speed === DEFAULT_TTS_CONFIG.speed &&
+    c.style === DEFAULT_TTS_CONFIG.style
+  );
+}
+
 export function makeSynthesizeSpeech(deps: TtsDeps) {
   const openAiSynth = deps.synth?.openai ?? synthesizeSpeechOpenAI;
   const elevenSynth = deps.synth?.eleven ?? synthesizeSpeechElevenLabs;
@@ -57,10 +70,14 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
   const inworldSynth = deps.synth?.inworld ?? synthesizeSpeechInworld;
 
   return async (input: RoutedTtsInput): Promise<TtsResult> => {
-    // Priority: an explicit per-user voice config wins; otherwise pick the
-    // per-language native voice (which itself falls back to DEFAULT_TTS_CONFIG
-    // for languages without a dedicated voice).
-    const config = input.config ?? voiceConfigForLanguage(input.languageCode);
+    // Priority: a user-CHANGED voice config wins; a config equal to the default
+    // is ignored so the per-language native voice is used instead (which itself
+    // falls back to DEFAULT_TTS_CONFIG for languages with no dedicated voice).
+    const explicit =
+      input.config && !isDefaultTtsConfig(input.config)
+        ? input.config
+        : undefined;
+    const config = explicit ?? voiceConfigForLanguage(input.languageCode);
     const shared = {
       text: input.text,
       voiceId: config.voiceId,

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { DEFAULT_TTS_CONFIG } from "@language-coach/shared";
 import { makeSynthesizeSpeech } from "./tts-router";
 
 describe("makeSynthesizeSpeech", () => {
@@ -47,6 +48,22 @@ describe("makeSynthesizeSpeech", () => {
       2,
       expect.anything(),
       expect.objectContaining({ voiceId: "Ir1QNHvhaJXbAGhT50w3" }),
+    );
+  });
+
+  it("ignores a config equal to the default and uses the per-language voice", async () => {
+    // The mobile Voice Lab sends DEFAULT_TTS_CONFIG when the user hasn't changed
+    // it; that must NOT override the German native voice.
+    const eleven = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ eleven }));
+    await synth({
+      text: "hallo",
+      languageCode: "de",
+      config: DEFAULT_TTS_CONFIG,
+    });
+    expect(eleven).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ voiceId: "7eVMgwCnXydb3CikjV7a" }),
     );
   });
 
