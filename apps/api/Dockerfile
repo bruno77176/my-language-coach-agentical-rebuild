@@ -19,6 +19,11 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc tsconfig.base.json .
 COPY apps/api/package.json apps/api/
 COPY packages/shared/package.json packages/shared/
 COPY packages/config/package.json packages/config/
+# pnpm.patchedDependencies (root package.json) makes the lockfile reference
+# patches/*.patch, so the patch files must be present before install or
+# `pnpm install --frozen-lockfile` fails with ENOENT. (Patched dep is mobile-
+# only, but the patch lives in the shared root lockfile this build installs.)
+COPY patches patches
 
 RUN pnpm install --frozen-lockfile
 
