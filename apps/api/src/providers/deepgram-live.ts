@@ -60,7 +60,9 @@ export async function openLiveTranscription(
   });
 
   sock.on("open", () => fire("open"));
-  sock.on("close", () => fire("close"));
+  // Forward the close payload (CloseEvent: code + reason) so the caller can log
+  // exactly why Deepgram dropped the socket instead of a bare "closed".
+  sock.on("close", (e) => fire("close", e));
   sock.on("error", (e) => fire("error", e));
   sock.on("message", (raw) => {
     const m = raw as {

@@ -42,14 +42,38 @@ function makeDeps(raw: ReturnType<typeof fakeRawSocket>) {
 }
 
 describe("createLiveConnection", () => {
-  it("relays inbound audio bytes to Deepgram", async () => {
+  it("relays inbound audio bytes to Deepgram once its socket is open", async () => {
     const raw = fakeRawSocket();
     const conn = createLiveConnection(makeDeps(raw), { ctx });
     const ws = fakeWs();
     await conn.onOpen(ws);
+    raw.emit("open"); // Deepgram socket is now OPEN
     const bytes = new Uint8Array([1, 2, 3]).buffer;
     conn.onMessage(bytes, ws);
     expect(raw.sendMedia).toHaveBeenCalledWith(bytes);
+  });
+
+  it("drops inbound audio until Deepgram's socket is open", async () => {
+    const raw = fakeRawSocket();
+    const conn = createLiveConnection(makeDeps(raw), { ctx });
+    const ws = fakeWs();
+    await conn.onOpen(ws);
+    // No "open" emitted yet — sending into a connecting socket would throw
+    // "Socket is not open", so we must drop rather than forward.
+    conn.onMessage(new Uint8Array([1, 2, 3]).buffer, ws);
+    expect(raw.sendMedia).not.toHaveBeenCalled();
+  });
+
+  it("notifies the client when Deepgram closes (so the UI doesn't hang)", async () => {
+    const raw = fakeRawSocket();
+    const conn = createLiveConnection(makeDeps(raw), { ctx });
+    const ws = fakeWs();
+    await conn.onOpen(ws);
+    raw.emit("close", { code: 1011, reason: "boom" });
+    const sent = ws.send.mock.calls.map((c) => JSON.parse(c[0] as string));
+    expect(
+      sent.some((m) => m.type === "error" && m.code === "STT_CLOSED:1011"),
+    ).toBe(true);
   });
 
   it("runs a turn on utterance-end and streams reply-chunks to the client", async () => {

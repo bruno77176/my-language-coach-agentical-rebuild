@@ -6,6 +6,7 @@ import {
   type LiveSocket,
 } from "../providers/deepgram-live";
 import { runTurn, type RunTurnDeps } from "./run-turn";
+import { deepgramModelForLanguage } from "../providers/deepgram";
 import { canUseLiveVoice } from "../lib/voice-entitlement";
 import type { Verifier } from "../middleware/auth";
 import type { ChatMessage } from "../providers/openai";
@@ -42,6 +43,12 @@ export function createLiveConnection(
   let currentTurn: AbortController | null = null;
   let ws: WsLike | null = null;
   let frameCount = 0;
+  // Only forward mic audio once Deepgram's socket is actually OPEN. The SDK's
+  // sendMedia throws "Socket is not open" if we send while it's still
+  // connecting (or after it closed), which floods the logs and tells us
+  // nothing. Gating on this also lets us count frames dropped pre-open.
+  let dgOpen = false;
+  let droppedBeforeOpen = 0;
   // Running conversation for this live session — appended each turn so the
   // coach remembers what was said earlier in the session.
   const convo: ChatMessage[] = [...params.ctx.baseMessages];
@@ -84,7 +91,7 @@ export function createLiveConnection(
     onOpen: async (socket: WsLike) => {
       ws = socket;
       console.warn(
-        `[live] ws open; connecting Deepgram (lang=${params.ctx.languageCode})`,
+        `[live] ws open; connecting Deepgram (lang=${params.ctx.languageCode} model=${deepgramModelForLanguage(params.ctx.languageCode)})`,
       );
       try {
         live = await openLiveTranscription(
@@ -98,8 +105,20 @@ export function createLiveConnection(
         send({ type: "error", code: "STT_CONNECT_FAILED" });
         return;
       }
-      live.on("open", () => console.warn("[live] Deepgram socket open"));
-      live.on("close", () => console.warn("[live] Deepgram socket closed"));
+      live.on("open", () => {
+        dgOpen = true;
+        console.warn("[live] Deepgram socket open");
+      });
+      live.on("close", (p) => {
+        dgOpen = false;
+        const ce = p as { code?: number; reason?: string } | undefined;
+        console.warn(
+          `[live] Deepgram socket closed (code=${ce?.code ?? "?"} reason="${ce?.reason ?? ""}" droppedBeforeOpen=${droppedBeforeOpen})`,
+        );
+        // Tell the client so the UI doesn't sit in "Listening…" forever when
+        // Deepgram refuses or drops the connection.
+        send({ type: "error", code: `STT_CLOSED:${ce?.code ?? "?"}` });
+      });
       live.on("transcript", (p) => {
         const text = (p as { text: string }).text;
         console.warn(`[live] transcript: ${text}`);
@@ -112,7 +131,12 @@ export function createLiveConnection(
         if (utterance) void runOneTurn(utterance);
       });
       live.on("error", (p) => {
-        console.warn(`[live] Deepgram error: ${JSON.stringify(p)}`);
+        const ee = p as
+          | { message?: string; error?: unknown; type?: string }
+          | undefined;
+        const detail =
+          ee?.message ?? ee?.type ?? JSON.stringify(p) ?? "unknown";
+        console.warn(`[live] Deepgram error: ${detail}`);
         send({ type: "error", code: "STT_PROVIDER_FAILURE" });
       });
     },
@@ -137,7 +161,13 @@ export function createLiveConnection(
         if (frameCount === 1) console.warn("[live] first audio frame received");
         if (frameCount % 100 === 0)
           console.warn(`[live] ${frameCount} audio frames received`);
-        live?.sendAudio(data as ArrayBuffer | ArrayBufferView);
+        // Drop frames until Deepgram is open — sending into a connecting/closed
+        // socket throws "Socket is not open" on every frame.
+        if (dgOpen) {
+          live?.sendAudio(data as ArrayBuffer | ArrayBufferView);
+        } else {
+          droppedBeforeOpen++;
+        }
       } else {
         console.warn(
           `[live] unhandled binary frame type: ${Object.prototype.toString.call(data)}`,
