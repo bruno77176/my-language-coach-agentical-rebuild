@@ -120,8 +120,12 @@ export function createLiveConnection(
       ws = socket;
       if (typeof data === "string") {
         try {
-          const msg = JSON.parse(data) as { type?: string };
+          const msg = JSON.parse(data) as { type?: string; msg?: string };
           if (msg?.type === "cancel") currentTurn?.abort();
+          // Client-side diagnostics (mic start status / errors) surfaced here so
+          // device-only failures are visible in the server logs.
+          else if (msg?.type === "client-log")
+            console.warn(`[live] client: ${msg.msg}`);
         } catch {
           // ignore non-JSON text frames
         }
