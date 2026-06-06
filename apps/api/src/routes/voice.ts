@@ -35,6 +35,7 @@ import type {
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { runTurn } from "./run-turn";
+import { persistVocab } from "./vocab-persist";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
@@ -901,6 +902,13 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             vocab: fb.vocab,
           })
           .where(eq(sessionFeedback.conversationId, conversationId));
+
+        // Mirror the extracted vocab into the persistent flashcard deck.
+        await persistVocab(deps.db, {
+          userId,
+          language: conversation.language,
+          vocab: fb.vocab,
+        });
       } catch {
         // Already reported via reportError inside generate-feedback;
         // outer catch swallows DB errors so /end response isn't blocked.
