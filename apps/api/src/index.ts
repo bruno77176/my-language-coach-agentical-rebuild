@@ -56,6 +56,11 @@ app.route(
       const connectArgs = {
         ...args,
         Authorization: `Token ${env.DEEPGRAM_API_KEY}`,
+        // Don't let the SDK's ReconnectingWebSocket silently retry a rejected
+        // handshake 30× (that floods the logs with "Socket is not open" and
+        // buries the real close reason). One attempt → the genuine close
+        // code/reason surfaces immediately so we can see WHY Deepgram refuses.
+        reconnectAttempts: 0,
       } as Parameters<typeof deepgram.listen.v1.connect>[0];
       return deepgram.listen.v1.connect(
         connectArgs,
