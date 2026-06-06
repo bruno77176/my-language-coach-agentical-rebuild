@@ -1,12 +1,14 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { EditorialText, Screen } from "@/src/design";
 import {
   palette,
@@ -16,18 +18,34 @@ import {
 } from "@language-coach/design-tokens";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useVocabDeck } from "@/src/features/vocab/use-vocab-deck";
-import { useRemoveVocab } from "@/src/features/vocab/use-vocab-mutations";
+import {
+  useRemoveVocab,
+  useToggleStar,
+} from "@/src/features/vocab/use-vocab-mutations";
 import type { VocabItem } from "@/src/features/vocab/api";
 
 export default function VocabDeckScreen() {
   const { data: profile } = useProfile();
   const language = profile?.target_lang ?? "en";
-  const { data, isLoading } = useVocabDeck(language);
+  const [starredOnly, setStarredOnly] = useState(false);
+  const { data, isLoading } = useVocabDeck(language, starredOnly);
   const remove = useRemoveVocab(language);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const toggleStar = useToggleStar(language);
 
   const items = data?.items ?? [];
   const dueCount = data?.dueCount ?? 0;
+  const starredCount = data?.starredCount ?? 0;
+
+  function confirmRemove(item: VocabItem) {
+    Alert.alert("Remove word", `Remove "${item.term}" from your deck?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => remove.mutate(item.id),
+      },
+    ]);
+  }
 
   return (
     <Screen variant="gradient">
@@ -52,8 +70,22 @@ export default function VocabDeckScreen() {
           Your words
         </EditorialText>
         <EditorialText kind="bodyMd" color={palette.inkSoft}>
-          {items.length} saved · {dueCount} to review
+          {items.length} {starredOnly ? "starred" : "saved"} · {dueCount} to
+          review
         </EditorialText>
+
+        <View style={styles.filterRow}>
+          <FilterChip
+            label="All"
+            active={!starredOnly}
+            onPress={() => setStarredOnly(false)}
+          />
+          <FilterChip
+            label={`★ Important${starredCount ? ` (${starredCount})` : ""}`}
+            active={starredOnly}
+            onPress={() => setStarredOnly(true)}
+          />
+        </View>
 
         {isLoading ? (
           <ActivityIndicator
@@ -66,8 +98,9 @@ export default function VocabDeckScreen() {
             color={palette.inkSoft}
             style={{ marginTop: spacing.xl }}
           >
-            No words yet. They&apos;ll appear here as you talk with your coach —
-            or add one yourself.
+            {starredOnly
+              ? "No starred words yet. Tap the star on a word to mark it important."
+              : "No words yet. They'll appear here as you talk with your coach — or add one yourself."}
           </EditorialText>
         ) : (
           <View style={styles.list}>
@@ -75,13 +108,10 @@ export default function VocabDeckScreen() {
               <DeckRow
                 key={item.id}
                 item={item}
-                confirming={confirmId === item.id}
-                onLongPress={() => setConfirmId(item.id)}
-                onCancel={() => setConfirmId(null)}
-                onRemove={() => {
-                  setConfirmId(null);
-                  remove.mutate(item.id);
-                }}
+                onToggleStar={() =>
+                  toggleStar.mutate({ id: item.id, starred: !item.starred })
+                }
+                onRemove={() => confirmRemove(item)}
               />
             ))}
           </View>
@@ -91,39 +121,58 @@ export default function VocabDeckScreen() {
       <Pressable
         style={[styles.cta, items.length === 0 && styles.ctaDisabled]}
         disabled={items.length === 0}
-        onPress={() => router.push("/vocab/review")}
+        onPress={() =>
+          router.push(starredOnly ? "/vocab/review?starred=1" : "/vocab/review")
+        }
       >
         <EditorialText
           kind="bodyLg"
           color={palette.peach}
           style={styles.ctaText}
         >
-          {"▸"} Start review
+          {"▸"} Start review{starredOnly ? " ★" : ""}
         </EditorialText>
       </Pressable>
     </Screen>
   );
 }
 
-function DeckRow({
-  item,
-  confirming,
-  onLongPress,
-  onCancel,
-  onRemove,
+function FilterChip({
+  label,
+  active,
+  onPress,
 }: {
-  item: VocabItem;
-  confirming: boolean;
-  onLongPress: () => void;
-  onCancel: () => void;
-  onRemove: () => void;
+  label: string;
+  active: boolean;
+  onPress: () => void;
 }) {
   return (
     <Pressable
-      onLongPress={onLongPress}
-      delayLongPress={350}
-      style={styles.row}
+      onPress={onPress}
+      style={[styles.chip, active && styles.chipActive]}
     >
+      <EditorialText
+        kind="bodySm"
+        color={active ? palette.peach : palette.inkSoft}
+      >
+        {label}
+      </EditorialText>
+    </Pressable>
+  );
+}
+
+function DeckRow({
+  item,
+  onToggleStar,
+  onRemove,
+}: {
+  item: VocabItem;
+  onToggleStar: () => void;
+  onRemove: () => void;
+}) {
+  const mastered = item.mastery >= 3;
+  return (
+    <View style={styles.row}>
       <View style={{ flex: 1 }}>
         <EditorialText kind="bodyLg" color={palette.ink}>
           {item.term}
@@ -134,32 +183,24 @@ function DeckRow({
           </EditorialText>
         ) : null}
       </View>
-      {confirming ? (
-        <View style={styles.confirmRow}>
-          <Pressable onPress={onCancel} hitSlop={8}>
-            <EditorialText kind="bodySm" color={palette.inkSoft}>
-              Cancel
-            </EditorialText>
-          </Pressable>
-          <Pressable onPress={onRemove} hitSlop={8}>
-            <EditorialText kind="bodySm" color={palette.coral}>
-              Remove
-            </EditorialText>
-          </Pressable>
-        </View>
-      ) : (
-        <MasteryPips mastery={item.mastery} />
-      )}
-    </Pressable>
-  );
-}
-
-function MasteryPips({ mastery }: { mastery: number }) {
-  return (
-    <View style={styles.pips}>
-      {[0, 1, 2].map((i) => (
-        <View key={i} style={[styles.pip, i < mastery && styles.pipFilled]} />
-      ))}
+      {mastered ? (
+        <Ionicons
+          name="checkmark-circle"
+          size={18}
+          color={palette.accent}
+          style={styles.masteredIcon}
+        />
+      ) : null}
+      <Pressable onPress={onToggleStar} hitSlop={8} style={styles.iconBtn}>
+        <Ionicons
+          name={item.starred ? "star" : "star-outline"}
+          size={20}
+          color={item.starred ? palette.coral : palette.inkSoft}
+        />
+      </Pressable>
+      <Pressable onPress={onRemove} hitSlop={8} style={styles.iconBtn}>
+        <Ionicons name="trash-outline" size={19} color={palette.inkSoft} />
+      </Pressable>
     </View>
   );
 }
@@ -173,6 +214,14 @@ const styles = StyleSheet.create({
   },
   scroll: { padding: spacing.xl, paddingBottom: 140, gap: spacing.sm },
   title: { color: palette.ink },
+  filterRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    backgroundColor: palette.glassStrong,
+  },
+  chipActive: { backgroundColor: palette.ink },
   list: { marginTop: spacing.lg, gap: spacing.sm },
   row: {
     flexDirection: "row",
@@ -180,18 +229,10 @@ const styles = StyleSheet.create({
     backgroundColor: palette.glassStrong,
     borderRadius: radius.lg,
     padding: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  confirmRow: { flexDirection: "row", gap: spacing.md, alignItems: "center" },
-  pips: { flexDirection: "row", gap: 4 },
-  pip: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: palette.inkSoft,
-    opacity: 0.3,
-  },
-  pipFilled: { backgroundColor: palette.accent, opacity: 1 },
+  masteredIcon: { marginRight: spacing.xs },
+  iconBtn: { padding: spacing.xs },
   cta: {
     position: "absolute",
     left: spacing.xl,
