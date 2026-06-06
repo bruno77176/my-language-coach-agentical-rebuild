@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -37,6 +37,19 @@ export default function SignInScreen() {
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [appleBusy, setAppleBusy] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+
+  // When a field gains focus, scroll the form bottom (email → password → submit)
+  // above the keyboard. Combined with behavior="padding" below, this keeps the
+  // field being typed into visible — on Android the soft keyboard can cover up
+  // to ~40% of the screen, and with edge-to-edge enabled the OS no longer
+  // resizes the window for us. Deferred a frame so the keyboard inset is applied
+  // before we scroll.
+  const onFieldFocus = () => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+  };
 
   const onGoogle = async () => {
     setGoogleBusy(true);
@@ -139,11 +152,9 @@ export default function SignInScreen() {
   const buttonLabel = mode === "signIn" ? "Sign in" : "Create account";
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior="padding">
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -218,6 +229,7 @@ export default function SignInScreen() {
           <TextInput
             value={email}
             onChangeText={setEmail}
+            onFocus={onFieldFocus}
             placeholder="you@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -238,6 +250,7 @@ export default function SignInScreen() {
           <PasswordInput
             value={password}
             onChangeText={setPassword}
+            onFocus={onFieldFocus}
             placeholder="At least 6 characters"
             autoCapitalize="none"
             autoComplete="password"

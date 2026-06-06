@@ -410,9 +410,14 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   });
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
-  // Keep the newest message pinned to the bottom (above the mic bar). Driven by
-  // onContentSizeChange on the list so it also tracks a streaming coach reply
-  // that grows the same bubble (messages.length doesn't change mid-stream).
+  const [listHeight, setListHeight] = useState(0);
+  // Float the newest message up toward the middle of the screen for comfortable
+  // reading, instead of pinning it just above the mic bar. The list gets a large
+  // bottom spacer (~half its height, see paddingBottom below) so there's empty
+  // room to scroll past the last message; scrollToEnd then lands the newest
+  // content around the vertical middle rather than at the very bottom. Driven by
+  // onContentSizeChange so it also tracks a streaming coach reply that grows the
+  // same bubble (messages.length doesn't change mid-stream).
   const scrollToLatest = useCallback(() => {
     requestAnimationFrame(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -617,11 +622,16 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
           />
         )}
         onContentSizeChange={scrollToLatest}
+        onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
         contentContainerStyle={[
           activeStyles.chatContainer,
           {
             paddingTop: insets.top + 64,
-            paddingBottom: micBarBottom + 96,
+            // Half the viewport of empty space below the last message gives
+            // scrollToEnd the headroom to lift the newest bubble to ~the middle
+            // of the screen. Floor at the mic-bar clearance so the bottom of a
+            // short conversation never tucks under the mic bar.
+            paddingBottom: Math.max(micBarBottom + 96, listHeight * 0.5),
           },
         ]}
         ListEmptyComponent={
