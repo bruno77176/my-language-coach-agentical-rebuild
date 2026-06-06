@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addVocab, removeVocab, reviewVocab, type ReviewResult } from "./api";
+import {
+  addVocab,
+  removeVocab,
+  reviewVocab,
+  setVocabStarred,
+  type ReviewResult,
+} from "./api";
 import { vocabDeckKey } from "./use-vocab-deck";
 
 export function useAddVocab(language: string) {
@@ -16,6 +22,15 @@ export function useReviewVocab(language: string) {
   return useMutation({
     mutationFn: (input: { id: string; result: ReviewResult }) =>
       reviewVocab(input.id, input.result),
+    onSuccess: () => qc.invalidateQueries({ queryKey: vocabDeckKey(language) }),
+  });
+}
+
+export function useToggleStar(language: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; starred: boolean }) =>
+      setVocabStarred(input.id, input.starred),
     onSuccess: () => qc.invalidateQueries({ queryKey: vocabDeckKey(language) }),
   });
 }
