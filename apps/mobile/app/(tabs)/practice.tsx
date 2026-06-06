@@ -411,18 +411,31 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   const [listHeight, setListHeight] = useState(0);
-  // Float the newest message up toward the middle of the screen for comfortable
-  // reading, instead of pinning it just above the mic bar. The list gets a large
-  // bottom spacer (~half its height, see paddingBottom below) so there's empty
-  // room to scroll past the last message; scrollToEnd then lands the newest
-  // content around the vertical middle rather than at the very bottom. Driven by
-  // onContentSizeChange so it also tracks a streaming coach reply that grows the
-  // same bubble (messages.length doesn't change mid-stream).
-  const scrollToLatest = useCallback(() => {
-    requestAnimationFrame(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
+  // Autoscroll — the app keeps the newest message in view on its own; the user
+  // never has to scroll. We scroll to the freshly-measured content height handed
+  // to us by onContentSizeChange (rather than a deferred scrollToEnd, which on a
+  // list of variable-height bubbles can read a stale size and leave the latest
+  // message below the fold). onContentSizeChange fires on every growth — a new
+  // message AND a streaming coach reply that grows the same bubble — so both are
+  // covered. The list carries a large bottom spacer (~half its height, see
+  // paddingBottom below) so "scroll to the bottom" leaves the newest message
+  // sitting around the vertical middle for comfortable reading.
+  const scrollToBottom = useCallback((contentHeight: number) => {
+    flatListRef.current?.scrollToOffset({
+      offset: contentHeight,
+      animated: true,
     });
   }, []);
+
+  // Backstop: when a new message is appended, the very first onContentSizeChange
+  // can fire a frame before the new bubble has its final height. A short delayed
+  // scrollToEnd catches that case so the brand-new message always lands in view.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 60);
+    return () => clearTimeout(id);
+  }, [messages.length]);
 
   const isBusy =
     state.phase === "processing" || state.phase === "loading-session";
@@ -621,14 +634,14 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             languageCode={targetLang}
           />
         )}
-        onContentSizeChange={scrollToLatest}
+        onContentSizeChange={(_w, h) => scrollToBottom(h)}
         onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
         contentContainerStyle={[
           activeStyles.chatContainer,
           {
             paddingTop: insets.top + 64,
-            // Half the viewport of empty space below the last message gives
-            // scrollToEnd the headroom to lift the newest bubble to ~the middle
+            // Half the viewport of empty space below the last message gives the
+            // autoscroll the headroom to lift the newest bubble to ~the middle
             // of the screen. Floor at the mic-bar clearance so the bottom of a
             // short conversation never tucks under the mic bar.
             paddingBottom: Math.max(micBarBottom + 96, listHeight * 0.5),
