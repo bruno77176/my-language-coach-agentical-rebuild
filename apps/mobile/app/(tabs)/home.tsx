@@ -20,6 +20,7 @@ import { useTodayStats } from "@/src/features/home/use-today-stats";
 import { QuoteCard } from "@/src/features/home/quote-card";
 import { TodayProgress } from "@/src/features/home/today-progress";
 import { useOfflineQuote } from "@/src/features/home/use-offline-quote";
+import { useVocabDeck } from "@/src/features/vocab/use-vocab-deck";
 import { supabase } from "@/src/lib/supabase";
 
 function useCurrentStreak() {
@@ -48,6 +49,7 @@ export default function HomeScreen() {
   const { data: stats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
   const cachedQuote = useOfflineQuote(profile ?? null);
+  const { data: vocab } = useVocabDeck(profile?.target_lang);
 
   // Block on spinner if profile hasn't loaded AND there's no cached quote, OR
   // if we have no profile and no cached quote at all (e.g., anonymous user
@@ -98,6 +100,28 @@ export default function HomeScreen() {
           dailyGoalMinutes={dailyGoalMinutes}
         />
 
+        {vocab && vocab.items.length > 0 ? (
+          <Pressable
+            style={styles.vocabCard}
+            onPress={() => router.push("/vocab")}
+            hitSlop={8}
+          >
+            <View style={{ flex: 1 }}>
+              <EditorialText kind="bodyLg" color={palette.ink}>
+                Review your words
+              </EditorialText>
+              <EditorialText kind="bodySm" color={palette.inkSoft}>
+                {vocab.dueCount > 0
+                  ? `${vocab.dueCount} to review`
+                  : "All caught up — browse anytime"}
+              </EditorialText>
+            </View>
+            <EditorialText kind="displayMd" color={palette.accent}>
+              {vocab.items.length}
+            </EditorialText>
+          </Pressable>
+        ) : null}
+
         <Pressable
           style={styles.cta}
           onPress={() => router.push("/(tabs)/practice")}
@@ -147,4 +171,13 @@ const styles = StyleSheet.create({
     ...shadow.cta,
   },
   ctaText: { fontWeight: "600" },
+  vocabCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: palette.glassStrong,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+    ...shadow.cta,
+  },
 });

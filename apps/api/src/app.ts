@@ -31,6 +31,7 @@ import { makeSynthesizeSpeech } from "./providers/tts-router";
 import { makeGoogleAccessTokenProvider } from "./lib/google-tts-auth";
 import { createMessagesRoutes } from "./routes/messages";
 import { createMemoryRoutes } from "./routes/memory";
+import { createVocabRoutes } from "./routes/vocab";
 import { createFeedbackRoutes } from "./routes/feedback";
 import { createWeeklySummaryRoutes } from "./routes/weekly-summary";
 import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
@@ -265,6 +266,14 @@ export function createApp(
   );
 
   app.route("/v1/memory", createMemoryRoutes({ db }));
+
+  app.route(
+    "/v1/vocab",
+    createVocabRoutes({
+      db,
+      translate: (input) => translateMessage(openai, input),
+    }),
+  );
 
   app.route("/v1", createFeedbackRoutes({ db }));
   app.route(
