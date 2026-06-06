@@ -16,17 +16,19 @@ keeps any per-user choice. All voices use ElevenLabs model `eleven_flash_v2_5`
 
 ## Which languages have a NATIVE voice today
 
-Only **German, Spanish, English** have a native-speaker voice in the account.
-**French, Italian, Japanese, Korean, Chinese, Swedish, Danish, Russian,
-Romanian, Hungarian, Turkish, Portuguese have NONE** — they need a native voice
-added from the ElevenLabs Voice Library before they can be wired.
+**German, Spanish, English, French, Italian** have a native-speaker voice in the
+account. **Japanese, Korean, Chinese, Swedish, Danish, Russian, Romanian,
+Hungarian, Turkish, Portuguese have NONE** — they need a native voice added from
+the ElevenLabs Voice Library before they can be wired.
 
-| Lang                                           | Status       | Voice ID wired          | Voice                         |
-| ---------------------------------------------- | ------------ | ----------------------- | ----------------------------- |
-| de                                             | ✅ native    | `7eVMgwCnXydb3CikjV7a`  | Lea - Clear and Feminine      |
-| es                                             | ✅ native    | `Ir1QNHvhaJXbAGhT50w3`  | Sara Martin - Light, Intimate |
-| en                                             | ✅ native    | `EXAVITQu4vr4xnSDxMaL`  | Sarah - Mature, Reassuring    |
-| fr, it, ja, ko, zh, sv, da, ru, ro, hu, tr, pt | ❌ no native | (falls back to default) | needs a Library voice         |
+| Lang                                   | Status       | Voice ID wired          | Voice                         |
+| -------------------------------------- | ------------ | ----------------------- | ----------------------------- |
+| de                                     | ✅ native    | `7eVMgwCnXydb3CikjV7a`  | Lea - Clear and Feminine      |
+| es                                     | ✅ native    | `Ir1QNHvhaJXbAGhT50w3`  | Sara Martin - Light, Intimate |
+| en                                     | ✅ native    | `EXAVITQu4vr4xnSDxMaL`  | Sarah - Mature, Reassuring    |
+| fr                                     | ✅ native    | `ucMmKRQbfDEYyb2IIGax`  | Aurore (parisian)             |
+| it                                     | ✅ native    | `kAzI34nYjizE0zON6rXv`  | Sami - Energetic, Expressive  |
+| ja, ko, zh, sv, da, ru, ro, hu, tr, pt | ❌ no native | (falls back to default) | needs a Library voice         |
 
 ## All 28 voices currently in the account
 

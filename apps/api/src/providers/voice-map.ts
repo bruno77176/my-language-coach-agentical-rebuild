@@ -26,6 +26,8 @@ const VOICE_BY_LANGUAGE: Record<string, TtsConfig> = {
   en: el("EXAVITQu4vr4xnSDxMaL"), // Sarah — native English (American)
   de: el("7eVMgwCnXydb3CikjV7a"), // Lea - Clear and Feminine — native German
   es: el("Ir1QNHvhaJXbAGhT50w3"), // Sara Martin — native Spanish (peninsular)
+  fr: el("ucMmKRQbfDEYyb2IIGax"), // Aurore — native French (parisian)
+  it: el("kAzI34nYjizE0zON6rXv"), // Sami — native Italian
 };
 
 // Resolve the TTS voice for a target language. Falls back to the global default

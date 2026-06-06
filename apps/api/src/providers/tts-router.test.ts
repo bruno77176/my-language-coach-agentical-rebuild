@@ -19,15 +19,15 @@ describe("makeSynthesizeSpeech", () => {
     const eleven = vi.fn().mockResolvedValue(result);
     const openai = vi.fn().mockResolvedValue(result);
     const synth = makeSynthesizeSpeech(deps({ eleven, openai }));
-    // "it" (Italian) has no dedicated native voice yet → DEFAULT_TTS_CONFIG.
-    await synth({ text: "ciao", languageCode: "it" });
+    // "ja" (Japanese) has no dedicated native voice yet → DEFAULT_TTS_CONFIG.
+    await synth({ text: "こんにちは", languageCode: "ja" });
     expect(openai).not.toHaveBeenCalled();
     // DEFAULT_TTS_CONFIG is ElevenLabs "Sarah" on Flash v2.5.
     expect(eleven).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         voiceId: "EXAVITQu4vr4xnSDxMaL",
-        languageCode: "it",
+        languageCode: "ja",
       }),
     );
   });

@@ -17,9 +17,23 @@ describe("voiceConfigForLanguage", () => {
     });
   });
 
+  it("returns the native French voice for 'fr'", () => {
+    expect(voiceConfigForLanguage("fr")).toMatchObject({
+      provider: "elevenlabs",
+      voiceId: "ucMmKRQbfDEYyb2IIGax",
+    });
+  });
+
+  it("returns the native Italian voice for 'it'", () => {
+    expect(voiceConfigForLanguage("it")).toMatchObject({
+      provider: "elevenlabs",
+      voiceId: "kAzI34nYjizE0zON6rXv",
+    });
+  });
+
   it("falls back to the default voice for a language with no native voice", () => {
-    // French has no dedicated native voice yet.
-    expect(voiceConfigForLanguage("fr")).toEqual(DEFAULT_TTS_CONFIG);
+    // Japanese has no dedicated native voice yet.
+    expect(voiceConfigForLanguage("ja")).toEqual(DEFAULT_TTS_CONFIG);
   });
 
   it("falls back to the default voice when languageCode is undefined", () => {
