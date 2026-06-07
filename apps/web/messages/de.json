@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — Ein Coach, der sich an dich erinnert. Feedback nach jedem Gespräch.",
-    "description": "Dein KI-Sprachcoach merkt sich, worüber ihr gesprochen habt, gibt dir nach jedem Gespräch einen Feedback-Bericht und lässt dich Alltagsszenarien spielen. In 15 Sprachen."
+    "description": "Dein KI-Sprachcoach merkt sich, worüber ihr gesprochen habt, gibt dir nach jedem Gespräch einen Feedback-Bericht, speichert neue Wörter als Lernkarten zum Wiederholen und spricht mit lebensechten Stimmen bei minimaler Latenz. In 15 Sprachen."
   },
   "hero": {
     "eyebrow": "Jetzt in offener Beta",
@@ -35,6 +35,22 @@
       "title": "Feedback, das wirklich hilft",
       "body": "Nach jedem Gespräch: was du gut gemacht hast, was du noch schleifen kannst und die neuen Wörter, die du dir merken solltest. Gespeichert, damit du jederzeit darauf zurückkommen kannst."
     }
+  },
+  "vocab": {
+    "eyebrow": "Vokabel-Wiederholung",
+    "title": "Jedes gelernte Wort, gespeichert für später",
+    "body": "Neue Wörter aus deinen Gesprächen landen in deinem eigenen Stapel. Wiederhole sie als Lernkarten — sprich jedes laut aus, lass es sofort prüfen und präge es dir ein.",
+    "p1": "Automatisch aus deinen Chats gespeichert",
+    "p2": "Sprich-und-prüf-Lernkarten",
+    "p3": "Markiere die wichtigsten Wörter mit einem Stern"
+  },
+  "voices": {
+    "eyebrow": "Lebensechte Stimmen",
+    "title": "Stimmen, die du wirklich hören willst",
+    "body": "Natürliche Stimmen mit minimaler Latenz, die antworten, sobald du aufhörst zu sprechen. Wähle Stimme und Anbieter deines Coachs und stelle dann das passende Sprechtempo ein.",
+    "p1": "Nahezu sofortige, natürliche Antworten",
+    "p2": "Mehrere Stimmen zur Auswahl",
+    "p3": "Einstellbares Sprechtempo"
   },
   "howItWorks": {
     "title": "So funktioniert's",

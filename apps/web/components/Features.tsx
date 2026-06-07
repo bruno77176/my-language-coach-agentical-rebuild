@@ -10,8 +10,14 @@ const SCREENS: Array<{ src: string; alt: string }> = [
     src: "/screens/practice.jpeg",
     alt: "Practice screen showing live conversation",
   },
-  { src: "/screens/practice.jpeg", alt: "Correction screen" },
-  { src: "/screens/home.jpeg", alt: "Home screen showing daily practice" },
+  {
+    src: "/screens/home-review.jpeg",
+    alt: "Home screen with daily goal and words to review",
+  },
+  {
+    src: "/screens/feedback.jpeg",
+    alt: "Feedback report with highlights, corrections and new vocabulary",
+  },
 ];
 
 export function Features({ messages }: Props) {

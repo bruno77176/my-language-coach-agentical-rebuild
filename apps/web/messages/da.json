@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — En coach, der husker dig. Feedback efter hver samtale.",
-    "description": "Din AI-sprogcoach husker, hvad I har talt om, giver dig en feedbackrapport efter hver samtale og lader dig spille hverdagsscenarier. På 15 sprog."
+    "description": "Din AI-sprogcoach husker, hvad I har talt om, giver dig en feedbackrapport efter hver samtale, gemmer nye ord som flashcards til at repetere og taler med naturtro stemmer med meget lav latens. På 15 sprog."
   },
   "hero": {
     "eyebrow": "Nu i åben beta",
@@ -35,6 +35,22 @@
       "title": "Feedback der faktisk hjælper",
       "body": "Efter hver samtale: hvad du ramte rigtigt, hvad du kan slibe på og de nye ord, der er værd at huske. Gemt så du kan vende tilbage."
     }
+  },
+  "vocab": {
+    "eyebrow": "Ordrepetition",
+    "title": "Hvert ord du lærer, gemt til senere",
+    "body": "Nye ord fra dine samtaler havner i din egen bunke. Repeter dem som flashcards — sig hvert ord højt, få det tjekket med det samme, og lad det sidde fast.",
+    "p1": "Gemmes automatisk fra dine chats",
+    "p2": "Sig-og-tjek-kort",
+    "p3": "Sæt stjerne ved de vigtigste ord"
+  },
+  "voices": {
+    "eyebrow": "Naturtro stemmer",
+    "title": "Stemmer, du faktisk har lyst til at høre",
+    "body": "Naturlige stemmer med meget lav latens, der svarer, i det øjeblik du holder op med at tale. Vælg din coachs stemme og udbyder, og indstil derefter det taletempo, der passer dig.",
+    "p1": "Næsten øjeblikkelige, naturlige svar",
+    "p2": "Flere stemmer at vælge mellem",
+    "p3": "Justerbart taletempo"
   },
   "howItWorks": {
     "title": "Sådan fungerer det",

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — Un coach care își amintește de tine. Feedback după fiecare conversație.",
-    "description": "Coach-ul tău AI pentru limbi își amintește despre ce ați discutat, îți oferă un raport de feedback după fiecare conversație și te lasă să joci scenarii din viața reală. În 15 limbi."
+    "description": "Coach-ul tău AI pentru limbi își amintește despre ce ați discutat, îți oferă un raport de feedback după fiecare conversație, salvează cuvintele noi sub formă de cartonașe de recapitulat și vorbește cu voci realiste, cu latență foarte mică. În 15 limbi."
   },
   "hero": {
     "eyebrow": "Acum în beta deschisă",
@@ -35,6 +35,22 @@
       "title": "Feedback care chiar ajută",
       "body": "După fiecare conversație: ce ai reușit, ce poți rafina și cuvintele noi care merită reținute. Salvate ca să te poți întoarce la ele."
     }
+  },
+  "vocab": {
+    "eyebrow": "Recapitularea vocabularului",
+    "title": "Fiecare cuvânt învățat, salvat pentru mai târziu",
+    "body": "Cuvintele noi din conversațiile tale ajung în propriul tău pachet. Recapitulează-le sub formă de cartonașe — rostește fiecare cu voce tare, primește verificarea pe loc și fixează-le în memorie.",
+    "p1": "Salvate automat din conversațiile tale",
+    "p2": "Cartonașe de rostit și verificat",
+    "p3": "Marchează cu stea cuvintele cele mai importante"
+  },
+  "voices": {
+    "eyebrow": "Voci realiste",
+    "title": "Voci pe care chiar vei vrea să le asculți",
+    "body": "Voci naturale cu latență foarte mică, care răspund în clipa în care te oprești din vorbit. Alege vocea și furnizorul antrenorului tău, apoi setează viteza de vorbire care ți se potrivește.",
+    "p1": "Răspunsuri naturale aproape instantanee",
+    "p2": "Mai multe voci din care să alegi",
+    "p3": "Viteză de vorbire reglabilă"
   },
   "howItWorks": {
     "title": "Cum funcționează",

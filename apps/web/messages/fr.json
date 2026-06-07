@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — Un coach qui se souvient de vous. Un retour après chaque conversation.",
-    "description": "Votre coach de langue IA se souvient de ce que vous avez discuté, vous donne un rapport de retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie. En 15 langues."
+    "description": "Votre coach de langue IA se souvient de ce que vous avez discuté, vous donne un rapport de retour après chaque conversation, enregistre les nouveaux mots sous forme de cartes à réviser, et parle avec des voix réalistes à très faible latence. En 15 langues."
   },
   "hero": {
     "eyebrow": "Disponible en bêta ouverte",
@@ -35,6 +35,22 @@
       "title": "Un retour vraiment utile",
       "body": "Après chaque conversation : ce que vous avez réussi, ce qu'il faut peaufiner, et les nouveaux mots à retenir. Enregistrés pour les retrouver plus tard."
     }
+  },
+  "vocab": {
+    "eyebrow": "Révision du vocabulaire",
+    "title": "Chaque mot appris, gardé pour plus tard",
+    "body": "Les nouveaux mots de vos conversations arrivent dans votre propre paquet. Révisez-les sous forme de cartes — dites chaque mot à voix haute, vérifiez-le aussitôt, et faites-le entrer dans votre mémoire.",
+    "p1": "Enregistrés automatiquement depuis vos chats",
+    "p2": "Cartes à dire et à vérifier",
+    "p3": "Marquez d'une étoile les mots essentiels"
+  },
+  "voices": {
+    "eyebrow": "Voix réalistes",
+    "title": "Des voix que vous aurez envie d'écouter",
+    "body": "Des voix naturelles à très faible latence qui répondent dès que vous arrêtez de parler. Choisissez la voix et le fournisseur de votre coach, puis réglez la vitesse qui vous convient.",
+    "p1": "Réponses naturelles quasi instantanées",
+    "p2": "Plusieurs voix au choix",
+    "p3": "Vitesse de parole ajustable"
   },
   "howItWorks": {
     "title": "Comment ça marche",

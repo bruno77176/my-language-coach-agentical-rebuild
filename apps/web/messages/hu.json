@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — Egy coach, aki emlékszik rád. Visszajelzés minden beszélgetés után.",
-    "description": "Az MI-alapú nyelvcoachod emlékszik arra, miről beszéltetek, minden beszélgetés után visszajelzést ad, és valós élethelyzeteket játszhatsz el vele. 15 nyelven."
+    "description": "Az MI-alapú nyelvcoachod emlékszik arra, miről beszéltetek, minden beszélgetés után visszajelzést ad, az új szavakat ismétléshez kártyaként menti, és élethű, nagyon alacsony késleltetésű hangokon szólal meg. 15 nyelven."
   },
   "hero": {
     "eyebrow": "Most nyílt béta",
@@ -35,6 +35,22 @@
       "title": "Visszajelzés, ami tényleg segít",
       "body": "Minden beszélgetés után: amit jól csináltál, amit csiszolhatsz és az érdemes új szavak. Elmentve, hogy bármikor visszatérhess hozzájuk."
     }
+  },
+  "vocab": {
+    "eyebrow": "Szóismétlés",
+    "title": "Minden megtanult szó, elmentve későbbre",
+    "body": "A beszélgetéseidből származó új szavak a saját paklidba kerülnek. Ismételd őket kártyákkal — mondd ki mindegyiket hangosan, kapj azonnali ellenőrzést, és rögzítsd a memóriádban.",
+    "p1": "Automatikusan mentve a csevegéseidből",
+    "p2": "Mondd ki és ellenőrizd kártyák",
+    "p3": "Csillagozd meg a legfontosabb szavakat"
+  },
+  "voices": {
+    "eyebrow": "Élethű hangok",
+    "title": "Hangok, amelyeket tényleg hallgatni akarsz",
+    "body": "Természetes, nagyon alacsony késleltetésű hangok, amelyek abban a pillanatban válaszolnak, amint befejezed a beszédet. Válaszd ki a coachod hangját és szolgáltatóját, majd állítsd be a neked megfelelő beszédsebességet.",
+    "p1": "Szinte azonnali, természetes válaszok",
+    "p2": "Több hang közül választhatsz",
+    "p3": "Állítható beszédsebesség"
   },
   "howItWorks": {
     "title": "Így működik",

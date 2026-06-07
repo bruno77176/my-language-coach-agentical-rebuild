@@ -4,14 +4,23 @@ interface Props {
   messages: Messages["languages"];
 }
 
+// Mirrors the learnable languages in @language-coach/shared (LANGUAGES).
 const LANGUAGES: Array<{ flag: string; name: string }> = [
+  { flag: "🇬🇧", name: "English" },
   { flag: "🇫🇷", name: "Français" },
   { flag: "🇩🇪", name: "Deutsch" },
   { flag: "🇮🇹", name: "Italiano" },
+  { flag: "🇪🇸", name: "Español" },
+  { flag: "🇵🇹", name: "Português" },
   { flag: "🇹🇷", name: "Türkçe" },
+  { flag: "🇸🇪", name: "Svenska" },
+  { flag: "🇩🇰", name: "Dansk" },
+  { flag: "🇷🇺", name: "Русский" },
+  { flag: "🇷🇴", name: "Română" },
+  { flag: "🇭🇺", name: "Magyar" },
   { flag: "🇯🇵", name: "日本語" },
-  { flag: "🇰🇷", name: "한국어" },
   { flag: "🇨🇳", name: "中文" },
+  { flag: "🇰🇷", name: "한국어" },
 ];
 
 export function LanguagesStrip({ messages }: Props) {
