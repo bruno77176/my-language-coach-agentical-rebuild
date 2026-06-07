@@ -411,31 +411,39 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   const [listHeight, setListHeight] = useState(0);
-  // Autoscroll — the app keeps the newest message in view on its own; the user
-  // never has to scroll. We scroll to the freshly-measured content height handed
-  // to us by onContentSizeChange (rather than a deferred scrollToEnd, which on a
-  // list of variable-height bubbles can read a stale size and leave the latest
-  // message below the fold). onContentSizeChange fires on every growth — a new
-  // message AND a streaming coach reply that grows the same bubble — so both are
-  // covered. The list carries a large bottom spacer (~half its height, see
-  // paddingBottom below) so "scroll to the bottom" leaves the newest message
-  // sitting around the vertical middle for comfortable reading.
-  const scrollToBottom = useCallback((contentHeight: number) => {
-    flatListRef.current?.scrollToOffset({
-      offset: contentHeight,
+  // Track the live message count so the scroll helper can run from callbacks
+  // (onContentSizeChange) without going stale.
+  const msgCountRef = useRef(0);
+  msgCountRef.current = messages.length;
+
+  // Autoscroll — the app keeps the newest message centered on screen on its own;
+  // the user never scrolls. We ask FlatList to place the LAST row at the vertical
+  // center (viewPosition 0.5). This is deterministic and identical for user and
+  // coach messages: it doesn't depend on measuring total content height (which is
+  // unreliable on a virtualized list of variable-height bubbles once the thread
+  // fills the screen) and it doesn't care whether the message arrived all at once
+  // (user transcript) or grew chunk-by-chunk (streaming coach reply). The bottom
+  // spacer (see paddingBottom below) gives the list room to lift the last row all
+  // the way up to the center. onScrollToIndexFailed re-tries once the row is laid
+  // out.
+  const centerLatest = useCallback(() => {
+    const n = msgCountRef.current;
+    if (n === 0) return;
+    flatListRef.current?.scrollToIndex({
+      index: n - 1,
+      viewPosition: 0.5,
       animated: true,
     });
   }, []);
 
-  // Backstop: when a new message is appended, the very first onContentSizeChange
-  // can fire a frame before the new bubble has its final height. A short delayed
-  // scrollToEnd catches that case so the brand-new message always lands in view.
+  // Re-center when a message is added. onContentSizeChange covers a streaming
+  // reply that grows in place; this covers the append itself, with a frame's
+  // delay so the new row has mounted before we scroll.
   useEffect(() => {
-    const id = setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 60);
+    if (messages.length === 0) return;
+    const id = setTimeout(centerLatest, 50);
     return () => clearTimeout(id);
-  }, [messages.length]);
+  }, [messages.length, centerLatest]);
 
   const isBusy =
     state.phase === "processing" || state.phase === "loading-session";
@@ -634,16 +642,25 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             languageCode={targetLang}
           />
         )}
-        onContentSizeChange={(_w, h) => scrollToBottom(h)}
+        onContentSizeChange={centerLatest}
+        onScrollToIndexFailed={({ index, averageItemLength }) => {
+          // The target row isn't measured yet — jump to an estimate, then
+          // re-center once layout settles.
+          flatListRef.current?.scrollToOffset({
+            offset: averageItemLength * index,
+            animated: false,
+          });
+          setTimeout(centerLatest, 50);
+        }}
         onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
         contentContainerStyle={[
           activeStyles.chatContainer,
           {
             paddingTop: insets.top + 64,
-            // Half the viewport of empty space below the last message gives the
-            // autoscroll the headroom to lift the newest bubble to ~the middle
-            // of the screen. Floor at the mic-bar clearance so the bottom of a
-            // short conversation never tucks under the mic bar.
+            // Half a viewport of empty space below the last message gives the
+            // list room to lift the newest bubble all the way up to the vertical
+            // center (viewPosition 0.5). Floor at the mic-bar clearance so the
+            // bottom of a short conversation never tucks under the mic bar.
             paddingBottom: Math.max(micBarBottom + 96, listHeight * 0.5),
           },
         ]}
