@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — A coach that remembers you. Feedback after every chat.",
-    "description": "Your AI language coach remembers what you've discussed, gives you a feedback report after every conversation, and lets you role-play real-life scenarios. In 15 languages."
+    "description": "Your AI language coach remembers what you've discussed, gives you a feedback report after every conversation, saves new words as flashcards to review, and speaks with lifelike, low-latency voices. In 15 languages."
   },
   "hero": {
     "eyebrow": "Now in open beta",
@@ -35,6 +35,22 @@
       "title": "Feedback that actually helps",
       "body": "After every conversation: your highlights, what to polish, and the new words worth remembering. Saved so you can come back to them."
     }
+  },
+  "vocab": {
+    "eyebrow": "Vocabulary review",
+    "title": "Every word you learn, saved for later",
+    "body": "New words from your conversations land in your own deck. Review them as flashcards — say each one out loud, get it checked instantly, and watch them stick.",
+    "p1": "Auto-saved from your chats",
+    "p2": "Speak-and-check flashcards",
+    "p3": "Star the words that matter most"
+  },
+  "voices": {
+    "eyebrow": "Lifelike voices",
+    "title": "Voices you'll actually want to hear",
+    "body": "Natural, ultra-low-latency voices that reply the moment you stop speaking. Choose your coach's voice and provider, then set the speaking speed that fits you.",
+    "p1": "Near-instant, natural replies",
+    "p2": "Multiple voices to choose from",
+    "p3": "Adjustable speaking speed"
   },
   "howItWorks": {
     "title": "How it works",

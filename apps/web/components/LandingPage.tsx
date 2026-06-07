@@ -1,6 +1,7 @@
 import { Hero } from "@/components/Hero";
 import { ValueStrip } from "@/components/ValueStrip";
 import { Features } from "@/components/Features";
+import { Showcase } from "@/components/Showcase";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Pricing } from "@/components/Pricing";
 import { LanguagesStrip } from "@/components/LanguagesStrip";
@@ -23,6 +24,31 @@ export function LandingPage({ locale }: Props) {
       <Hero messages={m.hero} />
       <ValueStrip messages={m.valueStrip} />
       <Features messages={m.features} />
+      <Showcase
+        messages={m.vocab}
+        background="bg-white"
+        imageRight
+        images={[
+          {
+            src: "/screens/vocab-list.jpeg",
+            alt: "Your saved words list with review counter",
+          },
+          {
+            src: "/screens/flashcard.jpeg",
+            alt: "Vocabulary flashcard prompting you to say the word",
+          },
+        ]}
+      />
+      <Showcase
+        messages={m.voices}
+        background="bg-cream"
+        images={[
+          {
+            src: "/screens/voice.jpeg",
+            alt: "Coach voice settings with provider, voice and speed options",
+          },
+        ]}
+      />
       <HowItWorks messages={m.howItWorks} />
       <Pricing messages={m.pricing} />
       <LanguagesStrip messages={m.languages} />

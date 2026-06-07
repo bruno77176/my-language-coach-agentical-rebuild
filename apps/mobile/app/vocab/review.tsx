@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   StyleSheet,
   Vibration,
@@ -16,7 +17,12 @@ import { Ionicons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAudioRecorder, RecordingPresets } from "expo-audio";
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  getRecordingPermissionsAsync,
+  requestRecordingPermissionsAsync,
+} from "expo-audio";
 import { EditorialText, Screen } from "@/src/design";
 import {
   palette,
@@ -187,13 +193,28 @@ export default function VocabReviewScreen() {
     }
     // start recording
     try {
+      // Request mic permission first (the practice screen does this; without it
+      // recorder.record() throws and the card used to flip straight to a red
+      // cross). On denial/failure, surface an alert and stay on the prompt
+      // instead of marking the word wrong.
+      let perm = await getRecordingPermissionsAsync();
+      if (!perm.granted) perm = await requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          "Microphone needed",
+          'Enable microphone access in Settings to practise pronunciation, or tap "Show answer".',
+        );
+        return;
+      }
       await configureForRecording();
       await recorder.prepareToRecordAsync();
       recorder.record();
       setPhase("recording");
     } catch {
-      // Mic unavailable / denied — let them peek instead.
-      reveal("peek");
+      Alert.alert(
+        "Microphone unavailable",
+        'Couldn\'t start recording. Try again, or tap "Show answer".',
+      );
     }
   }
 

@@ -174,7 +174,11 @@ const styles = StyleSheet.create({
   vocabCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: palette.glassStrong,
+    // Opaque cream, not translucent glassStrong: on Android a translucent
+    // background + elevation (shadow.cta) makes the compositor paint an opaque
+    // inner rectangle inset from the rounded card — the "greyish border" Bruno
+    // flagged. Cream is opaque and matches the other cards on the gradient.
+    backgroundColor: palette.cream,
     borderRadius: radius.lg,
     padding: spacing.lg,
     gap: spacing.md,

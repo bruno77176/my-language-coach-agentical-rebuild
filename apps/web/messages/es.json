@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — Una coach que te recuerda. Feedback después de cada conversación.",
-    "description": "Tu coach de idiomas con IA recuerda de qué habéis hablado, te da un informe de feedback después de cada conversación y te deja interpretar escenarios de la vida real. En 15 idiomas."
+    "description": "Tu coach de idiomas con IA recuerda de qué habéis hablado, te da un informe de feedback después de cada conversación, guarda las palabras nuevas como tarjetas para repasar y habla con voces realistas de baja latencia. En 15 idiomas."
   },
   "hero": {
     "eyebrow": "Ahora en beta abierta",
@@ -35,6 +35,22 @@
       "title": "Feedback que de verdad ayuda",
       "body": "Después de cada conversación: lo que clavaste, lo que pulir y las palabras nuevas que merece la pena recordar. Guardadas para volver a ellas."
     }
+  },
+  "vocab": {
+    "eyebrow": "Repaso de vocabulario",
+    "title": "Cada palabra que aprendes, guardada para después",
+    "body": "Las palabras nuevas de tus conversaciones llegan a tu propio mazo. Repásalas como tarjetas — di cada una en voz alta, recibe una corrección al instante y haz que se queden.",
+    "p1": "Guardadas automáticamente de tus chats",
+    "p2": "Tarjetas para decir y comprobar",
+    "p3": "Marca con estrella las palabras clave"
+  },
+  "voices": {
+    "eyebrow": "Voces realistas",
+    "title": "Voces que querrás escuchar",
+    "body": "Voces naturales de muy baja latencia que responden en cuanto dejas de hablar. Elige la voz y el proveedor de tu coach, y ajusta la velocidad que mejor te venga.",
+    "p1": "Respuestas naturales casi instantáneas",
+    "p2": "Varias voces para elegir",
+    "p3": "Velocidad de habla ajustable"
   },
   "howItWorks": {
     "title": "Cómo funciona",

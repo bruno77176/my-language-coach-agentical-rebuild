@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "My Language Coach — Seni hatırlayan bir koç. Her konuşmadan sonra geri bildirim.",
-    "description": "Yapay zekâ dil koçun ne konuştuğunuzu hatırlar, her konuşmadan sonra sana bir geri bildirim raporu verir ve gerçek hayat senaryolarını canlandırmana izin verir. 15 dilde."
+    "description": "Yapay zekâ dil koçun ne konuştuğunuzu hatırlar, her konuşmadan sonra sana bir geri bildirim raporu verir, yeni kelimeleri tekrar etmen için kart olarak kaydeder ve düşük gecikmeli, gerçekçi seslerle konuşur. 15 dilde."
   },
   "hero": {
     "eyebrow": "Şimdi açık betada",
@@ -35,6 +35,22 @@
       "title": "Gerçekten faydalı geri bildirim",
       "body": "Her konuşmadan sonra: iyi yaptıkların, geliştirebileceklerin ve hatırlamaya değer yeni kelimeler. Sonra dönüp bakabilmen için kaydedilir."
     }
+  },
+  "vocab": {
+    "eyebrow": "Kelime tekrarı",
+    "title": "Öğrendiğin her kelime, sonrası için kayıtlı",
+    "body": "Sohbetlerinden çıkan yeni kelimeler kendi destene düşer. Onları kartlarla tekrar et — her birini sesli söyle, anında kontrol et ve kalıcı hale getir.",
+    "p1": "Sohbetlerinden otomatik kaydedilir",
+    "p2": "Söyle ve kontrol et kartları",
+    "p3": "En önemli kelimeleri yıldızla"
+  },
+  "voices": {
+    "eyebrow": "Gerçekçi sesler",
+    "title": "Dinlemek isteyeceğin sesler",
+    "body": "Konuşmayı bıraktığın an yanıt veren, çok düşük gecikmeli doğal sesler. Koçunun sesini ve sağlayıcısını seç, ardından sana uygun konuşma hızını ayarla.",
+    "p1": "Neredeyse anında, doğal yanıtlar",
+    "p2": "Seçebileceğin birden çok ses",
+    "p3": "Ayarlanabilir konuşma hızı"
   },
   "howItWorks": {
     "title": "Nasıl çalışır",

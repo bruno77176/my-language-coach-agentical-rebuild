@@ -40,6 +40,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: "portrait",
     userInterfaceStyle: "light",
     newArchEnabled: true,
+    // EAS Update (OTA). runtimeVersion uses the appVersion policy: a build's
+    // runtime is its marketing version (2.0.0), so JS-only updates published with
+    // `eas update` reach every build sharing that version. When NATIVE code/deps
+    // change, bump `version` and ship a new store build — that isolates the new
+    // native runtime so an OTA can't land an incompatible JS bundle on an old
+    // binary. (appVersion, not fingerprint, because fingerprint hashes can differ
+    // across machines/OSes and we run `eas update` from Windows.)
+    runtimeVersion: { policy: "appVersion" },
+    updates: {
+      url: "https://u.expo.dev/730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
+    },
     icon: "./assets/icon.png",
     splash: {
       image: "./assets/splash-transparent.png",
@@ -49,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "33",
+      buildNumber: "38",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -60,7 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 72,
+      versionCode: 76,
       // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
       // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
       edgeToEdgeEnabled: true,
