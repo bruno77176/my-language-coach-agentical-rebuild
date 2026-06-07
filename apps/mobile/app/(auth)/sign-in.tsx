@@ -38,16 +38,21 @@ export default function SignInScreen() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [appleBusy, setAppleBusy] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const emailYRef = useRef(0);
+  const passwordYRef = useRef(0);
 
-  // When a field gains focus, scroll the form bottom (email → password → submit)
-  // above the keyboard. Combined with behavior="padding" below, this keeps the
-  // field being typed into visible — on Android the soft keyboard can cover up
-  // to ~40% of the screen, and with edge-to-edge enabled the OS no longer
-  // resizes the window for us. Deferred a frame so the keyboard inset is applied
-  // before we scroll.
-  const onFieldFocus = () => {
+  // Bring the focused field into view above the keyboard. We scroll to the
+  // field's own measured Y (captured via onLayout on its wrapper) rather than
+  // scrolling to the end of the form — scrollToEnd pushed the top field (email)
+  // off-screen on a second focus, and on Android the keyboard can cover ~40% of
+  // the screen with edge-to-edge disabling the OS auto-resize. Deferred a frame
+  // so the keyboard inset/reflow is applied before we scroll.
+  const scrollFieldIntoView = (y: number) => {
     requestAnimationFrame(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, y - spacing.xl),
+        animated: true,
+      });
     });
   };
 
@@ -218,46 +223,58 @@ export default function SignInScreen() {
           </Pressable>
         </View>
 
-        <GlassCard padding="md" style={styles.inputCard}>
-          <EditorialText
-            kind="bodySm"
-            color={palette.inkSoft}
-            style={styles.fieldLabel}
-          >
-            Email
-          </EditorialText>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            onFocus={onFieldFocus}
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            style={[typeTokens.bodyLg, styles.textInput]}
-            placeholderTextColor={palette.inkSoft}
-          />
-        </GlassCard>
+        <View
+          onLayout={(e) => {
+            emailYRef.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <GlassCard padding="md" style={styles.inputCard}>
+            <EditorialText
+              kind="bodySm"
+              color={palette.inkSoft}
+              style={styles.fieldLabel}
+            >
+              Email
+            </EditorialText>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => scrollFieldIntoView(emailYRef.current)}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              style={[typeTokens.bodyLg, styles.textInput]}
+              placeholderTextColor={palette.inkSoft}
+            />
+          </GlassCard>
+        </View>
 
-        <GlassCard padding="md" style={styles.inputCard}>
-          <EditorialText
-            kind="bodySm"
-            color={palette.inkSoft}
-            style={styles.fieldLabel}
-          >
-            Password
-          </EditorialText>
-          <PasswordInput
-            value={password}
-            onChangeText={setPassword}
-            onFocus={onFieldFocus}
-            placeholder="At least 6 characters"
-            autoCapitalize="none"
-            autoComplete="password"
-            style={[typeTokens.bodyLg, styles.textInput]}
-            placeholderTextColor={palette.inkSoft}
-          />
-        </GlassCard>
+        <View
+          onLayout={(e) => {
+            passwordYRef.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <GlassCard padding="md" style={styles.inputCard}>
+            <EditorialText
+              kind="bodySm"
+              color={palette.inkSoft}
+              style={styles.fieldLabel}
+            >
+              Password
+            </EditorialText>
+            <PasswordInput
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => scrollFieldIntoView(passwordYRef.current)}
+              placeholder="At least 6 characters"
+              autoCapitalize="none"
+              autoComplete="password"
+              style={[typeTokens.bodyLg, styles.textInput]}
+              placeholderTextColor={palette.inkSoft}
+            />
+          </GlassCard>
+        </View>
 
         {mode === "signIn" ? (
           <Pressable

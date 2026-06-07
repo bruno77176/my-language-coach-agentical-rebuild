@@ -14,6 +14,10 @@ export default function AuthLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: "transparent" },
+          // Cross-fade instead of the default slide: the auth screens are
+          // transparent over a shared gradient, so a slide briefly shows both
+          // screens overlapping. A fade reads as intentional on the same bg.
+          animation: "fade",
         }}
       />
     </Screen>

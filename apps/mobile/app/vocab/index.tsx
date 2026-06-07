@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { EditorialText, Screen } from "@/src/design";
 import {
@@ -25,6 +26,7 @@ import {
 import type { VocabItem } from "@/src/features/vocab/api";
 
 export default function VocabDeckScreen() {
+  const insets = useSafeAreaInsets();
   const { data: profile } = useProfile();
   const language = profile?.target_lang ?? "en";
   const [starredOnly, setStarredOnly] = useState(false);
@@ -119,7 +121,12 @@ export default function VocabDeckScreen() {
       </ScrollView>
 
       <Pressable
-        style={[styles.cta, items.length === 0 && styles.ctaDisabled]}
+        style={[
+          styles.cta,
+          // Lift above the Android nav bar / home indicator.
+          { bottom: Math.max(spacing.xl, insets.bottom + spacing.md) },
+          items.length === 0 && styles.ctaDisabled,
+        ]}
         disabled={items.length === 0}
         onPress={() =>
           router.push(starredOnly ? "/vocab/review?starred=1" : "/vocab/review")

@@ -426,6 +426,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   // spacer (see paddingBottom below) gives the list room to lift the last row all
   // the way up to the center. onScrollToIndexFailed re-tries once the row is laid
   // out.
+  const settleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const centerLatest = useCallback(() => {
     const n = msgCountRef.current;
     if (n === 0) return;
@@ -434,7 +435,30 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       viewPosition: 0.5,
       animated: true,
     });
+    // Settle: re-assert the centered position after content/layout stops
+    // changing. On Android the immediate scroll fired during a streaming reply
+    // lands before the final bubble height is known, leaving the message low
+    // (it stayed near the bottom on a Samsung device); this re-center after a
+    // beat lifts it to the middle. Debounced — each growth resets the timer, so
+    // only the final size triggers it. Harmless on iOS (re-asserts same spot).
+    if (settleRef.current) clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      const m = msgCountRef.current;
+      if (m === 0) return;
+      flatListRef.current?.scrollToIndex({
+        index: m - 1,
+        viewPosition: 0.5,
+        animated: true,
+      });
+    }, 250);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (settleRef.current) clearTimeout(settleRef.current);
+    },
+    [],
+  );
 
   // Re-center when a message is added. onContentSizeChange covers a streaming
   // reply that grows in place; this covers the append itself, with a frame's
