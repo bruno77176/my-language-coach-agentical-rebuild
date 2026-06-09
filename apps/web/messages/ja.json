@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "早期アクセス — オープンベータ公開中",
-    "headline": "読むのも書くのもできる。",
-    "headlineAccent": "でも、いざ話すとなると言葉が出ない。",
+    "headline": "言語を、話そう。",
+    "headlineAccent": "自信を、育てよう。",
+    "painQuote": "読むのも書くのもできる。でも、いざ話すとなると言葉が出ない。",
     "subheadline": "あなたを覚えているAIコーチと、声に出して練習。実生活のロールプレイをこなし、会話のたびにフィードバック — 15言語対応。気兼ねなく、いつでも。",
     "scanToInstall": "スキャンしてインストール",
     "iosLabel": "iOS — TestFlight",

@@ -15,6 +15,11 @@ export async function Hero({ messages }: HeroProps) {
           <p className="font-body text-xs uppercase tracking-[0.18em] text-accent-deep pt-12 lg:pt-0">
             {messages.eyebrow}
           </p>
+          {/* Pain-point quote first (the visitor's own thought), then the
+              slogan resolves it — problem -> promise. */}
+          <p className="font-display italic text-lg md:text-xl text-ink-soft border-l-2 border-accent/50 pl-4 max-w-md">
+            &ldquo;{messages.painQuote}&rdquo;
+          </p>
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-ink">
             {messages.headline}
             <br />

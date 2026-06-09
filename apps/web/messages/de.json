@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "Early Access — jetzt in offener Beta",
-    "headline": "Lesen und schreiben? Kein Problem.",
-    "headlineAccent": "Aber wenn ich sprechen soll, blockiere ich.",
+    "headline": "Sprachen üben.",
+    "headlineAccent": "Selbstvertrauen aufbauen.",
+    "painQuote": "Lesen und schreiben? Kein Problem. Aber wenn ich sprechen soll, blockiere ich.",
     "subheadline": "Sprich es einfach durch — mit einem KI-Coach, der sich an dich erinnert, reale Rollenspiele durchspielt und dir nach jedem Gespräch Feedback gibt. In 15 Sprachen. Ohne Wertung, jederzeit.",
     "scanToInstall": "Zum Installieren scannen",
     "iosLabel": "iOS — TestFlight",

@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "Early access — now in open beta",
-    "headline": "I can read. I can write.",
-    "headlineAccent": "But when it's time to speak, I get stuck.",
+    "headline": "Practice languages.",
+    "headlineAccent": "Build confidence.",
+    "painQuote": "I can read. I can write. But when it's time to speak, I get stuck.",
     "subheadline": "Talk it out with an AI coach who remembers you, runs real-life role-plays, and gives feedback after every chat — in 15 languages. Judgment-free, anytime.",
     "scanToInstall": "Scan to install",
     "iosLabel": "iOS — TestFlight",

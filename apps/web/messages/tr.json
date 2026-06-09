@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "Erken erişim — artık açık betada",
-    "headline": "Okuyup yazabiliyorum.",
-    "headlineAccent": "Ama iş konuşmaya gelince tıkanıyorum.",
+    "headline": "Dil pratiği yap.",
+    "headlineAccent": "Özgüven kazan.",
+    "painQuote": "Okuyup yazabiliyorum. Ama iş konuşmaya gelince tıkanıyorum.",
     "subheadline": "Seni hatırlayan, gerçek hayattan rol yapma senaryoları sunan ve her konuşmadan sonra geri bildirim veren bir yapay zekâ koçuyla yüksek sesle pratik yap — 15 dilde. Yargılamadan, istediğin zaman.",
     "scanToInstall": "Yüklemek için tara",
     "iosLabel": "iOS — TestFlight",
