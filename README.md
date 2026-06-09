@@ -2,22 +2,18 @@
 
 This is the rebuild of the My Language Coach app. See:
 
-- **[Spec](../docs/superpowers/specs/2026-05-09-language-coach-rebuild-design.md)** — full design document.
-- **[Audit of legacy app](../AUDIT.md)** — what was wrong with v1.
-- **[Stack explained (FR)](../docs/decisions/2026-05-09-stack-explained-fr.md)** — why we chose each tool.
+- **[Spec](docs/superpowers/specs/2026-05-09-language-coach-rebuild-design.md)** — full design document.
+- **[Audit of legacy app](docs/legacy-AUDIT.md)** — what was wrong with v1.
+- **[Stack explained (FR)](docs/decisions/2026-05-09-stack-explained-fr.md)** — why we chose each tool.
 
 ## Status
 
-| Plan                                           | Status  |
-| ---------------------------------------------- | ------- |
-| 1 — Foundation                                 | ✓ done  |
-| 2 — Backend + Supabase + DB                    | ✓ done  |
-| 3 — Mobile + auth + onboarding                 | ✓ done  |
-| 4 — Voice loop                                 | ✓ done  |
-| 5 — Around-the-voice features                  | ✓ done  |
-| 6 — Voice-loop parity + streaming TTS          | ✓ done  |
-| 7 — Visual identity + UI polish                | pending |
-| 8 — Topics + vocab + freemium + push + release | pending |
+Plans 1–8 are essentially shipped (foundation, backend, mobile auth/onboarding, voice loop,
+around-voice features, voice parity + streaming TTS, visual identity, and the Plan 8 coaching
+loop), plus vocab flashcards, per-language voices, and 15 supported languages.
+
+See **[`CLAUDE.md`](CLAUDE.md)** for current architecture/conventions and
+**[`docs/REMAINING-WORK-2026-06-09.md`](docs/REMAINING-WORK-2026-06-09.md)** for what's left.
 
 ## Layout
 
@@ -101,5 +97,5 @@ Mobile: EAS Update / EAS Build wired in Plan 3.
 
 ## Plans
 
-Implementation plans live in `../docs/superpowers/plans/`. This repo is built
+Implementation plans live in `docs/superpowers/plans/`. This repo is built
 plan-by-plan; each plan ends with a green CI run + a verifiable deployable artifact.
