@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — En coach som minns dig. Feedback efter varje samtal.",
-    "description": "Din AI-språkcoach minns vad ni har pratat om, ger dig en feedbackrapport efter varje samtal, sparar nya ord som flashcards att repetera och talar med naturtrogna röster med mycket låg latens. På 15 språk."
+    "title": "My Language Coach — AI-talträning på 15 språk",
+    "description": "Öva riktiga samtal med en AI-coach som kommer ihåg dig, kör rollspel från verkliga livet och ger feedback efter varje chatt. Bygg självförtroende i att tala på 15 språk."
   },
   "hero": {
-    "eyebrow": "Öppen beta nu",
-    "headline": "Träna språk.",
-    "headlineAccent": "Bygg självförtroende.",
-    "subheadline": "En AI-coach som minns dig, ger dig feedback efter varje chatt och låter dig kliva in i verkliga rollspel — på 15 språk.",
+    "eyebrow": "Tidig åtkomst — nu i öppen beta",
+    "headline": "Läsa kan du.",
+    "headlineAccent": "Det är att prata som är svårt.",
+    "subheadline": "Prata igenom det med en AI-coach som kommer ihåg dig, kör rollspel från verkliga livet och ger feedback efter varje samtal — på 15 språk. Utan att döma, när som helst.",
     "scanToInstall": "Skanna för att installera",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Öppen beta",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Det här är vad som skiljer oss",
     "f1": {
-      "title": "En coach som känner dig",
-      "body": "Din coach minns vad ni pratat om, din nivå och vad du behöver repetera. Varje pass bygger på det förra — ingen kallstart."
+      "title": "Lisa, coachen som känner dig",
+      "body": "Hon kommer ihåg vad ni har pratat om, din nivå och vad du bör repetera. Varje pass bygger vidare på det förra — ingen kallstart."
     },
     "f2": {
       "title": "Verkliga scenarier",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Naturtrogna röster",
     "title": "Röster du faktiskt vill lyssna på",
-    "body": "Naturliga röster med mycket låg latens som svarar i samma stund som du slutar prata. Välj din coachs röst och leverantör och ställ sedan in det taltempo som passar dig.",
+    "body": "Naturliga röster med extremt låg latens som svarar i samma stund du slutar prata. Välj din coachs röst och ställ sedan in det taltempo som passar dig.",
     "p1": "Nästan omedelbara, naturliga svar",
     "p2": "Flera röster att välja mellan",
     "p3": "Justerbart taltempo"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Prata eller spela en roll",
-      "body": "Fri konversation med din coach Lisa, eller gå in i ett scenario och möt en främling i en roll."
+      "body": "Prata bara med Lisa, eller kliv in i ett scenario och möt en främling i sin roll."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 $",
       "priceNote": "inget kort, ingen provperiod",
       "items": [
-        "10 minuters konversation per dag",
-        "Tre rollspelsscenarier",
+        "5 minuters samtal per dag",
+        "Se en kort annons för 3 minuter till",
+        "Tre startscenarier — kaffe, vägbeskrivning, fest",
         "Feedback för aktuell session + de tre senaste",
         "Grundläggande minne mellan sessioner"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Redo att börja prata?",
-    "subtitle": "Gratis att testa. Pro för 7,99 $/mån om du vill stanna kvar."
+    "subtitle": "Gratis att prova, inget kort behövs. Pro för $7,99/mån om du bestämmer dig för att stanna."
   },
   "footer": {
     "tagline": "Träna språk. Bygg självförtroende.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Vi kunde inte slutföra borttagningen. Försök igen eller kontakta supporten.",
     "doneTitle": "Konto borttaget",
     "doneBody": "Ditt konto och all tillhörande data har tagits bort. Ledsen att se dig gå."
+  },
+  "faq": {
+    "title": "Frågor, besvarade",
+    "items": [
+      {
+        "q": "Hjälper det verkligen att öva med en AI?",
+        "a": "Se Lisa som ett övningsrum, inte en ersättning för riktiga samtal. Hon är tillgänglig dygnet runt, dömer dig aldrig och kostar en bråkdel av en lärare — så du kan öva så mycket du behöver och känna dig redo när du pratar med människor."
+      },
+      {
+        "q": "Måste jag betala?",
+        "a": "Nej. Gratisversionen kräver varken kort eller provperiod — 5 minuters samtal om dagen, plus en kort annons för 3 minuter till. Pro kostar mindre än en enda lektion med en lärare i månaden, och du kan säga upp när som helst."
+      },
+      {
+        "q": "Förstår den mig och svarar på språket jag lär mig?",
+        "a": "Ja. Din coach talar med naturliga röster av modersmålskvalitet och svarar på ditt målspråk. Prata i din egen takt — den hänger med."
+      },
+      {
+        "q": "Jag låser mig när jag ska prata. Är det verkligen något för mig?",
+        "a": "Det är precis det den är till för. Öva högt i lugn och ro, så ofta du vill, med en coach som minns var du är och varsamt för dig framåt."
+      },
+      {
+        "q": "Vilka språk kan jag öva?",
+        "a": "Femton i dag — engelska, franska, tyska, italienska, spanska, portugisiska, turkiska, svenska, danska, ryska, rumänska, ungerska, japanska, kinesiska och koreanska — och fler är på väg."
+      },
+      {
+        "q": "Är mina uppgifter privata?",
+        "a": "Dina samtal är dina. Du kan radera ditt konto och allt som hör till det när som helst, direkt i appen."
+      }
+    ]
   }
 }

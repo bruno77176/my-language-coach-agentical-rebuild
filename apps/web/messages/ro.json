@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Un coach care își amintește de tine. Feedback după fiecare conversație.",
-    "description": "Coach-ul tău AI pentru limbi își amintește despre ce ați discutat, îți oferă un raport de feedback după fiecare conversație, salvează cuvintele noi sub formă de cartonașe de recapitulat și vorbește cu voci realiste, cu latență foarte mică. În 15 limbi."
+    "title": "My Language Coach — exersarea vorbirii cu IA în 15 limbi",
+    "description": "Exersează conversații reale cu un coach AI care își amintește de tine, joacă scenarii din viața reală și îți dă feedback după fiecare conversație. Capătă încredere în vorbire în 15 limbi."
   },
   "hero": {
-    "eyebrow": "Acum în beta deschisă",
-    "headline": "Exersează limbile.",
-    "headlineAccent": "Câștigă încredere.",
-    "subheadline": "Un coach AI care își amintește de tine, îți oferă feedback după fiecare chat și te pune în scenarii reale — în 15 limbi.",
+    "eyebrow": "Acces timpuriu — acum în beta deschisă",
+    "headline": "Să-l citești, poți.",
+    "headlineAccent": "Greu e să vorbești.",
+    "subheadline": "Exersează cu voce tare cu un coach AI care își amintește de tine, joacă scenarii din viața reală și îți dă feedback după fiecare conversație — în 15 limbi. Fără judecăți, oricând.",
     "scanToInstall": "Scanează pentru a instala",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Beta deschisă",
@@ -24,8 +24,8 @@
   "features": {
     "title": "De ce suntem diferiți",
     "f1": {
-      "title": "Un coach care te cunoaște",
-      "body": "Coach-ul tău își amintește despre ce ați vorbit, nivelul tău și ce trebuie revizuit. Fiecare sesiune se construiește pe cea anterioară — fără să o iei de la zero."
+      "title": "Lisa, coach-ul care te cunoaște",
+      "body": "Își amintește despre ce ați vorbit, nivelul tău și ce merită recapitulat. Fiecare sesiune se bazează pe cea anterioară — fără a o lua de la zero."
     },
     "f2": {
       "title": "Scenarii din viața reală",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Voci realiste",
     "title": "Voci pe care chiar vei vrea să le asculți",
-    "body": "Voci naturale cu latență foarte mică, care răspund în clipa în care te oprești din vorbit. Alege vocea și furnizorul antrenorului tău, apoi setează viteza de vorbire care ți se potrivește.",
+    "body": "Voci naturale, cu latență extrem de mică, care răspund în clipa în care te oprești din vorbit. Alege vocea coach-ului tău, apoi setează ritmul de vorbire care ți se potrivește.",
     "p1": "Răspunsuri naturale aproape instantanee",
     "p2": "Mai multe voci din care să alegi",
     "p3": "Viteză de vorbire reglabilă"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Vorbește sau joacă un rol",
-      "body": "Conversație liberă cu coach-ul tău Lisa sau intră într-un scenariu și întâlnește un străin într-un rol."
+      "body": "Vorbește pur și simplu cu Lisa sau intră într-un scenariu și întâlnește un străin în rolul său."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 $",
       "priceNote": "fără card, fără perioadă de probă",
       "items": [
-        "10 minute de conversație pe zi",
-        "Trei scenarii de joc de rol",
+        "5 minute de conversație pe zi",
+        "Vezi o reclamă scurtă pentru încă 3 minute",
+        "Trei scenarii de început — cafea, indicații, petrecere",
         "Feedback pentru sesiunea curentă + ultimele 3",
         "Memorie de bază între sesiuni"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Gata să începi să vorbești?",
-    "subtitle": "Gratuit de încercat. Pro la 7,99 $/lună dacă te decizi să rămâi."
+    "subtitle": "Gratuit de încercat, fără card. Pro la $7,99/lună dacă decizi să rămâi."
   },
   "footer": {
     "tagline": "Exersează limbile. Câștigă încredere.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Nu am putut finaliza ștergerea. Încearcă din nou sau contactează suportul.",
     "doneTitle": "Cont șters",
     "doneBody": "Contul tău și toate datele asociate au fost șterse. Ne pare rău că pleci."
+  },
+  "faq": {
+    "title": "Întrebări, cu răspuns",
+    "items": [
+      {
+        "q": "Chiar ajută să exersezi cu o IA?",
+        "a": "Gândește-te la Lisa ca la un spațiu de repetiție, nu un înlocuitor al conversațiilor reale. Este disponibilă non-stop, nu te judecă niciodată și costă o fracțiune dintr-un profesor — așa exersezi cât ai nevoie și te simți pregătit când vorbești cu oameni."
+      },
+      {
+        "q": "Trebuie să plătesc?",
+        "a": "Nu. Versiunea gratuită nu necesită card sau perioadă de probă — 5 minute de conversație pe zi, plus o reclamă scurtă pentru încă 3 minute. Pro costă mai puțin decât o singură ședință cu un profesor pe lună, și poți anula oricând."
+      },
+      {
+        "q": "Mă va înțelege și îmi va răspunde în limba pe care o învăț?",
+        "a": "Da. Coach-ul tău vorbește cu voci naturale, de calitate nativă, și răspunde în limba pe care o studiezi. Vorbește în ritmul tău — te ține din urmă."
+      },
+      {
+        "q": "Îngheț când trebuie să vorbesc. Chiar e pentru mine?",
+        "a": "Exact pentru asta e făcut. Exersează cu voce tare, în intimitate, de câte ori vrei, cu un coach care își amintește unde ai rămas și te împinge ușor înainte."
+      },
+      {
+        "q": "Ce limbi pot exersa?",
+        "a": "Cincisprezece astăzi — engleză, franceză, germană, italiană, spaniolă, portugheză, turcă, suedeză, daneză, rusă, română, maghiară, japoneză, chineză și coreeană — și altele în curând."
+      },
+      {
+        "q": "Datele mele sunt private?",
+        "a": "Conversațiile tale sunt ale tale. Îți poți șterge contul și tot ce ține de el oricând, direct din aplicație."
+      }
+    ]
   }
 }

@@ -83,11 +83,11 @@ _Each falls short:_ gamified apps don't produce speaking ability; tutors are cos
 
 ## Objections
 
-| Objection                                              | Response                                                                                                                                                                         |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "Is talking to an AI really as good as a person?"      | It's available 24/7, judgment-free, and a fraction of the cost — the perfect place to build confidence _before_ (or instead of) speaking with people.                            |
-| "Another subscription?"                                | Free tier needs no card. Pro is cheaper than a single tutor session per month.                                                                                                   |
-| "Will it understand me / reply in the right language?" | Yes — natural, native-quality voice per language. _(Resolved: ElevenLabs Flash v2.5 is now the default TTS and reliably speaks the right language; safe to lean on this claim.)_ |
+| Objection                                              | Response                                                                                                                                                                                     |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Is talking to an AI really as good as a person?"      | A rehearsal space, not a replacement — available 24/7, judgment-free, and a fraction of the cost, so you can practice as much as you need and feel ready for real conversations with people. |
+| "Another subscription?"                                | Free tier needs no card. Pro is cheaper than a single tutor session per month.                                                                                                               |
+| "Will it understand me / reply in the right language?" | Yes — natural, native-quality voice per language. _(Resolved: ElevenLabs Flash v2.5 is now the default TTS and reliably speaks the right language; safe to lean on this claim.)_             |
 
 **Anti-persona:** Someone who only wants grammar drills / gamified streaks; or a strictly zero-budget user — ad revenue alone can't fund AI voice, so the model needs some free→Pro conversion.
 
@@ -109,7 +109,7 @@ _Each falls short:_ gamified apps don't produce speaking ability; tutors are cos
   **How they describe us:**
 - None yet — collect after launch.
   **Words to use:** practice, confidence, real conversations, role-play, remembers you, feedback, judgment-free, at your own pace.
-  **Words to avoid:** "fluent in X days" / overpromises, heavy linguistic jargon, "lessons/drills" framing.
+  **Words to avoid:** "fluent in X days" / overpromises, heavy linguistic jargon, "lessons/drills" framing, and **AI-vs-human / "replaces a tutor or people" framing** — nothing replaces speaking with people. Position the app as filling a gap and easing communication: a judgment-free rehearsal space that prepares you for real conversations, never a substitute for them.
   **Glossary:**
   | Term | Meaning |
   |---|---|

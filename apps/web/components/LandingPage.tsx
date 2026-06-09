@@ -5,6 +5,7 @@ import { Showcase } from "@/components/Showcase";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Pricing } from "@/components/Pricing";
 import { LanguagesStrip } from "@/components/LanguagesStrip";
+import { Faq } from "@/components/Faq";
 import { DownloadCTA } from "@/components/DownloadCTA";
 import { Footer } from "@/components/Footer";
 import { ScrollDepthTracker } from "@/components/ScrollDepthTracker";
@@ -52,6 +53,7 @@ export function LandingPage({ locale }: Props) {
       <HowItWorks messages={m.howItWorks} />
       <Pricing messages={m.pricing} />
       <LanguagesStrip messages={m.languages} />
+      <Faq messages={m.faq} />
       <FinalCta
         title={m.finalCta.title}
         subtitle={m.finalCta.subtitle}

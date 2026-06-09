@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — A coach that remembers you. Feedback after every chat.",
-    "description": "Your AI language coach remembers what you've discussed, gives you a feedback report after every conversation, saves new words as flashcards to review, and speaks with lifelike, low-latency voices. In 15 languages."
+    "title": "My Language Coach — AI speaking practice in 15 languages",
+    "description": "Practice real conversations with an AI coach that remembers you, runs real-life role-plays, and gives feedback after every chat. Build speaking confidence in 15 languages."
   },
   "hero": {
-    "eyebrow": "Now in open beta",
-    "headline": "Practice languages.",
-    "headlineAccent": "Build confidence.",
-    "subheadline": "An AI coach who remembers you, gives you feedback after every chat, and lets you step into real-life role-plays — in 15 languages.",
+    "eyebrow": "Early access — now in open beta",
+    "headline": "You can read it.",
+    "headlineAccent": "Speaking is the hard part.",
+    "subheadline": "Talk it out with an AI coach who remembers you, runs real-life role-plays, and gives feedback after every chat — in 15 languages. Judgment-free, anytime.",
     "scanToInstall": "Scan to install",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Open beta",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Why this is different",
     "f1": {
-      "title": "A coach who knows you",
-      "body": "Your coach remembers what you've talked about, your level, and what to revisit. Every session builds on the last — not a cold start."
+      "title": "Lisa, the coach who knows you",
+      "body": "She remembers what you've talked about, your level, and what to revisit. Every session builds on the last — not a cold start."
     },
     "f2": {
       "title": "Real-life scenarios",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Lifelike voices",
     "title": "Voices you'll actually want to hear",
-    "body": "Natural, ultra-low-latency voices that reply the moment you stop speaking. Choose your coach's voice and provider, then set the speaking speed that fits you.",
+    "body": "Natural, ultra-low-latency voices that reply the moment you stop speaking. Choose your coach's voice, then set the speaking speed that fits you.",
     "p1": "Near-instant, natural replies",
     "p2": "Multiple voices to choose from",
     "p3": "Adjustable speaking speed"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Talk or role-play",
-      "body": "Free chat with your coach Lisa, or step into a scenario and meet a stranger in role."
+      "body": "Just talk with Lisa, or step into a scenario and meet a stranger in role."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "$0",
       "priceNote": "no card, no trial",
       "items": [
-        "10 minutes of conversation per day",
-        "Three role-play scenarios",
+        "5 minutes of conversation per day",
+        "Watch a short ad for 3 more minutes",
+        "Three starter scenarios — coffee, directions, party",
         "Feedback for your current session + last 3",
         "Basic memory across sessions"
       ]
@@ -106,9 +107,38 @@
     "title": "Available languages",
     "more": "+ more coming soon"
   },
+  "faq": {
+    "title": "Questions, answered",
+    "items": [
+      {
+        "q": "Will practicing with an AI actually help me?",
+        "a": "Think of Lisa as a rehearsal space, not a replacement for real conversations. She's available 24/7, never judges you, and costs a fraction of a tutor — so you can practice as much as you need and feel ready when you speak with people."
+      },
+      {
+        "q": "Do I have to pay?",
+        "a": "No. The free tier needs no card and no trial — 5 minutes of conversation a day, plus a short ad for 3 minutes more. Pro costs less than a single tutor session a month, and you can cancel anytime."
+      },
+      {
+        "q": "Will it understand me and reply in the language I'm learning?",
+        "a": "Yes. Your coach speaks with natural, native-quality voices and replies in your target language. Talk at your own pace — it keeps up."
+      },
+      {
+        "q": "I freeze up when I have to speak. Is this really for me?",
+        "a": "That's exactly who it's for. Practice out loud in private, as often as you like, with a coach that remembers where you are and gently moves you forward."
+      },
+      {
+        "q": "Which languages can I practice?",
+        "a": "Fifteen today — English, French, German, Italian, Spanish, Portuguese, Turkish, Swedish, Danish, Russian, Romanian, Hungarian, Japanese, Chinese, and Korean — with more on the way."
+      },
+      {
+        "q": "Is my data private?",
+        "a": "Your conversations are yours. You can delete your account and everything tied to it at any time, right from the app."
+      }
+    ]
+  },
   "finalCta": {
     "title": "Ready to start talking?",
-    "subtitle": "Free to try. Pro at $7.99/mo if you decide to stick around."
+    "subtitle": "Free to try, no card needed. Pro at $7.99/mo if you decide to stick around."
   },
   "footer": {
     "tagline": "Practice languages. Build confidence.",

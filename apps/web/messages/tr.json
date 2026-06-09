@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Seni hatırlayan bir koç. Her konuşmadan sonra geri bildirim.",
-    "description": "Yapay zekâ dil koçun ne konuştuğunuzu hatırlar, her konuşmadan sonra sana bir geri bildirim raporu verir, yeni kelimeleri tekrar etmen için kart olarak kaydeder ve düşük gecikmeli, gerçekçi seslerle konuşur. 15 dilde."
+    "title": "My Language Coach — 15 dilde yapay zekâ ile konuşma pratiği",
+    "description": "Seni hatırlayan, gerçek hayattan rol yapma senaryoları sunan ve her sohbetten sonra geri bildirim veren bir yapay zekâ koçuyla gerçek konuşmalar yap. 15 dilde konuşma özgüveni kazan."
   },
   "hero": {
-    "eyebrow": "Şimdi açık betada",
-    "headline": "Dil pratiği yap.",
-    "headlineAccent": "Özgüven kazan.",
-    "subheadline": "Seni hatırlayan, her sohbetten sonra geri bildirim veren ve gerçek hayat rol oyunlarına seni dahil eden bir YZ koçu — 15 dilde.",
+    "eyebrow": "Erken erişim — artık açık betada",
+    "headline": "Okuyabiliyorsun.",
+    "headlineAccent": "Asıl zor olan konuşmak.",
+    "subheadline": "Seni hatırlayan, gerçek hayattan rol yapma senaryoları sunan ve her konuşmadan sonra geri bildirim veren bir yapay zekâ koçuyla yüksek sesle pratik yap — 15 dilde. Yargılamadan, istediğin zaman.",
     "scanToInstall": "Yüklemek için tara",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Açık beta",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Bizi farklı kılan ne",
     "f1": {
-      "title": "Seni tanıyan bir koç",
-      "body": "Koçun ne konuştuğunuzu, seviyeni ve neyi tekrar etmen gerektiğini hatırlar. Her seans bir öncekinin üzerine kurulur — sıfırdan başlamak yok."
+      "title": "Seni tanıyan koç, Lisa",
+      "body": "Neler konuştuğunuzu, seviyeni ve nelere geri dönmen gerektiğini hatırlar. Her seans bir öncekinin üzerine kurulur — sıfırdan başlamak yok."
     },
     "f2": {
       "title": "Gerçek hayat senaryoları",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Gerçekçi sesler",
     "title": "Dinlemek isteyeceğin sesler",
-    "body": "Konuşmayı bıraktığın an yanıt veren, çok düşük gecikmeli doğal sesler. Koçunun sesini ve sağlayıcısını seç, ardından sana uygun konuşma hızını ayarla.",
+    "body": "Sen konuşmayı bırakır bırakmaz yanıt veren, çok düşük gecikmeli doğal sesler. Koçunun sesini seç, ardından sana uyan konuşma hızını ayarla.",
     "p1": "Neredeyse anında, doğal yanıtlar",
     "p2": "Seçebileceğin birden çok ses",
     "p3": "Ayarlanabilir konuşma hızı"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Konuş ya da rol yap",
-      "body": "Koçun Lisa ile serbest sohbet et ya da bir senaryoya gir ve bir yabancıyla rolde tanış."
+      "body": "Lisa ile rahatça konuş ya da bir senaryoya girip rolündeki bir yabancıyla tanış."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 $",
       "priceNote": "kart yok, deneme yok",
       "items": [
-        "Günde 10 dakika konuşma",
-        "Üç rol oyunu senaryosu",
+        "Günde 5 dakika konuşma",
+        "Kısa bir reklam izle, 3 dakika daha kazan",
+        "Üç başlangıç senaryosu — kahve, yol tarifi, parti",
         "Mevcut seans + son 3 için geri bildirim",
         "Seanslar arası temel hafıza"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Konuşmaya hazır mısın?",
-    "subtitle": "Denemek ücretsiz. Kalmaya karar verirsen Pro ayda 7,99 $."
+    "subtitle": "Denemesi ücretsiz, kart gerekmez. Kalmaya karar verirsen Pro ayda $7,99."
   },
   "footer": {
     "tagline": "Dil pratiği yap. Özgüven kazan.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Silmeyi tamamlayamadık. Tekrar dene ya da destekle iletişime geç.",
     "doneTitle": "Hesap silindi",
     "doneBody": "Hesabın ve ilişkili tüm veriler silindi. Gittiğin için üzgünüz."
+  },
+  "faq": {
+    "title": "Sıkça sorulan sorular",
+    "items": [
+      {
+        "q": "Yapay zekâ ile pratik yapmak gerçekten işe yarar mı?",
+        "a": "Lisa'yı gerçek konuşmaların yerine geçen bir şey değil, bir prova alanı olarak düşün. 7/24 ulaşılabilir, seni asla yargılamaz ve bir öğretmenin maliyetinin çok altında — böylece ihtiyacın kadar pratik yapar ve insanlarla konuşurken kendini hazır hissedersin."
+      },
+      {
+        "q": "Ödeme yapmam gerekir mi?",
+        "a": "Hayır. Ücretsiz sürüm kart ya da deneme gerektirmez — günde 5 dakika konuşma, artı kısa bir reklamla 3 dakika daha. Pro, ayda tek bir öğretmen dersinden daha ucuza gelir ve istediğin zaman iptal edebilirsin."
+      },
+      {
+        "q": "Beni anlayıp öğrendiğim dilde yanıt verir mi?",
+        "a": "Evet. Koçun ana dil kalitesinde doğal seslerle konuşur ve hedef dilinde yanıt verir. Kendi hızında konuş — o sana ayak uydurur."
+      },
+      {
+        "q": "Konuşmam gerektiğinde donup kalıyorum. Bu gerçekten bana göre mi?",
+        "a": "Tam da bunun için yapıldı. Baş başa, istediğin kadar sesli pratik yap; koçun nerede kaldığını hatırlar ve seni nazikçe ileri taşır."
+      },
+      {
+        "q": "Hangi dilleri pratik edebilirim?",
+        "a": "Bugün on beş — İngilizce, Fransızca, Almanca, İtalyanca, İspanyolca, Portekizce, Türkçe, İsveççe, Danca, Rusça, Rumence, Macarca, Japonca, Çince ve Korece — ve dahası yolda."
+      },
+      {
+        "q": "Verilerim gizli mi?",
+        "a": "Konuşmaların sana ait. Hesabını ve ona bağlı her şeyi istediğin zaman, doğrudan uygulamadan silebilirsin."
+      }
+    ]
   }
 }

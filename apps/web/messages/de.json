@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Ein Coach, der sich an dich erinnert. Feedback nach jedem Gespräch.",
-    "description": "Dein KI-Sprachcoach merkt sich, worüber ihr gesprochen habt, gibt dir nach jedem Gespräch einen Feedback-Bericht, speichert neue Wörter als Lernkarten zum Wiederholen und spricht mit lebensechten Stimmen bei minimaler Latenz. In 15 Sprachen."
+    "title": "My Language Coach — KI-Sprechtraining in 15 Sprachen",
+    "description": "Übe echte Gespräche mit einem KI-Coach, der sich an dich erinnert, reale Rollenspiele durchspielt und nach jedem Chat Feedback gibt. Bau Sprechsicherheit in 15 Sprachen auf."
   },
   "hero": {
-    "eyebrow": "Jetzt in offener Beta",
-    "headline": "Sprachen üben.",
-    "headlineAccent": "Selbstvertrauen aufbauen.",
-    "subheadline": "Ein KI-Coach, der sich an dich erinnert, dir nach jedem Gespräch Feedback gibt und dich in echte Alltagsszenarien schlüpfen lässt — in 15 Sprachen.",
+    "eyebrow": "Early Access — jetzt in offener Beta",
+    "headline": "Lesen kannst du es.",
+    "headlineAccent": "Das Sprechen ist das Schwere.",
+    "subheadline": "Sprich es einfach durch — mit einem KI-Coach, der sich an dich erinnert, reale Rollenspiele durchspielt und dir nach jedem Gespräch Feedback gibt. In 15 Sprachen. Ohne Wertung, jederzeit.",
     "scanToInstall": "Zum Installieren scannen",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Offene Beta",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Was uns anders macht",
     "f1": {
-      "title": "Ein Coach, der dich kennt",
-      "body": "Dein Coach merkt sich, worüber ihr gesprochen habt, dein Niveau und was du wiederholen solltest. Jede Sitzung baut auf der letzten auf — kein Kaltstart."
+      "title": "Lisa, der Coach, der dich kennt",
+      "body": "Sie merkt sich, worüber ihr gesprochen habt, dein Niveau und was du wiederholen solltest. Jede Sitzung baut auf der letzten auf — kein Kaltstart."
     },
     "f2": {
       "title": "Echte Alltagsszenarien",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Lebensechte Stimmen",
     "title": "Stimmen, die du wirklich hören willst",
-    "body": "Natürliche Stimmen mit minimaler Latenz, die antworten, sobald du aufhörst zu sprechen. Wähle Stimme und Anbieter deines Coachs und stelle dann das passende Sprechtempo ein.",
+    "body": "Natürliche Stimmen mit extrem niedriger Latenz, die antworten, sobald du aufhörst zu sprechen. Wähle die Stimme deines Coachs und stelle dann das Sprechtempo ein, das zu dir passt.",
     "p1": "Nahezu sofortige, natürliche Antworten",
     "p2": "Mehrere Stimmen zur Auswahl",
     "p3": "Einstellbares Sprechtempo"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Reden oder Rolle spielen",
-      "body": "Freies Gespräch mit deinem Coach Lisa, oder du steigst in ein Szenario ein und triffst eine fremde Person in einer Rolle."
+      "body": "Sprich einfach mit Lisa oder steige in ein Szenario ein und triff eine fremde Person in ihrer Rolle."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 €",
       "priceNote": "keine Karte, keine Testphase",
       "items": [
-        "10 Minuten Gespräch pro Tag",
-        "Drei Rollenspiel-Szenarien",
+        "5 Minuten Gespräch pro Tag",
+        "Kurze Werbung ansehen für 3 Minuten mehr",
+        "Drei Einstiegsszenarien — Kaffee, Wegbeschreibung, Party",
         "Feedback für die aktuelle Sitzung + die letzten 3",
         "Basis-Gedächtnis über Sitzungen hinweg"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Bereit, loszureden?",
-    "subtitle": "Kostenlos ausprobieren. Pro für 7,99 €/Monat, wenn du dabei bleiben möchtest."
+    "subtitle": "Kostenlos testen, keine Karte nötig. Pro für 7,99 $/Mon., wenn du dabeibleiben willst."
   },
   "footer": {
     "tagline": "Sprachen üben. Selbstvertrauen aufbauen.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Wir konnten die Löschung nicht abschließen. Versuch es erneut oder kontaktiere den Support.",
     "doneTitle": "Konto gelöscht",
     "doneBody": "Dein Konto und alle zugehörigen Daten wurden gelöscht. Schade, dass du gehst."
+  },
+  "faq": {
+    "title": "Häufige Fragen",
+    "items": [
+      {
+        "q": "Hilft es wirklich, mit einer KI zu üben?",
+        "a": "Sieh Lisa als Übungsraum, nicht als Ersatz für echte Gespräche. Sie ist rund um die Uhr verfügbar, wertet dich nie und kostet einen Bruchteil eines Tutors — so kannst du so viel üben, wie du brauchst, und dich bereit fühlen, wenn du mit Menschen sprichst."
+      },
+      {
+        "q": "Muss ich bezahlen?",
+        "a": "Nein. Die kostenlose Version braucht weder Karte noch Testphase — 5 Minuten Gespräch pro Tag, plus eine kurze Werbung für 3 Minuten extra. Pro kostet weniger als eine einzige Tutorstunde im Monat, und du kannst jederzeit kündigen."
+      },
+      {
+        "q": "Versteht sie mich und antwortet in der Sprache, die ich lerne?",
+        "a": "Ja. Dein Coach spricht mit natürlichen Stimmen in muttersprachlicher Qualität und antwortet in deiner Zielsprache. Sprich in deinem eigenen Tempo — er kommt mit."
+      },
+      {
+        "q": "Ich blockiere, wenn ich sprechen muss. Ist das wirklich etwas für mich?",
+        "a": "Genau dafür ist es gemacht. Übe laut und für dich allein, so oft du willst — mit einem Coach, der sich merkt, wo du stehst, und dich behutsam weiterbringt."
+      },
+      {
+        "q": "Welche Sprachen kann ich üben?",
+        "a": "Heute fünfzehn — Englisch, Französisch, Deutsch, Italienisch, Spanisch, Portugiesisch, Türkisch, Schwedisch, Dänisch, Russisch, Rumänisch, Ungarisch, Japanisch, Chinesisch und Koreanisch — weitere folgen."
+      },
+      {
+        "q": "Sind meine Daten privat?",
+        "a": "Deine Gespräche gehören dir. Du kannst dein Konto und alles, was damit verbunden ist, jederzeit direkt in der App löschen."
+      }
+    ]
   }
 }

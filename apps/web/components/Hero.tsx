@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { PhoneFrame } from "./PhoneFrame";
 import { DownloadCTA } from "./DownloadCTA";
 import type { Messages } from "@/lib/i18n";
@@ -13,19 +12,9 @@ export async function Hero({ messages }: HeroProps) {
       <div className="absolute inset-0 bg-warmth pointer-events-none" />
       <div className="relative max-w-content mx-auto px-6 py-12 md:py-20 lg:py-24 grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-12 items-center">
         <div className="space-y-5 md:space-y-6">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/character.png"
-              alt=""
-              width={48}
-              height={48}
-              className="rounded-full shadow-card select-none"
-              priority
-            />
-            <p className="font-body text-xs uppercase tracking-[0.18em] text-accent-deep">
-              {messages.eyebrow}
-            </p>
-          </div>
+          <p className="font-body text-xs uppercase tracking-[0.18em] text-accent-deep pt-12 lg:pt-0">
+            {messages.eyebrow}
+          </p>
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-ink">
             {messages.headline}
             <br />

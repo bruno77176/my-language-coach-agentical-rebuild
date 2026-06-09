@@ -38,23 +38,25 @@ export function Showcase({
         }`}
       >
         {/* Phones */}
-        <div className="flex justify-center items-end gap-4">
+        <div className="flex min-w-0 justify-center items-end gap-4">
           {images.map((img, i) => (
             <PhoneFrame
               key={img.src}
               src={img.src}
               alt={img.alt}
               widthClass={
-                images.length > 1 ? "w-[180px] sm:w-[200px]" : "w-[230px]"
+                images.length > 1
+                  ? "w-[130px] sm:w-[180px] md:w-[200px]"
+                  : "w-[200px] sm:w-[230px]"
               }
               rotate={images.length > 1 ? (i === 0 ? -4 : 4) : 0}
-              className={images.length > 1 && i === 1 ? "-ml-8 sm:-ml-10" : ""}
+              className={images.length > 1 && i === 1 ? "-ml-5 sm:-ml-10" : ""}
             />
           ))}
         </div>
 
         {/* Copy */}
-        <div className="space-y-5 text-center md:text-left">
+        <div className="space-y-5 min-w-0 text-center md:text-left">
           <p className="font-body text-sm uppercase tracking-widest text-accent-deep">
             {messages.eyebrow}
           </p>

@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Un coach qui se souvient de vous. Un retour après chaque conversation.",
-    "description": "Votre coach de langue IA se souvient de ce que vous avez discuté, vous donne un rapport de retour après chaque conversation, enregistre les nouveaux mots sous forme de cartes à réviser, et parle avec des voix réalistes à très faible latence. En 15 langues."
+    "title": "My Language Coach — entraînement à l'oral par IA en 15 langues",
+    "description": "Entraînez-vous à de vraies conversations avec un coach IA qui se souvient de vous, propose des jeux de rôle du quotidien et donne un retour après chaque échange. Prenez confiance à l'oral en 15 langues."
   },
   "hero": {
-    "eyebrow": "Disponible en bêta ouverte",
-    "headline": "Pratiquez les langues.",
-    "headlineAccent": "Gagnez en confiance.",
-    "subheadline": "Un coach IA qui se souvient de vous, vous donne un retour après chaque conversation, et vous laisse jouer des scénarios de la vraie vie — en 15 langues.",
+    "eyebrow": "Accès anticipé — désormais en bêta ouverte",
+    "headline": "Lire, ça va.",
+    "headlineAccent": "C'est parler qui coince.",
+    "subheadline": "Parlez-en avec un coach IA qui se souvient de vous, vous met en situation dans des jeux de rôle du quotidien et vous donne un retour après chaque conversation — en 15 langues. Sans jugement, à tout moment.",
     "scanToInstall": "Scannez pour installer",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Bêta ouverte",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Ce qui fait la différence",
     "f1": {
-      "title": "Un coach qui vous connaît",
-      "body": "Votre coach se souvient de ce dont vous avez parlé, de votre niveau, et de ce qu'il faut revoir. Chaque session s'appuie sur la précédente — pas de départ à froid."
+      "title": "Lisa, le coach qui vous connaît",
+      "body": "Elle se souvient de ce dont vous avez parlé, de votre niveau et de ce qu'il faut revoir. Chaque session s'appuie sur la précédente — jamais de départ à zéro."
     },
     "f2": {
       "title": "Scénarios de la vraie vie",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Voix réalistes",
     "title": "Des voix que vous aurez envie d'écouter",
-    "body": "Des voix naturelles à très faible latence qui répondent dès que vous arrêtez de parler. Choisissez la voix et le fournisseur de votre coach, puis réglez la vitesse qui vous convient.",
+    "body": "Des voix naturelles à très faible latence qui répondent dès que vous arrêtez de parler. Choisissez la voix de votre coach, puis réglez la vitesse de parole qui vous convient.",
     "p1": "Réponses naturelles quasi instantanées",
     "p2": "Plusieurs voix au choix",
     "p3": "Vitesse de parole ajustable"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Discutez ou jouez un rôle",
-      "body": "Conversation libre avec votre coach Lisa, ou entrez dans un scénario et rencontrez un inconnu en rôle."
+      "body": "Discutez simplement avec Lisa, ou entrez dans un scénario et rencontrez un inconnu dans son rôle."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 $",
       "priceNote": "sans carte, sans essai",
       "items": [
-        "10 minutes de conversation par jour",
-        "Trois scénarios de jeu de rôle",
+        "5 minutes de conversation par jour",
+        "Regardez une courte pub pour 3 minutes de plus",
+        "Trois scénarios pour débuter — café, directions, soirée",
         "Retour pour la session en cours + les 3 dernières",
         "Mémoire de base entre les sessions"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Prêt à commencer à parler ?",
-    "subtitle": "Gratuit pour essayer. Pro à 7,99 $/mois si vous décidez de rester."
+    "subtitle": "Gratuit à l'essai, sans carte. Pro à 7,99 $/mois si vous décidez de rester."
   },
   "footer": {
     "tagline": "Pratiquez les langues. Gagnez en confiance.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Nous n'avons pas pu finaliser la suppression. Réessayez, ou contactez le support.",
     "doneTitle": "Compte supprimé",
     "doneBody": "Votre compte et toutes les données associées ont été supprimés. Nous sommes désolés de vous voir partir."
+  },
+  "faq": {
+    "title": "Vos questions, nos réponses",
+    "items": [
+      {
+        "q": "S'entraîner avec une IA, ça aide vraiment ?",
+        "a": "Voyez Lisa comme un espace de répétition, pas un remplacement des vraies conversations. Elle est disponible 24h/24, ne vous juge jamais et coûte une fraction d'un professeur — vous vous entraînez autant qu'il le faut et vous vous sentez prêt au moment de parler avec de vraies personnes."
+      },
+      {
+        "q": "Dois-je payer ?",
+        "a": "Non. La version gratuite ne demande ni carte ni essai — 5 minutes de conversation par jour, plus une courte pub pour 3 minutes de plus. Pro coûte moins qu'une seule séance avec un professeur par mois, et vous pouvez résilier à tout moment."
+      },
+      {
+        "q": "Va-t-elle me comprendre et répondre dans la langue que j'apprends ?",
+        "a": "Oui. Votre coach parle avec des voix naturelles de qualité native et répond dans votre langue cible. Parlez à votre rythme — il suit."
+      },
+      {
+        "q": "Je me bloque quand je dois parler. Est-ce vraiment fait pour moi ?",
+        "a": "C'est exactement à ça que ça sert. Entraînez-vous à voix haute, en privé, autant de fois que vous voulez, avec un coach qui se souvient d'où vous en êtes et vous fait progresser en douceur."
+      },
+      {
+        "q": "Quelles langues puis-je pratiquer ?",
+        "a": "Quinze aujourd'hui — anglais, français, allemand, italien, espagnol, portugais, turc, suédois, danois, russe, roumain, hongrois, japonais, chinois et coréen — et d'autres arrivent."
+      },
+      {
+        "q": "Mes données sont-elles privées ?",
+        "a": "Vos conversations vous appartiennent. Vous pouvez supprimer votre compte et tout ce qui y est lié à tout moment, directement depuis l'application."
+      }
+    ]
   }
 }
