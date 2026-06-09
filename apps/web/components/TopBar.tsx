@@ -17,16 +17,16 @@ export function TopBar({ locale }: Props) {
           aria-label="My Language Coach — home"
           className="pointer-events-auto flex items-center gap-2.5"
         >
-          {/* Lisa as the logo mark. The source art has her hair touching the
-              top edge, so we scale it down inside a peach circle to keep her
-              full head visible (no clipped hairline). */}
-          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#f8d7c4] shadow-card">
+          {/* Lisa as the logo mark — a pre-composed circular avatar
+              (transparent corners, full head with breathing room baked in)
+              so it sits cleanly with no peach halo or clipped hairline. */}
+          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full shadow-card">
             <Image
-              src="/character.png"
+              src="/lisa-avatar.png"
               alt=""
               fill
               sizes="36px"
-              className="object-cover scale-[0.92]"
+              className="object-cover"
               priority
             />
           </span>
