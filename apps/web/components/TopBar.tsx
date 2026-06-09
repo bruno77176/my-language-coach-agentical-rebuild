@@ -17,16 +17,16 @@ export function TopBar({ locale }: Props) {
           aria-label="My Language Coach — home"
           className="pointer-events-auto flex items-center gap-2.5"
         >
-          {/* Lisa as the logo mark — a pre-composed circular avatar
-              (transparent corners, full head with breathing room baked in)
-              so it sits cleanly with no peach halo or clipped hairline. */}
-          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full shadow-card">
+          {/* Lisa as the logo mark — exported from the app's loading avatar
+              (avatar.json) so the web brand mark matches the app exactly:
+              a clean teal disc, full head, transparent corners. */}
+          <span className="relative h-9 w-9 shrink-0">
             <Image
               src="/lisa-avatar.png"
               alt=""
               fill
               sizes="36px"
-              className="object-cover"
+              className="object-contain drop-shadow-sm"
               priority
             />
           </span>
