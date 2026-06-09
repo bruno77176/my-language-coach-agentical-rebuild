@@ -29,6 +29,7 @@ vi.mock("@/src/lib/supabase", () => ({
   supabase: {
     auth: {
       signInWithIdToken: vi.fn(),
+      updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
   },
 }));
@@ -119,7 +120,7 @@ describe("signInWithApple", () => {
       supabase.auth.signInWithIdToken as ReturnType<typeof vi.fn>
     ).mockResolvedValue({ data: { session: fakeSession }, error: null });
 
-    const session = await signInWithApple();
+    const { session, fullName } = await signInWithApple();
 
     expect(AppleAuthentication.signInAsync).toHaveBeenCalledWith(
       expect.objectContaining({ nonce: "hashed-nonce" }),
@@ -130,6 +131,50 @@ describe("signInWithApple", () => {
       nonce: "raw-nonce",
     });
     expect(session).toBe(fakeSession);
+    // No name in the credential → nothing returned, no profile write.
+    expect(fullName).toBe("");
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("captures Apple's given name and persists it to user_metadata", async () => {
+    (
+      AppleAuthentication.signInAsync as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      identityToken: "apple-id-token",
+      fullName: { givenName: "Bruno", familyName: "Moise" },
+    });
+    const fakeSession = { user: { id: "u3" } };
+    (
+      supabase.auth.signInWithIdToken as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({ data: { session: fakeSession }, error: null });
+
+    const { fullName } = await signInWithApple();
+
+    expect(fullName).toBe("Bruno");
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({
+      data: { full_name: "Bruno" },
+    });
+  });
+
+  it("still returns the session if persisting the name fails", async () => {
+    (
+      AppleAuthentication.signInAsync as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      identityToken: "apple-id-token",
+      fullName: { givenName: "Bruno" },
+    });
+    const fakeSession = { user: { id: "u4" } };
+    (
+      supabase.auth.signInWithIdToken as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({ data: { session: fakeSession }, error: null });
+    (
+      supabase.auth.updateUser as ReturnType<typeof vi.fn>
+    ).mockRejectedValueOnce(new Error("network"));
+
+    const { session, fullName } = await signInWithApple();
+
+    expect(session).toBe(fakeSession);
+    expect(fullName).toBe("Bruno");
   });
 
   it("throws SocialSignInCancelled when the user cancels", async () => {

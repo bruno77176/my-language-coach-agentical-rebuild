@@ -70,7 +70,26 @@ export async function signInWithGoogle(): Promise<Session> {
   return data.session;
 }
 
-export async function signInWithApple(): Promise<Session> {
+export type AppleSignInResult = {
+  session: Session;
+  /**
+   * The given name Apple returned in the credential, if any. Apple only
+   * provides `fullName` on the FIRST authorization for an Apple ID, so we
+   * capture it here and persist it to Supabase user_metadata below — later
+   * sign-ins return null. Callers use this to pre-seed onboarding so the user
+   * is never asked to re-type a name Apple already gave us (Guideline 4).
+   */
+  fullName: string;
+};
+
+function formatAppleFullName(
+  fullName: AppleAuthentication.AppleAuthenticationFullName | null,
+): string {
+  if (!fullName) return "";
+  return (fullName.givenName ?? fullName.familyName ?? "").trim();
+}
+
+export async function signInWithApple(): Promise<AppleSignInResult> {
   const rawNonce = Crypto.randomUUID();
   const hashedNonce = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
@@ -111,5 +130,19 @@ export async function signInWithApple(): Promise<Session> {
       error?.message ?? "Supabase rejected the token",
     );
   }
-  return data.session;
+
+  // Apple sends the name only in the authorization response (never in the JWT),
+  // and only on the first authorization. Persist it to user_metadata so it
+  // survives later sign-ins and an interrupted onboarding. Best-effort: a
+  // failure here must not block sign-in.
+  const fullName = formatAppleFullName(credential.fullName);
+  if (fullName) {
+    try {
+      await supabase.auth.updateUser({ data: { full_name: fullName } });
+    } catch {
+      // ignore — the name still flows through the returned value below
+    }
+  }
+
+  return { session: data.session, fullName };
 }
