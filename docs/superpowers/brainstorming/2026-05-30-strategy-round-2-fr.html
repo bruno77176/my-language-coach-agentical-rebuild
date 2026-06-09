@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 05 30 strategy round 2 fr</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    max-width: 820px;
+    margin: 40px auto;
+    padding: 0 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #2a2622;
+    background: #faf6ee;
+  }
+  h1 { font-size: 2em; margin-top: 1em; padding-bottom: 0.3em; border-bottom: 2px solid #d4a373; color: #2a1a0a; }
+  h2 { font-size: 1.45em; margin-top: 2em; padding-bottom: 0.2em; border-bottom: 1px solid #e5dcc6; color: #2a1a0a; }
+  h3 { font-size: 1.15em; margin-top: 1.5em; color: #5b3e1d; }
+  h4 { font-size: 1em; margin-top: 1.3em; color: #5b3e1d; }
+  p, ul, ol { margin: 0.8em 0; }
+  ul, ol { padding-left: 1.6em; }
+  li { margin: 0.3em 0; }
+  li > p { margin: 0.3em 0; }
+  table { border-collapse: collapse; margin: 1.2em 0; width: 100%; font-size: 0.93em; display: block; overflow-x: auto; }
+  thead { background: #ead9b8; }
+  th, td { border: 1px solid #d4c4a0; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { font-weight: 600; }
+  tbody tr:nth-child(even) td { background: #f4ecda; }
+  code { font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.88em; background: #f0e3c4; padding: 1px 5px; border-radius: 3px; color: #4a2a08; }
+  pre { background: #f0e3c4; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: transparent; padding: 0; font-size: 0.9em; }
+  blockquote { border-left: 3px solid #d4a373; padding: 0.2em 16px; margin: 1em 0; color: #5a4a3a; font-style: italic; background: #f4ecda; border-radius: 0 4px 4px 0; }
+  hr { border: 0; border-top: 1px solid #d4c4a0; margin: 2.5em 0; }
+  a { color: #b86b3a; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: #8a4a20; }
+  strong { color: #1a1006; font-weight: 600; }
+  em { color: #5a4a3a; }
+  .meta { color: #8a7a5a; font-size: 0.9em; font-style: italic; margin: 0.5em 0 2em; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #faf6ee; color: #2a2622; }
+  }
+</style>
+</head>
+<body>
+<h1>Stratégie et paris produit — Round 2 (analyse approfondie)</h1>
+<p><em>Bruno a demandé une réflexion plus lente et plus profonde que le brouillon du Round 1 (2026-05-29). La voici.</em></p>
+<p><em>Le document du Round 1 se trouve à <code>2026-05-29-strategy-and-product-bets.md</code> dans ce dossier — il reste comme brouillon antérieur. Ce document le remplace. La version anglaise est à <code>2026-05-30-strategy-round-2.md</code>.</em></p>
+<hr>
+<h2>Contexte</h2>
+<p>Tu as livré les Plans 1 à 7 d&#39;une reconstruction greenfield de My Language Coach (Expo SDK 54 + Hono + Supabase, build dev actif sur ton appareil Android, peaufinage de l&#39;identité visuelle du Plan 7 terminé). Tu veux :</p>
+<ol>
+<li>Évaluer honnêtement s&#39;il existe un véritable potentiel commercial pour cette app sur le marché 2026 du coaching conversationnel par IA — pas « est-ce possible » mais « est-ce probable, et quelle est la forme réaliste du succès vs de l&#39;échec ? »</li>
+<li>Décider ce que les Plans 8 / 9 / 10 livrent réellement, dans quel ordre, avec quelle monétisation</li>
+<li>Atteindre rapidement un lancement Play Store + App Store (la deadline Play du 2026-07-04 approche)</li>
+<li>Éviter de brûler des semaines sur les mauvais paris</li>
+</ol>
+<p>Le Round 1 de cette analyse a été « un peu rapide ». Il a affirmé des prix et des positions concurrentielles avec assurance, sans sources. Il a sous-estimé le travail technique du Plan 8. Il a sous-estimé les vents contraires concurrentiels (en particulier le lancement gratuit de Babbel Speak que j&#39;avais manqué). Ce round comble ces lacunes en ancrant chaque affirmation dans deux enquêtes parallèles :</p>
+<ul>
+<li>Une <strong>enquête de réalité technique</strong> qui a lu les chemins de code, les schémas et les documents de Plan existants</li>
+<li>Une <strong>enquête de veille marché</strong> qui a rassemblé les données 2026 de prix, financement, adoption et conversion à partir de 40+ sources</li>
+</ul>
+<p>Chaque affirmation majeure ci-dessous est sourcée ou étiquetée comme inférence.</p>
+<hr>
+<h2>Comment ce round diffère du Round 1</h2>
+<table>
+<thead>
+<tr>
+<th>Le Round 1 disait</th>
+<th>Le Round 2 corrige par</th>
+<th>Pourquoi c&#39;est important</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Speak est à ~14,99 $/mois</td>
+<td><strong>Speak est à 20 $/mois ou 99 $/an</strong> (Série C 2024-12, valorisation 1 G$, 10M utilisateurs, 4,8★ iOS)</td>
+<td>Le plafond de prix marché pour un « coach IA premium » est plus haut que je le pensais ; 9,99 $ est confortablement milieu de marché, pas un sous-positionnement</td>
+</tr>
+<tr>
+<td>La concurrence est « Speak / Talkpal / Praktika / ELSA »</td>
+<td><strong>Ajouter Babbel Speak (gratuit, lancé sept. 2025) et l&#39;expansion IA de Duolingo</strong></td>
+<td>Deux acteurs bien dotés offrent maintenant la fonctionnalité conversation gratuitement ou presque dans le cadre de leurs abonnements existants. L&#39;indé ne peut pas rivaliser sur « conversation IA » comme offre autonome</td>
+</tr>
+<tr>
+<td>Duolingo Max est la référence IA-premium</td>
+<td><strong>Duolingo Max n&#39;a que 9 % d&#39;adoption</strong> après 2+ ans, et croît lentement</td>
+<td>Signal fort que la « voix IA » seule ne vaut pas un prix premium pour les consommateurs. Reformule notre exigence de différenciation</td>
+</tr>
+<tr>
+<td>Conversion free→paid 1–3 % indé / 5–8 % best-in-class</td>
+<td><strong>Trial→paid 38–54 %, download→subscriber global 1,7 %</strong> (données RevenueCat 2025 sur des milliers d&#39;apps)</td>
+<td>Les maths du funnel diffèrent de ce que j&#39;ai cité — l&#39;action se joue dans la conversion de l&#39;essai, pas dans le saut large install→paid</td>
+</tr>
+<tr>
+<td>Speak brûle ~300 $ de CAC</td>
+<td><strong>Plutôt 15–30 $ canal mixte ; 30–50 $ payant pur</strong></td>
+<td>Le cadre « l&#39;indé ne peut pas concurrencer » est en partie vrai mais exagéré. Les canaux payants restent chers mais pas catastrophiques à cinq chiffres</td>
+</tr>
+<tr>
+<td>Coût variable ~0,025 $/min</td>
+<td><strong>API seule 0,025 $/min, avec infra/stockage/marge 0,05–0,10 $/min côté utilisateur</strong></td>
+<td>Mes maths de marge étaient roses. À 10 $/mois avec un utilisateur intensif (60 min/mois), la marge brute est de ~30 %, pas les ~70 % que je citais</td>
+</tr>
+<tr>
+<td>« Mémoire du coach + feedback + jeu de rôle = différenciateur clair »</td>
+<td><strong>Toujours vrai, mais le déploiement de la mémoire ChatGPT Voice est un point de veille</strong> — actuellement aucune persistance vocale par langue, mais OpenAI déploie la mémoire largement</td>
+<td>La fenêtre de différenciation est réelle mais pas illimitée. Le temps est un facteur</td>
+</tr>
+<tr>
+<td>Plan 8 = ~3-4 semaines</td>
+<td><strong>Plan 8 = 4-5 semaines</strong> sur la base de la réalité technique (pas d&#39;abstraction de provider, pas de logique de feature-gating, pas de scaffolding mémoire/feedback/scénarios — tout en greenfield)</td>
+<td>L&#39;honnêteté temporelle compte pour gérer le burnout. Ne promets pas 3 semaines pour ensuite glisser</td>
+</tr>
+<tr>
+<td>La suppression de compte est « une préoccupation parallèle »</td>
+<td><strong>La suppression de compte est un BLOCAGE DUR pour la soumission App Store</strong> — actuellement en cours sur la branche <code>worktree-account-deletion</code></td>
+<td>La spec du Plan 8 peut être rédigée en parallèle mais l&#39;implémentation du Plan 8 ne peut pas démarrer avant que la suppression de compte ne soit fusionnée</td>
+</tr>
+<tr>
+<td>Le jeu de cartes vocab demande une conception de table complète</td>
+<td><strong>La table <code>vocab_items</code> existe déjà</strong> avec <code>userId, language, term, translation, firstSeenMessageId, mastery</code> — le Plan 9 a une vraie avance</td>
+<td>L&#39;estimation du Plan 9 peut tomber de 4 semaines à 3</td>
+</tr>
+<tr>
+<td>Le gating des entitlements « a juste besoin de câblage »</td>
+<td><strong><code>entitlements</code> a un champ <code>plan</code> mais ZÉRO logique de feature-gating câblée</strong> — quota de secondes vocales uniquement. Construire le feature-gating est une vraie tâche du Plan 8</td>
+<td>Ajoute 3 à 5 jours à l&#39;estimation du Plan 8</td>
+</tr>
+<tr>
+<td>Le swap de provider TTS « facile »</td>
+<td><strong>Appels de fonction directs, pas de pattern stratégie</strong> — swapper la TTS pour le tier Pro nécessite une tâche de refactor avant le Plan 10</td>
+<td>Mettre ce refactor dans le Plan 8 comme Tâche 1, ou vivre avec OpenAI TTS jusqu&#39;au Plan 9</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Constats — Réalité technique (ancrée dans le code)</h2>
+<p>Voici les constats sol-vérité dont j&#39;avais besoin avant toute recommandation.</p>
+<h3>La boucle vocale est prête pour la prod et prête à être étendue</h3>
+<ul>
+<li><strong>Endpoint de fin de session :</strong> <code>apps/api/src/routes/voice.ts:345-418</code> — <code>POST /sessions/:id/end</code> vérifie la propriété, calcule la durée wall-clock, fait l&#39;upsert de la streak, retourne <code>{ seconds_spoken, goal_reached }</code>. Le bon point de greffe pour les appels d&#39;extraction de mémoire et de génération de feedback.</li>
+<li><strong>Protocole SSE</strong> dans <code>apps/api/src/routes/voice.ts:163-342</code> émet les événements <code>transcription</code> / <code>reply-chunk</code> / <code>done</code> / <code>error</code>. Le payload <code>done</code> est actuellement <code>{ messageId, userMessageId }</code> — trop léger pour porter le feedback. Décision : le feedback obtient son propre endpoint, sans être tassé dans le flux SSE. (<code>POST /sessions/:id/feedback</code> polled par le client mobile à l&#39;ouverture de la sheet de fin de session, ou retourné dans la réponse du handler <code>/end</code>.)</li>
+<li><strong>Constructeur du system prompt du coach :</strong> <code>packages/shared/src/prompts.ts:8-23</code> (<code>buildCoachSystemPrompt</code>) prend actuellement <code>{ targetLanguage, userDisplayName }</code>. L&#39;étendre à <code>{ ..., memory?: CoachMemory }</code> et injecter conditionnellement un bloc <code>&lt;context&gt;...&lt;/context&gt;</code> est le chemin le plus propre. <strong>Aucun placeholder de mémoire n&#39;existe encore</strong> — tout est en greenfield.</li>
+</ul>
+<h3>État du schéma de base de données</h3>
+<p>Schéma actuel (issu des migrations 0000–0009) :</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Rôle</th>
+<th>Usage Plan 8/9/10</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>profiles</code></td>
+<td>userId, displayName, langs, dailyGoalMinutes, timezone</td>
+<td>L&#39;éditeur de mémoire vit ici (Plan 8)</td>
+</tr>
+<tr>
+<td><code>conversations</code></td>
+<td>id, userId, language, topicId, startedAt, endedAt, secondsSpoken</td>
+<td>Cible FK du feedback (Plan 8)</td>
+</tr>
+<tr>
+<td><code>messages</code></td>
+<td>id, conversationId, role, text, translation, audioStoragePath</td>
+<td>Source d&#39;extraction du vocab (Plan 9)</td>
+</tr>
+<tr>
+<td><code>vocab_items</code></td>
+<td>id, userId, language, term, translation, firstSeenMessageId, mastery</td>
+<td><strong>Existe déjà — avance du Plan 9 !</strong></td>
+</tr>
+<tr>
+<td><code>entitlements</code></td>
+<td>userId, plan (free/pro), proUntil, monthlyVoiceSecondsUsed</td>
+<td>Besoin de feature flags + quota quotidien (Plan 8)</td>
+</tr>
+<tr>
+<td><code>usage_events</code></td>
+<td>userId, platform, provider, operation, units, costUsd, rateCardId</td>
+<td>Déjà câblé ; les nouveaux SKU s&#39;insèrent proprement</td>
+</tr>
+<tr>
+<td><code>rate_cards</code></td>
+<td>$/unité versionnés par opération de provider</td>
+<td>Supporte déjà les SKU TTS du tier Pro</td>
+</tr>
+</tbody></table>
+<p>Manquant pour le Plan 8 :</p>
+<ul>
+<li><code>coach_memory</code> (par utilisateur, par langue, profil structuré)</li>
+<li><code>session_feedback</code> (par conversation, JSON 3-panneaux structuré)</li>
+<li>Une migration pour étendre <code>entitlements</code> avec des feature flags ou remplacer la vérif plan-only par un module de feature-gating</li>
+</ul>
+<h3>Le pattern RLS est cohérent</h3>
+<p>Depuis <code>0001_rls_policies.sql:12-58</code> : pattern standard direct-owned (<code>USING (auth.uid() = user_id)</code>) plus pattern imbriqué (<code>USING (EXISTS (SELECT 1 FROM conversations ...))</code>) pour <code>messages</code>. <strong>Rappel critique de ta mémoire :</strong> les politiques UPDATE ont besoin à la fois des clauses <code>USING</code> ET <code>WITH CHECK</code> ou les updates affectent silencieusement 0 lignes. Appliquer cohéremment sur les nouvelles tables.</p>
+<h3>Le module entitlements ne gère que le quota vocal</h3>
+<p><code>apps/api/src/lib/quota.ts:13-29</code> vérifie <code>plan + proUntil</code> contre <code>monthlyVoiceSecondsUsed</code>. <strong>Aucune logique de feature-gating n&#39;existe encore.</strong> Le Plan 8 doit construire :</p>
+<ol>
+<li>Un module de feature-gating (<code>canUseFeature(userId, feature)</code>) qui enrobe le lookup d&#39;entitlement</li>
+<li>Des constantes de feature (<code>COACH_MEMORY</code>, <code>DEEP_FEEDBACK</code>, <code>ROLE_PLAY_PREMIUM</code>, etc.)</li>
+<li>Un wrapper de quota quotidien pour le tier gratuit (10 min/jour de conversation, 3 jeux de rôle/jour, etc.)</li>
+</ol>
+<p>C&#39;est 3 à 5 jours de travail à lui seul.</p>
+<h3>Architecture mobile pour les nouveaux écrans</h3>
+<ul>
+<li>Routes : <code>(auth)/</code>, <code>(onboarding)/</code>, <code>(tabs)/</code> (home, practice, progress, profile). Pas de routes vocab, library, ou memory.</li>
+<li>Styling : <strong>Confirmé — chaque écran utilise <code>StyleSheet.create({...})</code> en inline</strong>, pas NativeWind. Ne combats pas ça — épouse le pattern.</li>
+<li>Design tokens à <code>packages/design-tokens/src/colors.ts:1-31</code> : palette Sunrise (peach/coral/mauve/accent/ink/cream/danger/glass/shadowTint) avec gradients sunrise/warmth/glow. <strong>Pas de variante dark mode.</strong></li>
+<li><strong>Décision :</strong> le jeu de cartes vocab obtient une palette dark isolée, contenue dans le composant du jeu. Ne pollue pas les tokens globaux tant qu&#39;on ne sait pas si on veut un thème dark global.</li>
+</ul>
+<h3>Pattern de structure des Plans (à imiter)</h3>
+<p>Les Plans existants (<code>auth-social-and-password-reset</code>, <code>cost-revenue-dashboard</code>, <code>universal-links-email-verification</code>, <code>account-deletion</code>) suivent tous cette forme :</p>
+<ol>
+<li>Phrase d&#39;objectif (1–2 lignes)</li>
+<li>Paragraphe d&#39;architecture</li>
+<li>Section tech stack</li>
+<li>Vue d&#39;ensemble de la structure des fichiers (nouveaux / modifiés / out-of-band)</li>
+<li>Découpage numéroté en tâches — tâches atomiques de 1–2h, chacune avec : commentaire de scope, fichiers, checklist <code>- [ ]</code>, snippets prêts pour le code, étape run/test/commit</li>
+<li>Section de conventions propre au Plan</li>
+</ol>
+<p>Les specs et plans 8/9/10 doivent matcher exactement. N&#39;innove pas sur la structure du plan.</p>
+<h3>L&#39;abstraction des providers est directe, pas en pattern stratégie</h3>
+<p><code>apps/api/src/providers/{openai,deepgram,elevenlabs}.ts</code> exportent un factory + des fonctions d&#39;opération. Il n&#39;y a pas de couche d&#39;interface pour swapper la TTS selon l&#39;entitlement. <strong>Implication :</strong> si le Plan 8 veut une TTS premium pour le tier Pro (Inworld 1.5 Max ou Gemini 3.1 Flash), la Tâche 1 du Plan 8 est un petit refactor de stratégie TTS. Alternative : différer et livrer le Plan 8 avec une seule TTS, refactor au Plan 10.</p>
+<h3>La suppression de compte bloque le Plan 8</h3>
+<p>En cours sur <code>worktree-account-deletion</code>. Dernier commit sur main : <code>4ffa0e1 fix(mobile): delete-account sheet renders correctly on iPad</code> (29 mai). <strong>La rédaction de la spec du Plan 8 peut se faire en parallèle ; l&#39;implémentation du Plan 8 ne peut pas démarrer avant le merge.</strong> Recommandation : brainstormer la spec du Plan 8 pendant qu&#39;on finit le plan de suppression.</p>
+<h3>Zéro scaffolding existant pour mémoire / feedback / jeu de rôle</h3>
+<p>Le grep confirme : aucun code <code>coach_memory</code>, aucun <code>session_feedback</code>, aucun <code>role_play</code> / <code>scenario</code>. Vocab est la seule avance. C&#39;est une bonne nouvelle (pas de dette) mais ça veut dire que les estimations réalistes ne sont pas « étendre X » mais « construire de zéro ».</p>
+<h3>L&#39;intégration de l&#39;enregistrement des coûts est propre</h3>
+<p>Pattern fire-and-forget via le callback <code>onUsage</code> (<code>apps/api/src/lib/usage-bridge.ts</code>). Ajouter de nouvelles opérations (extraction mémoire à gpt-4o-mini, feedback à gpt-4o, TTS premium) consiste à insérer un callback au site d&#39;appel + mettre à jour <code>rate_cards</code>. Pas de refactor nécessaire.</p>
+<hr>
+<h2>Constats — Réalité du marché (ancrés dans les données 2026)</h2>
+<h3>La catégorie pèse comme suit</h3>
+<ul>
+<li><strong>Marché mondial de l&#39;apprentissage des langues numérique :</strong> 21,06 G$ en 2025 → projeté à 24,39 G$ en 2026 → 50,82 G$ d&#39;ici 2031 (TCAC 15,83 %) — Mordor Intelligence, Business of Apps</li>
+<li><strong>Sous-ensemble du revenu app-based :</strong> 1,54 G$ en 2025, +18,8 % YoY — Business of Apps</li>
+<li><strong>327M téléchargements en 2025</strong> — LingoBright</li>
+<li>Les fonctionnalités IA sont passées de différenciateur à <strong>incontournable</strong> : 60 %+ des plateformes livrent une fonction conversation IA d&#39;ici 2026</li>
+</ul>
+<p>Le marché est réel. La catégorie est encore en expansion. <strong>Mais :</strong> Duolingo contrôle 67 % du revenu app et le reste est fragmenté entre des concurrents bien financés. La case « facile » de l&#39;indé — la pure conversation IA — est fermée.</p>
+<h3>Paysage concurrentiel (prix et traction 2026 vérifiés)</h3>
+<table>
+<thead>
+<tr>
+<th>Concurrent</th>
+<th>Mensuel</th>
+<th>Annuel (équiv. $/mois)</th>
+<th>Financement / échelle</th>
+<th>Fonctionnalité notable</th>
+<th>Leçon pour l&#39;indé</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Speak</strong></td>
+<td>20 $</td>
+<td>99 $ (8,25 $/mois)</td>
+<td>162M$ levés, val. 1G$, 10M users, 4,8★</td>
+<td>Intégration OpenAI Realtime API</td>
+<td>Possède la « conversation IA premium » ; hors de portée</td>
+</tr>
+<tr>
+<td><strong>Duolingo Max</strong></td>
+<td>29,99 $</td>
+<td>168 $ (14 $/mois)</td>
+<td>12,2M payants (Duolingo total), Max=9%</td>
+<td>Video Call + Roleplay</td>
+<td><strong>Le tier IA premium échoue en adoption</strong> — signal de tier</td>
+</tr>
+<tr>
+<td><strong>Babbel Speak</strong></td>
+<td>Gratuit avec abo Babbel</td>
+<td>Babbel ~7,45–15 $/mois</td>
+<td>Marque établie, ~383M$ revenu 2024</td>
+<td><strong>Conversation IA gratuite depuis sept. 2025</strong></td>
+<td><strong>Vent contraire direct — les incumbents bundlent maintenant l&#39;IA gratuitement</strong></td>
+</tr>
+<tr>
+<td><strong>Talkpal</strong></td>
+<td>9,99 $</td>
+<td>59,88 $ (4,99 $/mois)</td>
+<td>5M+ utilisateurs, financement non divulgué</td>
+<td>Tier gratuit 10 min/jour</td>
+<td>Comp directe la plus proche ; agressif sur le prix</td>
+</tr>
+<tr>
+<td><strong>Praktika</strong></td>
+<td>8 $</td>
+<td>Pas de mensuel</td>
+<td>Non divulgué ; 4,7★ stores</td>
+<td>Multimodal — upload photos/vidéos pour conversation</td>
+<td>Angle fonctionnel intéressant à noter</td>
+</tr>
+<tr>
+<td><strong>ELSA Speak</strong></td>
+<td>13,33 $</td>
+<td>159,99 $ (13,33 $/mois)</td>
+<td>Série C ; <strong>2,7★ Trustpilot</strong> (médiocre)</td>
+<td>Prononciation niveau phonème</td>
+<td>Le moat prononciation est réel mais la marque ELSA est abîmée</td>
+</tr>
+<tr>
+<td><strong>Loora</strong></td>
+<td>10 $</td>
+<td>119,99 $ (10 $/mois)</td>
+<td>Non divulgué</td>
+<td>Orientation professionnel/corporate</td>
+<td>Niche B2B ; pas un concurrent direct</td>
+</tr>
+<tr>
+<td><strong>Univerbal</strong></td>
+<td>10–15 $</td>
+<td>90 $ (7,50 $/mois)</td>
+<td>Renommage de Quazel</td>
+<td>Emphase sur la fluidité conversationnelle</td>
+<td>Vraie comp à notre bande de prix exacte</td>
+</tr>
+<tr>
+<td><strong>Talkio AI</strong></td>
+<td>10 $</td>
+<td>9 $/mois annuel</td>
+<td>Non divulgué</td>
+<td><strong>40+ langues, 134 dialectes, 400+ tuteurs</strong></td>
+<td><strong>Possède la « largeur » — cette voie est fermée</strong></td>
+</tr>
+<tr>
+<td><strong>Lingoda Sprint</strong></td>
+<td>89–139 $</td>
+<td>n/a</td>
+<td>Établi, instruction live</td>
+<td>Cours live + structure cashback</td>
+<td>Produit différent — tuteur humain premium</td>
+</tr>
+<tr>
+<td><strong>ChatGPT Voice</strong></td>
+<td>20 $ (Plus)</td>
+<td>n/a</td>
+<td>OpenAI</td>
+<td>Gratuit avec l&#39;abo Plus</td>
+<td><strong>Le vrai plancher — ton barre est « qu&#39;est-ce que ChatGPT ne fait PAS ? »</strong></td>
+</tr>
+</tbody></table>
+<p>Sources : Beginners in AI, ICanLearn, Getlatka, Lucidity Insights, Talkpal Pricing, Trustpilot, DigitalAdGenius, Practice Me, blog Talkio.ai.</p>
+<h3>Les deux signaux les plus importants</h3>
+<ol>
+<li><p><strong>Duolingo Max à 9 % d&#39;adoption</strong> après 2+ ans signifie que le marché consommateur a répondu à la question « paieriez-vous 30 $/mois de plus pour les fonctionnalités voix IA greffées sur Duolingo ? » et la réponse est massivement <strong>non</strong>. La conversation IA seule — même avec une marque leader de catégorie et 52,7M DAU en haut du funnel — n&#39;est pas une fonctionnalité de tier premium. <strong>Ça reformule ce qu&#39;on doit vendre.</strong> L&#39;item « conversation IA » doit être emballé dans une histoire de valeur plus large (coaching, maîtrise du vocabulaire, progression en prononciation) que l&#39;utilisateur comprend comme une amélioration continue, pas comme de l&#39; « IA ».</p>
+</li>
+<li><p><strong>Babbel Speak est maintenant gratuit</strong> dans le cadre de l&#39;abonnement Babbel existant (lancé en septembre 2025). C&#39;est le changement concurrentiel le plus sous-estimé de l&#39;année. Babbel était l&#39;ancre « cours structuré » — ils bundlent maintenant la conversation IA gratuitement. Leur incumbency + profondeur de contenu + marque + IA bundlée est un vrai vent contraire pour tout pitch autonome « conversation IA ». <strong>Notre offre ne peut pas être « paie 10 $ pour la conversation IA » — ça se fait écraser.</strong> Ça doit être « paie 10 $ pour un système de coaching complet qui utilise l&#39;IA comme moteur ».</p>
+</li>
+</ol>
+<h3>Benchmarks de conversion / churn</h3>
+<ul>
+<li><strong>Trial-to-paid (freemium avec essai) :</strong> 38–54 % — Adapty</li>
+<li><strong>Download-to-subscriber global :</strong> 1,7 % — données RevenueCat 2025</li>
+<li><strong>Conversion d&#39;essai (download → start trial) :</strong> 3,7–8,9 % — Adapty</li>
+<li><strong>Churn d&#39;apps éducation :</strong> &gt;95 % au jour 30 (médiane) ; &gt;50 % au jour 7</li>
+<li><strong>Cible de rétention saine :</strong> 40 %+ à 90 jours, &lt;5 % de churn mensuel — Business of Apps</li>
+<li><strong>Conversion iOS vs Android :</strong> catégorie éducation environ Android 27 % / iOS 25 % page-to-install, iOS skewed plus haut en revenu/install dans les catégories d&#39;abonnement</li>
+</ul>
+<p>Ce que ça veut dire pour les maths de notre lancement :</p>
+<ul>
+<li>1000 installs / mois × 7 % download→trial × 45 % trial→paid = ~32 abonnés payants/mois</li>
+<li>5000 installs / mois × 7 % × 45 % = ~160 abonnés payants/mois — break-even et au-delà</li>
+<li><strong>Le goulot d&#39;étranglement est le démarrage de l&#39;essai, pas la conversion de l&#39;essai.</strong> Le produit doit donner envie aux gens de démarrer un essai en quelques minutes après l&#39;ouverture.</li>
+</ul>
+<h3>Réalité CAC</h3>
+<ul>
+<li>Cible CAC organique industrie pour des apps de langue saines : 15 $. CAC canal payant : 30–50 $+. Certaines sources projettent 1500 $ de CAC cumulé à maturité pour les leaders de catégorie.</li>
+<li>Le CAC mixte de Speak (financement levé / utilisateurs totaux) se situe probablement à <strong>15–30 $</strong>, pas les 300 $ que je citais hier.</li>
+<li>Taux d&#39;opt-in ATT : creux à 13,85 % (mi-2024) → ~35–50 % mondialement T2 2025. S&#39;améliore mais reste hostile à l&#39;attribution payante.</li>
+<li><strong>Réalité indé :</strong> l&#39;UA payant est réel mais financièrement fragile. Un CAC de 20 $ à 10 $ d&#39;ARPU mensuel + 30 % de commission store = 7 $ de contribution × 5 mois = 35 $ de LTV. Payback CAC ~3 mois. Soutenable seulement si le churn est bas.</li>
+<li><strong>Organique piloté par le fondateur</strong> (YouTube, TikTok, Reddit, X/Bluesky) est le chemin indé. Réel, mais lent. Compte ~6 mois de contenu cohérent avant traction significative.</li>
+</ul>
+<h3>Répartition géographique</h3>
+<ul>
+<li>LATAM/Brésil (69,7M$, TCAC 17 %) et Turquie (5,6M$, TCAC 16,2 %) sont les plus en croissance — Cognitive Market Research</li>
+<li>iOS skewed revenu UE/US ; Android skewed volume Inde/Brésil/SEA</li>
+<li><strong>Aucun concurrent majeur ne propose de prix géo-discountés</strong>. Opportunité dans les marchés à faible PIB mais avec risque d&#39;arbitrage transfrontalier. Probablement à zapper en v1.</li>
+</ul>
+<h3>Probabilités d&#39;outcome spécifiques à Bruno (18 mois, vu les données)</h3>
+<p>C&#39;est le morceau qui compte le plus. Vu l&#39;état actuel du produit, la bande passante de fondateur solo, l&#39;absence de financement, et en supposant que le lancement soit fait avec <strong>un positionnement de niche + contenu de fondateur + tarification freemium 7,99–9,99 $ :</strong></p>
+<table>
+<thead>
+<tr>
+<th>Cible</th>
+<th>Probabilité</th>
+<th>Ce qu&#39;il faut</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>1k $ MRR</strong></td>
+<td><strong>40–50 %</strong></td>
+<td>Niche claire + 6 mois de contenu de fondateur cohérent + essai 7 jours + 1k abonnés</td>
+</tr>
+<tr>
+<td><strong>10k $ MRR</strong></td>
+<td><strong>10–15 %</strong></td>
+<td>Ce qui précède + efficacité UA payant OU moment viral OU audience préexistante de 30k+</td>
+</tr>
+<tr>
+<td><strong>50k $ MRR</strong></td>
+<td><strong>&lt;5 %</strong></td>
+<td>Nécessite probablement du capital ou un chemin d&#39;acquisition</td>
+</tr>
+</tbody></table>
+<p>Ces probabilités ne sont pas des prédictions, ce sont des priors basés sur l&#39;indé SaaS au sens large (30 % des solo devs atteignent 1k $ MRR en 12 mois — benchmark Indie Hackers) ajustés pour la friction concurrentielle spécifique à la catégorie.</p>
+<p><strong>La question que ça force pour Bruno :</strong> est-ce que 1k–10k $ MRR est un outcome valable pour toi vu l&#39;investissement de temps ? Si la réponse honnête est « non, j&#39;ai besoin de 10k $+ pour que ça vaille le coup », alors le chemin nécessite soit une audience pré-construite, soit un pivot vers une niche où les indés ont un levier disproportionné. Si « oui, 1k–5k $ MRR + le métier + l&#39;optionalité, c&#39;est assez », alors procède avec le plan ci-dessous.</p>
+<h3>Ce que ChatGPT Voice ne fait toujours pas (2026)</h3>
+<ul>
+<li>Pas de mémoire persistante par session sur l&#39;usage coach de langue</li>
+<li>Pas de curriculum structuré</li>
+<li>Pas de répétition espacée / suivi de vocab</li>
+<li>Pas de transcription de conversation avec corrections</li>
+<li>Pas de visualisation de progression</li>
+<li>Pas de drilling ciblé sur les zones faibles</li>
+</ul>
+<p><strong>Ces points restent la surface du différenciateur.</strong> Aucun n&#39;est techniquement hors de portée pour OpenAI — mais ils ne sont pas livrés. La fenêtre est réelle mais ne durera pas éternellement ; le déploiement de la « mémoire » d&#39;OpenAI est à surveiller mensuellement.</p>
+<hr>
+<h2>Recommandations stratégiques</h2>
+<h3>1. Repositionner : pas « app de conversation IA » — « système de coaching qui utilise l&#39;IA »</h3>
+<p>Ne vends pas ce qui est commoditisé (la voix IA). Vends ce qui ne l&#39;est pas (la boucle qui l&#39;enrobe).</p>
+<p>Le pitch devient : <strong>« Ton coach se souvient de toi, te donne du feedback après chaque conversation, construit un deck de vocabulaire à partir de tes vraies conversations, et te montre tes progrès sur des semaines. ChatGPT Voice ne fait rien de tout ça. Babbel Speak non plus. »</strong></p>
+<p>C&#39;est le seul positionnement qui survit au tournant Babbel-Speak-gratuit. Si on vend « conversation IA », les clients Babbel ne switchent pas. Si on vend « la boucle de coaching », les clients Babbel sont intrigués par quelque chose que Babbel n&#39;a pas.</p>
+<h3>2. Choisir un persona de niche pour l&#39;histoire de lancement (tout le reste reste générique)</h3>
+<p>Le produit reste générique 12 langues. <strong>L&#39;histoire de lancement est étroite.</strong> Sans ça, l&#39;acquisition organique est morte — il n&#39;y a aucune raison convaincante pour quiconque de partager, blogger, ou poster sur un générique « coach de langue IA ».</p>
+<p>Trois positionnements candidats, évalués :</p>
+<ul>
+<li><strong>A. « Coach de conversation IA pour ingés / travailleurs remote apprenant l&#39;italien/espagnol/français/allemand pour une relocation »</strong> — ton propre profil, facile à écrire le copy, niche qui colle au chevauchement de ton audience avec dev Twitter / r/digitalnomad. <strong>Ma recommandation.</strong></li>
+<li><strong>B. « Coach anglais IA pour ingés non-natifs préparant des entretiens »</strong> — TAM plus gros, angle de contenu plus dur (spécifique anglais, moins fun à utiliser pour toi), concurrence ELSA/Loora plus directe</li>
+<li><strong>C. « Coach italien IA pour anglophones qui prévoient de déménager en Italie »</strong> — le plus étroit, contenu le plus facile, TAM le plus petit mais fit message-marché le plus serré</li>
+</ul>
+<p>Recommandation : <strong>A</strong>, avec B en fallback si A ne décolle pas. Différer <strong>C</strong> sauf si tu découvres une traction spécifique italienne.</p>
+<h3>3. Tarification : 7,99 $/mois, 49,99 $/an (4,16 $/mois équivalent), essai 7 jours</h3>
+<p>Calibration à la baisse depuis le 9,99 $ d&#39;hier sur la base des données :</p>
+<ul>
+<li>7,99 $/mois est <strong>sous</strong> le mensuel de Talkpal (9,99 $) mais au-dessus de Praktika (8 $) — ancre psychologique « sous 10 $ »</li>
+<li>49,99 $/an (~4,16 $/mois) est une réduction agressive de 50 % sur l&#39;annuel — signal fort trial-to-annual</li>
+<li>Essai gratuit 7 jours (opt-out — conversion automatique au payant sauf annulation) — conversion 2,5–3× plus haute que les essais opt-in selon Adapty</li>
+<li>Zapper le tier lifetime en v1 — verrouille un plancher de prix que tu pourrais regretter si tu montes en gamme</li>
+<li><strong>Réductions géographiques :</strong> zapper en v1 ; réévaluer à 1k utilisateurs si Brésil/Inde/Turquie montrent du volume</li>
+</ul>
+<p>Marge à 7,99 $/mois :</p>
+<ul>
+<li>Commission Apple/Google : 30 % an 1 → 5,59 $ net</li>
+<li>Coût variable utilisateur Pro typique (60 min/mois conversation) : 3,50–6 $ à 0,05–0,10 $/min côté utilisateur</li>
+<li>Marge de contribution : 0–2 $/utilisateur/mois pour les utilisateurs intensifs, 3–5 $ pour les utilisateurs légers</li>
+<li><strong>Plus serré que ce que l&#39;analyse d&#39;hier suggérait.</strong> Implication : un plafond quotidien soft sur Pro (60 min/jour) n&#39;est pas optionnel — c&#39;est une protection de marge requise.</li>
+</ul>
+<p>C&#39;est une vraie révision à la baisse à flagger. Le 9,99 $ était basé sur des hypothèses de coût obsolètes. 7,99 $ est mieux positionné concurrentiellement ET plus proche de la réalité des coûts.</p>
+<h3>4. Tier gratuit : délibérément limité mais utile</h3>
+<ul>
+<li><strong>Voix :</strong> 10 min/jour (matche exactement Talkpal, pas besoin d&#39;innover ici)</li>
+<li><strong>Sessions dans l&#39;historique :</strong> les 3 dernières seulement (pousse à l&#39;upgrade pour les utilisateurs qui veulent suivre les progrès)</li>
+<li><strong>Jeu de rôle :</strong> 3 scénarios gratuits du catalogue de 10 (café/directions/small-talk — les points d&#39;entrée les plus faciles)</li>
+<li><strong>Mémoire :</strong> <strong>La mémoire basique EST gratuite</strong> (nom, sujets récents, niveau). Critique — sans ça, l&#39;expérience gratuite est froide et ne convertit pas. Verrouiller la mémoire entièrement derrière Pro tue le funnel.</li>
+<li><strong>Feedback :</strong> Le feedback de fin de session est <strong>gratuit</strong> pour la session courante. L&#39;historique (&gt;3 sessions en arrière) est Pro. Comme ça chaque utilisateur gratuit voit le payoff de coaching une fois.</li>
+<li><strong>Jeu de cartes vocab (Plan 9) :</strong> 10 cartes/jour, un seul mode (voice translate seulement — le plus viscéralement satisfaisant)</li>
+<li><strong>Score de prononciation (Plan 10) :</strong> Pro seulement — signal d&#39;upgrade à 100 %</li>
+</ul>
+<h3>5. Canal de distribution : choisir UN — recommandation YouTube</h3>
+<p>Le Round 1 disait « TikTok / Reddit / Twitter / YouTube — choisis-en un ». Les données marché renforcent que c&#39;est la décision la plus importante. Nouvelle analyse :</p>
+<table>
+<thead>
+<tr>
+<th>Canal</th>
+<th>Fit pour Bruno</th>
+<th>Outcome réaliste à 6 mois</th>
+<th>Effort/semaine</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>YouTube</strong></td>
+<td>Haut — le long-form colle à la niche ingé/coach, trafic evergreen pilote par la recherche, l&#39;angle build-in-public du fondateur marche</td>
+<td>500–2000 abonnés, 50–200 installs organiques/semaine au mois 6</td>
+<td>8–12h/semaine</td>
+</tr>
+<tr>
+<td><strong>TikTok / Reels</strong></td>
+<td>Moyen — audience plus jeune, plus dur à monétiser au TAM, variance haute</td>
+<td>0–5000 abonnés, upside viral si tu touches</td>
+<td>6–10h/semaine</td>
+</tr>
+<tr>
+<td><strong>Reddit</strong></td>
+<td>Haut — r/languagelearning (2,7M) + subs de niche, très haute confiance</td>
+<td>50–300 installs organiques sur 6 mois depuis les posts</td>
+<td>3–5h/semaine</td>
+</tr>
+<tr>
+<td><strong>X / Bluesky</strong></td>
+<td>Moyen — chevauchement dev Twitter, build-in-public marche</td>
+<td>200–1000 abonnés, installs indirects via réseaux dev</td>
+<td>3–5h/semaine</td>
+</tr>
+</tbody></table>
+<p><strong>Recommandation : YouTube en primaire + Reddit en adjacent.</strong> Le contenu YouTube (vidéos de 5-10 min : « J&#39;ai construit un coach italien IA, voici la semaine 4 » / « Pourquoi j&#39;ai switché de Babbel à mon app » / « Construire une app de langue avec Supabase + Expo SDK 54 ») est evergreen, découvrable par la recherche, et matche l&#39;énergie build-in-public de ton instinct devblog existant. Reddit est adjacent à faible coût — partage la vidéo, réponds aux questions techniques, ne spam jamais.</p>
+<p><strong>Engagement :</strong> une vidéo YouTube par semaine pendant 26 semaines (une toutes les deux semaines si 26 c&#39;est trop). La sortie de contenu est la moitié de la stratégie de lancement.</p>
+<h3>6. Mener avec la rétention, pas l&#39;acquisition</h3>
+<p>Les apps éducation churnent 95 %+ au jour 30 (Business of Apps). L&#39;acquisition sans rétention est un trou. Priorités v1 :</p>
+<ul>
+<li><strong>Expérience de première session :</strong> l&#39;utilisateur doit sentir qu&#39;il a obtenu quelque chose de précieux en 90 secondes. La phrase d&#39;ouverture que le coach prononce compte plus que n&#39;importe quelle autre ligne de code.</li>
+<li><strong>Push jour 1 :</strong> « Ton premier rapport de feedback est prêt. » Concret, précieux, ouvre l&#39;écran de feedback.</li>
+<li><strong>Push jour 2 :</strong> « Prêt pour un warmup de 5 minutes avec ton coach ? » Indice d&#39;habitude.</li>
+<li><strong>Push jour 7 :</strong> « Voici ton premier résumé hebdo » — progrès concret, vrais chiffres, upsell Pro doux.</li>
+<li><strong>Sauvetage de churn jour 14 :</strong> « Veux-tu que je te rappelle ce que tu as appris la dernière fois ? » — exploite la mémoire.</li>
+<li><strong>Assurance streak :</strong> 1 freeze par semaine gratuit, illimité Pro.</li>
+</ul>
+<p>Les fonctionnalités de rétention ont un levier plus haut par heure que les ajouts de fonctionnalités. Priorise en conséquence.</p>
+<h3>7. Séquencement : spécifier le Plan 8 maintenant, livrer les Plans 8/9/10 en 4-4-3 semaines</h3>
+<ul>
+<li><strong>Maintenant → ~2 semaines :</strong> suppression de compte livrée. Rédaction de la spec du Plan 8 en parallèle.</li>
+<li><strong>Semaines 2–7 :</strong> implémentation du Plan 8 (« La boucle de coaching »). Estimation honnête 4–5 semaines. Fin : lancement payant.</li>
+<li><strong>Semaines 7–11 :</strong> Plan 9 (« La boucle de vocab »). 4 semaines. Fin : jeu de cartes livré, boucle de rétention mesurable.</li>
+<li><strong>Semaines 11–14 :</strong> Plan 10 (« La boucle de prononciation »). 3 semaines (moins de nouvelle infra). Fin : fonctionnalité signature du tier Pro.</li>
+<li><strong>Tout le long :</strong> vidéo YouTube hebdo, présence Reddit + Twitter hebdo.</li>
+</ul>
+<hr>
+<h2>Plan 8 — « La boucle de coaching » (4–5 semaines)</h2>
+<p><strong>Objectif :</strong> livrer une app qui autorise le paiement avec les trois fonctionnalités qui nous rendent pas-Babbel et pas-ChatGPT-Voice : mémoire persistante, feedback de fin de session, scénarios de jeu de rôle — plus paywall, push, et quotas freemium.</p>
+<h3>Architecture</h3>
+<ul>
+<li><strong>Mémoire :</strong> nouvelle table <code>coach_memory</code> (par utilisateur, par langue), profil structuré (sujets récents, niveau, zones faibles, contexte personnel, résumé de la dernière session). Chemin d&#39;écriture : <code>voice.ts /end</code> appelle gpt-4o-mini pour fusionner la mémoire existante avec la nouvelle transcription → upsert. Chemin de lecture : <code>streamChatCompletion</code> appelle <code>buildCoachSystemPrompt</code> avec bloc mémoire optionnel ; le builder de prompt du coach injecte un paragraphe <code>&lt;context&gt;</code> si la mémoire est présente.</li>
+<li><strong>Feedback :</strong> nouvelle table <code>session_feedback</code> (par conversation). Chemin d&#39;écriture : <code>voice.ts /end</code> retourne synchronement après l&#39;écriture, OU async via un endpoint <code>POST /sessions/:id/feedback</code> que le mobile poll quand la sheet de fin de session s&#39;ouvre. Un seul appel gpt-4o avec la transcription complète → JSON structuré (highlights / corrections / vocab) → validation Zod → stocker. Lecture : le même endpoint retourne la ligne.</li>
+<li><strong>Jeu de rôle :</strong> catalogue statique dans <code>packages/shared/src/role-play-scenarios.ts</code> (10 scénarios, chacun un template de system-prompt + 2-3 « twists »). Nouveau endpoint <code>POST /sessions/start</code> accepte <code>scenarioId</code> (optionnel) ; le prompt du coach est construit depuis le template de scénario au lieu du greeting par défaut.</li>
+<li><strong>Feature gating :</strong> nouveau module <code>apps/api/src/lib/features.ts</code> qui enrobe les lookups d&#39;entitlement. Fonctions : <code>canUseFeature(userId, feature)</code> et <code>getDailyQuota(userId, feature)</code>. Utilisé à : la gate feedback de fin de session (gratuit = session courante seulement), le picker de jeu de rôle (gratuit = 3 scénarios), la profondeur de mémoire (gratuit = basique / Pro = profonde).</li>
+<li><strong>Quota quotidien :</strong> étendre le schéma <code>entitlements</code> avec <code>dailyVoiceSecondsUsed</code> + <code>dailyResetAt</code> (ou calculer depuis <code>usage_events</code>). Ajouter plafond 10 min/jour pour gratuit, plafond soft 60 min/jour pour Pro.</li>
+<li><strong>Paywall :</strong> RevenueCat + react-native-purchases. Abonnements consommables iOS + Android (7,99 $/mois, 49,99 $/an). Écran paywall modal, déclenché sur dépassement de quota, sur tap de fonctionnalité Pro, ou au jour 7.</li>
+<li><strong>Notifications push :</strong> Expo Push, jobs programmés dans <code>apps/api/src/jobs/</code>. Notifications jour 1, 2, 7, 14 selon l&#39;état utilisateur. Utilise la table <code>push_tokens</code> existante.</li>
+</ul>
+<h3>Ajouts au tech stack</h3>
+<ul>
+<li><code>revenuecat/react-native-purchases</code> (mobile)</li>
+<li>Pas de nouvelles deps serveur ; réutilise openai + supabase + drizzle</li>
+</ul>
+<h3>Découpage des tâches (en miroir du pattern existant)</h3>
+<p>Cible : 12–14 tâches atomiques, 1–2h chacune. Durée honnête 4–5 semaines.</p>
+<ol>
+<li><strong>Migrations de schéma</strong> — <code>coach_memory</code>, <code>session_feedback</code>, étendre <code>entitlements</code>, policies RLS</li>
+<li><strong>Module de feature-gating</strong> — <code>lib/features.ts</code>, types, tests unitaires</li>
+<li><strong>Refactor abstraction de provider TTS</strong> (ou différer au Plan 10 — décision Bruno) — envelopper OpenAI TTS derrière interface, ajouter stub d&#39;implémentation Inworld</li>
+<li><strong>Job d&#39;extraction mémoire</strong> — fonction d&#39;extraction gpt-4o-mini, prompt, schéma Zod, tests unitaires</li>
+<li><strong>Injection mémoire</strong> — étendre <code>buildCoachSystemPrompt</code>, intégrer dans <code>streamChatCompletion</code></li>
+<li><strong>UI de consentement mémoire</strong> — écran onboarding + écran éditeur Profile pour « La mémoire de ton coach »</li>
+<li><strong>Génération de feedback</strong> — appel gpt-4o, sortie JSON structurée, schéma Zod, endpoint, stockage</li>
+<li><strong>Sheet de fin de session</strong> — UI mobile (3 panneaux : highlights / corrections / vocab), poll l&#39;endpoint feedback</li>
+<li><strong>Catalogue de scénarios de jeu de rôle</strong> — 10 scénarios, templates de prompt, UI de picker</li>
+<li><strong>Démarrage de session jeu de rôle</strong> — étendre l&#39;endpoint session-start, chemin de conversation-prompt avec template de scénario</li>
+<li><strong>Application du quota quotidien</strong> — wrapper l&#39;endpoint voix, 10 min/jour gratuit, plafond soft 60 min/jour Pro</li>
+<li><strong>Intégration RevenueCat</strong> — webhook entitlements, écran paywall, identifiants store</li>
+<li><strong>Notifications push</strong> — jobs jour 1/2/7/14, templates de messages, programmation par timezone utilisateur</li>
+<li><strong>Préparation soumission App Store / Play Console</strong> — captures, descriptions, disclaimer contenu IA, consentement GDPR, vérification suppression de compte</li>
+</ol>
+<h3>Fichiers critiques pour le Plan 8</h3>
+<ul>
+<li><code>apps/api/src/routes/voice.ts</code> (étendre handler <code>/end</code>)</li>
+<li><code>apps/api/src/lib/quota.ts</code> + nouveau <code>apps/api/src/lib/features.ts</code></li>
+<li><code>packages/shared/src/prompts.ts</code> (injection mémoire)</li>
+<li><code>packages/shared/src/role-play-scenarios.ts</code> (nouveau)</li>
+<li><code>apps/api/src/db/schema/coach-memory.ts</code> (nouveau)</li>
+<li><code>apps/api/src/db/schema/session-feedback.ts</code> (nouveau)</li>
+<li><code>apps/api/src/db/schema/entitlements.ts</code> (étendre)</li>
+<li><code>apps/api/migrations/0010_coach_memory.sql</code> (nouveau)</li>
+<li><code>apps/api/migrations/0011_session_feedback.sql</code> (nouveau)</li>
+<li><code>apps/api/migrations/0012_entitlements_daily_quota.sql</code> (nouveau)</li>
+<li><code>apps/mobile/app/(tabs)/profile/memory.tsx</code> (nouveau)</li>
+<li><code>apps/mobile/app/(tabs)/practice.tsx</code> (étendre — sheet de fin de session)</li>
+<li><code>apps/mobile/app/(modals)/role-play-picker.tsx</code> (nouveau)</li>
+<li><code>apps/mobile/app/(modals)/paywall.tsx</code> (nouveau)</li>
+</ul>
+<h3>Ce qui n&#39;est PAS dans le Plan 8 (dire non délibérément)</h3>
+<ul>
+<li>Jeu de cartes vocab (Plan 9)</li>
+<li>Score de prononciation (Plan 10)</li>
+<li>Correction douce en temps réel (Plan 9 ou 10)</li>
+<li>Leçon quotidienne auto-générée (Plan 10)</li>
+<li>Graphique de confiance à l&#39;oral (Plan 9)</li>
+<li>Assurance streak (Plan 9)</li>
+<li>Déploiement multi-région (différé)</li>
+<li>Tarification géographique</li>
+<li>Tier lifetime</li>
+<li>Système de parrainage</li>
+</ul>
+<h3>Définition de fait pour le Plan 8</h3>
+<ul>
+<li>L&#39;app est sur Play Store internal track (track Production après validation de stabilité)</li>
+<li>L&#39;app est sur App Store TestFlight (production après review Apple)</li>
+<li>Le paywall est câblé, RevenueCat enregistre, le flag Pro bascule à l&#39;achat</li>
+<li>5+ utilisateurs testeurs ont complété une session, vu le feedback, édité leur mémoire, essayé un jeu de rôle</li>
+<li>La suppression de compte est vérifiée fonctionnelle de bout en bout sur les deux stores</li>
+</ul>
+<hr>
+<h2>Plan 9 — « La boucle de vocab » (4 semaines)</h2>
+<p><strong>Objectif :</strong> la boucle d&#39;habitude addictive. Extraction de vocab + jeu de cartes SRS + graphique de confiance à l&#39;oral + assurance streak. C&#39;est ce qui double le nombre de sessions.</p>
+<h3>Architecture</h3>
+<ul>
+<li><strong>Extraction de vocab :</strong> <code>voice.ts /end</code> ajoute un appel gpt-4o-mini qui extrait 5–8 items vocab (terme, traduction, source-message-id, difficulté, partie du discours). Insère dans la table <code>vocab_items</code> existante. Ajouter colonnes <code>next_review_at</code> + <code>interval_days</code> + <code>ease</code> pour SRS.</li>
+<li><strong>Moteur SRS :</strong> algorithme FSRS dans <code>apps/api/src/lib/srs.ts</code>. À la review de carte, calculer le prochain intervalle selon succès/échec. Cartes dues aujourd&#39;hui récupérées via <code>next_review_at &lt;= now()</code>.</li>
+<li><strong>Jeu de cartes :</strong> nouvelle route <code>(tabs)/vocab.tsx</code> + écran de jeu. Mode voice translate + mode tap-translate pour v1 (différer listen-repeat + write à v1.1). Métaphore de pile de cartes matchant les captures d&#39;écran que Bruno a partagées.</li>
+<li><strong>Palette dark du jeu :</strong> scopée au composant <code>apps/mobile/components/vocab-game/</code>. Ne pas polluer les tokens globaux.</li>
+<li><strong>Graphique de confiance à l&#39;oral :</strong> widget sur l&#39;onglet progress. Lit depuis la table <code>messages</code> existante (calculer mots/min depuis le texte + durée sur fenêtre glissante de 4 semaines).</li>
+<li><strong>Assurance streak :</strong> simple flag booléen sur la table <code>streak_days</code> — « frozen », consommé sur invocation utilisateur. Gratuit = 1/semaine, Pro = illimité.</li>
+</ul>
+<h3>Découpage des tâches (8–10 tâches)</h3>
+<ol>
+<li>Migration de schéma : étendre <code>vocab_items</code> avec colonnes SRS</li>
+<li>Extraction de vocab à la fin de session (gpt-4o-mini)</li>
+<li>Algorithme FSRS + tests unitaires</li>
+<li>Endpoint liste vocab + cartes dues</li>
+<li>UI jeu de cartes — mode voice translate</li>
+<li>UI jeu de cartes — mode tap-translate + combo / jauge d&#39;énergie</li>
+<li>Widget graphique de confiance à l&#39;oral</li>
+<li>Toggle assurance streak + UI</li>
+<li>Notification push : « X cartes t&#39;attendent »</li>
+<li>Intégration paywall pour cartes illimitées</li>
+</ol>
+<h3>Fichiers critiques</h3>
+<ul>
+<li><code>apps/api/src/db/schema/vocab.ts</code> (étendre)</li>
+<li><code>apps/api/migrations/0013_vocab_srs.sql</code> (nouveau)</li>
+<li><code>apps/api/src/lib/srs.ts</code> (nouveau)</li>
+<li><code>apps/api/src/routes/vocab.ts</code> (nouveau — liste, review, dues)</li>
+<li><code>apps/mobile/app/(tabs)/vocab.tsx</code> (nouveau)</li>
+<li><code>apps/mobile/components/vocab-game/</code> (nouveau dir)</li>
+<li><code>apps/mobile/components/speaking-confidence-chart.tsx</code> (nouveau)</li>
+</ul>
+<h3>Définition de fait pour le Plan 9</h3>
+<ul>
+<li>Sessions moyennes par utilisateur actif / semaine doublent vs la baseline du Plan 8</li>
+<li>30 %+ des utilisateurs actifs reviewent au moins une carte par jour</li>
+<li>Le taux de conversion Pro augmente de 30 %+ par rapport au lancement Plan 8</li>
+</ul>
+<hr>
+<h2>Plan 10 — « La boucle de prononciation » (3 semaines)</h2>
+<p><strong>Objectif :</strong> la signature la plus forte du tier Pro. Le score de prononciation est ce qui fait basculer les indécis hors du tier gratuit.</p>
+<h3>Architecture</h3>
+<ul>
+<li><strong>Score de prononciation :</strong> Azure Pronunciation Assessment comme provider v1 (meilleure qualité, intégration la plus simple). Coût ~0,02 $/utterance. Pro seulement.</li>
+<li><strong>Stockage audio avec consentement :</strong> <code>messages.audio_storage_path</code> supporte déjà l&#39;audio utilisateur (le schéma accepte ça). Ajouter <code>uploadUserAudio</code> dans <code>voice.ts</code> à côté du <code>uploadCoachAudioChunk</code> existant. Écran de consentement onboarding + bouton Profile supprimer-mon-audio.</li>
+<li><strong>« Écoute le toi du passé » :</strong> nouvel écran — comparaison de prononciation semaine sur semaine, lecteur audio pour chaque utterance.</li>
+<li><strong>Leçon quotidienne auto :</strong> nouvelle notification push — « Focus du jour : passé composé (tu as galéré la semaine dernière) ». Tape dans le prompt de jeu de rôle avec focus explicite sur zone faible.</li>
+<li><strong>Correction douce temps réel :</strong> toggle opt-in dans Profile. Quand activé, le prompt du coach inclut « Si l&#39;utilisateur fait une erreur claire, corrige-la doucement inline au plus une fois tous les ~5 tours. »</li>
+</ul>
+<h3>Découpage des tâches (6–8 tâches)</h3>
+<ol>
+<li>Intégration provider Azure Pronunciation Assessment</li>
+<li>Stockage audio utilisateur + flow de consentement</li>
+<li>Stockage score de prononciation + endpoint</li>
+<li>Écran « Écoute le toi du passé »</li>
+<li>Push leçon quotidienne auto + intégration jeu de rôle</li>
+<li>Toggle correction temps réel + changement de prompt</li>
+<li>Email hebdomadaire de progrès (gpt-4o-mini summarizer + SendGrid ou Resend)</li>
+</ol>
+<h3>Fichiers critiques</h3>
+<ul>
+<li><code>apps/api/src/providers/azure-pronunciation.ts</code> (nouveau)</li>
+<li><code>apps/api/src/routes/voice.ts</code> (étendre — <code>uploadUserAudio</code>)</li>
+<li><code>apps/api/src/jobs/daily-lesson-push.ts</code> (nouveau)</li>
+<li><code>apps/mobile/app/(tabs)/progress/pronunciation.tsx</code> (nouveau)</li>
+<li><code>apps/mobile/app/(tabs)/profile.tsx</code> (étendre — toggle correction)</li>
+</ul>
+<h3>Définition de fait pour le Plan 10</h3>
+<ul>
+<li>60 %+ des utilisateurs Pro ont donné consentement au stockage audio</li>
+<li>La conversion Free→Pro s&#39;améliore mesurablement (cible : 20 %+ d&#39;amélioration vs baseline du Plan 9)</li>
+<li>30 %+ des utilisateurs Pro ouvrent l&#39;écran prononciation au moins hebdomadairement</li>
+</ul>
+<hr>
+<h2>Vérification — comment savoir si chaque phase fonctionne</h2>
+<h3>Lancement Plan 8 (Semaine 7)</h3>
+<ul>
+<li>App Store + Play Store live (tracks production)</li>
+<li>50+ installs testeurs iOS + Android</li>
+<li>5+ abonnés payants dans les 14 jours après lancement public</li>
+<li>Taux de session sans crash &gt;99,5 %</li>
+<li>Suppression de compte vérifiée fonctionnelle</li>
+<li>Sentry a &lt;1 erreur unique pour 100 sessions</li>
+</ul>
+<h3>Lancement Plan 9 (Semaine 11)</h3>
+<ul>
+<li>Cartes-par-jour par utilisateur actif &gt;5 (médiane)</li>
+<li>Rétention jour 7 s&#39;améliore de 20 % vs cohorte Plan 8</li>
+<li>Rétention jour 30 &gt;25 % (baseline Plan 8 probablement 10–15 %)</li>
+<li>Reviews sur les stores : 4,4+ étoiles moyenne sur 20+ reviews</li>
+</ul>
+<h3>Lancement Plan 10 (Semaine 14)</h3>
+<ul>
+<li>30+ abonnés payants (240 $+/mois MRR)</li>
+<li>Conversion Free→Pro des utilisateurs installés &gt;2 %</li>
+<li>1 pièce de contenu YouTube a &gt;5k vues (distribution organique validée)</li>
+<li>Rétention de la feature prononciation : 30 %+ des utilisateurs Pro l&#39;utilisent hebdomadairement</li>
+</ul>
+<h3>Vérif trimestrielle (Mois 6)</h3>
+<ul>
+<li>1k $ MRR — à ce point on est dans la bande de probabilité 40–50 % de succès</li>
+<li>5+ témoignages honnêtes d&#39;utilisateurs réels</li>
+<li>Burn-rate : net positif mois sur mois (revenu &gt; infra + outils)</li>
+</ul>
+<h3>Déclencheurs de pivot</h3>
+<ul>
+<li><strong>Aucun abonné payant après 30 jours post-lancement :</strong> le positionnement est faux. Repositionner + relancer dans les 2 semaines.</li>
+<li><strong>Rétention jour 7 &lt;5 % sur 100+ utilisateurs :</strong> l&#39;expérience de première session est fausse. Redessiner l&#39;onboarding + la première session.</li>
+<li><strong>Utilisateurs gratuits actifs &gt;500 mais conversion Pro &lt;1 % :</strong> le placement du paywall / l&#39;histoire de valeur est fausse. Tester A/B les déclencheurs de paywall.</li>
+<li><strong>Contenu YouTube sous-performant après 8 semaines :</strong> switcher vers TikTok ou contenu court-format Reddit. Ne pas doubler la mise sur un canal qui ne produit pas.</li>
+</ul>
+<hr>
+<h2>Décisions ouvertes pour Bruno (à résoudre avant la spec du Plan 8)</h2>
+<p>Classées par impact.</p>
+<ol>
+<li><strong>Positionnement de niche pour l&#39;histoire de lancement.</strong> A (ingés apprenant italien/espagnol/français/allemand pour relocation), B (anglais pour ingés non-natifs en entretien), C (italien pour anglophones déménageant en Italie). Mon vote : A. Cette décision pilote TOUT le copy marketing, les mots-clés ASO, l&#39;angle du contenu YouTube, le hero de la landing page.</li>
+<li><strong>Tarification.</strong> 7,99 $/mois + 49,99 $/an (recommandation Round 2), 9,99 $/mois + 59,99 $/an (Round 1), ou 5,99 $/mois en sous-positionnement. Les données du Round 2 penchent pour 7,99 $.</li>
+<li><strong>Deal lifetime founders.</strong> 99 $ lifetime pour les 200 premiers utilisateurs, oui/non. Les nouvelles données disent zapper en v1 — verrouille un plancher de prix trop bas avant qu&#39;on sache si la montée en gamme est viable.</li>
+<li><strong>Timing de l&#39;abstraction de provider TTS.</strong> Tâche 1 du Plan 8 (maintenant, ~3 jours de travail, débloque la TTS premium du tier Pro) vs différer au Plan 10. Vote : inclure dans le Plan 8 — petite tâche, ouvre le différenciateur du tier Pro plus tôt.</li>
+<li><strong>Mécanisme de livraison du feedback.</strong> Synchrone dans la réponse <code>/end</code> (~3 sec de latence) vs async via endpoint séparé (<code>/end</code> instantané, polled). Vote : async — meilleure UX, ne bloque pas la sheet de fin de session.</li>
+<li><strong>Profondeur de mémoire du tier gratuit.</strong> Mémoire basique (nom, sujets récents, résumé de niveau) gratuite vs TOUTE la mémoire Pro seulement. Vote : basique gratuit — l&#39;expérience gratuite sans AUCUNE mémoire est froide, tue le funnel.</li>
+<li><strong>YouTube vs autre canal primaire de distribution.</strong> Vote Round 2 : YouTube + Reddit secondaire. Es-tu OK avec un investissement contenu de 8–12h/semaine, ou tu veux te pencher vers TikTok/court-format ?</li>
+<li><strong>Séquence de lancement iOS vs Android.</strong> Android en premier (ton build dev marche déjà, la deadline Play 2026-07-04 force ça) + iOS 4–6 semaines plus tard (TestFlight puis production). Vote : Android en premier, ride la deadline, iOS comme milestone du Plan 9.</li>
+<li><strong>Choix du provider de prononciation.</strong> Azure Pronunciation Assessment (meilleure qualité) vs SpeechSuper (moins cher) vs ELSA SDK (meilleure marque). Vote : Azure pour v1 — qualité + vitesse d&#39;intégration.</li>
+<li><strong>Le Plan 8 doit-il attendre le merge de la suppression de compte, ou avancer en parallèle ?</strong> La suppression de compte est le blocage dur pour la soumission App Store. La rédaction de la spec du Plan 8 peut tourner en parallèle ; la tâche #1 du Plan 8 (migrations de schéma) peut aussi démarrer en parallèle. Le travail UI mobile du Plan 8 devrait attendre le merge de la suppression pour éviter les conflits de merge sur profile.tsx.</li>
+<li><strong>Durée de l&#39;essai.</strong> 7 jours vs 14 jours. Données : 14 jours montre ~5 % trial-to-paid plus haut mais taux de start trial plus bas. Effet net ambigu. Vote : 7 jours (standard, moins de paralysie d&#39;analyse).</li>
+<li><strong>Stratégie linguistique des métadonnées App Store.</strong> Captures/descriptions en anglais seulement vs localisées dans les 12 langues cibles. Vote : anglais + top 4 langues supportées (italien, espagnol, français, allemand) pour v1. Localiser plus tard si la traction le justifie.</li>
+</ol>
+<hr>
+<h2>Fichiers critiques à modifier sur les Plans 8/9/10 (vue d&#39;ensemble)</h2>
+<p><strong>Backend (<code>apps/api/src/</code>) :</strong></p>
+<ul>
+<li><code>routes/voice.ts</code> — étendre <code>/end</code>, ajouter <code>/feedback</code>, ajouter param scénario à <code>/sessions/start</code></li>
+<li><code>lib/quota.ts</code> — ajouter vérification de quota quotidien</li>
+<li><code>lib/features.ts</code> — NOUVEAU — module de feature-gating</li>
+<li><code>db/schema/{coach-memory,session-feedback,vocab,entitlements}.ts</code> — nouveaux + étendre</li>
+<li><code>providers/openai.ts</code> — extraire helper d&#39;appel feedback gpt-4o</li>
+<li><code>providers/azure-pronunciation.ts</code> — NOUVEAU (Plan 10)</li>
+<li><code>providers/tts-strategy.ts</code> — NOUVEAU (Tâche 3 du Plan 8 si Bruno donne le feu vert)</li>
+<li><code>jobs/{day-1-push,day-7-summary,daily-lesson}.ts</code> — NOUVEAUX</li>
+</ul>
+<p><strong>Shared (<code>packages/shared/src/</code>) :</strong></p>
+<ul>
+<li><code>prompts.ts</code> — étendre <code>buildCoachSystemPrompt</code> pour mémoire + jeu de rôle</li>
+<li><code>role-play-scenarios.ts</code> — NOUVEAU</li>
+<li><code>feedback-schema.ts</code> — NOUVEAU (Zod)</li>
+<li><code>coach-memory-schema.ts</code> — NOUVEAU (Zod)</li>
+</ul>
+<p><strong>Mobile (<code>apps/mobile/app/</code>) :</strong></p>
+<ul>
+<li><code>(tabs)/practice.tsx</code> — étendre (sheet de fin de session)</li>
+<li><code>(tabs)/vocab.tsx</code> — NOUVEAU (Plan 9)</li>
+<li><code>(tabs)/profile.tsx</code> — étendre (lien éditeur mémoire, toggle correction, consentement audio)</li>
+<li><code>(tabs)/profile/memory.tsx</code> — NOUVEAU</li>
+<li><code>(tabs)/progress/pronunciation.tsx</code> — NOUVEAU (Plan 10)</li>
+<li><code>(modals)/paywall.tsx</code> — NOUVEAU</li>
+<li><code>(modals)/role-play-picker.tsx</code> — NOUVEAU</li>
+<li><code>(onboarding)/memory-consent.tsx</code> — NOUVEAU</li>
+</ul>
+<p><strong>Design tokens (<code>packages/design-tokens/src/</code>) :</strong></p>
+<ul>
+<li>Ajouter une palette dark scopée pour le jeu vocab au Plan 9 — garder Sunrise intouché globalement</li>
+</ul>
+<hr>
+<h2>Opinion honnête sur l&#39;aventure</h2>
+<p>Après recherche et ancrage plus profonds :</p>
+<p><strong>Oui, il existe un chemin réel mais étroit.</strong> 1k–10k $ MRR en 18 mois est atteignable avec le plan ci-dessus, en supposant :</p>
+<ul>
+<li>Le positionnement de niche est choisi et tenu</li>
+<li>Le contenu fondateur tourne hebdomadairement pendant 6 mois minimum</li>
+<li>Le Plan 8 livre en 7 semaines (pas 4 comme espéré initialement)</li>
+<li>La suppression de compte atterrit mi-juin sans glisser</li>
+<li>L&#39;ingénierie de rétention est prise aussi sérieusement que l&#39;ingénierie de fonctionnalités</li>
+</ul>
+<p><strong>Les cotes du pari produit favorisent « livrer et valider », pas « construire plus avant de lancer ».</strong> Chaque semaine non passée sur l&#39;App Store avec un flow d&#39;abonnement payant est une semaine gaspillée dans cette catégorie — le paysage concurrentiel IA bouge plus vite que ton cycle d&#39;itération. Mieux vaut lancer le Plan 8 à la semaine 7 et apprendre des vrais utilisateurs que construire les Plans 8 + 9 en parallèle pendant 10 semaines avant tout feedback externe.</p>
+<p><strong>Les signaux Babbel Speak / Duolingo Max sont dégrisants.</strong> Ils confirment : la conversation IA seule N&#39;EST PAS suffisante pour commander des revenus d&#39;abonnement. <strong>Tout notre pitch doit être le système de coaching, pas l&#39;IA.</strong> Mémoire + feedback + vocab + prononciation sont le système. L&#39;IA est le moteur qui les rend intelligents. Vends le système. Montre le moteur.</p>
+<p><strong>Le plus gros risque après le burnout :</strong> prendre trop de temps à lancer et rater la fenêtre de différenciation. Le déploiement de la mémoire ChatGPT vers la voix, Babbel Speak gagnant en traction, le polish continu de Speak sur OpenAI Realtime — l&#39;écart se ferme mensuellement. <strong>Livrer le Plan 8 en juillet, pas en septembre.</strong></p>
+<p><strong>La plus grosse opportunité unique :</strong> la boucle de coaching (mémoire + feedback + vocab + jeu de rôle) n&#39;existe vraiment pas comme produit intégré aujourd&#39;hui. Speak a la conversation IA. ELSA a la prononciation. Babbel a les leçons structurées + IA gratuite. Duolingo a la gamification. Personne n&#39;a les quatre câblés en une boucle cohérente qui compose. Si on livre cette boucle, le positionnement s&#39;écrit tout seul.</p>
+<hr>
+<h2>TL;DR</h2>
+<ol>
+<li><strong>Le brouillon du Round 1 était trop rose sur le prix, la marge, et le paysage concurrentiel.</strong> Le Round 2 corrige : 7,99 $/mois, marge réelle 30–50 % pas 70 %, Babbel Speak est maintenant gratuit, Duolingo Max à 9 % signifie que la voix-IA-seule est une commodité.</li>
+<li><strong>Repositionner : « système de coaching qui utilise l&#39;IA » — pas « app de conversation IA ».</strong> Ça survit à Babbel-Speak-gratuit. Le positionnement pure-conversation-IA non.</li>
+<li><strong>Choisir un persona de niche pour le lancement</strong> — recommandé : « Coach de conversation IA pour ingés/travailleurs remote apprenant italien/espagnol/français/allemand pour relocation. » Tout le reste reste générique, l&#39;histoire de lancement est étroite.</li>
+<li><strong>Plan 8 = 4–5 semaines honnêtes</strong> (mémoire + feedback fin de session + jeu de rôle + paywall + push + quotas freemium). La suppression de compte est un BLOCAGE DUR — spécifier le Plan 8 en parallèle mais ne pas démarrer l&#39;implémentation avant le merge de la suppression.</li>
+<li><strong>Plan 9 = 4 semaines</strong> (extraction vocab + jeu de cartes + SRS + graphique de confiance + assurance streak). La table <code>vocab_items</code> existe déjà — avance.</li>
+<li><strong>Plan 10 = 3 semaines</strong> (prononciation via Azure + stockage audio utilisateur + leçon quotidienne auto + correction douce).</li>
+<li><strong>Distribution : s&#39;engager sur YouTube hebdo + Reddit adjacent.</strong> 8–12h/semaine de contenu. Chiffre réel, pas optionnel.</li>
+<li><strong>Tarification : 7,99 $/mois + 49,99 $/an + essai 7 jours. Pas de lifetime en v1.</strong></li>
+<li><strong>Tier gratuit : 10 min/jour, 3 dernières sessions, 3 jeux de rôle, mémoire basique, feedback session courante. Jeu de cartes 10/jour.</strong></li>
+<li><strong>Probabilités d&#39;outcome (18 mois) :</strong> 1k $ MRR ~40–50 %, 10k $ MRR ~10–15 %, 50k $ MRR &lt;5 %. Si 1k–10k $ MRR est un outcome qui a du sens pour toi, procède. Sinon, resserrer la niche ou reconsidérer.</li>
+<li><strong>Les 12 décisions ouvertes</strong> ci-dessus sont à résoudre quand on brainstorme la prochaine fois. Top trois : persona de niche, tarification, YouTube vs autre canal.</li>
+</ol>
+<hr>
+<p><em>Fin du Round 2. Les 12 décisions ouvertes sont l&#39;input de brainstorm pour la prochaine session.</em></p>
+
+</body>
+</html>

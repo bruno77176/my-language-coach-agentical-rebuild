@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Latence de conversation — avant / après / speech-to-speech</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    max-width: 1000px; margin: 40px auto; padding: 0 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px; line-height: 1.6; color: #2a2622; background: #faf6ee;
+  }
+  h1 { font-size: 1.8em; color: #2a1a0a; border-bottom: 2px solid #d4a373; padding-bottom: .3em; }
+  h2 { font-size: 1.2em; color: #2a1a0a; margin-top: 2em; }
+  .sub { color: #8a7a5a; font-style: italic; margin-top: -0.4em; }
+  .row { margin: 22px 0; }
+  .rowhead { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .rowtitle { font-weight:600; color:#2a1a0a; }
+  .rowtotal { font-variant-numeric: tabular-nums; color:#5b3e1d; font-weight:600; }
+  .track { background:#efe6d2; border-radius:6px; height:46px; width:100%; position:relative; overflow:hidden; }
+  .bar { height:100%; display:flex; }
+  .seg { height:100%; display:flex; align-items:center; justify-content:center;
+         font-size:11px; color:#1a1006; overflow:hidden; white-space:nowrap;
+         border-right:1px solid rgba(255,255,255,.55); box-sizing:border-box; }
+  .seg span { padding:0 3px; text-shadow:0 1px 0 rgba(255,255,255,.35); }
+  .scaleNote { color:#8a7a5a; font-size:.82em; margin-top:4px; }
+  table { border-collapse: collapse; margin: 1em 0; width: 100%; font-size: .9em; }
+  th,td { border:1px solid #d4c4a0; padding:7px 10px; text-align:left; vertical-align:top; }
+  thead { background:#ead9b8; }
+  td.num { text-align:right; font-variant-numeric: tabular-nums; }
+  .sw { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px; vertical-align:middle; }
+  .legend { font-size:.85em; }
+  .pill { display:inline-block; font-size:.72em; padding:1px 7px; border-radius:10px; font-weight:600; }
+  .ship { background:#cfe8c9; color:#26561c; }
+  .pend { background:#f6e2b0; color:#7a5500; }
+  .na   { background:#e3dccb; color:#6a5c3e; }
+  blockquote { border-left:3px solid #d4a373; background:#f4ecda; padding:.4em 16px; margin:1.4em 0; border-radius:0 4px 4px 0; color:#5a4a3a; }
+  .big { font-size:1.05em; }
+  strong { color:#1a1006; }
+</style>
+</head>
+<body>
+<h1>Latence de conversation : avant → après → speech-to-speech</h1>
+<p class="sub">Du moment où tu arrêtes de parler jusqu'au premier mot du coach (« time-to-first-audio »). La longueur de chaque trait est proportionnelle au temps. Estimations à partir de la lecture du code + benchmarks 2026 — à affiner avec de vraies mesures.</p>
+
+<p class="scaleNote">Échelle commune : toute la largeur = <strong>2,6 s</strong> (le « avant »). Les trois traits partagent la même échelle, donc tu peux comparer à l'œil. Survole un segment pour le détail.</p>
+
+<!-- ============ BAR 1 : AVANT ============ -->
+<div class="row">
+  <div class="rowhead"><span class="rowtitle">1 · Avant</span><span class="rowtotal">≈ 2,6 s &nbsp;(100 %)</span></div>
+  <div class="track"><div class="bar">
+    <div class="seg" style="width:5.75%;background:#e8a07a" title="Réseau client↔serveur : 150 ms"><span>Réseau</span></div>
+    <div class="seg" style="width:5.75%;background:#e6b5d0" title="Auth (appel réseau Supabase getUser) : 150 ms"><span>Auth</span></div>
+    <div class="seg" style="width:3.45%;background:#bcd9a8" title="Lectures DB en série (×3) : 90 ms"><span>DB</span></div>
+    <div class="seg" style="width:22.99%;background:#9aa6e0" title="STT — transcription en batch : 600 ms"><span>STT&nbsp;600&nbsp;ms</span></div>
+    <div class="seg" style="width:4.60%;background:#86c6c0" title="Insert message + chargement historique : 120 ms"><span>Hist</span></div>
+    <div class="seg" style="width:19.16%;background:#d3b0e0" title="LLM jusqu'à la 1ʳᵉ phrase : 500 ms"><span>LLM&nbsp;500&nbsp;ms</span></div>
+    <div class="seg" style="width:32.57%;background:#f0a64f" title="TTS : synthèse + upload Storage + URL signée : 850 ms"><span>TTS&nbsp;850&nbsp;ms</span></div>
+    <div class="seg" style="width:5.75%;background:#cdbd9a" title="Client : re-téléchargement + lecture : 150 ms"><span>Lecture</span></div>
+  </div></div>
+</div>
+
+<!-- ============ BAR 2 : APRES HORIZON 1 ============ -->
+<div class="row">
+  <div class="rowhead"><span class="rowtitle">2 · Après notre fix (Horizon 1 complet)</span><span class="rowtotal">≈ 1,6 s &nbsp;(−39 %)</span></div>
+  <div class="track"><div class="bar">
+    <div class="seg" style="width:5.75%;background:#e8a07a" title="Réseau : 150 ms (inchangé ; multi-région plus tard)"><span>Réseau</span></div>
+    <div class="seg" style="width:0.38%;background:#e6b5d0" title="Auth vérifiée en local : ~10 ms ⏳ pas encore livré (tranche 3)"></div>
+    <div class="seg" style="width:1.15%;background:#bcd9a8" title="Lectures DB en parallèle : 30 ms ✅ livré"></div>
+    <div class="seg" style="width:22.99%;background:#9aa6e0" title="STT batch : 600 ms (inchangé — STT streaming = Horizon 2)"><span>STT&nbsp;600&nbsp;ms</span></div>
+    <div class="seg" style="width:3.45%;background:#86c6c0" title="Insert + historique plafonné : 90 ms ✅ livré"><span>Hist</span></div>
+    <div class="seg" style="width:16.48%;background:#d3b0e0" title="LLM 1ʳᵉ phrase (prompt plus court) : 430 ms ✅ livré"><span>LLM&nbsp;430</span></div>
+    <div class="seg" style="width:7.66%;background:#f0a64f" title="TTS : inline (upload supprimé ✅) + voix rapide ⏳ : 200 ms"><span>TTS&nbsp;200</span></div>
+    <div class="seg" style="width:3.07%;background:#cdbd9a" title="Lecture inline, plus de download : 80 ms ✅ livré"><span>Lec</span></div>
+  </div></div>
+  <div class="scaleNote">✅ déjà livré aujourd'hui : DB //, historique, LLM, TTS inline, lecture. ⏳ encore à faire dans l'Horizon 1 : voix TTS rapide (synthèse) + auth locale. <strong>En prod aujourd'hui on est donc autour de ~2,0 s</strong> ; ~1,6 s une fois l'Horizon 1 fini.</div>
+</div>
+
+<!-- ============ BAR 3 : SPEECH-TO-SPEECH ============ -->
+<div class="row">
+  <div class="rowhead"><span class="rowtitle">3 · Speech-to-speech (Horizon 2, potentiel)</span><span class="rowtotal">≈ 0,5 s &nbsp;(−81 %)</span></div>
+  <div class="track"><div class="bar">
+    <div class="seg" style="width:5.75%;background:#e8a07a" title="Réseau : 150 ms"><span>Réseau</span></div>
+    <div class="seg" style="width:10.73%;background:#8fb98f" title="Pipeline unifié voix→voix (STT+LLM+TTS en streaming continu) : 280 ms"><span>Voix→voix&nbsp;280&nbsp;ms</span></div>
+    <div class="seg" style="width:2.68%;background:#cdbd9a" title="Lecture : 70 ms"><span>Lec</span></div>
+  </div></div>
+  <div class="scaleNote">Un seul flux WebSocket (Inworld / OpenAI Realtime / Gemini Live) : la transcription, le LLM et la voix se recouvrent au lieu de s'enchaîner. Interruptible (barge-in). Réservé au tier Pro.</div>
+</div>
+
+<h2>Le détail, étape par étape</h2>
+<table>
+  <thead><tr>
+    <th>Étape</th><th class="num">Avant</th><th class="num">% du total</th><th class="num">Après H1</th><th>Statut</th>
+  </tr></thead>
+  <tbody>
+    <tr><td><span class="sw" style="background:#e8a07a"></span>Réseau client↔serveur</td><td class="num">150 ms</td><td class="num">5,7 %</td><td class="num">150 ms</td><td><span class="pill na">infra (multi-région +tard)</span></td></tr>
+    <tr><td><span class="sw" style="background:#e6b5d0"></span>Auth (vérif token)</td><td class="num">150 ms</td><td class="num">5,7 %</td><td class="num">~10 ms</td><td><span class="pill pend">⏳ JWT local — tranche 3</span></td></tr>
+    <tr><td><span class="sw" style="background:#bcd9a8"></span>Lectures DB</td><td class="num">90 ms</td><td class="num">3,4 %</td><td class="num">30 ms</td><td><span class="pill ship">✅ parallélisé</span></td></tr>
+    <tr><td><span class="sw" style="background:#9aa6e0"></span>STT (transcription)</td><td class="num">600 ms</td><td class="num">23,0 %</td><td class="num">600 ms</td><td><span class="pill na">Horizon 2 (STT streaming)</span></td></tr>
+    <tr><td><span class="sw" style="background:#86c6c0"></span>Insert + historique</td><td class="num">120 ms</td><td class="num">4,6 %</td><td class="num">90 ms</td><td><span class="pill ship">✅ historique plafonné</span></td></tr>
+    <tr><td><span class="sw" style="background:#d3b0e0"></span>LLM (1ʳᵉ phrase)</td><td class="num">500 ms</td><td class="num">19,2 %</td><td class="num">430 ms</td><td><span class="pill ship">✅ prompt plus court</span></td></tr>
+    <tr><td><span class="sw" style="background:#f0a64f"></span>TTS (synthèse + envoi)</td><td class="num">850 ms</td><td class="num">32,6 %</td><td class="num">200 ms</td><td><span class="pill ship">✅ inline</span> <span class="pill pend">⏳ voix rapide</span></td></tr>
+    <tr><td><span class="sw" style="background:#cdbd9a"></span>Lecture audio</td><td class="num">150 ms</td><td class="num">5,7 %</td><td class="num">80 ms</td><td><span class="pill ship">✅ inline (plus de download)</span></td></tr>
+    <tr style="font-weight:600;background:#f4ecda"><td>TOTAL</td><td class="num">2 610 ms</td><td class="num">100 %</td><td class="num">1 590 ms</td><td>−39 %</td></tr>
+  </tbody>
+</table>
+
+<h2>Ce qu'il faut retenir</h2>
+<blockquote class="big">
+Les deux plus gros postes du « avant » sont le <strong>TTS (33 %)</strong> et le <strong>STT (23 %)</strong>.<br>
+• <strong>Le TTS</strong> : on a déjà supprimé l'aller-retour Storage (inline ✅) ; reste à passer à une voix rapide pour gagner le reste.<br>
+• <strong>Le STT</strong> ne bouge qu'à l'Horizon 2 (transcription en streaming) — c'est pour ça que l'Horizon 1 plafonne vers ~1,6 s.<br>
+• Le vrai saut sous la seconde demande le <strong>speech-to-speech</strong> (Horizon 2), qui fait disparaître l'enchaînement des étapes.
+</blockquote>
+
+<table>
+  <thead><tr><th>Scénario</th><th class="num">Temps</th><th class="num">Gain vs avant</th></tr></thead>
+  <tbody>
+    <tr><td>Avant</td><td class="num">~2,6 s</td><td class="num">—</td></tr>
+    <tr><td>Aujourd'hui en prod (ce qui est livré)</td><td class="num">~2,0 s</td><td class="num">−23 %</td></tr>
+    <tr><td>Horizon 1 complet (+ voix rapide + JWT local)</td><td class="num">~1,6 s</td><td class="num">−39 %</td></tr>
+    <tr><td>Speech-to-speech (Horizon 2)</td><td class="num">~0,5 s</td><td class="num">−81 %</td></tr>
+  </tbody>
+</table>
+
+<p class="sub">Chiffres = estimations (milieux de fourchette). Première action d'implémentation : instrumenter les vrais temps pour caler ce modèle sur la réalité.</p>
+</body>
+</html>

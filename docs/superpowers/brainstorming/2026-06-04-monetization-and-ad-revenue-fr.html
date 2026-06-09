@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monétisation &amp; revenus publicitaires</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    max-width: 820px;
+    margin: 40px auto;
+    padding: 0 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #2a2622;
+    background: #faf6ee;
+  }
+  h1 { font-size: 2em; margin-top: 1em; padding-bottom: 0.3em; border-bottom: 2px solid #d4a373; color: #2a1a0a; }
+  h2 { font-size: 1.45em; margin-top: 2em; padding-bottom: 0.2em; border-bottom: 1px solid #e5dcc6; color: #2a1a0a; }
+  h3 { font-size: 1.15em; margin-top: 1.5em; color: #5b3e1d; }
+  h4 { font-size: 1em; margin-top: 1.3em; color: #5b3e1d; }
+  p, ul, ol { margin: 0.8em 0; }
+  ul, ol { padding-left: 1.6em; }
+  li { margin: 0.3em 0; }
+  li > p { margin: 0.3em 0; }
+  table { border-collapse: collapse; margin: 1.2em 0; width: 100%; font-size: 0.93em; display: block; overflow-x: auto; }
+  thead { background: #ead9b8; }
+  th, td { border: 1px solid #d4c4a0; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { font-weight: 600; }
+  tbody tr:nth-child(even) td { background: #f4ecda; }
+  code { font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.88em; background: #f0e3c4; padding: 1px 5px; border-radius: 3px; color: #4a2a08; }
+  pre { background: #f0e3c4; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: transparent; padding: 0; font-size: 0.9em; }
+  blockquote { border-left: 3px solid #d4a373; padding: 0.2em 16px; margin: 1em 0; color: #5a4a3a; font-style: italic; background: #f4ecda; border-radius: 0 4px 4px 0; }
+  hr { border: 0; border-top: 1px solid #d4c4a0; margin: 2.5em 0; }
+  a { color: #b86b3a; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: #8a4a20; }
+  strong { color: #1a1006; font-weight: 600; }
+  em { color: #5a4a3a; }
+  .meta { color: #8a7a5a; font-size: 0.9em; font-style: italic; margin: 0.5em 0 2em; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #faf6ee; color: #2a2622; }
+  }
+</style>
+</head>
+<body>
+<h1>Monétisation &amp; revenus publicitaires — couvrir le coût des gratuits, pubs, et projections de revenu</h1>
+<p><strong>Date :</strong> 2026-06-04 <strong>Auteur :</strong> Claude (à la demande de Bruno) <strong>Complément de :</strong> <code>2026-05-30-strategy-round-2-fr.md</code> (stratégie canonique). Ce document ne <strong>remplace pas</strong> le doc de stratégie — celui-ci possède le prix, le positionnement et le tunnel d'abonnement. Il <strong>ajoute</strong> la couche que la stratégie n'a jamais traitée : <strong>comment empêcher les gratuits de coûter de l'argent, est-ce que la pub peut aider, et à quoi ressemble vraiment le revenu combiné.</strong></p>
+<blockquote><p>⚠️ Tous les chiffres sont des <strong>estimations avec hypothèses explicites</strong>, pas des garanties. L'eCPM publicitaire surtout est très variable (pays, engagement, saison). À lire comme un modèle de raisonnement, pas une prévision.</p></blockquote>
+<hr>
+<h2>0. Chiffres repris du doc de stratégie (pour rester cohérent)</h2>
+<table>
+<thead>
+<tr><th>Levier</th><th>Valeur canonique (doc stratégie)</th></tr>
+</thead>
+<tbody>
+<tr><td>Prix</td><td><strong>7,99 $/mois, 49,99 $/an (4,16 $/mois éq.), essai 7 jours opt-out</strong></td></tr>
+<tr><td>Net après commission store</td><td>30 % → <strong>5,59 $/mois</strong> net (mensuel), <strong>34,99 $/an</strong> ≈ 2,92 $/mois (annuel)</td></tr>
+<tr><td>Free tier</td><td><strong>10 min/jour de voix</strong>, 3 jeux de rôle/jour, 3 dernières sessions, mémoire de base gratuite</td></tr>
+<tr><td>Coût à servir</td><td><strong>~0,025 $/min API seul</strong> ; <strong>0,05–0,10 $/min "user-facing"</strong> (infra + marge)</td></tr>
+<tr><td>Conversion</td><td>essai→payant <strong>38–54 %</strong> ; download→abonné <strong>1,7 %</strong> ; download→essai <strong>3,7–8,9 %</strong></td></tr>
+<tr><td>Cible</td><td><strong>1k MRR (40–50 % de proba)</strong> — PAS une optimisation $10k+</td></tr>
+<tr><td>Marge gros utilisateur</td><td>À 60 min/mois un abonné Pro ne rapporte que <strong>0–2 $/mois</strong> de contribution ; les légers 3–5 $</td></tr>
+</tbody>
+</table>
+<p>La couche pub ci-dessous se construit <strong>par-dessus</strong> ça, pas contre.</p>
+<hr>
+<h2>1. La thèse centrale (le recadrage honnête)</h2>
+<p><strong>Les pubs seules ne couvrent (presque) jamais une appli voix IA.</strong></p>
+<p>Le problème : ton <strong>coût par utilisateur gratuit est anormalement élevé</strong> pour une appli mobile. La plupart des apps gratuites coûtent ~0 $/user (juste l'hébergement). Toi, <strong>chaque minute de conversation coûte de l'argent réel</strong> : STT + LLM + TTS.</p>
+<p>Ordre de grandeur (tout compris, pour <em>servir</em> — API + infra, hors marge) : <strong>~0,03–0,05 $/min.</strong></p>
+<p>Coût mensuel d'un user gratuit :</p>
+<ul>
+<li>5 min/jour → ~0,20 $/jour → <strong>~6 $/mois</strong></li>
+<li>10 min/jour (le plafond actuel) → <strong>~9–15 $/mois</strong></li>
+</ul>
+<p>👉 Un utilisateur gratuit <em>engagé</em> peut te coûter <strong>plus cher qu'un abonné ne te rapporte</strong>. C'est le piège des apps IA.</p>
+<p>Ce que rapporte une pub mobile :</p>
+<ul>
+<li><strong>Pub récompensée (rewarded video)</strong>, la plus rentable : eCPM ~10–30 $ dans les pays riches (US/UK), ~1–5 $ ailleurs. Donc <strong>une pub regardée ≈ 0,005–0,03 $.</strong></li>
+<li>Bannière / interstitielle : moins.</li>
+</ul>
+<p>Donc : <strong>une minute de voix coûte ~0,05 $, une pub regardée rapporte ~0,01 $.</strong> Une pub ne paie même pas une minute. Les pubs <strong>ne peuvent pas</strong> financer de la voix IA illimitée. C'est mathématique, pas du pessimisme.</p>
+<hr>
+<h2>2. Le vrai levier n°1 : plafonner le coût (tu l'as déjà à moitié)</h2>
+<p>Avant les pubs, ce qui empêche réellement les gratuits de te saigner :</p>
+<ol>
+<li><strong>Plafonds d'usage stricts</strong> — tu as DÉJÀ ça (<code>FREE_TIER_VOICE_SECONDS_PER_DAY/MONTH</code>). La valeur de ce chiffre EST ton bouton coût. Un free tier à 3–5 min/jour borne le coût à ~2–4 $/mois max par user. Les 10 min/jour du doc stratégie collent à Talkpal et aident la conversion, mais côté coût pur ça laisse un gratuit "à fond" coûter ~9–15 $/mois. <strong>Cette tension est LA décision de monétisation la plus importante.</strong> (Voir §6.)</li>
+<li><strong>Modèles moins chers pour le free tier</strong> — STT/LLM/TTS bon marché en gratuit, premium en Pro (déjà suivi dans le travail de benchmarking).</li>
+<li><strong>Cache</strong> — greetings déjà cachés ; à étendre aux phrases récurrentes / ouvertures.</li>
+</ol>
+<p><strong>À retenir : le plafond est le levier de coût dominant. Les pubs sont secondaires.</strong></p>
+<hr>
+<h2>3. Là où les pubs ONT du sens : la vidéo récompensée</h2>
+<p>Pas pour "couvrir les frais" globalement, mais pour <strong>aligner coût et revenu, minute par minute</strong> :</p>
+<blockquote><p>« Ta session gratuite est finie. <strong>Regarde une pub pour gagner +3 minutes.</strong> »</p></blockquote>
+<p>C'est le pattern malin : l'utilisateur qui veut plus paie en attention (une pub) au moment exact où il génère du coût. Ça transforme un coût subi en coût <strong>partiellement compensé</strong>, et ça <strong>pousse vers l'abonnement</strong> (au bout de 3–4 pubs → « abonne-toi pour enlever pubs &amp; limites »). C'est un <strong>levier de conversion</strong>, pas une source de revenu principale.</p>
+<h3>Les bases des pubs (puisque tu pars de zéro)</h3>
+<ul>
+<li><strong>Régie pub :</strong> <strong>Google AdMob</strong> (le standard mobile). Pour Expo/RN → <code>react-native-google-mobile-ads</code> (plugin Expo). Module natif → rappel : lance <code>pnpm install</code> après l'<code>expo install</code> sinon le binaire ne part pas dans le build.</li>
+<li><strong>Formats :</strong> <em>rewarded</em> (ta cible), interstitiel (entre deux écrans), bannière (faible revenu, dégrade l'UX). <strong>Pour toi : rewarded uniquement au début.</strong></li>
+<li><strong>Consentement obligatoire :</strong> RGPD (UE) via le SDK UMP d'AdMob, et <strong>ATT sur iOS</strong> (la fenêtre « Autoriser le suivi »). Sans ça → comptes bloqués / revenus quasi nuls. Apple/Google sont stricts.</li>
+<li><strong>eCPM dépend du pays :</strong> un user français/US rapporte 5–10× plus qu'un user d'un pays à faible revenu. Ton audience mondiale tire la moyenne vers le bas.</li>
+</ul>
+<hr>
+<h2>4. Projections de revenu (abonnements = colonne vertébrale, pubs = appoint)</h2>
+<p><strong>Hypothèses</strong> (calées sur le doc stratégie ; conservatrices) :</p>
+<ul>
+<li>ARPU net mélangé par abonné payant : <strong>~4,50 $/mois</strong> (mix mensuel 5,59 $ net et annuel 2,92 $ net éq.).</li>
+<li>En régime stable, <strong>payants ≈ 2,5 % des MAU</strong> (entre les 1,7 % download→abonné et une conversion active plus haute).</li>
+<li>Coût à servir mélangé d'un gratuit : <strong>~0,50 $/MAU gratuit/mois</strong> (la plupart sont légers ; une minorité approche le plafond — c'est l'entrée la plus incertaine, très dépendante du plafond).</li>
+<li><strong>ARPU pub : 0,05–0,10 $ par MAU gratuit/mois</strong> (rewarded, hors jeu, moyenne mondiale — volontairement conservateur).</li>
+</ul>
+<table>
+<thead>
+<tr><th></th><th>Démarrage</th><th>Base (≈ cible 1k MRR)</th><th>Étirement</th></tr>
+</thead>
+<tbody>
+<tr><td>MAU</td><td>2 000</td><td>8 000</td><td>20 000</td></tr>
+<tr><td>Abonnés payants (~2,5 %)</td><td>50</td><td>200</td><td>500</td></tr>
+<tr><td><strong>MRR abonnements (net)</strong></td><td><strong>~225 $</strong></td><td><strong>~900 $</strong></td><td><strong>~2 250 $</strong></td></tr>
+<tr><td>MAU gratuits</td><td>1 950</td><td>7 800</td><td>19 500</td></tr>
+<tr><td><strong>Revenu pub</strong></td><td>100–195 $</td><td>390–780 $</td><td>975–1 950 $</td></tr>
+<tr><td>Coût à servir les gratuits</td><td>~975 $</td><td>~3 900 $</td><td>~9 750 $</td></tr>
+<tr><td>Coût variable/infra Pro</td><td>~150 $</td><td>~600 $</td><td>~1 500 $</td></tr>
+<tr><td><strong>Net (abos + pubs − coûts)</strong></td><td><strong>−650 à −800 $</strong></td><td><strong>−2 200 à −2 600 $</strong></td><td><strong>−6 300 à −7 300 $</strong></td></tr>
+</tbody>
+</table>
+<h3>À lire attentivement</h3>
+<p>Avec un <strong>plafond gratuit de 10 min/jour et seulement ~2,5 % de conversion, le modèle est sous l'eau</strong> — le coût des gratuits écrase à la fois le revenu d'abonnement et de pub. C'est le vrai danger que Bruno pressentait. Deux choses le corrigent :</p>
+<ol>
+<li><strong>Resserrer le plafond et/ou réserver les extensions aux pubs récompensées</strong> (voir §6) → coupe la ligne de coût dominante.</li>
+<li><strong>Améliorer la conversion</strong> (meilleur onboarding, taux de démarrage d'essai) → plus d'abonnés par gratuit.</li>
+</ol>
+<p>Le même scénario Base avec un <strong>plafond gratuit plus serré (≈ 0,15 $/MAU gratuit de coût)</strong> et <strong>3 % de conversion</strong> :</p>
+<table>
+<thead>
+<tr><th></th><th>Base (réglé)</th></tr>
+</thead>
+<tbody>
+<tr><td>MAU</td><td>8 000</td></tr>
+<tr><td>Abonnés payants (3 %)</td><td>240 → <strong>~1 080 $ MRR</strong></td></tr>
+<tr><td>Coût des gratuits</td><td>~1 170 $</td></tr>
+<tr><td>Revenu pub</td><td>~585 $</td></tr>
+<tr><td>Coût variable Pro</td><td>~700 $</td></tr>
+<tr><td><strong>Net</strong></td><td><strong>≈ −200 $</strong> (à peu près à l'équilibre, tendance positive à mesure que les abos annuels s'accumulent)</td></tr>
+</tbody>
+</table>
+<p>👉 <strong>Les pubs ne rendent pas les gratuits rentables. C'est le plafond + la conversion qui le font. Les pubs transforment "très négatif" en "proche de l'équilibre" sur la base gratuite, et accélèrent les upgrades.</strong></p>
+<hr>
+<h2>5. Est-ce que ça couvre les frais ? Verdict honnête</h2>
+<p><strong>Non — pas les pubs seules.</strong> Le modèle qui marche pour toi, c'est un <strong>trépied</strong> :</p>
+<ol>
+<li><strong>Plafonds serrés</strong> → bornent le coût des gratuits (le levier n°1).</li>
+<li><strong>Pubs récompensées</strong> → compensent <em>partiellement</em> le coût des gratuits + poussent à l'abonnement.</li>
+<li><strong>Abonnements (RevenueCat — déjà branché)</strong> → <strong>c'est ça qui finance réellement tout.</strong></li>
+</ol>
+<p>Les pubs, c'est la <strong>cerise</strong> : un peu de revenu sur les gratuits + un déclencheur de conversion. Le <strong>gâteau, c'est l'abonnement.</strong> Pour une appli voix IA, miser sur la pub comme revenu principal est perdant.</p>
+<hr>
+<h2>6. Recommandation (par paliers, réaliste side-hustle pour ~1k MRR)</h2>
+<ol>
+<li><strong>D'abord, régler le bouton plafond.</strong> Trancher la tension : 10 min/jour, c'est super pour l'engagement mais dangereux côté coût. Reco : <strong>baisser la base toujours-gratuite (ex. 5 min/jour)</strong>, puis laisser les <strong>pubs récompensées la compléter</strong> (+3 min/pub, plafond 2–3 pubs/jour). Ça borne le coût de base ET lie chaque minute extra à une pub vue. Gratuit à implémenter (valeur du plafond) ; moyen pour le câblage pub.</li>
+<li><strong>Ensuite, ajouter les pubs récompensées</strong> comme mécanique "+minutes" — crée un 2e revenu <strong>et</strong> un tunnel de conversion (« abonne-toi pour enlever pubs &amp; limites »). Ça se marie naturellement avec le paywall + quota du Plan 8.</li>
+<li><strong>Ne jamais traiter la pub comme revenu principal.</strong> Les abonnements portent le business ; les pubs amortissent la fuite du free tier.</li>
+<li><strong>Suivre l'économie unitaire par cohorte</strong> — ajouter "coût par MAU gratuit" et "ARPU pub par MAU gratuit" au cost dashboard, pour régler le plafond avec de vraies données, pas au doigt mouillé.</li>
+</ol>
+<h3>Séquencement vs. la roadmap</h3>
+<p>Le travail paywall + entitlements + quota journalier est déjà une tâche <strong>Plan 8</strong> (doc stratégie §"Plan 8"). Les pubs récompensées sont un <strong>add-on Plan 8 ou un fast-follow</strong> naturel : le moment "quota dépassé" est exactement là où s'affichent ET le paywall ET le « regarde une pub pour +minutes ». À construire ensemble.</p>
+<hr>
+<h2>7. Décisions (tranchées le 2026-06-04 avec Bruno)</h2>
+<ol>
+<li><strong>Base gratuite : 5 min/jour + compléments par pub.</strong> ✅ DÉCIDÉ. La base toujours-gratuite passe des 10 min/jour du doc stratégie à <strong>5 min/jour</strong> ; les minutes supplémentaires viennent uniquement des pubs récompensées (et "enlever les limites" est un argument d'abonnement). ⚠️ Le doc de stratégie indique encore 10 min/jour — à mettre à jour pour cohérence lors de sa prochaine révision.</li>
+<li><strong>Pubs uniquement comme mécanique d'extension de quota.</strong> ✅ DÉCIDÉ. Aucune pub pour les abonnés ni les users en essai ; jamais de spam pub dans la boucle principale. La pub récompensée ne se déclenche qu'au moment « quota gratuit atteint → +3 min contre une pub ».</li>
+<li><strong>Pubs sur iOS ET Android, avec repli auto en non-personnalisé.</strong> ✅ DÉCIDÉ. Intégrer AdMob une seule fois pour les deux plateformes, afficher la fenêtre de consentement ATT iOS, et laisser AdMob servir des pubs non personnalisées à ceux qui refusent. La vidéo récompensée est le format le moins pénalisé par le refus ATT, donc inutile de couper iOS. (Rappel : le consentement RGPD UMP en UE se gère de la même façon.)</li>
+<li><strong>Pubs partout (tous pays).</strong> ✅ DÉCIDÉ. Dans ce design, le rôle premier de la pub récompensée est le <strong>contrôle du coût + le coup de pouce conversion</strong>, pas le revenu — elle a donc sa place même dans les pays à faible eCPM (elle borne quand même le coût des gratuits et pousse à s'abonner). Le revenu pub n'est qu'un bonus là où l'eCPM est élevé.</li>
+</ol>
+<hr>
+<p><em>Généré à la demande de Bruno en complément du doc de stratégie Round 2. À mettre à jour si le prix, le plafond gratuit ou le modèle de coût des fournisseurs change.</em></p>
+</body>
+</html>

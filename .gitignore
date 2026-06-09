@@ -37,3 +37,14 @@ Thumbs.db
 
 # Brainstorm artifacts
 .superpowers/
+
+# Local agent / editor tooling
+.agents/
+.claude/
+.playwright-mcp/
+.vercel/
+skills-lock.json
+
+# Build artifacts / backups
+apps/mobile/build-out.json
+*.local-bak

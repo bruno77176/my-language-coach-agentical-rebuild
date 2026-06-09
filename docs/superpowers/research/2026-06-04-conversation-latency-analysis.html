@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conversation latency — analysis &amp; plan</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    max-width: 820px;
+    margin: 40px auto;
+    padding: 0 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #2a2622;
+    background: #faf6ee;
+  }
+  h1 { font-size: 2em; margin-top: 1em; padding-bottom: 0.3em; border-bottom: 2px solid #d4a373; color: #2a1a0a; }
+  h2 { font-size: 1.45em; margin-top: 2em; padding-bottom: 0.2em; border-bottom: 1px solid #e5dcc6; color: #2a1a0a; }
+  h3 { font-size: 1.15em; margin-top: 1.5em; color: #5b3e1d; }
+  h4 { font-size: 1em; margin-top: 1.3em; color: #5b3e1d; }
+  p, ul, ol { margin: 0.8em 0; }
+  ul, ol { padding-left: 1.6em; }
+  li { margin: 0.3em 0; }
+  li > p { margin: 0.3em 0; }
+  table { border-collapse: collapse; margin: 1.2em 0; width: 100%; font-size: 0.93em; display: block; overflow-x: auto; }
+  thead { background: #ead9b8; }
+  th, td { border: 1px solid #d4c4a0; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { font-weight: 600; }
+  tbody tr:nth-child(even) td { background: #f4ecda; }
+  code { font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.88em; background: #f0e3c4; padding: 1px 5px; border-radius: 3px; color: #4a2a08; }
+  pre { background: #f0e3c4; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: transparent; padding: 0; font-size: 0.9em; }
+  blockquote { border-left: 3px solid #d4a373; padding: 0.2em 16px; margin: 1em 0; color: #5a4a3a; font-style: italic; background: #f4ecda; border-radius: 0 4px 4px 0; }
+  hr { border: 0; border-top: 1px solid #d4c4a0; margin: 2.5em 0; }
+  a { color: #b86b3a; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: #8a4a20; }
+  strong { color: #1a1006; font-weight: 600; }
+  em { color: #5a4a3a; }
+  .meta { color: #8a7a5a; font-size: 0.9em; font-style: italic; margin: 0.5em 0 2em; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #faf6ee; color: #2a2622; }
+  }
+</style>
+</head>
+<body>
+<h1>Conversation latency — full analysis and plan to make the voice loop fast</h1>
+<p><strong>Date:</strong> 2026-06-04 <strong>Author:</strong> Claude (at Bruno's request) <strong>Why:</strong> The in-app conversation feels far too slow — too much latency between messages. This is the core of the product (a real-time voice coach), so it must improve drastically. This doc puts <strong>all options on the table</strong>, then recommends a sequenced plan: optimize the current pipeline first, then the realtime leap.</p>
+<blockquote><p>⚠️ Latency numbers are estimates from a full code read + 2026 provider benchmarks, not production measurements. The first implementation step is to <strong>instrument real timings</strong> so we tune against data, not guesses.</p></blockquote>
+<hr>
+<h2>1. How the voice loop works today</h2>
+<p>It's a <strong>turn-based / push-to-talk</strong> loop:</p>
+<ol>
+<li>User taps mic, talks, taps again to stop → the app records <strong>one full audio clip</strong>.</li>
+<li>The clip is uploaded to the API (single Fly machine, Stockholm).</li>
+<li><strong>STT</strong> (Deepgram nova-3) transcribes the whole clip.</li>
+<li><strong>LLM</strong> (OpenAI gpt-4o-mini) streams the coach reply token-by-token.</li>
+<li><strong>TTS</strong> synthesizes the reply — already <strong>pipelined</strong>: each finished sentence is sent to TTS immediately while the LLM keeps writing.</li>
+<li>Each audio chunk is <strong>uploaded to Supabase Storage</strong>, a signed URL is created, and that URL is sent to the client.</li>
+<li>The client <strong>downloads</strong> each chunk from its URL and plays them back-to-back.</li>
+</ol>
+<p><strong>Two things are already done right:</strong> TTS is pipelined with the LLM (we don't wait for the full reply before speaking), and the client plays the first chunk as soon as it arrives. So this is <strong>not</strong> a rewrite — it's about removing serialized waits.</p>
+<hr>
+<h2>2. The diagnosis — where ~3 seconds go</h2>
+<p>"Latency between messages" = <strong>time to first audio (TTFA)</strong>: from the moment you stop talking to the moment the coach starts speaking. Critical path, with the real serialized waits found in the code:</p>
+<table>
+<thead>
+<tr><th>Stage</th><th>Cost</th><th>Where</th></tr>
+</thead>
+<tbody>
+<tr><td>Client: stop recording + POST round-trip</td><td>50–200 ms</td><td><code>api-client.ts</code></td></tr>
+<tr><td>Server: <strong>auth network call</strong> to Supabase, every turn</td><td>50–200 ms</td><td><code>middleware/auth.ts:25</code></td></tr>
+<tr><td>Server: <strong>4 sequential DB queries</strong> (conversation, quota, profile, memory)</td><td>40–120 ms</td><td><code>routes/voice.ts:157–247</code></td></tr>
+<tr><td>Server: <strong>STT in BATCH</strong> (whole clip uploaded, then transcribed)</td><td>300–1500 ms</td><td><code>providers/deepgram.ts:49</code></td></tr>
+<tr><td>Server: save user message + <strong>load FULL unbounded history</strong></td><td>40–300 ms</td><td><code>voice.ts:293,300</code></td></tr>
+<tr><td>Server: LLM to first sentence (streamed)</td><td>200–800 ms</td><td><code>providers/openai.ts</code></td></tr>
+<tr><td>Server: <strong>TTS + upload to Storage + sign URL</strong> (2 network calls) per chunk</td><td>400–1500 ms</td><td><code>voice.ts:361</code> → <code>lib/storage.ts:59</code></td></tr>
+<tr><td>Client: <strong>re-download</strong> chunk from URL, decode, play</td><td>50–300 ms</td><td><code>audio-controller.ts:75</code></td></tr>
+</tbody>
+</table>
+<p><strong>Total ≈ 2–3.5 s before the first word.</strong></p>
+<h3>The biggest removable costs</h3>
+<ol>
+<li>🔴 <strong>The Storage round-trip on the audio path.</strong> Every audio chunk is uploaded to Supabase + signed (2 network calls), THEN the client downloads it back. That's a full extra round-trip per chunk that adds <strong>nothing</strong> to the experience. Biggest single waste.</li>
+<li>🔴 <strong>Gemini as the default TTS voice.</strong> Gemini is a non-streaming REST call — you wait for the whole sentence's audio before any sound plays. Great quality, bad for latency.</li>
+<li>🟠 <strong>Per-turn auth network call</strong> to Supabase (also the cause of the "401 / invalid token" failures under load).</li>
+<li>🟠 <strong>Batch STT</strong> — uploading the whole clip then transcribing, instead of streaming while the user talks.</li>
+<li>🟡 <strong>Unbounded history</strong> sent to the LLM every turn — grows forever, slows the first token and costs more.</li>
+</ol>
+<hr>
+<h2>3. The options — two horizons</h2>
+<h3>Horizon 1 — Optimize the current pipeline (fast, cheap, low risk)</h3>
+<p><strong>Target: ~3 s → ~1.2 s.</strong> No new vendor, mostly server-side.</p>
+<table>
+<thead>
+<tr><th>#</th><th>Change</th><th>Saves</th><th>Effort</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><strong>Send audio inline over the stream</strong> (base64 in the event); do the Storage upload in the background, off the critical path</td><td>~400–900 ms <strong>per chunk, incl. the first</strong></td><td>Medium</td></tr>
+<tr><td>2</td><td><strong>Switch the default voice to a fast streaming provider</strong> (ElevenLabs Flash ~75 ms, already integrated) and actually stream it; keep Gemini as a premium option</td><td>200–1500 ms on first audio</td><td>Medium</td></tr>
+<tr><td>3</td><td><strong>Verify the login token locally</strong> instead of calling Supabase every turn</td><td>50–200 ms/turn + fixes the 401s</td><td>Small</td></tr>
+<tr><td>4</td><td><strong>Run the 4 startup DB queries in parallel</strong></td><td>60–90 ms</td><td>Small</td></tr>
+<tr><td>5</td><td><strong>Cap the history</strong> sent to the LLM (last N turns + memory summary)</td><td>faster first token, lower cost</td><td>Small</td></tr>
+<tr><td>6</td><td><strong>Move post-turn DB writes to the background</strong> (don't block the turn's end)</td><td>snappier turn completion</td><td>Small</td></tr>
+<tr><td>7</td><td><strong>Bigger server</strong> (the 256 MB machine starves under light load, adding latency everywhere) + multi-region later</td><td>global consistency</td><td>Small (infra)</td></tr>
+</tbody>
+</table>
+<h3>Horizon 2 — Streaming capture + realtime "Live" mode (the leap)</h3>
+<p><strong>Target: sub-1 s, interruptible.</strong> Planned AFTER Horizon 1.</p>
+<ul>
+<li><strong>2a. Streaming STT:</strong> the app streams mic audio <strong>while</strong> you talk (Deepgram streaming + voice-activity detection), so the transcript is ready the instant you stop — instead of "record full clip → upload → transcribe". Cuts STT from 300–1500 ms to ~100–300 ms.</li>
+<li><strong>2b. Realtime speech-to-speech:</strong> a single WebSocket connection that does voice-in → voice-out in <strong>under 500 ms</strong>, with the ability to interrupt the coach (barge-in). Best as a <strong>Pro-tier "Live conversation" mode</strong>, alongside (not replacing) the turn-based loop.</li>
+</ul>
+<hr>
+<h2>4. Realtime providers — updated comparison (verified 2026-06-04)</h2>
+<p>Your earlier research concluded "only Inworld exposes the text transcript" (which we need for corrections, feedback, memory). <strong>That is now outdated</strong> — the native options expose transcripts too:</p>
+<table>
+<thead>
+<tr><th>Option</th><th>Latency</th><th>Exposes text?</th><th>Cost</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Optimized cascade (Horizon 1)</strong></td><td>~1.0–1.4 s</td><td>✅ authoritative LLM text</td><td>current</td><td>No new vendor, lowest risk</td></tr>
+<tr><td><strong>Inworld Realtime</strong></td><td>sub-500 ms voice-to-voice</td><td>✅ yes (clean transcripts)</td><td>~$0.01/min</td><td>Your original lead; strong cost + transcript clarity; concurrency typically ≥4× request limit</td></tr>
+<tr><td><strong>OpenAI Realtime</strong></td><td>lowest</td><td>✅ now streams transcript deltas</td><td>higher</td><td>Native audio; transcript is ASR-of-audio (slightly lossy)</td></tr>
+<tr><td><strong>Gemini Live</strong></td><td>lowest</td><td>✅ input + output transcription config</td><td>mid</td><td>Native audio; same lossy-transcript caveat</td></tr>
+</tbody>
+</table>
+<p><strong>Takeaway:</strong> all three realtime options are now viable for a coach that needs text. Inworld still leads on cost + transcript cleanliness. But <strong>we don't need to pick yet</strong> — Horizon 1 gets most of the felt improvement without committing to a new vendor or new infra.</p>
+<hr>
+<h2>5. TTS provider trade-off (the heart of the default-voice question)</h2>
+<table>
+<thead>
+<tr><th>Provider</th><th>Quality</th><th><strong>Latency (TTFA)</strong></th><th>Cost</th><th>Integrated?</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Gemini Kore</strong> (current default)</td><td>#1, excellent</td><td>❌ slow (REST, no streaming)</td><td>💚 cheap</td><td>✅</td></tr>
+<tr><td><strong>ElevenLabs Flash v2.5</strong></td><td>very good</td><td>✅ ~75 ms, streaming</td><td>🟠 pricier</td><td>✅ (but currently buffered)</td></tr>
+<tr><td><strong>Cartesia Sonic 4</strong></td><td>good</td><td>✅✅ ~40 ms</td><td>🟠 TBD</td><td>❌</td></tr>
+<tr><td><strong>OpenAI tts</strong></td><td>ok</td><td>❌ slow</td><td>mid</td><td>✅ (fallback)</td></tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> for the latency goal, make the default a <strong>streaming low-TTFA</strong> provider — <strong>ElevenLabs Flash v2.5</strong> (already integrated, just stop buffering it) — and keep <strong>Gemini as a selectable "premium quality" voice</strong>. Evaluate <strong>Cartesia</strong> for an even lower floor. ⚠️ ElevenLabs costs more than Gemini, so cross-check against the free/pro economics (free users are already expensive — see the monetization doc); a likely outcome is a <strong>fast default for everyone, Gemini premium as an upgrade</strong>.</p>
+<hr>
+<h2>6. Recommended plan &amp; expected result</h2>
+<ol>
+<li><strong>Do Horizon 1 first</strong> (the table in §3) — biggest felt improvement for the least risk. Order by impact: inline audio (1) → streaming fast TTS (2) → local token verify (3) → parallel queries (4) → history cap (5) → background writes (6) → bigger server (7).</li>
+<li><strong>Instrument real timings</strong> before/after each change (don't benchmark on the prod machine — it starves and skews results).</li>
+<li><strong>Then decide Horizon 2</strong> — streaming STT is the next biggest cut; the realtime "Live" mode is a Pro feature to choose (Inworld vs native) once Horizon 1 data is in.</li>
+</ol>
+<p><strong>Expected after Horizon 1:</strong> time-to-first-word <strong>~1.0–1.4 s</strong> (from ~3 s), no new vendor, low risk. <strong>Expected after Horizon 2:</strong> <strong>sub-1 s, interruptible</strong> — competitive with Speak / Babbel-Speak.</p>
+<hr>
+<h2>7. Open questions / risks</h2>
+<ul>
+<li>Inline audio: confirm the app plays a freshly-written temp clip fast enough (tiny write cost) vs. the old download — measure.</li>
+<li>Streaming ElevenLabs: keep chunk ordering correct so sentences don't overlap.</li>
+<li>Local token verification must still block unconfirmed-email accounts (a past bug).</li>
+<li>History cap must not break coach continuity — lean on the memory summary for older turns.</li>
+<li>The TTS default switch overlaps with the in-flight Voice Lab work and the separate Gemini-GA TTS fix — coordinate so they don't collide.</li>
+</ul>
+<hr>
+<p>*Companion to the scaling audit (<code>2026-06-03-scaling-and-bottlenecks-audit.md</code>), the Inworld S2S investigation (<code>2026-06-03-inworld-realtime-speech-to-speech-investigation.md</code>), and the monetization doc. Update once real timings are measured.*</p>
+</body>
+</html>

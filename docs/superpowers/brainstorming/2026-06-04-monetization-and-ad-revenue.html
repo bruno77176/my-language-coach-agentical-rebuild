@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monetization &amp; Ad Revenue</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    max-width: 820px;
+    margin: 40px auto;
+    padding: 0 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #2a2622;
+    background: #faf6ee;
+  }
+  h1 { font-size: 2em; margin-top: 1em; padding-bottom: 0.3em; border-bottom: 2px solid #d4a373; color: #2a1a0a; }
+  h2 { font-size: 1.45em; margin-top: 2em; padding-bottom: 0.2em; border-bottom: 1px solid #e5dcc6; color: #2a1a0a; }
+  h3 { font-size: 1.15em; margin-top: 1.5em; color: #5b3e1d; }
+  h4 { font-size: 1em; margin-top: 1.3em; color: #5b3e1d; }
+  p, ul, ol { margin: 0.8em 0; }
+  ul, ol { padding-left: 1.6em; }
+  li { margin: 0.3em 0; }
+  li > p { margin: 0.3em 0; }
+  table { border-collapse: collapse; margin: 1.2em 0; width: 100%; font-size: 0.93em; display: block; overflow-x: auto; }
+  thead { background: #ead9b8; }
+  th, td { border: 1px solid #d4c4a0; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { font-weight: 600; }
+  tbody tr:nth-child(even) td { background: #f4ecda; }
+  code { font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.88em; background: #f0e3c4; padding: 1px 5px; border-radius: 3px; color: #4a2a08; }
+  pre { background: #f0e3c4; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: transparent; padding: 0; font-size: 0.9em; }
+  blockquote { border-left: 3px solid #d4a373; padding: 0.2em 16px; margin: 1em 0; color: #5a4a3a; font-style: italic; background: #f4ecda; border-radius: 0 4px 4px 0; }
+  hr { border: 0; border-top: 1px solid #d4c4a0; margin: 2.5em 0; }
+  a { color: #b86b3a; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: #8a4a20; }
+  strong { color: #1a1006; font-weight: 600; }
+  em { color: #5a4a3a; }
+  .meta { color: #8a7a5a; font-size: 0.9em; font-style: italic; margin: 0.5em 0 2em; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #faf6ee; color: #2a2622; }
+  }
+</style>
+</head>
+<body>
+<h1>Monetization &amp; Ad Revenue — covering free-user costs, ads, and revenue projections</h1>
+<p><strong>Date:</strong> 2026-06-04 <strong>Author:</strong> Claude (at Bruno's request) <strong>Companion to:</strong> <code>2026-05-30-strategy-round-2.md</code> (canonical strategy). This doc does <strong>not</strong> replace it — the strategy doc owns pricing, positioning, and the subscription funnel. This doc adds the layer the strategy doc never covered: <strong>how to stop free users from costing money, whether ads can help, and what the combined revenue actually looks like.</strong></p>
+<blockquote><p>⚠️ All figures are <strong>estimates with explicit assumptions</strong>, not guarantees. Ad eCPM in particular is highly variable (geo, engagement, season). Treat the projections as a model to reason with, not a forecast.</p></blockquote>
+<hr>
+<h2>0. Numbers carried over from the strategy doc (so we stay consistent)</h2>
+<table>
+<thead>
+<tr><th>Lever</th><th>Canonical value (strategy doc)</th></tr>
+</thead>
+<tbody>
+<tr><td>Price</td><td><strong>$7.99/mo, $49.99/yr ($4.16/mo eq.), 7-day opt-out trial</strong></td></tr>
+<tr><td>Net after store cut</td><td>30% → <strong>$5.59/mo</strong> net (monthly), <strong>$34.99/yr</strong> ≈ $2.92/mo (annual)</td></tr>
+<tr><td>Free tier</td><td><strong>10 min/day voice</strong>, 3 role-plays/day, last 3 sessions, basic memory free</td></tr>
+<tr><td>Cost to serve</td><td><strong>~$0.025/min API only</strong>; <strong>$0.05–0.10/min user-facing</strong> (infra + margin)</td></tr>
+<tr><td>Conversion</td><td>trial→paid <strong>38–54%</strong>; download→subscriber <strong>1.7%</strong>; download→trial <strong>3.7–8.9%</strong></td></tr>
+<tr><td>Target</td><td><strong>$1k MRR (40–50% likely)</strong> — NOT a $10k+ optimized play</td></tr>
+<tr><td>Heavy-user margin</td><td>At 60 min/mo a Pro user nets only <strong>$0–2/mo</strong> contribution; light users $3–5</td></tr>
+</tbody>
+</table>
+<p>The ad layer below is built <strong>on top of</strong> these, not against them.</p>
+<hr>
+<h2>1. The core thesis (the honest reframe)</h2>
+<p><strong>Ads alone will (almost) never cover an AI voice app.</strong></p>
+<p>The problem: your <strong>cost per free user is abnormally high</strong> for a mobile app. Most free apps cost ~$0/user (just hosting). Here, <strong>every minute of conversation costs real money</strong>: STT + LLM + TTS.</p>
+<p>Order of magnitude (all-in, to <em>serve</em> — API + infra, no margin): <strong>~$0.03–0.05/min.</strong></p>
+<p>A free user's monthly cost:</p>
+<ul>
+<li>5 min/day → ~$0.20/day → <strong>~$6/mo</strong></li>
+<li>10 min/day (the current cap) → <strong>~$9–15/mo</strong></li>
+</ul>
+<p>👉 An <em>engaged</em> free user can cost you <strong>more than a subscriber earns you</strong>. That is the AI-app trap.</p>
+<p>What a mobile ad earns:</p>
+<ul>
+<li><strong>Rewarded video</strong> (the most lucrative): eCPM ~$10–30 in rich geos (US/UK), ~$1–5 elsewhere. So <strong>one ad watched ≈ $0.005–0.03.</strong></li>
+<li>Banner / interstitial: less.</li>
+</ul>
+<p>So: <strong>a minute of voice costs ~$0.05; an ad watched earns ~$0.01.</strong> One ad doesn't even pay for one minute. Ads <strong>cannot</strong> fund unlimited AI voice. That's arithmetic, not pessimism.</p>
+<hr>
+<h2>2. The real lever #1: cap the cost (you already have half of it)</h2>
+<p>Before ads, what actually stops free users from bleeding you:</p>
+<ol>
+<li><strong>Hard usage caps</strong> — you ALREADY have this (<code>FREE_TIER_VOICE_SECONDS_PER_DAY/MONTH</code>). The value of this number IS your cost dial. A free tier at 3–5 min/day bounds cost to ~$2–4/mo max per user. The strategy doc's 10 min/day matches Talkpal and helps conversion, but from a pure cost view it allows a maxed-out free user to cost ~$9–15/mo. <strong>This tension is the single most important monetization decision.</strong> (See §6.)</li>
+<li><strong>Cheaper models for free tier</strong> — cheap STT/LLM/TTS for free, premium for Pro (already tracked in the model-benchmarking work).</li>
+<li><strong>Caching</strong> — greetings already cached; extend to recurring phrases / openers.</li>
+</ol>
+<p><strong>Takeaway: the cap is the dominant cost lever. Ads are secondary.</strong></p>
+<hr>
+<h2>3. Where ads DO make sense: rewarded video</h2>
+<p>Not to "cover costs" globally, but to <strong>align cost and revenue minute-by-minute</strong>:</p>
+<blockquote><p>"Your free session is over. <strong>Watch an ad to earn +3 minutes.</strong>"</p></blockquote>
+<p>This is the smart pattern: the user who wants more pays in attention (an ad) at the exact moment they generate cost. It turns a sunk cost into a <strong>partially-offset</strong> cost, and it <strong>pushes toward subscription</strong> (after 3–4 ads → "subscribe to remove ads &amp; limits"). It's a <strong>conversion lever</strong>, not a primary revenue source.</p>
+<h3>Ads basics (since you're starting from zero)</h3>
+<ul>
+<li><strong>Ad network:</strong> <strong>Google AdMob</strong> (the mobile standard). For Expo/RN → <code>react-native-google-mobile-ads</code> (Expo plugin). Native module → reminder: run <code>pnpm install</code> after <code>expo install</code> or the binary won't ship in the build.</li>
+<li><strong>Formats:</strong> <em>rewarded</em> (your target), interstitial (between screens), banner (low revenue, hurts UX). <strong>For you: rewarded only at first.</strong></li>
+<li><strong>Consent is mandatory:</strong> GDPR (EU) via AdMob's UMP SDK, and <strong>ATT on iOS</strong> (the "Allow tracking" prompt). Without these → account bans / near-zero revenue. Apple/Google enforce strictly.</li>
+<li><strong>eCPM depends on country:</strong> a French/US user earns 5–10× more than a user in a low-income country. Your worldwide audience drags the average down.</li>
+</ul>
+<hr>
+<h2>4. Revenue projections (subscriptions = backbone, ads = supplement)</h2>
+<p><strong>Assumptions</strong> (anchored to strategy doc; conservative):</p>
+<ul>
+<li>Blended net ARPU per paid sub: <strong>~$4.50/mo</strong> (mix of monthly $5.59 net and annual $2.92 net equiv.).</li>
+<li>Steady-state <strong>paid ≈ 2.5% of MAU</strong> (between the 1.7% download→subscriber and higher active conversion).</li>
+<li>Blended <strong>free-user cost to serve: ~$0.50/free MAU/mo</strong> (most are light; a minority approach the cap — this is the most uncertain input and is highly cap-dependent).</li>
+<li><strong>Ad ARPU: $0.05–0.10 per free MAU/mo</strong> (rewarded-led, non-game, worldwide blend — deliberately conservative).</li>
+</ul>
+<table>
+<thead>
+<tr><th></th><th>Early</th><th>Base (≈ $1k MRR target)</th><th>Stretch</th></tr>
+</thead>
+<tbody>
+<tr><td>MAU</td><td>2,000</td><td>8,000</td><td>20,000</td></tr>
+<tr><td>Paid subs (~2.5%)</td><td>50</td><td>200</td><td>500</td></tr>
+<tr><td><strong>Subscription MRR (net)</strong></td><td><strong>~$225</strong></td><td><strong>~$900</strong></td><td><strong>~$2,250</strong></td></tr>
+<tr><td>Free MAU</td><td>1,950</td><td>7,800</td><td>19,500</td></tr>
+<tr><td><strong>Ad revenue</strong></td><td>$100–195</td><td>$390–780</td><td>$975–1,950</td></tr>
+<tr><td>Free-user cost to serve</td><td>~$975</td><td>~$3,900</td><td>~$9,750</td></tr>
+<tr><td>Pro infra/variable cost</td><td>~$150</td><td>~$600</td><td>~$1,500</td></tr>
+<tr><td><strong>Net (subs + ads − costs)</strong></td><td><strong>−$650 to −$800</strong></td><td><strong>−$2,200 to −$2,600</strong></td><td><strong>−$6,300 to −$7,300</strong></td></tr>
+</tbody>
+</table>
+<h3>Read this carefully</h3>
+<p>With a <strong>10 min/day free cap and only ~2.5% conversion, the math is underwater</strong> — free-user cost dwarfs both subscription and ad revenue. This is the real danger Bruno sensed. Two things fix it:</p>
+<ol>
+<li><strong>Tighten the cap and/or gate extensions behind rewarded ads</strong> (see §6) → cuts the dominant cost line.</li>
+<li><strong>Improve conversion</strong> (better onboarding, trial start rate) → more subs per free user.</li>
+</ol>
+<p>The same Base scenario with a <strong>tighter free cap (≈ $0.15/free MAU cost)</strong> and <strong>3% conversion</strong>:</p>
+<table>
+<thead>
+<tr><th></th><th>Base (tuned)</th></tr>
+</thead>
+<tbody>
+<tr><td>MAU</td><td>8,000</td></tr>
+<tr><td>Paid subs (3%)</td><td>240 → <strong>~$1,080 MRR</strong></td></tr>
+<tr><td>Free-user cost</td><td>~$1,170</td></tr>
+<tr><td>Ad revenue</td><td>~$585</td></tr>
+<tr><td>Pro variable cost</td><td>~$700</td></tr>
+<tr><td><strong>Net</strong></td><td><strong>≈ −$200</strong> (roughly break-even, trending positive as annual subs accumulate)</td></tr>
+</tbody>
+</table>
+<p>👉 <strong>Ads don't make free users profitable. The cap + conversion do. Ads turn "deeply negative" into "near break-even" on the free base, and accelerate upgrades.</strong></p>
+<hr>
+<h2>5. Does it cover the costs? Honest verdict</h2>
+<p><strong>No — not ads alone.</strong> The model that works for you is a <strong>tripod</strong>:</p>
+<ol>
+<li><strong>Tight caps</strong> → bound free-user cost (the #1 lever).</li>
+<li><strong>Rewarded ads</strong> → <em>partially</em> offset free cost + push to subscription.</li>
+<li><strong>Subscriptions (RevenueCat — already wired)</strong> → <strong>this is what actually funds everything.</strong></li>
+</ol>
+<p>Ads are the <strong>cherry</strong>: a little revenue on free users + a conversion trigger. The <strong>cake is the subscription.</strong> For an AI voice app, betting on ads as primary revenue is a losing game.</p>
+<hr>
+<h2>6. Recommendation (staged, side-hustle realistic for ~$1k MRR)</h2>
+<ol>
+<li><strong>First, set the cap dial.</strong> Resolve the tension: a generous 10 min/day is great for engagement but cost-dangerous. Recommended: <strong>lower the always-free baseline (e.g. 5 min/day)</strong>, then let <strong>rewarded ads top it up</strong> (+3 min/ad, cap 2–3 ads/day). This bounds baseline cost AND ties every extra minute to an ad view. Free to implement (cap value); medium for the ad wiring.</li>
+<li><strong>Then add rewarded ads</strong> as the "+minutes" mechanic — creates a 2nd revenue stream <strong>and</strong> a conversion funnel ("subscribe to remove ads &amp; limits"). This pairs naturally with the Plan 8 paywall + quota work.</li>
+<li><strong>Never treat ads as primary revenue.</strong> Subscriptions carry the business; ads soften the free-tier bleed.</li>
+<li><strong>Watch unit economics per cohort</strong> — add the "cost per free MAU" and "ad ARPU per free MAU" to the cost dashboard so the cap can be tuned with real data, not guesses.</li>
+</ol>
+<h3>Sequencing vs. the roadmap</h3>
+<p>The paywall + entitlements + daily-quota work is already a <strong>Plan 8</strong> task (strategy doc §"Plan 8"). Rewarded ads are a natural <strong>Plan 8 add-on or fast-follow</strong>: the quota-exceeded moment is exactly where both the paywall AND the "watch an ad for +minutes" prompt fire. Build them together.</p>
+<hr>
+<h2>7. Decisions (resolved 2026-06-04 with Bruno)</h2>
+<ol>
+<li><strong>Free baseline: 5 min/day + ad top-ups.</strong> ✅ DECIDED. The always-free baseline drops from the strategy doc's 10 min/day to <strong>5 min/day</strong>; extra minutes come only from rewarded ads (and removing limits is a subscription upsell). ⚠️ The strategy doc still says 10 min/day — update it for consistency when next revising it.</li>
+<li><strong>Ads only as the quota-extension mechanic.</strong> ✅ DECIDED. No ads shown to paying or trialing users; never ad-spam the core loop. The rewarded ad fires only at the "free quota reached → +3 min for an ad" moment.</li>
+<li><strong>Ads on BOTH iOS and Android, with auto non-personalized fallback.</strong> ✅ DECIDED. Integrate AdMob once for both platforms, show the iOS ATT consent prompt, and let AdMob serve non-personalized ads to users who opt out. Rewarded video is the format least hurt by ATT opt-out, so no need to skip iOS. (Reminder: GDPR UMP consent in the EU is handled the same way.)</li>
+<li><strong>Ads everywhere (all geos).</strong> ✅ DECIDED. In this design the rewarded ad's primary job is <strong>cost-control + conversion nudge</strong>, not revenue — so it earns its place even in low-eCPM geos (it still bounds free cost and pushes toward subscribing). Ad revenue is just a bonus where eCPM is high.</li>
+</ol>
+<hr>
+<p><em>Generated at Bruno's request as a companion to the Round 2 strategy doc. Update if pricing, the free cap, or the provider cost model changes.</em></p>
+</body>
+</html>
