@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Egy coach, aki emlékszik rád. Visszajelzés minden beszélgetés után.",
-    "description": "Az MI-alapú nyelvcoachod emlékszik arra, miről beszéltetek, minden beszélgetés után visszajelzést ad, az új szavakat ismétléshez kártyaként menti, és élethű, nagyon alacsony késleltetésű hangokon szólal meg. 15 nyelven."
+    "title": "My Language Coach — MI-beszédgyakorlás 15 nyelven",
+    "description": "Gyakorolj valódi beszélgetéseket egy MI-coachcsal, aki emlékszik rád, valós élethelyzeteket játszik el, és minden csevegés után visszajelzést ad. Építsd a beszédbeli magabiztosságod 15 nyelven."
   },
   "hero": {
-    "eyebrow": "Most nyílt béta",
-    "headline": "Gyakorold a nyelveket.",
-    "headlineAccent": "Szerezz magabiztosságot.",
-    "subheadline": "Egy MI-coach, aki emlékszik rád, minden chat után visszajelzést ad és valós szerepekbe enged belépni — 15 nyelven.",
+    "eyebrow": "Korai hozzáférés — most nyílt bétában",
+    "headline": "Olvasni tudod.",
+    "headlineAccent": "A beszéd a nehéz.",
+    "subheadline": "Beszéld át egy MI-coachcsal, aki emlékszik rád, valós élethelyzeteket játszik el veled, és minden beszélgetés után visszajelzést ad — 15 nyelven. Ítélkezés nélkül, bármikor.",
     "scanToInstall": "Olvasd be a telepítéshez",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Nyílt béta",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Ezért vagyunk mások",
     "f1": {
-      "title": "Egy coach, aki ismer téged",
-      "body": "A coachod emlékszik arra, miről beszéltetek, a szintedre és arra, mit kell átismételned. Minden alkalom az előzőre épül — nincs hideg start."
+      "title": "Lisa, a coach, aki ismer téged",
+      "body": "Emlékszik arra, miről beszéltetek, a szintedre, és hogy mit érdemes átismételni. Minden alkalom az előzőre épül — nincs hideg újrakezdés."
     },
     "f2": {
       "title": "Valós élethelyzetek",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Élethű hangok",
     "title": "Hangok, amelyeket tényleg hallgatni akarsz",
-    "body": "Természetes, nagyon alacsony késleltetésű hangok, amelyek abban a pillanatban válaszolnak, amint befejezed a beszédet. Válaszd ki a coachod hangját és szolgáltatóját, majd állítsd be a neked megfelelő beszédsebességet.",
+    "body": "Természetes, rendkívül alacsony késleltetésű hangok, amelyek abban a pillanatban válaszolnak, ahogy abbahagyod a beszédet. Válaszd ki a coachod hangját, majd állítsd be a hozzád illő beszédtempót.",
     "p1": "Szinte azonnali, természetes válaszok",
     "p2": "Több hang közül választhatsz",
     "p3": "Állítható beszédsebesség"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Beszélgess vagy játssz szerepet",
-      "body": "Szabad beszélgetés Lisával, a coachoddal, vagy lépj be egy helyzetbe és találkozz egy idegennel szerepben."
+      "body": "Csak beszélgess Lisával, vagy lépj be egy helyzetbe, és találkozz egy idegennel a szerepében."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 $",
       "priceNote": "kártya nélkül, próbaidő nélkül",
       "items": [
-        "Napi 10 perc beszélgetés",
-        "Három szerepjáték helyzet",
+        "Napi 5 perc beszélgetés",
+        "Nézz meg egy rövid hirdetést 3 további percért",
+        "Három kezdő helyzet — kávé, útbaigazítás, buli",
         "Visszajelzés a jelenlegi szakaszra + az utolsó 3-ra",
         "Alap memória a beszélgetések között"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Készen állsz beszélni?",
-    "subtitle": "Ingyenes kipróbálni. Pro 7,99 $/hó, ha úgy döntesz, hogy maradsz."
+    "subtitle": "Ingyenes kipróbálni, kártya nélkül. A Pro havi 7,99 $, ha úgy döntesz, hogy maradsz."
   },
   "footer": {
     "tagline": "Gyakorold a nyelveket. Szerezz magabiztosságot.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Nem tudtuk befejezni a törlést. Próbáld újra vagy fordulj a támogatáshoz.",
     "doneTitle": "Fiók törölve",
     "doneBody": "Fiókod és minden hozzá tartozó adat törölve. Sajnáljuk, hogy elmész."
+  },
+  "faq": {
+    "title": "Kérdések, megválaszolva",
+    "items": [
+      {
+        "q": "Tényleg segít, ha egy MI-vel gyakorlok?",
+        "a": "Tekints Lisára gyakorlótérként, nem a valódi beszélgetések pótlékaként. A nap 24 órájában elérhető, soha nem ítélkezik, és töredékébe kerül egy tanárnak — így annyit gyakorolhatsz, amennyire szükséged van, és felkészültnek érzed magad, amikor emberekkel beszélsz."
+      },
+      {
+        "q": "Fizetnem kell?",
+        "a": "Nem. Az ingyenes verzióhoz nem kell kártya és nincs próbaidő — napi 5 perc beszélgetés, plusz egy rövid hirdetés további 3 percért. A Pro kevesebbe kerül, mint havonta egyetlen tanári óra, és bármikor lemondhatod."
+      },
+      {
+        "q": "Megért engem, és a tanult nyelven válaszol?",
+        "a": "Igen. A coachod természetes, anyanyelvi minőségű hangokon beszél, és a célnyelveden válaszol. Beszélj a saját tempódban — lépést tart veled."
+      },
+      {
+        "q": "Lefagyok, amikor meg kell szólalnom. Tényleg nekem való ez?",
+        "a": "Pontosan az ilyeneknek készült. Gyakorolj hangosan, négyszemközt, ahányszor csak akarsz, egy coachcsal, aki emlékszik, hol tartasz, és finoman tovább lendít."
+      },
+      {
+        "q": "Milyen nyelveket gyakorolhatok?",
+        "a": "Ma tizenötöt — angol, francia, német, olasz, spanyol, portugál, török, svéd, dán, orosz, román, magyar, japán, kínai és koreai — és továbbiak is jönnek."
+      },
+      {
+        "q": "Privátak az adataim?",
+        "a": "A beszélgetéseid a tieid. Bármikor törölheted a fiókodat és minden hozzá tartozó adatot, közvetlenül az alkalmazásból."
+      }
+    ]
   }
 }

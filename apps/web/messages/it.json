@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "My Language Coach — Un coach che si ricorda di te. Feedback dopo ogni conversazione.",
-    "description": "Il tuo coach linguistico IA ricorda di cosa avete parlato, ti dà un report di feedback dopo ogni conversazione, salva le nuove parole come flashcard da ripassare e parla con voci realistiche a bassissima latenza. In 15 lingue."
+    "title": "My Language Coach — pratica orale con IA in 15 lingue",
+    "description": "Esercitati in conversazioni reali con un coach IA che si ricorda di te, propone giochi di ruolo di vita reale e dà un feedback dopo ogni chat. Acquisisci sicurezza nel parlare in 15 lingue."
   },
   "hero": {
-    "eyebrow": "Ora in beta aperta",
-    "headline": "Pratica le lingue.",
-    "headlineAccent": "Guadagna fiducia.",
-    "subheadline": "Un coach IA che si ricorda di te, ti dà feedback dopo ogni chat e ti fa entrare in scenari di vita reale — in 15 lingue.",
+    "eyebrow": "Accesso anticipato — ora in beta aperta",
+    "headline": "Leggerlo ci riesci.",
+    "headlineAccent": "È parlare il difficile.",
+    "subheadline": "Parlane con un coach IA che si ricorda di te, ti mette in giochi di ruolo di vita reale e ti dà un feedback dopo ogni conversazione — in 15 lingue. Senza giudizio, quando vuoi.",
     "scanToInstall": "Scansiona per installare",
     "iosLabel": "iOS — TestFlight",
     "androidLabel": "Android — Beta aperta",
@@ -24,8 +24,8 @@
   "features": {
     "title": "Cosa ci rende diversi",
     "f1": {
-      "title": "Un coach che ti conosce",
-      "body": "Il tuo coach ricorda di cosa avete parlato, il tuo livello e cosa rivedere. Ogni sessione si basa sulla precedente — niente partenza da zero."
+      "title": "Lisa, il coach che ti conosce",
+      "body": "Ricorda di cosa avete parlato, il tuo livello e cosa rivedere. Ogni sessione si basa sulla precedente — mai una partenza da zero."
     },
     "f2": {
       "title": "Scenari di vita reale",
@@ -47,7 +47,7 @@
   "voices": {
     "eyebrow": "Voci realistiche",
     "title": "Voci che avrai voglia di ascoltare",
-    "body": "Voci naturali a bassissima latenza che rispondono nel momento in cui smetti di parlare. Scegli la voce e il provider del tuo coach, poi imposta la velocità che preferisci.",
+    "body": "Voci naturali a latenza ultrabassa che rispondono nel momento in cui smetti di parlare. Scegli la voce del tuo coach, poi imposta la velocità di parlato che fa per te.",
     "p1": "Risposte naturali quasi istantanee",
     "p2": "Più voci tra cui scegliere",
     "p3": "Velocità di parlato regolabile"
@@ -62,7 +62,7 @@
     "s2": {
       "n": "2",
       "title": "Parla o interpreta un ruolo",
-      "body": "Chiacchiera liberamente con la tua coach Lisa, o entra in uno scenario e incontra un estraneo in un ruolo."
+      "body": "Parla e basta con Lisa, oppure entra in uno scenario e incontra uno sconosciuto nel suo ruolo."
     },
     "s3": {
       "n": "3",
@@ -79,8 +79,9 @@
       "price": "0 €",
       "priceNote": "senza carta, senza prova",
       "items": [
-        "10 minuti di conversazione al giorno",
-        "Tre scenari di gioco di ruolo",
+        "5 minuti di conversazione al giorno",
+        "Guarda un breve annuncio per 3 minuti in più",
+        "Tre scenari per iniziare — caffè, indicazioni, festa",
         "Feedback per la sessione attuale + ultime 3",
         "Memoria di base tra le sessioni"
       ]
@@ -108,7 +109,7 @@
   },
   "finalCta": {
     "title": "Pronto a iniziare a parlare?",
-    "subtitle": "Gratis da provare. Pro a 7,99 €/mese se decidi di restare."
+    "subtitle": "Gratis da provare, senza carta. Pro a $7,99/mese se decidi di restare."
   },
   "footer": {
     "tagline": "Pratica le lingue. Guadagna fiducia.",
@@ -141,5 +142,34 @@
     "confirmFailed": "Non siamo riusciti a completare l'eliminazione. Riprova o contatta il supporto.",
     "doneTitle": "Account eliminato",
     "doneBody": "Il tuo account e tutti i dati associati sono stati eliminati. Ci dispiace vederti andare."
+  },
+  "faq": {
+    "title": "Domande, con risposta",
+    "items": [
+      {
+        "q": "Esercitarsi con un'IA aiuta davvero?",
+        "a": "Pensa a Lisa come a uno spazio di prova, non a un sostituto delle conversazioni reali. È disponibile 24 ore su 24, non ti giudica mai e costa una frazione di un insegnante — così ti eserciti quanto ti serve e ti senti pronto quando parli con le persone."
+      },
+      {
+        "q": "Devo pagare?",
+        "a": "No. La versione gratuita non richiede carta né prova — 5 minuti di conversazione al giorno, più un breve annuncio per altri 3 minuti. Pro costa meno di una singola lezione con un insegnante al mese, e puoi disdire quando vuoi."
+      },
+      {
+        "q": "Mi capirà e risponderà nella lingua che sto imparando?",
+        "a": "Sì. Il tuo coach parla con voci naturali di qualità madrelingua e risponde nella tua lingua di studio. Parla al tuo ritmo — ti sta dietro."
+      },
+      {
+        "q": "Mi blocco quando devo parlare. È davvero adatto a me?",
+        "a": "È fatto esattamente per questo. Esercitati a voce alta, in privato, tutte le volte che vuoi, con un coach che ricorda a che punto sei e ti fa progredire con calma."
+      },
+      {
+        "q": "Quali lingue posso praticare?",
+        "a": "Quindici oggi — inglese, francese, tedesco, italiano, spagnolo, portoghese, turco, svedese, danese, russo, rumeno, ungherese, giapponese, cinese e coreano — e altre in arrivo."
+      },
+      {
+        "q": "I miei dati sono privati?",
+        "a": "Le tue conversazioni sono tue. Puoi eliminare il tuo account e tutto ciò che è collegato in qualsiasi momento, direttamente dall'app."
+      }
+    ]
   }
 }

@@ -1,0 +1,33 @@
+# My Language Coach
+
+> My Language Coach is an AI voice coach for practicing real conversations and building speaking confidence in 15 languages. You have spoken conversations with an AI coach that remembers your level and history, runs real-life role-plays (ordering coffee, hotel check-in, job interview), and gives feedback after every chat. It is built for adult learners who can read or study a language but freeze when they have to speak. Available on iOS and Android.
+
+## What it does
+
+- **Coach with memory** — remembers your level, what you have covered, and what to revisit. Every session builds on the last, not a cold start.
+- **Real-life role-plays** — 10 scenarios: ordering coffee, asking directions, small talk at a party, hotel check-in, doctor visit, job interview, customer-service complaint, phone call with a friend, workplace meeting intro, and a lost-passport police-station scene.
+- **Feedback after every conversation** — highlights, corrections, and new vocabulary saved as speak-and-check flashcards.
+- **Natural, low-latency voices** — near-instant replies, multiple voices, adjustable speaking speed. Native-quality voices for English, German, French, Italian, and Spanish, with more in progress.
+- **15 languages** — English, French, German, Italian, Spanish, Portuguese, Turkish, Swedish, Danish, Russian, Romanian, Hungarian, Japanese, Chinese, and Korean.
+
+## Who it is for
+
+Adult, self-directed language learners preparing for travel, a move abroad, a job interview, exams, or reconnecting with heritage — anyone who can read or study a language but freezes when speaking. It gives you a judgment-free, always-available place to rehearse out loud and build confidence, so you walk into real conversations ready. It fills the gap that gamified streak apps leave open (they build vocabulary, not speaking ability) — it is meant to ease and prepare you for real human conversation, never to replace it.
+
+## How it compares
+
+- **vs. gamified apps (Duolingo, etc.)** — those build streaks and vocab; My Language Coach builds actual speaking ability through real conversation and feedback.
+- **vs. human tutors (italki, Preply)** — not a replacement; a low-pressure place to rehearse before and between real conversations, available 24/7, judgment-free, and affordable, with no scheduling.
+- **vs. general AI voice assistants** — purpose-built for learning: language-level memory, structured feedback, and guided role-plays that general assistants do not provide.
+
+## Pricing
+
+- **Free** — $0, no credit card. 5 minutes of conversation per day (watch a short ad for 3 minutes more), 3 starter scenarios, feedback for your current session plus the last 3, basic memory.
+- **Pro** — $7.99/month or $49.99/year (save 48%), with a 7-day free trial. All 10 scenarios, 60 minutes of conversation per day, full feedback history, deep memory, and a weekly progress email.
+
+## Links
+
+- Home: https://mylanguagecoach.app
+- Machine-readable pricing: https://mylanguagecoach.app/pricing.md
+- Privacy policy: https://mylanguagecoach.app/privacy
+- Terms: https://mylanguagecoach.app/terms

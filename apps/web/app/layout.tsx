@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "My Language Coach — Practice languages. Build confidence.",
   description:
-    "Your AI conversation partner. Talk to it, get instant corrections, and become fluent in any language — anywhere.",
+    "Practice real conversations with an AI coach that remembers you, runs real-life role-plays, and gives feedback after every chat. Build speaking confidence in 15 languages.",
   alternates: {
     canonical: "/",
     languages: languageAlternates,
@@ -57,6 +57,52 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.ico" },
 };
 
+// Site-wide structured data. No aggregateRating yet — the product is
+// pre-traction, so we don't fabricate review counts or star ratings.
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "My Language Coach",
+      url: SITE_URL,
+      logo: `${SITE_URL}/character.png`,
+    },
+    {
+      "@type": "MobileApplication",
+      "@id": `${SITE_URL}/#app`,
+      name: "My Language Coach",
+      operatingSystem: "iOS, Android",
+      applicationCategory: "EducationalApplication",
+      description:
+        "Practice real conversations with an AI coach that remembers you, runs real-life role-plays, and gives feedback after every chat. Build speaking confidence in 15 languages.",
+      inLanguage: [
+        "en",
+        "fr",
+        "de",
+        "it",
+        "es",
+        "pt",
+        "tr",
+        "sv",
+        "da",
+        "ru",
+        "ro",
+        "hu",
+        "ja",
+        "zh",
+        "ko",
+      ],
+      offers: [
+        { "@type": "Offer", price: "0", priceCurrency: "USD", name: "Free" },
+        { "@type": "Offer", price: "7.99", priceCurrency: "USD", name: "Pro" },
+      ],
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -66,6 +112,10 @@ export default function RootLayout({
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`}>
       <body>
         {children}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <Analytics />
       </body>
     </html>
