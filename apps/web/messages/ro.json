@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "Acces timpuriu — acum în beta deschisă",
-    "headline": "Citesc și scriu fără probleme.",
-    "headlineAccent": "Dar când e să vorbesc, mă blochez.",
+    "headline": "Exersează limbile.",
+    "headlineAccent": "Câștigă încredere.",
+    "painQuote": "Citesc și scriu fără probleme. Dar când e să vorbesc, mă blochez.",
     "subheadline": "Exersează cu voce tare cu un coach AI care își amintește de tine, joacă scenarii din viața reală și îți dă feedback după fiecare conversație — în 15 limbi. Fără judecăți, oricând.",
     "scanToInstall": "Scanează pentru a instala",
     "iosLabel": "iOS — TestFlight",

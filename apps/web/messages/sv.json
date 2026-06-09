@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "Tidig åtkomst — nu i öppen beta",
-    "headline": "Att läsa och skriva går bra.",
-    "headlineAccent": "Men när jag ska prata låser det sig.",
+    "headline": "Träna språk.",
+    "headlineAccent": "Bygg självförtroende.",
+    "painQuote": "Att läsa och skriva går bra. Men när jag ska prata låser det sig.",
     "subheadline": "Prata igenom det med en AI-coach som kommer ihåg dig, kör rollspel från verkliga livet och ger feedback efter varje samtal — på 15 språk. Utan att döma, när som helst.",
     "scanToInstall": "Skanna för att installera",
     "iosLabel": "iOS — TestFlight",

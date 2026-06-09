@@ -5,8 +5,9 @@
   },
   "hero": {
     "eyebrow": "Acesso antecipado — agora em beta aberta",
-    "headline": "Leio e escrevo sem problemas.",
-    "headlineAccent": "Mas na hora de falar, bloqueio.",
+    "headline": "Pratica línguas.",
+    "headlineAccent": "Ganha confiança.",
+    "painQuote": "Leio e escrevo sem problemas. Mas na hora de falar, bloqueio.",
     "subheadline": "Pratique em voz alta com um coach de IA que lembra de você, conduz simulações da vida real e dá feedback depois de cada conversa — em 15 idiomas. Sem julgamentos, a qualquer hora.",
     "scanToInstall": "Lê para instalar",
     "iosLabel": "iOS — TestFlight",
