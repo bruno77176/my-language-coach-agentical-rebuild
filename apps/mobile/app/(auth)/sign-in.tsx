@@ -15,6 +15,7 @@ import {
   signInWithApple,
   SocialSignInCancelled,
 } from "@/src/features/auth/social-sign-in";
+import { useOnboardingStore } from "@/src/features/onboarding/onboarding-store";
 import { router } from "expo-router";
 import { supabase } from "@/src/lib/supabase";
 import { showToast } from "@/src/lib/toast";
@@ -83,7 +84,10 @@ export default function SignInScreen() {
   const onApple = async () => {
     setAppleBusy(true);
     try {
-      await signInWithApple();
+      const { fullName } = await signInWithApple();
+      // Seed onboarding with the name Apple already gave us so the name step
+      // auto-skips — Apple forbids re-asking for it (Guideline 4).
+      if (fullName) useOnboardingStore.getState().setDisplayName(fullName);
       router.replace("/");
     } catch (err) {
       if (err instanceof SocialSignInCancelled) return;
