@@ -30,6 +30,6 @@ export function buildTranscript(input: TranscriptInput): string {
     lines.push(`${m.role === "user" ? "You" : "Coach"}: ${m.text}`);
   }
   if (input.messages.length > 0) lines.push("");
-  lines.push("Practice with me at mylanguagecoach.app");
+  lines.push("Practice with me → https://www.mylanguagecoach.app");
   return lines.join("\n");
 }

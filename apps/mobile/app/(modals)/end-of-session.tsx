@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   View,
 } from "react-native";
@@ -15,8 +16,7 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { useSessionFeedback } from "@/src/features/practice/use-session-feedback";
-import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
-import { FeedbackShareCard } from "@/src/features/sharing/share-cards";
+import { buildFeedbackText } from "@/src/features/sharing/share-text";
 
 export default function EndOfSessionScreen() {
   const { conversationId, secondsSpoken } = useLocalSearchParams<{
@@ -24,7 +24,6 @@ export default function EndOfSessionScreen() {
     secondsSpoken?: string;
   }>();
   const { data } = useSessionFeedback(conversationId ?? null);
-  const [shareOpen, setShareOpen] = useState(false);
 
   const goHome = () => router.replace("/(tabs)/home");
   const again = () => router.replace("/(tabs)/practice");
@@ -112,7 +111,17 @@ export default function EndOfSessionScreen() {
               )}
             </Section>
             <Pressable
-              onPress={() => setShareOpen(true)}
+              onPress={() => {
+                if (data?.status !== "ready") return;
+                void Share.share({
+                  message: buildFeedbackText({
+                    durationLabel: `${min} min ${sec} sec`,
+                    highlights: data.highlights,
+                    corrections: data.corrections,
+                    vocab: data.vocab,
+                  }),
+                });
+              }}
               hitSlop={8}
               style={styles.shareRow}
             >
@@ -136,22 +145,6 @@ export default function EndOfSessionScreen() {
           </Pressable>
         </View>
       </ScrollView>
-      {data?.status === "ready" && (
-        <ShareCardModal visible={shareOpen} onClose={() => setShareOpen(false)}>
-          <FeedbackShareCard
-            durationLabel={`${min} min of practice`}
-            highlight={data.highlights[0]?.phrase}
-            vocab={
-              data.vocab[0]
-                ? {
-                    term: data.vocab[0].term,
-                    translation: data.vocab[0].translation,
-                  }
-                : undefined
-            }
-          />
-        </ShareCardModal>
-      )}
     </Screen>
   );
 }
