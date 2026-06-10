@@ -60,12 +60,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "41",
+      buildNumber: "42",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
         NSMicrophoneUsageDescription:
           "We use the microphone so you can talk to your coach.",
+        // react-native-share references the photo library API, so Apple requires
+        // these purpose strings even though we only share app-generated images.
+        NSPhotoLibraryUsageDescription:
+          "Allow access so you can save and share images of your quotes, conversations and feedback.",
+        NSPhotoLibraryAddUsageDescription:
+          "Allow access so you can save shared images to your photo library.",
         ITSAppUsesNonExemptEncryption: false,
       },
     },
