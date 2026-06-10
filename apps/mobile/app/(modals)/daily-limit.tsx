@@ -59,6 +59,12 @@ export default function DailyLimitModal() {
   // Only auto-dismiss if Pro is unlocked *while on this screen* — a Pro user who
   // hits their own 60-min cap arrives already-Pro and should stay to read it.
   const wasProOnMount = useRef(isPro);
+  // Drive the message + CTAs off the SERVER's cap (authoritative), NOT the
+  // RevenueCat client flag — in testing they can disagree (Test Store has no
+  // webhook), which wrongly showed a free user the "60 minutes" Pro message.
+  const capSeconds = useDailyCap((s) => s.capSeconds);
+  const capMinutes = capSeconds != null ? Math.round(capSeconds / 60) : 10;
+  const isPaidCap = capSeconds != null && capSeconds > 600;
   const [adBusy, setAdBusy] = useState(false);
   const [adUsedUp, setAdUsedUp] = useState(false);
 
@@ -118,9 +124,9 @@ export default function DailyLimitModal() {
         </EditorialText>
 
         <EditorialText kind="bodyLg" color={palette.ink} style={styles.body}>
-          {isPro
-            ? "You've reached today's 60 minutes of practice."
-            : "You've used your free 10 minutes today."}
+          {isPaidCap
+            ? `You've reached today's ${capMinutes} minutes of practice.`
+            : `You've used your free ${capMinutes} minutes today.`}
         </EditorialText>
 
         {countdown ? (
@@ -143,7 +149,7 @@ export default function DailyLimitModal() {
 
         {/* Free users get the chooser: watch an ad for +3 min, or go Pro. Pro
             users at their own cap just wait for the reset. */}
-        {!isPro && (
+        {!isPaidCap && (
           <View style={styles.actions}>
             <Pressable
               onPress={() => router.push("/(modals)/paywall")}
@@ -174,7 +180,7 @@ export default function DailyLimitModal() {
 
         <Pressable onPress={onClose} style={styles.dismiss}>
           <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Maybe later
+            {isPaidCap ? "Close" : "Not now"}
           </EditorialText>
         </Pressable>
       </View>

@@ -32,7 +32,7 @@ export function ShareButton(props: Props) {
       style={disabled && styles.disabled}
     >
       <GlassCard radiusToken="pill" padding="xs" style={styles.button}>
-        <Ionicons name="share-outline" size={16} color={palette.ink} />
+        <Ionicons name="share-social-outline" size={16} color={palette.ink} />
       </GlassCard>
     </Pressable>
   );
