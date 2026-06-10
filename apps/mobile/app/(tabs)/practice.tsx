@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -41,6 +40,10 @@ import { EndSessionCTA } from "@/src/features/practice/end-session-cta";
 import { useSessionTimer } from "@/src/features/practice/use-session-timer";
 import { useGoalReward } from "@/src/features/practice/use-goal-reward";
 import { GoalReward } from "@/src/features/practice/goal-reward";
+import {
+  ConfirmSheet,
+  type ConfirmAction,
+} from "@/src/features/practice/confirm-sheet";
 import { useTodayStats } from "@/src/features/home/use-today-stats";
 import {
   useRecentSessions,
@@ -314,6 +317,11 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     false;
 
   const [startedAt] = useState<Date>(() => new Date());
+  // Which end-conversation dialog is open (null = none). "cta" = the explicit
+  // End button; "tab" = intercepted a tab navigation away from Practice.
+  const [endDialog, setEndDialog] = useState<
+    null | { kind: "cta" } | { kind: "tab"; target: string }
+  >(null);
 
   const {
     state,
@@ -511,58 +519,65 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     else if (state.phase === "recording") void stop();
   };
 
-  const confirmAndEnd = useCallback(() => {
-    const body = memoryEnabled
-      ? "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Plus your coach will remember what matters from this chat next time. Your practice time also goes toward your daily goal and streak."
-      : "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.";
+  const feedbackBlurb = memoryEnabled
+    ? "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Plus your coach will remember what matters from this chat next time. Your practice time also goes toward your daily goal and streak."
+    : "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.";
 
-    Alert.alert("End conversation?", body, [
-      { text: "Keep talking", style: "cancel" },
-      {
-        text: "End & see feedback",
-        style: "default",
-        onPress: () => {
-          // Clear the active-session store synchronously so the tab-press
-          // interceptors in (tabs)/_layout.tsx stop intercepting. The effect
-          // cleanup that nulls the store only fires on unmount or when
-          // activeConversationId changes — neither happens just from
-          // router.replace to a modal, so without this clear the popup keeps
-          // firing on every subsequent tab navigation.
-          clearActive();
-          void (async () => {
-            let endResult: {
-              conversationId: string | null;
-              secondsSpoken: number;
-            } | null = null;
-            try {
-              endResult = await end();
-            } catch {
-              /* best-effort */
-            }
-            resetSessionTimer();
-            todaySecondsAtStartRef.current = 0;
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
-              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
-              queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
-            ]);
-            if (endResult?.conversationId) {
-              router.replace({
-                pathname: "/(modals)/end-of-session",
-                params: {
-                  conversationId: endResult.conversationId,
-                  secondsSpoken: String(endResult.secondsSpoken),
-                },
-              });
-            } else {
-              router.replace("/(tabs)/practice");
-            }
-          })();
-        },
-      },
-    ]);
-  }, [memoryEnabled, end, queryClient, resetSessionTimer, clearActive]);
+  // End the conversation and route to the feedback report. clearActive() runs
+  // synchronously so the (tabs)/_layout.tsx tab interceptors stop intercepting.
+  const runEndWithFeedback = useCallback(
+    (fallbackTarget: string) => {
+      clearActive();
+      void (async () => {
+        let endResult: {
+          conversationId: string | null;
+          secondsSpoken: number;
+        } | null = null;
+        try {
+          endResult = await end();
+        } catch {
+          /* best-effort */
+        }
+        resetSessionTimer();
+        todaySecondsAtStartRef.current = 0;
+        useDailyCap.getState().clear();
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
+          queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
+          queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
+          queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
+        ]);
+        if (endResult?.conversationId) {
+          router.replace({
+            pathname: "/(modals)/end-of-session",
+            params: {
+              conversationId: endResult.conversationId,
+              secondsSpoken: String(endResult.secondsSpoken),
+            },
+          });
+        } else {
+          router.replace(fallbackTarget as never);
+        }
+      })();
+    },
+    [clearActive, end, queryClient, resetSessionTimer],
+  );
+
+  // Leave without saving — abandon the conversation (no feedback, no streak
+  // credit). The un-ended row simply never appears in recent sessions. Ideal
+  // when nothing was really said.
+  const runDiscard = useCallback(
+    (target: string) => {
+      clearActive();
+      resetSessionTimer();
+      todaySecondsAtStartRef.current = 0;
+      useDailyCap.getState().clear();
+      router.replace(target as never);
+    },
+    [clearActive, resetSessionTimer],
+  );
+
+  const confirmAndEnd = useCallback(() => setEndDialog({ kind: "cta" }), []);
 
   const pendingTabName = useActiveSession((s) => s.pendingTabName);
   const clearPendingTabSwitch = useActiveSession(
@@ -572,70 +587,48 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   useEffect(() => {
     if (!pendingTabName) return;
     const target = pendingTabName;
-    // Clear the trigger BEFORE showing the Alert so this effect doesn't
-    // re-fire and stack a second dialog if any other dep changes while
-    // the user is still deciding.
+    // Clear the trigger BEFORE opening the dialog so this effect doesn't
+    // re-fire and stack a second dialog if any other dep changes.
     clearPendingTabSwitch();
-    const body = memoryEnabled
-      ? "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Plus your coach will remember what matters from this chat next time. Your practice time also goes toward your daily goal and streak."
-      : "Your coach will prepare a feedback report — your highlights, things to polish, and new vocabulary worth remembering. Your practice time also goes toward your daily goal and streak.";
+    setEndDialog({ kind: "tab", target });
+  }, [pendingTabName, clearPendingTabSwitch]);
 
-    Alert.alert("End conversation?", body, [
-      {
-        text: "Just leave",
-        style: "cancel",
+  const buildEndActions = (): ConfirmAction[] => {
+    if (!endDialog) return [];
+    const fallback =
+      endDialog.kind === "tab"
+        ? `/(tabs)/${endDialog.target}`
+        : "/(tabs)/practice";
+    const actions: ConfirmAction[] = [];
+    if (endDialog.kind === "tab") {
+      actions.push({
+        label: "Just leave (keep it open)",
         onPress: () => {
-          router.push(`/(tabs)/${target}`);
+          setEndDialog(null);
+          router.push(fallback as never);
         },
+      });
+    }
+    actions.push({
+      label: "Leave without saving",
+      kind: "destructive",
+      onPress: () => {
+        setEndDialog(null);
+        runDiscard(fallback);
       },
-      {
-        text: "End & see feedback",
-        style: "default",
+    });
+    if (userTurnCount >= 1) {
+      actions.push({
+        label: "End & see feedback",
+        kind: "primary",
         onPress: () => {
-          // Same store-clear as confirmAndEnd — see comment there.
-          clearActive();
-          void (async () => {
-            let endResult: {
-              conversationId: string | null;
-              secondsSpoken: number;
-            } | null = null;
-            try {
-              endResult = await end();
-            } catch {
-              /* best-effort */
-            }
-            resetSessionTimer();
-            todaySecondsAtStartRef.current = 0;
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["today-stats"] }),
-              queryClient.invalidateQueries({ queryKey: ["progress-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["current-streak"] }),
-              queryClient.invalidateQueries({ queryKey: ["recent-sessions"] }),
-            ]);
-            if (endResult?.conversationId) {
-              router.replace({
-                pathname: "/(modals)/end-of-session",
-                params: {
-                  conversationId: endResult.conversationId,
-                  secondsSpoken: String(endResult.secondsSpoken),
-                },
-              });
-            } else {
-              router.replace(`/(tabs)/${target}`);
-            }
-          })();
+          setEndDialog(null);
+          runEndWithFeedback(fallback);
         },
-      },
-    ]);
-  }, [
-    pendingTabName,
-    memoryEnabled,
-    end,
-    queryClient,
-    resetSessionTimer,
-    clearPendingTabSwitch,
-    clearActive,
-  ]);
+      });
+    }
+    return actions;
+  };
 
   if (state.phase === "loading-session") {
     return (
@@ -784,6 +777,19 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         visible={rewardTriggered}
         streakDays={(streak ?? 0) + 1}
         onHidden={dismissReward}
+      />
+
+      <ConfirmSheet
+        visible={endDialog !== null}
+        title={
+          endDialog?.kind === "tab"
+            ? "Leave the conversation?"
+            : "End conversation?"
+        }
+        body={feedbackBlurb}
+        cancelLabel="Keep talking"
+        onRequestClose={() => setEndDialog(null)}
+        actions={buildEndActions()}
       />
     </Screen>
   );
