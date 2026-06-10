@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   View,
 } from "react-native";
@@ -23,7 +23,9 @@ import { TodayProgress } from "@/src/features/home/today-progress";
 import { useOfflineQuote } from "@/src/features/home/use-offline-quote";
 import { useVocabDeck } from "@/src/features/vocab/use-vocab-deck";
 import { supabase } from "@/src/lib/supabase";
-import { buildQuoteText } from "@/src/features/sharing/share-text";
+import { buildQuoteCaption } from "@/src/features/sharing/share-text";
+import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
+import { QuoteShareCard } from "@/src/features/sharing/share-cards";
 
 function useCurrentStreak() {
   return useQuery<number>({
@@ -47,6 +49,7 @@ function dateLabel(timezone: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [shareQuote, setShareQuote] = useState(false);
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: stats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
@@ -98,9 +101,7 @@ export default function HomeScreen() {
         <QuoteCard
           quote={quote}
           nativeLang={nativeLang}
-          onShare={() => {
-            void Share.share({ message: buildQuoteText(quote, nativeLang) });
-          }}
+          onShare={() => setShareQuote(true)}
         />
 
         <TodayProgress
@@ -144,6 +145,13 @@ export default function HomeScreen() {
           </EditorialText>
         </Pressable>
       </ScrollView>
+      <ShareCardModal
+        visible={shareQuote}
+        onClose={() => setShareQuote(false)}
+        caption={buildQuoteCaption(quote, nativeLang)}
+      >
+        <QuoteShareCard quote={quote} />
+      </ShareCardModal>
     </Screen>
   );
 }

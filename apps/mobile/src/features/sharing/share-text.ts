@@ -25,6 +25,26 @@ export function buildQuoteText(
   return lines.join("\n");
 }
 
+/**
+ * Caption for the quote *image* share — the original quote lives on the card,
+ * so the caption carries the translation + the tappable app link.
+ */
+export function buildQuoteCaption(
+  quote: DailyQuote,
+  nativeLang: SupportedLang,
+): string {
+  const lines: string[] = [];
+  const translation = quote.translations[nativeLang];
+  if (translation && quote.original.lang !== nativeLang) {
+    lines.push(`“${translation}”`, "");
+  }
+  lines.push(
+    "✦ Quote of the day from My Language Coach",
+    `Learn a language with Lisa → ${APP_URL}`,
+  );
+  return lines.join("\n");
+}
+
 export type FeedbackTextInput = {
   durationLabel: string;
   highlights: { phrase: string; why: string }[];

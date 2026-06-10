@@ -17,7 +17,7 @@ describe("buildTranscript", () => {
     expect(out).toContain("6 min");
     expect(out).toContain("You: Buongiorno!");
     expect(out).toContain("Coach: Buongiorno! Come stai?");
-    expect(out).toContain("Practice with me at mylanguagecoach.app");
+    expect(out).toContain("Practice with me → https://www.mylanguagecoach.app");
   });
 
   it("returns a header-only transcript when there are no messages", () => {
