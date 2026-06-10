@@ -11,6 +11,7 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { usePurchases } from "@/src/features/paywall/use-purchases";
+import { PaywallSuccess } from "@/src/features/paywall/PaywallSuccess";
 
 const STORE_NAME = Platform.OS === "ios" ? "App Store" : "Google Play";
 
@@ -24,14 +25,13 @@ const FEATURES_LIST = [
 export default function PaywallModal() {
   const { offerings, purchase, restore } = usePurchases();
   const [busy, setBusy] = useState<"monthly" | "annual" | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const onPurchase = async (kind: "monthly" | "annual") => {
     setBusy(kind);
     try {
       await purchase(kind);
-      Alert.alert("Welcome to Pro!", "Your features are unlocked.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      setShowSuccess(true);
     } catch (e) {
       const msg = String(e);
       if (!msg.includes("cancelled") && !msg.includes("Cancel")) {
@@ -56,69 +56,72 @@ export default function PaywallModal() {
   const insets = useSafeAreaInsets();
 
   return (
-    <Screen variant="gradient">
-      <Pressable
-        onPress={() => router.back()}
-        style={[styles.closeButton, { top: insets.top + spacing.md }]}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Close"
-      >
-        <Ionicons name="close" size={28} color={palette.ink} />
-      </Pressable>
-      <View style={styles.container}>
-        <EditorialText kind="displayMd" italic style={styles.title}>
-          Unlock your coach
-        </EditorialText>
-        <View style={styles.bullets}>
-          {FEATURES_LIST.map((f) => (
-            <EditorialText
-              key={f}
-              kind="bodyMd"
-              color={palette.ink}
-              style={styles.bullet}
-            >
-              • {f}
+    <>
+      <Screen variant="gradient">
+        <Pressable
+          onPress={() => router.back()}
+          style={[styles.closeButton, { top: insets.top + spacing.md }]}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        >
+          <Ionicons name="close" size={28} color={palette.ink} />
+        </Pressable>
+        <View style={styles.container}>
+          <EditorialText kind="displayMd" italic style={styles.title}>
+            Unlock your coach
+          </EditorialText>
+          <View style={styles.bullets}>
+            {FEATURES_LIST.map((f) => (
+              <EditorialText
+                key={f}
+                kind="bodyMd"
+                color={palette.ink}
+                style={styles.bullet}
+              >
+                • {f}
+              </EditorialText>
+            ))}
+          </View>
+          <Pressable
+            onPress={() => onPurchase("annual")}
+            style={[styles.btnAnnual, busy === "annual" && styles.busy]}
+            disabled={!!busy}
+          >
+            <EditorialText kind="bodyMd" color={palette.peach}>
+              Annual {annual ? `— ${annual.priceString}/yr` : ""} · save 48%
             </EditorialText>
-          ))}
+          </Pressable>
+          <Pressable
+            onPress={() => onPurchase("monthly")}
+            style={[styles.btnMonthly, busy === "monthly" && styles.busy]}
+            disabled={!!busy}
+          >
+            <EditorialText kind="bodyMd" color={palette.ink}>
+              Monthly {monthly ? `— ${monthly.priceString}/mo` : ""}
+            </EditorialText>
+          </Pressable>
+          <EditorialText
+            kind="bodySm"
+            color={palette.inkSoft}
+            style={styles.fineprint}
+          >
+            7-day free trial. Cancel anytime in {STORE_NAME} settings.
+          </EditorialText>
+          <Pressable onPress={onRestore} style={styles.restore}>
+            <EditorialText kind="bodySm" color={palette.inkSoft}>
+              Restore purchases
+            </EditorialText>
+          </Pressable>
+          <Pressable onPress={() => router.back()} style={styles.close}>
+            <EditorialText kind="bodySm" color={palette.inkSoft}>
+              Maybe later
+            </EditorialText>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => onPurchase("annual")}
-          style={[styles.btnAnnual, busy === "annual" && styles.busy]}
-          disabled={!!busy}
-        >
-          <EditorialText kind="bodyMd" color={palette.peach}>
-            Annual {annual ? `— ${annual.priceString}/yr` : ""} · save 48%
-          </EditorialText>
-        </Pressable>
-        <Pressable
-          onPress={() => onPurchase("monthly")}
-          style={[styles.btnMonthly, busy === "monthly" && styles.busy]}
-          disabled={!!busy}
-        >
-          <EditorialText kind="bodyMd" color={palette.ink}>
-            Monthly {monthly ? `— ${monthly.priceString}/mo` : ""}
-          </EditorialText>
-        </Pressable>
-        <EditorialText
-          kind="bodySm"
-          color={palette.inkSoft}
-          style={styles.fineprint}
-        >
-          7-day free trial. Cancel anytime in {STORE_NAME} settings.
-        </EditorialText>
-        <Pressable onPress={onRestore} style={styles.restore}>
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Restore purchases
-          </EditorialText>
-        </Pressable>
-        <Pressable onPress={() => router.back()} style={styles.close}>
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Maybe later
-          </EditorialText>
-        </Pressable>
-      </View>
-    </Screen>
+      </Screen>
+      <PaywallSuccess visible={showSuccess} onHidden={() => router.back()} />
+    </>
   );
 }
 

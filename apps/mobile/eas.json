@@ -41,6 +41,27 @@
         "GOOGLE_IOS_URL_SCHEME": "com.googleusercontent.apps.446154042539-4mjagb7drd9a7jmqug3h7ha44jp7gck0"
       }
     },
+    "ios-simulator": {
+      "extends": "preview",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "rc-test": {
+      "extends": "preview",
+      "env": {
+        "SUPABASE_URL": "https://nzrrqykcloanoaqwbexv.supabase.co",
+        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_02kfSiKQsU_hhoCQ4imRig_vTVsWY0m",
+        "SENTRY_DSN_MOBILE": "https://2441378aa3508ef04734add3d7c4c447@o4511359436783616.ingest.de.sentry.io/4511359440257104",
+        "POSTHOG_API_KEY": "placeholder_posthog_to_be_replaced_in_plan_6",
+        "POSTHOG_HOST": "https://us.i.posthog.com",
+        "EAS_PROJECT_ID": "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
+        "GOOGLE_WEB_CLIENT_ID": "446154042539-0mpbdpqj8st0s06cn9e6euresm0hdg4f.apps.googleusercontent.com",
+        "GOOGLE_IOS_CLIENT_ID": "446154042539-4mjagb7drd9a7jmqug3h7ha44jp7gck0.apps.googleusercontent.com",
+        "GOOGLE_IOS_URL_SCHEME": "com.googleusercontent.apps.446154042539-4mjagb7drd9a7jmqug3h7ha44jp7gck0",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_gJjEnnrQLQiomGPrhIvWOMjfEyW"
+      }
+    },
     "production": {
       "channel": "production",
       "android": {

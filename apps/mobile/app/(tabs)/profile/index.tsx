@@ -12,6 +12,7 @@ import {
   type BottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import Constants from "expo-constants";
+import Purchases from "react-native-purchases";
 import { useRouter } from "expo-router";
 import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
@@ -78,8 +79,16 @@ export default function ProfileScreen() {
       {
         text: "Sign out",
         style: "destructive",
-        onPress: () => {
-          supabase.auth.signOut();
+        onPress: async () => {
+          // Reset the RevenueCat identity to a fresh anonymous user so the
+          // next person to sign in on this device doesn't inherit this user's
+          // entitlements. (logOut throws if the RC user is already anonymous —
+          // swallow that case.) Android-only, matching where the SDK is
+          // configured in _layout.
+          if (Platform.OS === "android") {
+            await Purchases.logOut().catch(() => {});
+          }
+          await supabase.auth.signOut();
         },
       },
     ]);
