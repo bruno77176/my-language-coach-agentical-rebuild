@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,6 +15,8 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { useSessionFeedback } from "@/src/features/practice/use-session-feedback";
+import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
+import { FeedbackShareCard } from "@/src/features/sharing/share-cards";
 
 export default function EndOfSessionScreen() {
   const { conversationId, secondsSpoken } = useLocalSearchParams<{
@@ -22,6 +24,7 @@ export default function EndOfSessionScreen() {
     secondsSpoken?: string;
   }>();
   const { data } = useSessionFeedback(conversationId ?? null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const goHome = () => router.replace("/(tabs)/home");
   const again = () => router.replace("/(tabs)/practice");
@@ -108,6 +111,15 @@ export default function EndOfSessionScreen() {
                 ))
               )}
             </Section>
+            <Pressable
+              onPress={() => setShareOpen(true)}
+              hitSlop={8}
+              style={styles.shareRow}
+            >
+              <EditorialText kind="bodyMd" color={palette.accent}>
+                ✦ Share your progress
+              </EditorialText>
+            </Pressable>
           </>
         )}
 
@@ -124,6 +136,22 @@ export default function EndOfSessionScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      {data?.status === "ready" && (
+        <ShareCardModal visible={shareOpen} onClose={() => setShareOpen(false)}>
+          <FeedbackShareCard
+            durationLabel={`${min} min of practice`}
+            highlight={data.highlights[0]?.phrase}
+            vocab={
+              data.vocab[0]
+                ? {
+                    term: data.vocab[0].term,
+                    translation: data.vocab[0].translation,
+                  }
+                : undefined
+            }
+          />
+        </ShareCardModal>
+      )}
     </Screen>
   );
 }
@@ -173,6 +201,7 @@ const styles = StyleSheet.create({
   subtitle: { marginBottom: spacing.xl },
   loading: { gap: spacing.md, alignItems: "center", marginTop: spacing.xl },
   failed: { marginTop: spacing.xl },
+  shareRow: { alignItems: "center", marginTop: spacing.xl },
   section: { marginTop: spacing.xl },
   sectionTitle: {
     fontWeight: "600",

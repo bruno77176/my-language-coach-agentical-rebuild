@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -22,6 +23,8 @@ import { TodayProgress } from "@/src/features/home/today-progress";
 import { useOfflineQuote } from "@/src/features/home/use-offline-quote";
 import { useVocabDeck } from "@/src/features/vocab/use-vocab-deck";
 import { supabase } from "@/src/lib/supabase";
+import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
+import { QuoteShareCard } from "@/src/features/sharing/share-cards";
 
 function useCurrentStreak() {
   return useQuery<number>({
@@ -45,6 +48,7 @@ function dateLabel(timezone: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [shareQuote, setShareQuote] = useState(false);
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const { data: stats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
@@ -94,6 +98,15 @@ export default function HomeScreen() {
         </EditorialText>
 
         <QuoteCard quote={quote} nativeLang={nativeLang} />
+        <Pressable
+          onPress={() => setShareQuote(true)}
+          hitSlop={8}
+          style={styles.shareQuote}
+        >
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            ✦ Share this quote
+          </EditorialText>
+        </Pressable>
 
         <TodayProgress
           secondsSpoken={stats?.secondsSpoken ?? 0}
@@ -136,6 +149,9 @@ export default function HomeScreen() {
           </EditorialText>
         </Pressable>
       </ScrollView>
+      <ShareCardModal visible={shareQuote} onClose={() => setShareQuote(false)}>
+        <QuoteShareCard quote={quote} />
+      </ShareCardModal>
     </Screen>
   );
 }
@@ -162,6 +178,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   greeting: { marginTop: spacing.sm },
+  shareQuote: { alignSelf: "center", marginTop: -spacing.sm },
   cta: {
     backgroundColor: palette.ink,
     paddingVertical: spacing.base + 2,
