@@ -34,10 +34,23 @@ export type Env = z.infer<typeof EnvSchema>;
 
 // Voice loop tuning constants — consumed by quota helper (Task 8) and turn route (Task 9).
 export const FREE_TIER_VOICE_SECONDS_PER_MONTH = 30 * 60; // 30 minutes
-export const FREE_TIER_VOICE_SECONDS_PER_DAY = 600; // 10 minutes — Plan 8 M4 daily cap
-export const PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP = 3600; // 60 minutes — Plan 8 M4 Pro soft cap
+export const FREE_TIER_VOICE_SECONDS_PER_DAY = 600; // 10 minutes — free daily cap (wall-clock)
+// Pro daily cap. As of 2026-06-10 this is a HARD cap (was a soft/warn-only cap).
+export const PRO_TIER_VOICE_SECONDS_PER_DAY = 3600; // 60 minutes
+// Back-compat alias (older imports referenced the "soft cap" name).
+export const PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP =
+  PRO_TIER_VOICE_SECONDS_PER_DAY;
 export const MAX_TURN_AUDIO_SECONDS = 60;
 export const MIN_TURN_AUDIO_SECONDS = 1;
+
+// Daily wall-clock cap mechanics (2026-06-10). The daily counter tracks elapsed
+// *conversation* seconds (the on-screen timer), reported by the client per turn,
+// not transcribed speech. The clamp bounds a tampered client and long idle gaps.
+export const MAX_TURN_WALLCLOCK_DELTA_SECONDS = 180;
+// Rewarded-ad "+3 min" extension (stubbed until AdMob lands): seconds granted
+// back per watch, and how many watches a free user gets per local day.
+export const AD_EXTENSION_SECONDS = 180;
+export const MAX_AD_EXTENSIONS_PER_DAY = 2;
 
 export function loadEnv(): Env {
   const result = EnvSchema.safeParse(process.env);

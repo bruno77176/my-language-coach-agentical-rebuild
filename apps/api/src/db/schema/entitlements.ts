@@ -19,6 +19,9 @@ export const entitlements = pgTable("entitlements", {
   dailyResetAt: timestamp("daily_reset_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // Rewarded-ad "+3 min" extensions used in the current local day. Reset lazily
+  // by the same day-key comparison as dailyVoiceSecondsUsed (no cron).
+  dailyAdExtensions: integer("daily_ad_extensions").notNull().default(0),
 });
 
 export type Entitlement = typeof entitlements.$inferSelect;

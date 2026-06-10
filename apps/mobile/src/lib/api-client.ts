@@ -32,7 +32,32 @@ export function clientCapabilitiesHeader(): {
   return { "X-Client-Capabilities": "inline-audio" };
 }
 
-export type StartSessionResponse = { conversation_id: string };
+export type StartSessionResponse = {
+  conversation_id: string;
+  // Daily wall-clock budget so the client can enforce the cap locally + show a
+  // countdown. Optional for back-compat with older API responses.
+  daily_used_seconds?: number;
+  daily_cap_seconds?: number;
+  reset_at?: string;
+};
+
+/**
+ * Thrown by startSession when the free daily wall-clock cap is already spent
+ * (HTTP 429). Carries the reset instant for the limit screen's countdown.
+ */
+export class DailyQuotaError extends Error {
+  readonly code = "DAILY_QUOTA_EXCEEDED";
+  readonly resetAt?: string;
+  constructor(resetAt?: string) {
+    super("Daily limit reached");
+    this.name = "DailyQuotaError";
+    this.resetAt = resetAt;
+  }
+}
+
+export function isDailyQuotaError(e: unknown): e is DailyQuotaError {
+  return e instanceof DailyQuotaError;
+}
 
 export async function startSession(
   language: string,
@@ -52,9 +77,46 @@ export async function startSession(
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
+    if (res.status === 429) {
+      let resetAt: string | undefined;
+      try {
+        const j = JSON.parse(text) as { error?: { resetAt?: string } };
+        resetAt = j.error?.resetAt;
+      } catch {
+        // body wasn't JSON — fall through with no resetAt
+      }
+      throw new DailyQuotaError(resetAt);
+    }
     throw new Error(`startSession ${res.status}: ${text}`);
   }
   return res.json() as Promise<StartSessionResponse>;
+}
+
+export type AdExtensionResponse = {
+  daily_used_seconds: number;
+  daily_cap_seconds: number;
+  reset_at: string;
+  extensions_remaining: number;
+};
+
+/**
+ * Grant a "+3 min" rewarded-ad extension. STUB for now — the backend doesn't
+ * verify a real ad watch yet (real AdMob lands later); the caller invokes this
+ * after a simulated watch. Throws on the 409 "no extensions left today".
+ */
+export async function adExtension(): Promise<AdExtensionResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/voice/ad-extension`, {
+    method: "POST",
+    headers: {
+      authorization: await authHeader(),
+      ...clientPlatformHeader(),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`adExtension ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<AdExtensionResponse>;
 }
 
 export type EndSessionResponse = {
@@ -137,7 +199,14 @@ export type TurnEvent =
       durationMs: number;
     }
   | { type: "done"; messageId: string }
-  | { type: "error"; code: string; message: string; retryable: boolean };
+  | {
+      type: "error";
+      code: string;
+      message: string;
+      retryable: boolean;
+      // Present for DAILY_QUOTA_EXCEEDED — the local-midnight reset instant.
+      resetAt?: string;
+    };
 
 type TurnEventName = "transcription" | "reply-chunk" | "done";
 
@@ -153,6 +222,10 @@ export function streamTurn(
   conversationId: string,
   audioUri: string,
   voiceConfig?: TtsConfig,
+  // Wall-clock seconds elapsed in the conversation since the previous turn. The
+  // server clamps + accumulates this into the daily cap (the on-screen timer is
+  // the metric, not transcribed speech).
+  elapsedDeltaSeconds?: number,
 ): {
   events: AsyncIterable<TurnEvent>;
   close: () => void;
@@ -169,6 +242,15 @@ export function streamTurn(
   } as unknown as Blob);
   if (voiceConfig) {
     form.append("voice_config", JSON.stringify(voiceConfig));
+  }
+  if (
+    typeof elapsedDeltaSeconds === "number" &&
+    Number.isFinite(elapsedDeltaSeconds)
+  ) {
+    form.append(
+      "elapsed_delta_seconds",
+      String(Math.max(0, Math.round(elapsedDeltaSeconds))),
+    );
   }
 
   const url = `${API_BASE_URL}/v1/voice/sessions/${conversationId}/turns`;
@@ -257,53 +339,52 @@ export function streamTurn(
       endStream();
     });
     es.addEventListener("error", (e) => {
-      // Built-in error event: type "error" | "exception" | "timeout".
-      // The backend may also emit a custom-named "error" event with a
-      // JSON payload; react-native-sse merges those into the same handler.
-      // Body shapes we accept:
+      // Built-in error event: type "error" | "exception" | "timeout". The
+      // backend may emit a custom-named "error" SSE event (JSON in `data`), and
+      // a pre-stream Hono error (e.g. 429 DAILY_QUOTA_EXCEEDED, emitted before
+      // the stream opens) arrives with the body in `message`, not `data` — so we
+      // try both. Body shapes:
       //   - SSE custom error event: `{ code, message, retryable }`
-      //   - Hono error response (e.g. 429 before stream open):
-      //     `{ error: { code, message, resetAt? } }`
-      const maybeData = (e as { data?: string | null }).data;
-      if (maybeData) {
+      //   - Hono error response: `{ error: { code, message, resetAt? } }`
+      const rawStr =
+        (e as { data?: string | null }).data ??
+        (e as { message?: string }).message ??
+        "";
+      if (rawStr) {
         try {
-          const raw = JSON.parse(maybeData) as
-            | { code?: string; message?: string; retryable?: boolean }
-            | {
-                error?: {
-                  code?: string;
-                  message?: string;
-                  retryable?: boolean;
-                };
-              };
-          const flat =
-            "error" in raw && raw.error
-              ? raw.error
-              : (raw as {
-                  code?: string;
-                  message?: string;
-                  retryable?: boolean;
-                });
+          const parsed = JSON.parse(rawStr) as {
+            code?: string;
+            message?: string;
+            retryable?: boolean;
+            resetAt?: string;
+            error?: {
+              code?: string;
+              message?: string;
+              retryable?: boolean;
+              resetAt?: string;
+            };
+          };
+          const flat = parsed.error ?? parsed;
           push({
             type: "error",
             code: flat.code ?? "INTERNAL",
             message: flat.message ?? "Stream error",
             retryable: flat.retryable ?? false,
+            resetAt: flat.resetAt,
           });
         } catch {
           push({
             type: "error",
             code: "INTERNAL",
-            message: "Stream error",
+            message: rawStr || "Stream error",
             retryable: true,
           });
         }
       } else {
-        const message = (e as { message?: string }).message ?? "Stream error";
         push({
           type: "error",
           code: "INTERNAL",
-          message,
+          message: "Stream error",
           retryable: true,
         });
       }

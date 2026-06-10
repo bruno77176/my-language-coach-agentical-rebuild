@@ -10,8 +10,16 @@ import {
   sessionFeedback,
 } from "../db/schema";
 import type { Database } from "../db";
-import { MAX_TURN_AUDIO_SECONDS, MIN_TURN_AUDIO_SECONDS } from "../env";
-import { canUseSecondsDaily } from "../lib/quota";
+import {
+  MAX_TURN_AUDIO_SECONDS,
+  MIN_TURN_AUDIO_SECONDS,
+  MAX_TURN_WALLCLOCK_DELTA_SECONDS,
+  FREE_TIER_VOICE_SECONDS_PER_DAY,
+  AD_EXTENSION_SECONDS,
+  MAX_AD_EXTENSIONS_PER_DAY,
+} from "../env";
+import { canUseSecondsDaily, dailyUsed, dailyCapSeconds } from "../lib/quota";
+import { localDayKey, nextLocalMidnightUtc } from "../lib/daily-window";
 import { ProviderError } from "../providers/deepgram";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
 import type { StreamInput, ChatMessage } from "../providers/openai";
@@ -191,6 +199,43 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
+    // Daily wall-clock gate on session start — a capped user never even opens a
+    // conversation (or triggers a free greeting). Same check as the turn route.
+    const [entitlement, profile] = await Promise.all([
+      deps.db.query.entitlements.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+      deps.db.query.profiles.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+    ]);
+    const tz = profile?.timezone ?? "UTC";
+    const now = new Date();
+    if (entitlement) {
+      const check = canUseSecondsDaily(
+        {
+          plan: entitlement.plan as "free" | "pro",
+          proUntil: entitlement.proUntil,
+          dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
+          dailyResetAt: entitlement.dailyResetAt,
+        },
+        tz,
+        now,
+      );
+      if (!check.allowed) {
+        return c.json(
+          {
+            error: {
+              code: "DAILY_QUOTA_EXCEEDED",
+              message: "Daily limit reached",
+              resetAt: check.resetAt.toISOString(),
+            },
+          },
+          429,
+        );
+      }
+    }
+
     const inserted = await deps.db
       .insert(conversations)
       .values({
@@ -201,7 +246,85 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       })
       .returning({ id: conversations.id });
 
-    return c.json({ conversation_id: inserted[0]!.id });
+    // Surface the current budget so the client can enforce the cap locally
+    // (stop the session timer) and show an accurate countdown.
+    const used = entitlement ? dailyUsed(entitlement, tz, now) : 0;
+    const cap = entitlement
+      ? dailyCapSeconds(
+          {
+            plan: entitlement.plan as "free" | "pro",
+            proUntil: entitlement.proUntil,
+          },
+          now,
+        )
+      : FREE_TIER_VOICE_SECONDS_PER_DAY;
+    return c.json({
+      conversation_id: inserted[0]!.id,
+      daily_used_seconds: used,
+      daily_cap_seconds: cap,
+      reset_at: nextLocalMidnightUtc(now, tz).toISOString(),
+    });
+  });
+
+  // POST /ad-extension — grant a "+3 min" rewarded-ad extension. STUB: no ad
+  // verification yet (the client calls this after a simulated watch); real
+  // AdMob server-side verification lands in a later milestone. Subtracts
+  // AD_EXTENSION_SECONDS from today's used budget, capped at
+  // MAX_AD_EXTENSIONS_PER_DAY per local day.
+  routes.post("/ad-extension", async (c) => {
+    const userId = c.get("userId");
+    const [entitlement, profile] = await Promise.all([
+      deps.db.query.entitlements.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+      deps.db.query.profiles.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      }),
+    ]);
+    if (!entitlement) {
+      return c.json(
+        { error: { code: "INTERNAL", message: "No entitlement" } },
+        500,
+      );
+    }
+    const tz = profile?.timezone ?? "UTC";
+    const now = new Date();
+    const sameDay =
+      localDayKey(entitlement.dailyResetAt, tz) === localDayKey(now, tz);
+    const usedToday = sameDay ? entitlement.dailyVoiceSecondsUsed : 0;
+    const extToday = sameDay ? entitlement.dailyAdExtensions : 0;
+    if (extToday >= MAX_AD_EXTENSIONS_PER_DAY) {
+      return c.json(
+        {
+          error: {
+            code: "AD_LIMIT_REACHED",
+            message: "No more ad extensions today",
+          },
+        },
+        409,
+      );
+    }
+    const newUsed = Math.max(0, usedToday - AD_EXTENSION_SECONDS);
+    await deps.db
+      .update(entitlements)
+      .set({
+        dailyVoiceSecondsUsed: newUsed,
+        dailyAdExtensions: extToday + 1,
+        dailyResetAt: sameDay ? entitlement.dailyResetAt : now,
+      })
+      .where(eq(entitlements.userId, userId));
+    return c.json({
+      daily_used_seconds: newUsed,
+      daily_cap_seconds: dailyCapSeconds(
+        {
+          plan: entitlement.plan as "free" | "pro",
+          proUntil: entitlement.proUntil,
+        },
+        now,
+      ),
+      reset_at: nextLocalMidnightUtc(now, tz).toISOString(),
+      extensions_remaining: MAX_AD_EXTENSIONS_PER_DAY - (extToday + 1),
+    });
   });
 
   routes.post("/sessions/:id/turns", async (c) => {
@@ -281,7 +404,9 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         500,
       );
     }
-    const estimateSeconds = Math.ceil(audioBuffer.byteLength / 16_000);
+    // Daily wall-clock gate: block once the budget is already spent. The
+    // in-flight turn's elapsed time is accumulated after a successful turn.
+    const tz = profile?.timezone ?? "UTC";
     const dailyCheck = canUseSecondsDaily(
       {
         plan: entitlement.plan as "free" | "pro",
@@ -289,14 +414,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
         dailyResetAt: entitlement.dailyResetAt,
       },
-      estimateSeconds,
+      tz,
     );
     if (!dailyCheck.allowed) {
       return c.json(
         {
           error: {
             code: "DAILY_QUOTA_EXCEEDED",
-            message: "Free tier daily limit reached",
+            message: "Daily limit reached",
             resetAt: dailyCheck.resetAt.toISOString(),
           },
         },
@@ -472,27 +597,39 @@ export function createVoiceRoutes(deps: VoiceDeps) {
 
         const coachMsgId = coachRow!.id;
 
-        // 6. Update conversation seconds + entitlement (pure increments)
-        const secondsThisTurn = Math.round(stt.durationSeconds);
+        // 6. Update counters.
+        //  - conversation.secondsSpoken + monthlyVoiceSecondsUsed track actual
+        //    transcribed *speech* seconds (cost analytics; monthly is vestigial).
+        //  - dailyVoiceSecondsUsed tracks elapsed *conversation* wall-clock time
+        //    (the on-screen timer), reported by the client per turn and clamped
+        //    against tampering / long idle gaps. Resets at local midnight.
+        const speechSeconds = Math.round(stt.durationSeconds);
+        const elapsedRaw = Number(formData?.get("elapsed_delta_seconds") ?? 0);
+        const wallclockDelta = Number.isFinite(elapsedRaw)
+          ? Math.min(
+              MAX_TURN_WALLCLOCK_DELTA_SECONDS,
+              Math.max(0, Math.round(elapsedRaw)),
+            )
+          : 0;
+        const turnNow = new Date();
+        const sameDay =
+          localDayKey(entitlement.dailyResetAt, tz) ===
+          localDayKey(turnNow, tz);
         await deps.db
           .update(conversations)
           .set({
-            secondsSpoken: (conversation.secondsSpoken ?? 0) + secondsThisTurn,
+            secondsSpoken: (conversation.secondsSpoken ?? 0) + speechSeconds,
           })
           .where(eq(conversations.id, conversationId));
         await deps.db
           .update(entitlements)
           .set({
             monthlyVoiceSecondsUsed:
-              entitlement.monthlyVoiceSecondsUsed + secondsThisTurn,
+              entitlement.monthlyVoiceSecondsUsed + speechSeconds,
             dailyVoiceSecondsUsed:
-              (entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
-                ? 0
-                : entitlement.dailyVoiceSecondsUsed) + secondsThisTurn,
-            dailyResetAt:
-              entitlement.dailyResetAt.getTime() + 86400000 < Date.now()
-                ? new Date()
-                : entitlement.dailyResetAt,
+              (sameDay ? entitlement.dailyVoiceSecondsUsed : 0) +
+              wallclockDelta,
+            dailyResetAt: sameDay ? entitlement.dailyResetAt : turnNow,
           })
           .where(eq(entitlements.userId, userId));
 

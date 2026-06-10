@@ -20,6 +20,7 @@ import {
   streamTurn,
   streamOpening,
   endSession,
+  isDailyQuotaError,
   type TurnEvent,
 } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
@@ -121,6 +122,9 @@ export function useConversation(
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const conversationIdRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
+  // Wall-clock timestamp of the previous turn (or session start). The delta to
+  // the next turn is the conversation time consumed, reported to the daily cap.
+  const lastTurnAtRef = useRef<number>(Date.now());
   // Guard against double-firing the paywall navigation if the SSE error
   // event arrives more than once or a follow-up turn also 429s. Reset on
   // successful turn (in the for-await success path below) so a user who
@@ -140,6 +144,7 @@ export function useConversation(
         const { conversation_id } = await startSession(targetLang, scenarioId);
         if (cancelled) return;
         conversationIdRef.current = conversation_id;
+        lastTurnAtRef.current = Date.now();
 
         // Scenarios: the coach speaks first, in character. Play the opener
         // through the same reply-chunk/audio pipeline as a normal turn.
@@ -197,6 +202,19 @@ export function useConversation(
         }
       } catch (err) {
         if (cancelled) return;
+        // Capped before even opening a conversation → go straight to the limit
+        // screen. "restart" mode: after upgrading / watching an ad, the screen
+        // re-enters Practice fresh (there's no in-flight conversation to resume).
+        if (isDailyQuotaError(err)) {
+          router.replace({
+            pathname: "/(modals)/daily-limit",
+            params: {
+              mode: "restart",
+              ...(err.resetAt ? { resetAt: err.resetAt } : {}),
+            },
+          });
+          return;
+        }
         setState({ phase: "error", message: (err as Error).message });
       }
     })();
@@ -244,7 +262,7 @@ export function useConversation(
 
   type CoachStreamOutcome =
     | { kind: "ok" }
-    | { kind: "paywall" }
+    | { kind: "limit"; resetAt?: string }
     | { kind: "soft-error"; code: SoftErrorCode }
     | { kind: "fatal-error"; code: string; message: string };
 
@@ -329,7 +347,7 @@ export function useConversation(
         setLastActivityAt(Date.now());
       } else if (event.type === "error") {
         if (event.code === "DAILY_QUOTA_EXCEEDED") {
-          return { kind: "paywall" };
+          return { kind: "limit", resetAt: event.resetAt };
         }
         const code = event.code as SoftErrorCode;
         if (SOFT_ERROR_CODES.has(code)) {
@@ -456,7 +474,19 @@ export function useConversation(
       // dependency array; when disabled, undefined => backend defaults.
       const vl = useVoiceLab.getState();
       const voiceOverride = vl.config;
-      const { events } = streamTurn(conversationId, uri, voiceOverride);
+      // Conversation wall-clock consumed since the previous turn — the server
+      // clamps + accumulates this into the daily cap.
+      const elapsedDeltaSeconds = Math.max(
+        0,
+        Math.round((Date.now() - lastTurnAtRef.current) / 1000),
+      );
+      lastTurnAtRef.current = Date.now();
+      const { events } = streamTurn(
+        conversationId,
+        uri,
+        voiceOverride,
+        elapsedDeltaSeconds,
+      );
       const audioQueue = createAudioQueue();
 
       const outcome = await consumeCoachStream(events, audioQueue, (text) => {
@@ -474,11 +504,19 @@ export function useConversation(
         setLastActivityAt(Date.now());
       });
 
-      if (outcome.kind === "paywall") {
+      if (outcome.kind === "limit") {
         await audioQueue.waitForDrain();
         if (!paywallShownRef.current) {
           paywallShownRef.current = true;
-          router.push("/(modals)/paywall");
+          // "resume" mode: the conversation stays mounted underneath this modal,
+          // so after upgrading / watching an ad the user continues right here.
+          router.push({
+            pathname: "/(modals)/daily-limit",
+            params: {
+              mode: "resume",
+              ...(outcome.resetAt ? { resetAt: outcome.resetAt } : {}),
+            },
+          });
         }
         setState({ phase: "idle", conversationId });
         return;

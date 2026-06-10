@@ -1,8 +1,9 @@
 import {
   FREE_TIER_VOICE_SECONDS_PER_MONTH,
   FREE_TIER_VOICE_SECONDS_PER_DAY,
-  PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP,
+  PRO_TIER_VOICE_SECONDS_PER_DAY,
 } from "../env";
+import { localDayKey, nextLocalMidnightUtc } from "./daily-window";
 
 export type Entitlement = {
   plan: "free" | "pro";
@@ -32,16 +33,20 @@ export function canUseSeconds(
   return { allowed: false, reason: "QUOTA_EXCEEDED" };
 }
 
-// Plan 8 M4: daily quota.
+// Daily wall-clock cap (2026-06-10 rewrite).
 //
-// Free users: hard cap at FREE_TIER_VOICE_SECONDS_PER_DAY (10 min/day).
-// Pro users: soft cap at PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP (60 min/day);
-// requests above the soft cap are still allowed but flagged via warnSoftCap.
+// `dailyVoiceSecondsUsed` now means elapsed *conversation* seconds (the
+// on-screen timer), accumulated from the client's per-turn elapsed delta — not
+// transcribed-speech seconds. Both tiers are HARD caps:
+//   - Free: FREE_TIER_VOICE_SECONDS_PER_DAY (10 min/day)
+//   - Pro:  PRO_TIER_VOICE_SECONDS_PER_DAY  (60 min/day)
 //
-// The 24h reset window is computed off the per-row daily_reset_at timestamp,
-// so no external cron is required — the reset happens lazily here and the
-// caller is expected to persist the new reset time + zeroed counter on the
-// next successful turn.
+// The window resets at the user's LOCAL midnight (their profiles.timezone) via
+// the day-key comparison in daily-window — so a user can't get a fresh
+// allowance minutes after being blocked (the old rolling-24h bug). We block
+// once the budget is already spent; the in-flight turn's time is added
+// afterwards, so the final turn may overrun slightly (bounded by the per-turn
+// clamp), which favors the user.
 
 export type DailyEntitlement = {
   plan: "free" | "pro";
@@ -51,34 +56,47 @@ export type DailyEntitlement = {
 };
 
 export type CanUseDailyResult =
-  | { allowed: true; warnSoftCap?: boolean }
+  | { allowed: true }
   | { allowed: false; reason: "DAILY_QUOTA_EXCEEDED"; resetAt: Date };
 
-export function canUseSecondsDaily(
-  entitlement: DailyEntitlement,
-  estimatedSeconds: number,
-  nowOverride?: Date,
-): CanUseDailyResult {
-  const now = nowOverride ?? new Date();
-  // If reset window has passed, treat dailyVoiceSecondsUsed as 0
-  const used =
-    entitlement.dailyResetAt.getTime() + 24 * 60 * 60 * 1000 < now.getTime()
-      ? 0
-      : entitlement.dailyVoiceSecondsUsed;
-  const wouldUse = used + estimatedSeconds;
+/** Seconds used in the current local day (0 if the stored counter is stale). */
+export function dailyUsed(
+  entitlement: Pick<DailyEntitlement, "dailyVoiceSecondsUsed" | "dailyResetAt">,
+  timeZone: string,
+  now: Date,
+): number {
+  return localDayKey(entitlement.dailyResetAt, timeZone) ===
+    localDayKey(now, timeZone)
+    ? entitlement.dailyVoiceSecondsUsed
+    : 0;
+}
 
+/** Hard daily cap (seconds) for this entitlement at `now`. */
+export function dailyCapSeconds(
+  entitlement: Pick<DailyEntitlement, "plan" | "proUntil">,
+  now: Date,
+): number {
   const isPro =
     entitlement.plan === "pro" &&
     entitlement.proUntil !== null &&
     entitlement.proUntil > now;
+  return isPro
+    ? PRO_TIER_VOICE_SECONDS_PER_DAY
+    : FREE_TIER_VOICE_SECONDS_PER_DAY;
+}
 
-  if (isPro) {
-    const cap = PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP;
-    if (wouldUse <= cap) return { allowed: true };
-    return { allowed: true, warnSoftCap: true }; // soft cap: still allow
-  }
-
-  if (wouldUse <= FREE_TIER_VOICE_SECONDS_PER_DAY) return { allowed: true };
-  const resetAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  return { allowed: false, reason: "DAILY_QUOTA_EXCEEDED", resetAt };
+export function canUseSecondsDaily(
+  entitlement: DailyEntitlement,
+  timeZone: string,
+  nowOverride?: Date,
+): CanUseDailyResult {
+  const now = nowOverride ?? new Date();
+  const used = dailyUsed(entitlement, timeZone, now);
+  const cap = dailyCapSeconds(entitlement, now);
+  if (used < cap) return { allowed: true };
+  return {
+    allowed: false,
+    reason: "DAILY_QUOTA_EXCEEDED",
+    resetAt: nextLocalMidnightUtc(now, timeZone),
+  };
 }

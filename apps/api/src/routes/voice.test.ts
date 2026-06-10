@@ -30,6 +30,12 @@ describe("POST /v1/voice/sessions", () => {
   it("creates a conversation and returns its id", async () => {
     const conversationId = "11111111-1111-1111-1111-111111111111";
     const fakeDb = {
+      // Session-start now runs the daily-cap gate, which reads the entitlement
+      // + profile. Undefined entitlement → gate skipped, budget defaults.
+      query: {
+        entitlements: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        profiles: { findFirst: vi.fn().mockResolvedValue(undefined) },
+      },
       insert: vi.fn(() => ({
         values: vi.fn(() => ({
           returning: vi.fn().mockResolvedValue([{ id: conversationId }]),
@@ -195,5 +201,66 @@ describe("POST /v1/voice/sessions/:id/end", () => {
       method: "POST",
     });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("POST /v1/voice/ad-extension", () => {
+  function adExtDb(opts: {
+    dailyVoiceSecondsUsed: number;
+    dailyAdExtensions: number;
+  }) {
+    const set = vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) }));
+    const update = vi.fn(() => ({ set }));
+    const db = {
+      query: {
+        entitlements: {
+          findFirst: vi.fn().mockResolvedValue({
+            plan: "free",
+            proUntil: null,
+            dailyVoiceSecondsUsed: opts.dailyVoiceSecondsUsed,
+            dailyResetAt: new Date(), // same local day
+            dailyAdExtensions: opts.dailyAdExtensions,
+          }),
+        },
+        profiles: {
+          findFirst: vi.fn().mockResolvedValue({ timezone: "UTC" }),
+        },
+      },
+      update,
+    };
+    return { db, update, set };
+  }
+
+  it("grants +3 min (reduces used) and reports remaining extensions", async () => {
+    const { db } = adExtDb({
+      dailyVoiceSecondsUsed: 600,
+      dailyAdExtensions: 0,
+    });
+    const app = appWithVoice(
+      createVoiceRoutes({ db: db as never, ...noopProviderDeps }),
+    );
+    const res = await app.request("/v1/voice/ad-extension", { method: "POST" });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      daily_used_seconds: number;
+      extensions_remaining: number;
+    };
+    expect(body.daily_used_seconds).toBe(420); // 600 - 180
+    expect(body.extensions_remaining).toBe(1);
+  });
+
+  it("returns 409 AD_LIMIT_REACHED once the daily cap of extensions is hit", async () => {
+    const { db, update } = adExtDb({
+      dailyVoiceSecondsUsed: 600,
+      dailyAdExtensions: 2,
+    });
+    const app = appWithVoice(
+      createVoiceRoutes({ db: db as never, ...noopProviderDeps }),
+    );
+    const res = await app.request("/v1/voice/ad-extension", { method: "POST" });
+    expect(res.status).toBe(409);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("AD_LIMIT_REACHED");
+    expect(update).not.toHaveBeenCalled();
   });
 });

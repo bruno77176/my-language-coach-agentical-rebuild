@@ -3,7 +3,7 @@ import { canUseSeconds, canUseSecondsDaily } from "./quota";
 import {
   FREE_TIER_VOICE_SECONDS_PER_MONTH,
   FREE_TIER_VOICE_SECONDS_PER_DAY,
-  PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP,
+  PRO_TIER_VOICE_SECONDS_PER_DAY,
 } from "../env";
 
 describe("canUseSeconds", () => {
@@ -57,93 +57,97 @@ describe("canUseSeconds", () => {
   });
 });
 
-describe("canUseSecondsDaily", () => {
+describe("canUseSecondsDaily (wall-clock, hard caps, local-midnight reset)", () => {
+  // Noon UTC — same local day in UTC as the dailyResetAt below.
   const now = new Date("2026-05-30T12:00:00.000Z");
+  const tz = "UTC";
+  const earlierSameDay = new Date("2026-05-30T08:00:00.000Z");
 
-  it("allows free user under the daily cap", () => {
+  it("allows a free user under the daily cap", () => {
     const r = canUseSecondsDaily(
       {
         plan: "free",
         proUntil: null,
         dailyVoiceSecondsUsed: 100,
-        dailyResetAt: new Date(now.getTime() - 60_000), // 1 minute ago
+        dailyResetAt: earlierSameDay,
       },
-      60,
+      tz,
       now,
     );
     expect(r).toEqual({ allowed: true });
   });
 
-  it("rejects free user at the daily cap with DAILY_QUOTA_EXCEEDED + future resetAt", () => {
+  it("blocks a free user at the daily cap with DAILY_QUOTA_EXCEEDED + next-local-midnight resetAt", () => {
     const r = canUseSecondsDaily(
       {
         plan: "free",
         proUntil: null,
-        dailyVoiceSecondsUsed: FREE_TIER_VOICE_SECONDS_PER_DAY - 5,
-        dailyResetAt: new Date(now.getTime() - 60_000),
+        dailyVoiceSecondsUsed: FREE_TIER_VOICE_SECONDS_PER_DAY,
+        dailyResetAt: earlierSameDay,
       },
-      30,
+      tz,
       now,
     );
     expect(r.allowed).toBe(false);
     if (!r.allowed) {
       expect(r.reason).toBe("DAILY_QUOTA_EXCEEDED");
-      expect(r.resetAt.getTime()).toBeGreaterThan(now.getTime());
+      // Next local (UTC) midnight after 2026-05-30 noon = 2026-05-31T00:00Z.
+      expect(r.resetAt.toISOString()).toBe("2026-05-31T00:00:00.000Z");
     }
   });
 
-  it("treats dailyVoiceSecondsUsed as 0 once 24h reset window has passed", () => {
+  it("treats usage as 0 on a new local day (stale counter from a prior day)", () => {
     const r = canUseSecondsDaily(
       {
         plan: "free",
         proUntil: null,
-        dailyVoiceSecondsUsed: FREE_TIER_VOICE_SECONDS_PER_DAY, // would normally exhaust
-        dailyResetAt: new Date(now.getTime() - 25 * 60 * 60 * 1000), // 25h ago
+        dailyVoiceSecondsUsed: FREE_TIER_VOICE_SECONDS_PER_DAY, // would exhaust if counted
+        dailyResetAt: new Date("2026-05-29T20:00:00.000Z"), // previous local day
       },
-      60,
+      tz,
       now,
     );
     expect(r).toEqual({ allowed: true });
   });
 
-  it("allows active Pro under the soft cap with no warn flag", () => {
+  it("allows active Pro under the 60-min cap", () => {
     const r = canUseSecondsDaily(
       {
         plan: "pro",
         proUntil: new Date(now.getTime() + 86400000),
-        dailyVoiceSecondsUsed: 100,
-        dailyResetAt: new Date(now.getTime() - 60_000),
+        dailyVoiceSecondsUsed: PRO_TIER_VOICE_SECONDS_PER_DAY - 1,
+        dailyResetAt: earlierSameDay,
       },
-      60,
+      tz,
       now,
     );
     expect(r).toEqual({ allowed: true });
   });
 
-  it("allows active Pro over the soft cap but sets warnSoftCap=true", () => {
+  it("hard-blocks active Pro at the 60-min cap (no soft overage)", () => {
     const r = canUseSecondsDaily(
       {
         plan: "pro",
         proUntil: new Date(now.getTime() + 86400000),
-        dailyVoiceSecondsUsed: PRO_TIER_VOICE_SECONDS_PER_DAY_SOFT_CAP,
-        dailyResetAt: new Date(now.getTime() - 60_000),
+        dailyVoiceSecondsUsed: PRO_TIER_VOICE_SECONDS_PER_DAY,
+        dailyResetAt: earlierSameDay,
       },
-      60,
+      tz,
       now,
     );
-    expect(r.allowed).toBe(true);
-    if (r.allowed) expect(r.warnSoftCap).toBe(true);
+    expect(r.allowed).toBe(false);
+    if (!r.allowed) expect(r.reason).toBe("DAILY_QUOTA_EXCEEDED");
   });
 
-  it("treats expired Pro as free (uses free daily cap)", () => {
+  it("treats expired Pro as free (uses the free daily cap)", () => {
     const r = canUseSecondsDaily(
       {
         plan: "pro",
         proUntil: new Date(now.getTime() - 86400000), // expired
-        dailyVoiceSecondsUsed: FREE_TIER_VOICE_SECONDS_PER_DAY - 5,
-        dailyResetAt: new Date(now.getTime() - 60_000),
+        dailyVoiceSecondsUsed: FREE_TIER_VOICE_SECONDS_PER_DAY,
+        dailyResetAt: earlierSameDay,
       },
-      30,
+      tz,
       now,
     );
     expect(r.allowed).toBe(false);

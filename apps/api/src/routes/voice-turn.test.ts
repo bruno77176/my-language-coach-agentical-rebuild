@@ -429,8 +429,8 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
   });
 
   it("returns 429 DAILY_QUOTA_EXCEEDED when free user is at the daily cap", async () => {
-    // Free tier daily cap is 600 seconds (10 min). Using 599 + an estimated
-    // few seconds (50KB audio / 16KB/s = ~4s) exceeds.
+    // Free tier daily cap is 600 wall-clock seconds (10 min). The gate is now a
+    // hard "used >= cap" check (no estimate), so sitting at the cap blocks.
     const { app } = setupRoute({
       entitlement: {
         userId,
@@ -438,8 +438,8 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
         proUntil: null,
         monthlyVoiceSecondsUsed: 0,
         monthlyVoiceSecondsResetAt: new Date(Date.now() + 86_400_000),
-        dailyVoiceSecondsUsed: 599,
-        dailyResetAt: new Date(), // fresh window so the 24h reset doesn't kick in
+        dailyVoiceSecondsUsed: 600,
+        dailyResetAt: new Date(), // same local day so the counter isn't reset to 0
       },
     });
     const res = await app.request(
