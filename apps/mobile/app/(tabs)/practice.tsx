@@ -31,6 +31,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { useAudioSessionInit } from "@/src/lib/audio-session";
 import { useConversation } from "@/src/features/practice/use-conversation";
+import { useDailyCap } from "@/src/features/practice/daily-cap-store";
+import { usePurchases } from "@/src/features/paywall/use-purchases";
 import type { ChatMessage } from "@/src/features/practice/types";
 import { MessageBubble } from "@/src/features/practice/MessageBubble";
 import { MicButton } from "@/src/features/practice/MicButton";
@@ -379,6 +381,37 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       state.phase === "processing");
   const { seconds: sessionSeconds, reset: resetSessionTimer } =
     useSessionTimer(sessionActive);
+
+  // Client-side daily-cap enforcement: stop the conversation the instant the
+  // session timer reaches the remaining wall-clock budget and open the limit
+  // screen (the server is the independent backstop). Pro's 60-min cap is
+  // enforced server-side, so we don't client-gate Pro here.
+  const { isPro } = usePurchases();
+  const capSeconds = useDailyCap((s) => s.capSeconds);
+  const capUsedAtStart = useDailyCap((s) => s.usedAtStartSeconds);
+  const capBonus = useDailyCap((s) => s.bonusSeconds);
+  const capResetAt = useDailyCap((s) => s.resetAt);
+  const limitRemaining =
+    capSeconds != null ? capSeconds - capUsedAtStart + capBonus : Infinity;
+  const limitShownRef = useRef(false);
+  // A rewarded-ad grant bumps the bonus → allow the limit to fire again once
+  // the extended budget is consumed.
+  useEffect(() => {
+    limitShownRef.current = false;
+  }, [capBonus]);
+  useEffect(() => {
+    if (isPro || capSeconds == null) return;
+    if (sessionSeconds >= limitRemaining && !limitShownRef.current) {
+      limitShownRef.current = true;
+      router.push({
+        pathname: "/(modals)/daily-limit",
+        params: {
+          mode: "resume",
+          ...(capResetAt ? { resetAt: capResetAt } : {}),
+        },
+      });
+    }
+  }, [sessionSeconds, limitRemaining, capSeconds, isPro, capResetAt]);
 
   // Persist current state to AsyncStorage so the stale-session guard can
   // recover this session on next foreground / cold start. Re-persist when

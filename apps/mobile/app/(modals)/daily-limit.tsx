@@ -18,6 +18,10 @@ import {
 } from "@language-coach/design-tokens";
 import { usePurchases } from "@/src/features/paywall/use-purchases";
 import { adExtension } from "@/src/lib/api-client";
+import {
+  useDailyCap,
+  AD_EXTENSION_SECONDS,
+} from "@/src/features/practice/daily-cap-store";
 
 /** Live "Resets at midnight · in 3h 12m" string, or null when unknown. */
 function useResetCountdown(resetAt?: string): string | null {
@@ -78,6 +82,9 @@ export default function DailyLimitModal() {
     try {
       // STUB: no real ad yet — this grants +3 min server-side immediately.
       await adExtension();
+      // Extend the live client budget too, so the session timer doesn't
+      // immediately re-trigger the limit on resume.
+      useDailyCap.getState().addBonus(AD_EXTENSION_SECONDS);
       onUnlocked();
     } catch (e) {
       const msg = String(e);

@@ -246,13 +246,13 @@ describe("POST /v1/voice/ad-extension", () => {
       extensions_remaining: number;
     };
     expect(body.daily_used_seconds).toBe(420); // 600 - 180
-    expect(body.extensions_remaining).toBe(1);
+    expect(body.extensions_remaining).toBe(0); // 1/day cap, now used
   });
 
   it("returns 409 AD_LIMIT_REACHED once the daily cap of extensions is hit", async () => {
     const { db, update } = adExtDb({
       dailyVoiceSecondsUsed: 600,
-      dailyAdExtensions: 2,
+      dailyAdExtensions: 1,
     });
     const app = appWithVoice(
       createVoiceRoutes({ db: db as never, ...noopProviderDeps }),

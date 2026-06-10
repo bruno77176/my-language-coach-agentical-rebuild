@@ -48,9 +48,10 @@ export const MIN_TURN_AUDIO_SECONDS = 1;
 // not transcribed speech. The clamp bounds a tampered client and long idle gaps.
 export const MAX_TURN_WALLCLOCK_DELTA_SECONDS = 180;
 // Rewarded-ad "+3 min" extension (stubbed until AdMob lands): seconds granted
-// back per watch, and how many watches a free user gets per local day.
+// back per watch, and how many watches a free user gets per local day. One per
+// day — after that, only upgrading to Pro grants more access.
 export const AD_EXTENSION_SECONDS = 180;
-export const MAX_AD_EXTENSIONS_PER_DAY = 2;
+export const MAX_AD_EXTENSIONS_PER_DAY = 1;
 
 export function loadEnv(): Env {
   const result = EnvSchema.safeParse(process.env);

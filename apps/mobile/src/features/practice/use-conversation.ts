@@ -28,6 +28,7 @@ import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
 import { playOnce } from "./audio-controller";
 import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
+import { useDailyCap } from "./daily-cap-store";
 // expo-file-system v19's default export is the new File/Paths API; the simple
 // string-path helpers used for the inline-audio cache files live under
 // /legacy (same import the Voice Lab uses for preview playback).
@@ -141,10 +142,20 @@ export function useConversation(
     let cancelled = false;
     void (async () => {
       try {
-        const { conversation_id } = await startSession(targetLang, scenarioId);
+        const session = await startSession(targetLang, scenarioId);
         if (cancelled) return;
+        const conversation_id = session.conversation_id;
         conversationIdRef.current = conversation_id;
         lastTurnAtRef.current = Date.now();
+        // Publish the daily wall-clock budget so the Practice screen can stop
+        // the session live when the timer reaches the cap.
+        if (typeof session.daily_cap_seconds === "number") {
+          useDailyCap.getState().setBudget({
+            cap: session.daily_cap_seconds,
+            used: session.daily_used_seconds ?? 0,
+            resetAt: session.reset_at ?? null,
+          });
+        }
 
         // Scenarios: the coach speaks first, in character. Play the opener
         // through the same reply-chunk/audio pipeline as a normal turn.
