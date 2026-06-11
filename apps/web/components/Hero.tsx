@@ -1,6 +1,6 @@
+import { PhoneFrame } from "./PhoneFrame";
 import { DownloadCTA } from "./DownloadCTA";
 import { HeroText } from "./motion/HeroText";
-import { HeroPhones } from "./motion/HeroPhones";
 import { Reveal } from "./motion/Reveal";
 import type { Messages } from "@/lib/i18n";
 
@@ -25,7 +25,30 @@ export async function Hero({ messages }: HeroProps) {
             <DownloadCTA messages={messages} variant="hero" />
           </Reveal>
         </div>
-        <HeroPhones />
+        <div className="relative flex justify-center items-center">
+          <div className="flex gap-2 sm:gap-4 items-end justify-center w-full">
+            <PhoneFrame
+              src="/screens/home.jpeg"
+              alt="Home screen"
+              widthClass="hidden sm:block w-[140px] md:w-[170px] lg:w-[200px]"
+              rotate={-4}
+              priority
+            />
+            <PhoneFrame
+              src="/screens/practice.jpeg"
+              alt="Practice screen"
+              widthClass="w-[180px] sm:w-[180px] md:w-[210px] lg:w-[240px]"
+              priority
+            />
+            <PhoneFrame
+              src="/screens/progress.jpeg"
+              alt="Progress screen"
+              widthClass="hidden sm:block w-[140px] md:w-[170px] lg:w-[200px]"
+              rotate={4}
+              priority
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
