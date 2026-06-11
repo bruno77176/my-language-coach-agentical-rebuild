@@ -20,7 +20,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-accent px-6 py-3 font-body font-medium text-cream shadow-cta transition hover:bg-accent-deep focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-cream;
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-accent px-6 py-3 font-body font-medium text-cream shadow-cta transition duration-200 hover:bg-accent-deep hover:-translate-y-0.5 hover:shadow-floating active:translate-y-0 motion-reduce:transform-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-cream;
   }
 
   .btn-secondary {

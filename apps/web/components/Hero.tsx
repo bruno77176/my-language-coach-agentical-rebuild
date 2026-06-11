@@ -1,5 +1,7 @@
 import { PhoneFrame } from "./PhoneFrame";
 import { DownloadCTA } from "./DownloadCTA";
+import { HeroText } from "./motion/HeroText";
+import { Reveal } from "./motion/Reveal";
 import type { Messages } from "@/lib/i18n";
 
 interface HeroProps {
@@ -12,23 +14,16 @@ export async function Hero({ messages }: HeroProps) {
       <div className="absolute inset-0 bg-warmth pointer-events-none" />
       <div className="relative max-w-content mx-auto px-6 py-12 md:py-20 lg:py-24 grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-12 items-center">
         <div className="space-y-5 md:space-y-6">
-          <p className="font-body text-xs uppercase tracking-[0.18em] text-accent-deep pt-12 lg:pt-0">
-            {messages.eyebrow}
-          </p>
-          {/* Pain-point quote first (the visitor's own thought), then the
-              slogan resolves it — problem -> promise. */}
-          <p className="font-display italic text-lg md:text-xl text-ink-soft border-l-2 border-accent/50 pl-4 max-w-md">
-            &ldquo;{messages.painQuote}&rdquo;
-          </p>
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-ink">
-            {messages.headline}
-            <br />
-            <span className="text-accent">{messages.headlineAccent}</span>
-          </h1>
-          <p className="font-body text-base md:text-lg text-ink-soft max-w-md">
-            {messages.subheadline}
-          </p>
-          <DownloadCTA messages={messages} variant="hero" />
+          <HeroText
+            eyebrow={messages.eyebrow}
+            painQuote={messages.painQuote}
+            headline={messages.headline}
+            headlineAccent={messages.headlineAccent}
+            subheadline={messages.subheadline}
+          />
+          <Reveal delay={0.9}>
+            <DownloadCTA messages={messages} variant="hero" />
+          </Reveal>
         </div>
         <div className="relative flex justify-center items-center">
           <div className="flex gap-2 sm:gap-4 items-end justify-center w-full">
