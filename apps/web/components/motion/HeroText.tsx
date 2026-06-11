@@ -2,27 +2,23 @@
 
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+// Long, soft ease-out for an elegant glide (not a snap).
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 const container: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
+  show: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } },
 };
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
-};
-
-// The headline reveals word-by-word — the "text appears progressively" effect.
-const wordGroup: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
-};
-
-const word: Variants = {
-  hidden: { opacity: 0, y: "0.4em" },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE } },
+// Each line rises + fades + comes into focus from a soft blur.
+const item: Variants = {
+  hidden: { opacity: 0, y: 26, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.95, ease: EASE },
+  },
 };
 
 type Props = {
@@ -41,7 +37,6 @@ export function HeroText({
   subheadline,
 }: Props) {
   const reduce = useReducedMotion();
-  const words = headline.split(" ");
 
   const eyebrowCls =
     "font-body text-xs uppercase tracking-[0.18em] text-accent-deep pt-12 lg:pt-0";
@@ -73,29 +68,18 @@ export function HeroText({
       initial="hidden"
       animate="show"
     >
-      <motion.p variants={fadeUp} className={eyebrowCls}>
+      <motion.p variants={item} className={eyebrowCls}>
         {eyebrow}
       </motion.p>
-      <motion.p variants={fadeUp} className={quoteCls}>
+      <motion.p variants={item} className={quoteCls}>
         &ldquo;{painQuote}&rdquo;
       </motion.p>
-      <motion.h1 variants={wordGroup} className={headlineCls}>
-        {words.map((w, i) => (
-          <motion.span
-            key={i}
-            variants={word}
-            className="inline-block whitespace-pre"
-          >
-            {w}
-            {i < words.length - 1 ? " " : ""}
-          </motion.span>
-        ))}
+      <motion.h1 variants={item} className={headlineCls}>
+        {headline}
         <br />
-        <motion.span variants={word} className="inline-block text-accent">
-          {headlineAccent}
-        </motion.span>
+        <span className="text-accent">{headlineAccent}</span>
       </motion.h1>
-      <motion.p variants={fadeUp} className={subCls}>
+      <motion.p variants={item} className={subCls}>
         {subheadline}
       </motion.p>
     </motion.div>

@@ -21,7 +21,7 @@ export async function Hero({ messages }: HeroProps) {
             headlineAccent={messages.headlineAccent}
             subheadline={messages.subheadline}
           />
-          <Reveal delay={0.55}>
+          <Reveal delay={0.9}>
             <DownloadCTA messages={messages} variant="hero" />
           </Reveal>
         </div>
