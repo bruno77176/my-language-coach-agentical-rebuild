@@ -10,13 +10,12 @@ const container: Variants = {
   show: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } },
 };
 
-// Each line rises + fades + comes into focus from a soft blur.
+// Each line rises + fades in on a long, soft ease.
 const item: Variants = {
-  hidden: { opacity: 0, y: 26, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: 26 },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.95, ease: EASE },
   },
 };

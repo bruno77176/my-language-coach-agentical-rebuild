@@ -15,8 +15,8 @@ type Props = {
 };
 
 /**
- * Reveals its children as they scroll into view (once): fade + a gentle rise +
- * a blur-to-focus. The blur is the key to the elegant feel. Honours
+ * Reveals its children as they scroll into view (once): a fade + a gentle rise
+ * on a long, soft ease-out — smooth and unobtrusive. Honours
  * prefers-reduced-motion (renders static).
  */
 export function Reveal({ children, delay = 0, className }: Props) {
@@ -26,10 +26,10 @@ export function Reveal({ children, delay = 0, className }: Props) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 32, filter: "blur(8px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      initial={{ opacity: 0, y: 36 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -140px 0px" }}
-      transition={{ duration: 1, delay, ease: EASE }}
+      transition={{ duration: 0.9, delay, ease: EASE }}
     >
       {children}
     </motion.div>
