@@ -10,6 +10,7 @@ import { DownloadCTA } from "@/components/DownloadCTA";
 import { Footer } from "@/components/Footer";
 import { ScrollDepthTracker } from "@/components/ScrollDepthTracker";
 import { TopBar } from "@/components/TopBar";
+import { Reveal } from "@/components/motion/Reveal";
 import { getMessages, type Locale } from "@/lib/i18n";
 
 interface Props {
@@ -23,42 +24,60 @@ export function LandingPage({ locale }: Props) {
       <ScrollDepthTracker />
       <TopBar locale={locale} />
       <Hero messages={m.hero} />
-      <ValueStrip messages={m.valueStrip} />
-      <Features messages={m.features} />
-      <Showcase
-        messages={m.vocab}
-        background="bg-white"
-        imageRight
-        images={[
-          {
-            src: "/screens/vocab-list.jpeg",
-            alt: "Your saved words list with review counter",
-          },
-          {
-            src: "/screens/flashcard.jpeg",
-            alt: "Vocabulary flashcard prompting you to say the word",
-          },
-        ]}
-      />
-      <Showcase
-        messages={m.voices}
-        background="bg-cream"
-        images={[
-          {
-            src: "/screens/voice.jpeg",
-            alt: "Coach voice settings with provider, voice and speed options",
-          },
-        ]}
-      />
-      <HowItWorks messages={m.howItWorks} />
-      <Pricing messages={m.pricing} />
-      <LanguagesStrip messages={m.languages} />
-      <Faq messages={m.faq} />
-      <FinalCta
-        title={m.finalCta.title}
-        subtitle={m.finalCta.subtitle}
-        heroMessages={m.hero}
-      />
+      <Reveal>
+        <ValueStrip messages={m.valueStrip} />
+      </Reveal>
+      <Reveal>
+        <Features messages={m.features} />
+      </Reveal>
+      <Reveal>
+        <Showcase
+          messages={m.vocab}
+          background="bg-white"
+          imageRight
+          images={[
+            {
+              src: "/screens/vocab-list.jpeg",
+              alt: "Your saved words list with review counter",
+            },
+            {
+              src: "/screens/flashcard.jpeg",
+              alt: "Vocabulary flashcard prompting you to say the word",
+            },
+          ]}
+        />
+      </Reveal>
+      <Reveal>
+        <Showcase
+          messages={m.voices}
+          background="bg-cream"
+          images={[
+            {
+              src: "/screens/voice.jpeg",
+              alt: "Coach voice settings with provider, voice and speed options",
+            },
+          ]}
+        />
+      </Reveal>
+      <Reveal>
+        <HowItWorks messages={m.howItWorks} />
+      </Reveal>
+      <Reveal>
+        <Pricing messages={m.pricing} />
+      </Reveal>
+      <Reveal>
+        <LanguagesStrip messages={m.languages} />
+      </Reveal>
+      <Reveal>
+        <Faq messages={m.faq} />
+      </Reveal>
+      <Reveal>
+        <FinalCta
+          title={m.finalCta.title}
+          subtitle={m.finalCta.subtitle}
+          heroMessages={m.hero}
+        />
+      </Reveal>
       <Footer messages={m.footer} locale={locale} />
     </main>
   );
