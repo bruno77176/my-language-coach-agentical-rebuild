@@ -75,6 +75,10 @@ UI translated into the supported languages + a language selector in Profile. Alr
 
 Produce promo videos for the app (store listing / marketing / social). Relates to the **video** and **aso** skills.
 
+### 16. ✨❓ Lisa — deep, evolving human-like persona
+
+Give Lisa (the default coach) a consistent, realistic life — a home city, family (e.g. husband, children), hobbies, a personal history she can recount — and let it evolve believably over time. Makes the relationship mutual (memory already runs one way) and lifts retention. **Open questions / guardrails:** canon as a single source of truth in `packages/shared` prompts (bounded, curated evolution — not free LLM invention); per-language home vs. fixed home with travel stories; honor the no-AI-vs-human rule (warm character, honest she's a coach if asked). Needs a brainstorm + spec. Idea credit: Bruno's girlfriend (2026-06-11). → **Linear BRU-23.**
+
 ---
 
 ## 🔴 LATER — bug polish (after the feature push, but they still matter)
@@ -96,6 +100,10 @@ A timer keeps running when it shouldn't. _(Likely related to #1 — confirm whet
 ### 15. 🐛 Greeting voice ≠ rest of session
 
 The greeting message is spoken with a **different voice** than the rest of the session. Make it consistent.
+
+### 17. 🐛 Shared images have a black border — make exports impeccable
+
+Shared cards (quote / conversation / feedback) export with a black frame around the rounded card instead of a clean edge — visible on every share, a marketing surface. **Root cause:** the captured `cardWrap` has `borderRadius` + `overflow:'hidden'` + a shadow; `captureRef(..., {format:'png'})` grabs the bounding rectangle, so the rounded-corner/shadow margin is transparent → composites to black in WhatsApp & co. **Fix (recommended):** capture the gradient `CardFrame` full-bleed (no rounded corners / no shadow on the captured node) so there's zero transparency. Files: `share-card-modal.tsx`, `share-cards.tsx`. → **Linear BRU-24.**
 
 ---
 
