@@ -79,6 +79,10 @@ Produce promo videos for the app (store listing / marketing / social). Relates t
 
 Give Lisa (the default coach) a consistent, realistic life — a home city, family (e.g. husband, children), hobbies, a personal history she can recount — and let it evolve believably over time. Makes the relationship mutual (memory already runs one way) and lifts retention. **Open questions / guardrails:** canon as a single source of truth in `packages/shared` prompts (bounded, curated evolution — not free LLM invention); per-language home vs. fixed home with travel stories; honor the no-AI-vs-human rule (warm character, honest she's a coach if asked). Needs a brainstorm + spec. Idea credit: Bruno's girlfriend (2026-06-11). → **Linear BRU-23.**
 
+### 18. ✨❓ "Discover Lisa" — gamified persona (100 facts to uncover)
+
+A light meta-game on top of the persona (#16): ~100 facts to discover about Lisa, easiest → most secret, each discovery = 1 point. A collection/achievement layer that pulls users back, drives sharing, and forces more questions. **The genius:** the game action _is_ the learning action — to unlock a secret you must ask a good question and understand the answer in your target language. Stacks on coach-memory extraction (tag "turn revealed fact #N"), the share system (#4 — "47/100 discovered" cards), and the persona canon (#16 _is_ the 100-fact ledger). **Open questions:** anti-dump (Lisa deflects "list everything"; secrets gated behind trust/level); detection & a "Lisa dossier" X/100 screen; 100 levels vs 100 facts; extensibility (husband/kids as their own characters → chapters); free hook vs Pro perk. Depends on #16; needs its own spec. Idea credit: Bruno (2026-06-11). → **Linear BRU-25.**
+
 ---
 
 ## 🔴 LATER — bug polish (after the feature push, but they still matter)
