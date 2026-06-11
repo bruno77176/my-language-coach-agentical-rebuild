@@ -40,13 +40,22 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: "portrait",
     userInterfaceStyle: "light",
     newArchEnabled: true,
-    // EAS Update (OTA). runtimeVersion uses the appVersion policy: a build's
-    // runtime is its marketing version (2.0.0), so JS-only updates published with
-    // `eas update` reach every build sharing that version. When NATIVE code/deps
-    // change, bump `version` and ship a new store build — that isolates the new
-    // native runtime so an OTA can't land an incompatible JS bundle on an old
-    // binary. (appVersion, not fingerprint, because fingerprint hashes can differ
-    // across machines/OSes and we run `eas update` from Windows.)
+    // EAS Update (OTA). runtimeVersion = appVersion policy (a build's runtime is
+    // its marketing `version`).
+    //
+    // POLICY (Bruno, 2026-06-11): keep the marketing `version` FROZEN at 2.0.2
+    // until we go live. Bumping it makes every build a NEW version that needs a
+    // fresh Apple Beta App Review before EXTERNAL TestFlight testers can install
+    // it (~1-day delay — exactly what jumping 2.0.0→2.0.1→2.0.2 cost us). Builds
+    // WITHIN the same version skip that re-review. So: bump the BUILD NUMBER
+    // (ios.buildNumber / android.versionCode) every build, NOT `version`.
+    //
+    // Caveat: because runtime follows the frozen `version`, only OTA-publish
+    // (`eas update`) JS-ONLY changes — ship native/dependency changes as new store
+    // builds (which we do), never as an OTA, or a 2.0.2 OTA could crash an older
+    // 2.0.2 binary that lacks the new native code.
+    // (appVersion, not fingerprint, because fingerprint hashes differ across
+    // machines/OSes and we run `eas update` from Windows.)
     runtimeVersion: { policy: "appVersion" },
     updates: {
       url: "https://u.expo.dev/730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
