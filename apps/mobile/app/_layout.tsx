@@ -27,8 +27,15 @@ import { ErrorBoundary } from "@/src/design";
 import { IntroScreen } from "@/src/features/intro/IntroScreen";
 import { useColdStart } from "@/src/features/intro/use-cold-start";
 
+// RevenueCat public SDK keys are platform-specific (goog_… for the Play
+// Store, appl_… for the App Store). Both ship in the client bundle via
+// EXPO_PUBLIC_ — RC public keys are not secret. Pick the key for the
+// current store; web/other platforms get "" and the SDK stays unconfigured.
+const RC_SUPPORTED = Platform.OS === "ios" || Platform.OS === "android";
 const REVENUECAT_KEY =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY as
+  ((Platform.OS === "ios"
+    ? Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_IOS_KEY
+    : Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY) as
     | string
     | undefined) ?? "";
 
@@ -82,12 +89,11 @@ export default function RootLayout() {
     return () => sub.remove();
   }, [router]);
 
-  // RevenueCat SDK init (Android-only for v2). The public SDK key is
-  // namespaced EXPO_PUBLIC_ so it ships in the client bundle — that's
-  // intentional, RC public keys are not secret. iOS is gated until we
-  // wire the App Store offering (Plan 9).
+  // RevenueCat SDK init on both stores. The per-store key is resolved
+  // above; if it's missing (e.g. unsupported platform or env unset) the
+  // SDK stays unconfigured and the app degrades to free-only.
   useEffect(() => {
-    if (Platform.OS === "android" && REVENUECAT_KEY) {
+    if (RC_SUPPORTED && REVENUECAT_KEY) {
       Purchases.configure({ apiKey: REVENUECAT_KEY });
     }
   }, []);
@@ -96,7 +102,7 @@ export default function RootLayout() {
   // Supabase user.id so the webhook (Task 19) can map entitlement events
   // back to the right account.
   useEffect(() => {
-    if (Platform.OS !== "android" || !REVENUECAT_KEY) return;
+    if (!RC_SUPPORTED || !REVENUECAT_KEY) return;
     if (session?.user?.id) {
       void Purchases.logIn(session.user.id).catch(() => {});
     }

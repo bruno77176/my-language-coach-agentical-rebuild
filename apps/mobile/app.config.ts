@@ -69,7 +69,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "42",
+      buildNumber: "43",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -121,6 +121,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       GOOGLE_IOS_CLIENT_ID: process.env.GOOGLE_IOS_CLIENT_ID,
       EXPO_PUBLIC_REVENUECAT_ANDROID_KEY:
         process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+      EXPO_PUBLIC_REVENUECAT_IOS_KEY:
+        process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
       eas: {
         projectId: "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
       },
