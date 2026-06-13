@@ -1,5 +1,6 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
 import withStripBootCompleted from "./plugins/with-strip-boot-completed";
+import withModularHeaders from "./plugins/with-modular-headers";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
@@ -19,6 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "expo-stream-audio",
     "expo-apple-authentication",
     withStripBootCompleted,
+    withModularHeaders,
   ] as unknown as NonNullable<ExpoConfig["plugins"]>;
   if (googleIosUrlScheme) {
     plugins.push([
