@@ -1,0 +1,53 @@
+---
+title: Authentication — Google Sign-In on iOS
+---
+%% Last updated: 2026-05-29
+%% Scope: From user tapping "Continue with Google" on iOS to first authenticated API call landing on Fly.
+%% Note: Apple Sign-In follows the same shape with expo-apple-authentication + caller-supplied nonce.
+%%       Email/password skips steps 2-5 and hits Supabase directly via signInWithPassword.
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as Mobile app (RN)
+    participant SDK as Google native SDK
+    participant Safari as iOS ASWebAuthenticationSession
+    participant Google as Google OAuth (us-east)
+    participant SA as Supabase Auth (Stockholm)
+    participant DB as Supabase Postgres (Stockholm)
+    participant Fly as Backend API (Fly arn)
+
+    User->>App: Tap "Continue with Google"
+    App->>SDK: GoogleSignin.signIn()
+    SDK->>Safari: Open accounts.google.com (PKCE + nonce)
+    Safari->>Google: GET /authorize
+    Google->>User: Pick account, consent
+    User->>Google: Submit
+    Google-->>Safari: Redirect to custom URL scheme<br/>com.googleusercontent.apps.446154042539-...
+    Safari-->>SDK: ID token (JWT signed by Google)
+    SDK-->>App: { idToken, user }
+
+    Note over App,SA: ID token now in mobile app memory.<br/>Never logged, never sent to our API directly.
+
+    App->>SA: POST /token<br/>signInWithIdToken({ provider: google, token: idToken })
+    SA->>Google: Fetch JWKS (cached)
+    Google-->>SA: Public keys
+    SA->>SA: Verify signature + audience claim<br/>(audience must match an authorized client ID)
+
+    Note right of SA: Skip nonce checks MUST be ON for iOS:<br/>Google native SDK generates an internal nonce<br/>it does not expose, so caller can not supply one.
+
+    SA->>DB: Upsert auth.users + profiles row
+    DB-->>SA: user
+    SA-->>App: { access_token (1h), refresh_token (long-lived) }
+
+    App->>App: Store session in SecureStore<br/>(Keychain on iOS, EncryptedSharedPreferences on Android)
+
+    App->>Fly: GET /me<br/>Authorization: Bearer access_token
+    Fly->>SA: Fetch JWKS (cached, ~1 ms)
+    SA-->>Fly: Public keys
+    Fly->>Fly: Verify JWT locally<br/>(no network round-trip per request)
+    Fly->>DB: SELECT * FROM profiles WHERE user_id = auth.uid()<br/>(RLS enforces ownership)
+    DB-->>Fly: profile row
+    Fly-->>App: 200 OK + user profile
+
+    User->>App: Sees authenticated home screen

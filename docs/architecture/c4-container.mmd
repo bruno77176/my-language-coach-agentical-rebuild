@@ -1,0 +1,49 @@
+---
+title: My Language Coach — C4 Container
+---
+%% Last updated: 2026-05-29
+%% Scope: Each runtime container (Vercel project, Fly VM, Supabase, etc.) and how they communicate.
+%% Audience: engineers joining the project, on-call docs.
+
+C4Container
+    title Container diagram — My Language Coach (production)
+
+    Person(learner, "Language learner", "EU user, mostly on mobile")
+    Person(admin, "Bruno", "Operator")
+
+    System_Boundary(mlc, "My Language Coach") {
+        Container(web, "Landing site", "Next.js 14, Vercel iad1", "Public marketing pages, redirects to stores")
+        Container(adminUi, "Admin dashboard", "Next.js 14, Vercel iad1", "Internal cost + revenue dashboard")
+        Container(mobile, "Mobile app", "Expo / React Native, Hermes", "iOS .ipa + Android .aab")
+        Container(api, "Backend API", "Hono on Node, Fly.io arn (Stockholm)", "REST + WebSocket, owns AI orchestration")
+        ContainerDb(supa, "Supabase Postgres", "PG16, eu-north-1 Stockholm", "User data, conversations, usage events, RLS-enforced")
+        ContainerDb(storage, "Supabase Storage", "S3-compatible, eu-north-1", "Coach audio cache, avatars")
+    }
+
+    System_Ext(openai, "OpenAI", "us-east — chat (gpt-4o-mini) + TTS (gpt-4o-mini-tts)")
+    System_Ext(deepgram, "Deepgram", "us-east — streaming STT")
+    System_Ext(resend, "Resend / AWS SES", "eu-west-1 — transactional email")
+    System_Ext(apple, "Apple", "OAuth + App Store")
+    System_Ext(google, "Google", "OAuth + Play Store")
+    System_Ext(porkbun, "Porkbun + Cloudflare DNS", "Domain registrar + anycast DNS")
+
+    Rel(learner, web, "Browses", "HTTPS")
+    Rel(learner, mobile, "Practices", "HTTPS / WebSocket")
+    Rel(admin, adminUi, "Reads metrics", "HTTPS")
+
+    Rel(porkbun, web, "Resolves mylanguagecoach.app to", "DNS A / CNAME")
+
+    Rel(mobile, supa, "Reads own rows", "HTTPS anon key + RLS")
+    Rel(mobile, api, "Voice + chat + sync", "HTTPS + WebSocket, Bearer JWT")
+    Rel(adminUi, api, "Reads aggregates", "HTTPS, Bearer JWT")
+
+    Rel(api, supa, "Persists + reads", "SQL via service-role key (~5 ms)")
+    Rel(api, storage, "Uploads audio chunks", "HTTPS (~5 ms)")
+    Rel(api, openai, "Chat completion + TTS", "HTTPS SSE (~100 ms RTT)")
+    Rel(api, deepgram, "Streams user audio", "WebSocket (~95 ms RTT)")
+    Rel(api, resend, "Sends emails", "HTTPS (~30 ms RTT)")
+
+    Rel(mobile, apple, "Sign in with Apple", "OIDC")
+    Rel(mobile, google, "Sign in with Google", "OIDC")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
