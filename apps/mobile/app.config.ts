@@ -38,19 +38,23 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: "My Language Coach",
     slug: "my-language-coach",
     scheme: "mylanguagecoach",
-    version: "2.0.2",
+    version: "2.0.3",
     orientation: "portrait",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     // EAS Update (OTA). runtimeVersion = appVersion policy (a build's runtime is
     // its marketing `version`).
     //
-    // POLICY (Bruno, 2026-06-11): keep the marketing `version` FROZEN at 2.0.2
-    // until we go live. Bumping it makes every build a NEW version that needs a
-    // fresh Apple Beta App Review before EXTERNAL TestFlight testers can install
-    // it (~1-day delay — exactly what jumping 2.0.0→2.0.1→2.0.2 cost us). Builds
-    // WITHIN the same version skip that re-review. So: bump the BUILD NUMBER
-    // (ios.buildNumber / android.versionCode) every build, NOT `version`.
+    // POLICY (Bruno, 2026-06-11): keep the marketing `version` frozen and bump
+    // only the BUILD NUMBER (ios.buildNumber / android.versionCode) per build —
+    // a NEW version needs a fresh Apple Beta App Review before EXTERNAL TestFlight
+    // testers can install it (~1-day delay); builds WITHIN a version skip re-review.
+    // UPDATE (2026-06-18): Apple APPROVED 2.0.2, which CLOSES the 2.0.2 pre-release
+    // train — no further builds can be uploaded under 2.0.2 ("train is closed for
+    // new build submissions"). So we bumped to 2.0.3 to ship more internal test
+    // builds. Internal testing needs NO Beta App Review, so this bump is free for
+    // our own testing; the ~1-day review only bites if/when we open 2.0.3 to
+    // EXTERNAL testers. The approved 2.0.2 release (build 43) is untouched.
     //
     // Caveat: because runtime follows the frozen `version`, only OTA-publish
     // (`eas update`) JS-ONLY changes — ship native/dependency changes as new store
@@ -71,7 +75,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "44",
+      buildNumber: "45",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
