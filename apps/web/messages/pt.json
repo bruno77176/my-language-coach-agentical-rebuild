@@ -4,17 +4,16 @@
     "description": "Pratique conversas reais com um coach de IA que lembra de você, conduz simulações da vida real e dá feedback depois de cada conversa. Ganhe confiança para falar em 15 idiomas."
   },
   "hero": {
-    "eyebrow": "Acesso antecipado — agora em beta aberta",
+    "eyebrow": "Agora em iOS e Android",
     "headline": "Pratica línguas.",
     "headlineAccent": "Ganha confiança.",
     "painQuote": "Leio e escrevo sem problemas. Mas na hora de falar, bloqueio.",
     "subheadline": "Pratique em voz alta com um coach de IA que lembra de você, conduz simulações da vida real e dá feedback depois de cada conversa — em 15 idiomas. Sem julgamentos, a qualquer hora.",
     "scanToInstall": "Lê para instalar",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Beta aberta",
-    "iosCta": "Instalar via TestFlight",
-    "androidCta": "Instalar no Google Play",
-    "iosNote": "Beta TestFlight — vagas limitadas"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Baixar na App Store",
+    "androidCta": "Instalar no Google Play"
   },
   "valueStrip": {
     "v1": "Lembra-se de ti",

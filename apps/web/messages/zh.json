@@ -4,17 +4,16 @@
     "description": "和一位记得你的 AI 教练练习真实对话：演练真实生活场景，每次聊天后都给你反馈。用 15 种语言建立开口的自信。"
   },
   "hero": {
-    "eyebrow": "抢先体验 — 公开测试进行中",
+    "eyebrow": "iOS 与 Android 现已上线",
     "headline": "练习语言。",
     "headlineAccent": "建立自信。",
     "painQuote": "读和写都没问题，可一开口就卡住。",
     "subheadline": "和一位记得你的 AI 教练大声练习：演练真实生活场景，每次对话后都给你反馈 — 支持 15 种语言。没有评判，随时随地。",
     "scanToInstall": "扫码安装",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — 公开测试",
-    "iosCta": "在 TestFlight 获取",
-    "androidCta": "在 Google Play 获取",
-    "iosNote": "TestFlight 测试版 — 名额有限"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "在 App Store 获取",
+    "androidCta": "在 Google Play 获取"
   },
   "valueStrip": {
     "v1": "记得你",

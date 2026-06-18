@@ -4,17 +4,16 @@
     "description": "Øv dig i rigtige samtaler med en AI-coach, der husker dig, kører rollespil fra det virkelige liv og giver feedback efter hver chat. Opbyg selvtillid i tale på 15 sprog."
   },
   "hero": {
-    "eyebrow": "Early access — nu i åben beta",
+    "eyebrow": "Nu på iOS og Android",
     "headline": "Træn sprog.",
     "headlineAccent": "Få selvtillid.",
     "painQuote": "Jeg kan læse og skrive. Men når jeg skal tale, går jeg i stå.",
     "subheadline": "Tal dig igennem det med en AI-coach, der husker dig, kører rollespil fra det virkelige liv og giver feedback efter hver samtale — på 15 sprog. Uden fordømmelse, når som helst.",
     "scanToInstall": "Scan for at installere",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Åben beta",
-    "iosCta": "Installer via TestFlight",
-    "androidCta": "Installer på Google Play",
-    "iosNote": "TestFlight-beta — begrænset antal pladser"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Hent i App Store",
+    "androidCta": "Installer på Google Play"
   },
   "valueStrip": {
     "v1": "Husker dig",

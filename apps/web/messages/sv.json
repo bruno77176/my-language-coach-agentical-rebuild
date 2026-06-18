@@ -4,17 +4,16 @@
     "description": "Öva riktiga samtal med en AI-coach som kommer ihåg dig, kör rollspel från verkliga livet och ger feedback efter varje chatt. Bygg självförtroende i att tala på 15 språk."
   },
   "hero": {
-    "eyebrow": "Tidig åtkomst — nu i öppen beta",
+    "eyebrow": "Nu på iOS och Android",
     "headline": "Träna språk.",
     "headlineAccent": "Bygg självförtroende.",
     "painQuote": "Att läsa och skriva går bra. Men när jag ska prata låser det sig.",
     "subheadline": "Prata igenom det med en AI-coach som kommer ihåg dig, kör rollspel från verkliga livet och ger feedback efter varje samtal — på 15 språk. Utan att döma, när som helst.",
     "scanToInstall": "Skanna för att installera",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Öppen beta",
-    "iosCta": "Installera via TestFlight",
-    "androidCta": "Installera via Google Play",
-    "iosNote": "TestFlight-beta — begränsat antal platser"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Hämta i App Store",
+    "androidCta": "Installera via Google Play"
   },
   "valueStrip": {
     "v1": "Minns dig",

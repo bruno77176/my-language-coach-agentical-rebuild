@@ -4,17 +4,16 @@
     "description": "Seni hatırlayan, gerçek hayattan rol yapma senaryoları sunan ve her sohbetten sonra geri bildirim veren bir yapay zekâ koçuyla gerçek konuşmalar yap. 15 dilde konuşma özgüveni kazan."
   },
   "hero": {
-    "eyebrow": "Erken erişim — artık açık betada",
+    "eyebrow": "Artık iOS ve Android'de",
     "headline": "Dil pratiği yap.",
     "headlineAccent": "Özgüven kazan.",
     "painQuote": "Okuyup yazabiliyorum. Ama iş konuşmaya gelince tıkanıyorum.",
     "subheadline": "Seni hatırlayan, gerçek hayattan rol yapma senaryoları sunan ve her konuşmadan sonra geri bildirim veren bir yapay zekâ koçuyla yüksek sesle pratik yap — 15 dilde. Yargılamadan, istediğin zaman.",
     "scanToInstall": "Yüklemek için tara",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Açık beta",
-    "iosCta": "TestFlight'tan yükle",
-    "androidCta": "Google Play'den yükle",
-    "iosNote": "TestFlight beta — sınırlı yer"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "App Store'dan indir",
+    "androidCta": "Google Play'den yükle"
   },
   "valueStrip": {
     "v1": "Seni hatırlar",

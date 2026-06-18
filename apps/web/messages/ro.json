@@ -4,17 +4,16 @@
     "description": "Exersează conversații reale cu un coach AI care își amintește de tine, joacă scenarii din viața reală și îți dă feedback după fiecare conversație. Capătă încredere în vorbire în 15 limbi."
   },
   "hero": {
-    "eyebrow": "Acces timpuriu — acum în beta deschisă",
+    "eyebrow": "Acum pe iOS și Android",
     "headline": "Exersează limbile.",
     "headlineAccent": "Câștigă încredere.",
     "painQuote": "Citesc și scriu fără probleme. Dar când e să vorbesc, mă blochez.",
     "subheadline": "Exersează cu voce tare cu un coach AI care își amintește de tine, joacă scenarii din viața reală și îți dă feedback după fiecare conversație — în 15 limbi. Fără judecăți, oricând.",
     "scanToInstall": "Scanează pentru a instala",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Beta deschisă",
-    "iosCta": "Instalează prin TestFlight",
-    "androidCta": "Instalează din Google Play",
-    "iosNote": "Beta TestFlight — locuri limitate"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Descarcă din App Store",
+    "androidCta": "Instalează din Google Play"
   },
   "valueStrip": {
     "v1": "Își amintește de tine",

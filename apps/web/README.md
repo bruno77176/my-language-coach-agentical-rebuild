@@ -24,24 +24,23 @@ There are no component tests — sections are verified by manual smoke and Light
 
 ## Environment variables
 
-| Name                        | Purpose                                                     |
-| --------------------------- | ----------------------------------------------------------- |
-| `NEXT_PUBLIC_IOS_URL`       | iOS install URL (TestFlight join URL, later App Store URL). |
-| `NEXT_PUBLIC_ANDROID_URL`   | Android install URL (Play Store details URL).               |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | Footer "Contact" link.                                      |
-| `NEXT_PUBLIC_SITE_URL`      | Used as `metadataBase` for absolute OG/canonical URLs.      |
+| Name                        | Purpose                                                |
+| --------------------------- | ------------------------------------------------------ |
+| `NEXT_PUBLIC_IOS_URL`       | iOS install URL (App Store product URL).               |
+| `NEXT_PUBLIC_ANDROID_URL`   | Android install URL (Play Store details URL).          |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Footer "Contact" link.                                 |
+| `NEXT_PUBLIC_SITE_URL`      | Used as `metadataBase` for absolute OG/canonical URLs. |
 
 All four have safe defaults in code, so local dev works without `.env.local`.
 
-## TestFlight public link expires every ~90 days
+## Store links
 
-The iOS URL points to a TestFlight public-test join link. **These expire after 90 days and cap at 10,000 testers.** When the link breaks:
+The app is live in production on both stores:
 
-1. Generate a new public-test URL in App Store Connect → TestFlight → External Testing.
-2. Update `NEXT_PUBLIC_IOS_URL` in the Vercel project's Environment Variables (Production + Preview).
-3. Redeploy (Vercel does this automatically on env-var change).
+- **iOS:** `https://apps.apple.com/app/id6746396786` (App Store)
+- **Android:** `https://play.google.com/store/apps/details?id=com.anonymous.mylanguagecoach` (Google Play)
 
-Total: ~5 minutes. No code change needed.
+These are the in-code defaults (`lib/store-links.ts`). To override per-environment, set `NEXT_PUBLIC_IOS_URL` / `NEXT_PUBLIC_ANDROID_URL` in the Vercel project's Environment Variables (Production + Preview); Vercel redeploys automatically on env-var change. **If `NEXT_PUBLIC_IOS_URL` is still set to an old TestFlight join link in Vercel, it will override the code default — update or delete it there.**
 
 ## Production deployment
 

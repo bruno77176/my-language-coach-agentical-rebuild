@@ -27,9 +27,7 @@ describe("getStoreLinks", () => {
   });
 
   it("exports defaults that look like real store URLs", () => {
-    expect(DEFAULT_IOS_URL).toMatch(
-      /^https:\/\/testflight\.apple\.com\/join\//,
-    );
+    expect(DEFAULT_IOS_URL).toMatch(/^https:\/\/apps\.apple\.com\/app\/id/);
     expect(DEFAULT_ANDROID_URL).toMatch(
       /^https:\/\/play\.google\.com\/store\/apps\/details\?id=/,
     );

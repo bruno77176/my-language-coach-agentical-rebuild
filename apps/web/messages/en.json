@@ -4,17 +4,16 @@
     "description": "Practice real conversations with an AI coach that remembers you, runs real-life role-plays, and gives feedback after every chat. Build speaking confidence in 15 languages."
   },
   "hero": {
-    "eyebrow": "Early access — now in open beta",
+    "eyebrow": "Now on iOS and Android",
     "headline": "Practice languages.",
     "headlineAccent": "Build confidence.",
     "painQuote": "I can read. I can write. But when it's time to speak, I get stuck.",
     "subheadline": "Talk with an AI coach who remembers you, runs real-life role-plays, and gives feedback after every chat — in 15 languages. Judgment-free, anytime.",
     "scanToInstall": "Scan to install",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Open beta",
-    "iosCta": "Get it on TestFlight",
-    "androidCta": "Get it on Google Play",
-    "iosNote": "TestFlight beta — limited spots"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Download on the App Store",
+    "androidCta": "Get it on Google Play"
   },
   "valueStrip": {
     "v1": "Remembers you",

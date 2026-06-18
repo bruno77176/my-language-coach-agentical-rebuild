@@ -11,7 +11,7 @@ describe("generateQrSvg", () => {
   it("encodes the URL into the QR (lengths differ for different inputs)", async () => {
     const short = await generateQrSvg("a");
     const long = await generateQrSvg(
-      "https://testflight.apple.com/join/yU7XNGSS-very-long-suffix-to-force-larger-qr",
+      "https://apps.apple.com/app/id6746396786-very-long-suffix-to-force-larger-qr",
     );
     expect(long.length).toBeGreaterThan(short.length);
   });

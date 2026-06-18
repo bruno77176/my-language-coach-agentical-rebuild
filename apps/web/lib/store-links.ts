@@ -1,4 +1,4 @@
-export const DEFAULT_IOS_URL = "https://testflight.apple.com/join/yU7XNGSS";
+export const DEFAULT_IOS_URL = "https://apps.apple.com/app/id6746396786";
 export const DEFAULT_ANDROID_URL =
   "https://play.google.com/store/apps/details?id=com.anonymous.mylanguagecoach";
 

@@ -4,17 +4,16 @@
     "description": "あなたを覚えているAIコーチと本物の会話を練習。実生活のロールプレイをこなし、チャットのたびにフィードバック。15言語で話す自信を育てます。"
   },
   "hero": {
-    "eyebrow": "早期アクセス — オープンベータ公開中",
+    "eyebrow": "iOS と Android で配信中",
     "headline": "言語を、話そう。",
     "headlineAccent": "自信を、育てよう。",
     "painQuote": "読むのも書くのもできる。でも、いざ話すとなると言葉が出ない。",
     "subheadline": "あなたを覚えているAIコーチと、声に出して練習。実生活のロールプレイをこなし、会話のたびにフィードバック — 15言語対応。気兼ねなく、いつでも。",
     "scanToInstall": "スキャンしてインストール",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — オープンベータ",
-    "iosCta": "TestFlightで入手",
-    "androidCta": "Google Playで入手",
-    "iosNote": "TestFlightベータ — 枠に限りあり"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "App Store で入手",
+    "androidCta": "Google Playで入手"
   },
   "valueStrip": {
     "v1": "あなたを覚えている",

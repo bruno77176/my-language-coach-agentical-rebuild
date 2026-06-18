@@ -4,17 +4,16 @@
     "description": "Übe echte Gespräche mit einem KI-Coach, der sich an dich erinnert, reale Rollenspiele durchspielt und nach jedem Chat Feedback gibt. Bau Sprechsicherheit in 15 Sprachen auf."
   },
   "hero": {
-    "eyebrow": "Early Access — jetzt in offener Beta",
+    "eyebrow": "Jetzt für iOS und Android",
     "headline": "Sprachen üben.",
     "headlineAccent": "Selbstvertrauen aufbauen.",
     "painQuote": "Lesen und schreiben? Kein Problem. Aber wenn ich sprechen soll, blockiere ich.",
     "subheadline": "Sprich es einfach durch — mit einem KI-Coach, der sich an dich erinnert, reale Rollenspiele durchspielt und dir nach jedem Gespräch Feedback gibt. In 15 Sprachen. Ohne Wertung, jederzeit.",
     "scanToInstall": "Zum Installieren scannen",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Offene Beta",
-    "iosCta": "Über TestFlight laden",
-    "androidCta": "Bei Google Play laden",
-    "iosNote": "TestFlight-Beta — begrenzte Plätze"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Im App Store laden",
+    "androidCta": "Bei Google Play laden"
   },
   "valueStrip": {
     "v1": "Erinnert sich an dich",

@@ -4,17 +4,16 @@
     "description": "Entraînez-vous à de vraies conversations avec un coach IA qui se souvient de vous, propose des jeux de rôle du quotidien et donne un retour après chaque échange. Prenez confiance à l'oral en 15 langues."
   },
   "hero": {
-    "eyebrow": "Accès anticipé — désormais en bêta ouverte",
+    "eyebrow": "Maintenant sur iOS et Android",
     "headline": "Pratiquez les langues.",
     "headlineAccent": "Gagnez en confiance.",
     "painQuote": "Je lis, j'écris. Mais à l'oral, je bloque.",
     "subheadline": "Parlez-en avec un coach IA qui se souvient de vous, vous met en situation dans des jeux de rôle du quotidien et vous donne un retour après chaque conversation — en 15 langues. Sans jugement, à tout moment.",
     "scanToInstall": "Scannez pour installer",
-    "iosLabel": "iOS — TestFlight",
-    "androidLabel": "Android — Bêta ouverte",
-    "iosCta": "Installer via TestFlight",
-    "androidCta": "Installer sur Google Play",
-    "iosNote": "Bêta TestFlight — places limitées"
+    "iosLabel": "iOS — App Store",
+    "androidLabel": "Android — Google Play",
+    "iosCta": "Télécharger sur l'App Store",
+    "androidCta": "Installer sur Google Play"
   },
   "valueStrip": {
     "v1": "Se souvient de vous",

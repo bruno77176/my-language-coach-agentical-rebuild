@@ -37,18 +37,13 @@ export function DownloadCTAView({
     return (
       <div className="flex flex-col gap-3 items-stretch max-w-sm">
         {showIos && (
-          <>
-            <a
-              href={links.ios}
-              className="btn-primary w-full"
-              onClick={() => track("cta_ios_click", { variant })}
-            >
-              {messages.iosCta}
-            </a>
-            <p className="font-body text-xs text-ink-soft/70 text-center">
-              {messages.iosNote}
-            </p>
-          </>
+          <a
+            href={links.ios}
+            className="btn-primary w-full"
+            onClick={() => track("cta_ios_click", { variant })}
+          >
+            {messages.iosCta}
+          </a>
         )}
         {showAndroid && (
           <a
