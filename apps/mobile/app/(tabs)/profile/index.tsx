@@ -83,9 +83,9 @@ export default function ProfileScreen() {
           // Reset the RevenueCat identity to a fresh anonymous user so the
           // next person to sign in on this device doesn't inherit this user's
           // entitlements. (logOut throws if the RC user is already anonymous —
-          // swallow that case.) Android-only, matching where the SDK is
-          // configured in _layout.
-          if (Platform.OS === "android") {
+          // swallow that case.) Runs on both iOS and Android, matching where
+          // the SDK is configured in _layout (RC_SUPPORTED).
+          if (Platform.OS === "ios" || Platform.OS === "android") {
             await Purchases.logOut().catch(() => {});
           }
           await supabase.auth.signOut();
