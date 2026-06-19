@@ -18,6 +18,62 @@
   }
 }
 
+/*
+ * Reveal / rise animations.
+ *
+ * CRITICAL: the resting state of every animated element is FULLY VISIBLE
+ * (opacity:1). The hidden start-state is only ever applied as a progressive
+ * enhancement — by a CSS @keyframe (hero-rise) or by a class the React
+ * component adds AFTER it has mounted (.reveal-armed). If the JS bundle never
+ * runs (e.g. an old Safari that can't parse it), the text simply stays
+ * visible instead of being stuck invisible. Never gate text visibility on JS.
+ */
+
+/* HeroText: pure-CSS staggered fade+rise. Plays even with no JS, because it is
+   driven entirely by the keyframe below. Falls back to visible if CSS
+   animations or the keyframe are unsupported, and when reduced motion is on. */
+.hero-rise {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-rise {
+    animation: hero-rise 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reveal: scroll-into-view fade+rise. Base state visible. The component only
+   adds .reveal-armed (hidden) once it has mounted, and .reveal-in to play. */
+.reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-armed {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+
+  .reveal-in {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-pill bg-accent px-6 py-3 font-body font-medium text-cream shadow-cta transition duration-200 hover:bg-accent-deep hover:-translate-y-0.5 hover:shadow-floating active:translate-y-0 motion-reduce:transform-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-cream;
