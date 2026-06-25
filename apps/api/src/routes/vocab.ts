@@ -17,17 +17,34 @@ export type TranslateFn = (input: TranslateInput) => Promise<string>;
 export type TranscribeFn = (
   input: TranscribeInput,
 ) => Promise<TranscribeResult>;
+export type EnrichVocabInput = {
+  term: string;
+  sourceSentence?: string;
+  languageCode: string;
+  nativeLanguageCode: string;
+  onUsage?: OnUsage;
+};
+export type EnrichVocabFn = (
+  input: EnrichVocabInput,
+) => Promise<{ translation: string | null; article: string | null }>;
 
 export type VocabDeps = {
   db: Database;
   translate: TranslateFn;
   transcribe: TranscribeFn;
+  // Optional: translate + recover the gender article in one LLM call. When
+  // absent (e.g. in unit tests) the route falls back to translate-only.
+  enrichVocab?: EnrichVocabFn;
 };
 
 const AddBody = z.object({
   language: z.string().min(2).max(8),
   term: z.string().min(1).max(120),
   translation: z.string().min(1).max(120).optional(),
+  // The sentence the word was saved from (BRU-11) + its gender article
+  // (BRU-31). Article is usually derived server-side, but accept a client hint.
+  source_sentence: z.string().min(1).max(600).optional(),
+  article: z.string().min(1).max(16).optional(),
 });
 
 const PatchBody = z.union([
@@ -80,32 +97,50 @@ export function createVocabRoutes(deps: VocabDeps) {
       );
     }
     const { language, term } = parsed.data;
+    const sourceSentence = parsed.data.source_sentence ?? null;
     let translation: string | null = parsed.data.translation ?? null;
+    let article: string | null = parsed.data.article ?? null;
 
-    if (!translation) {
+    // Enrich missing fields (translation and/or gender article) in one call,
+    // using the source sentence as context for accurate sense + gender.
+    const needsTranslation = !translation;
+    const needsArticle = !article;
+    if (needsTranslation || needsArticle) {
       const profile = await deps.db.query.profiles.findFirst({
         where: (t, { eq: e }) => e(t.userId, userId),
       });
       const nativeLang = profile?.nativeLang ?? "en";
+      const onUsage = makeOnUsage(deps.db, {
+        userId,
+        platform: platformFromHeader(c.req.header("X-Client-Platform")),
+      });
       try {
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-        });
-        translation = await deps.translate({
-          text: term,
-          targetLanguageCode: nativeLang,
-          onUsage,
-        });
+        if (deps.enrichVocab) {
+          const enriched = await deps.enrichVocab({
+            term,
+            sourceSentence: sourceSentence ?? undefined,
+            languageCode: language,
+            nativeLanguageCode: nativeLang,
+            onUsage,
+          });
+          if (needsTranslation) translation = enriched.translation;
+          if (needsArticle) article = enriched.article;
+        } else if (needsTranslation) {
+          // No enrichment dep wired — fall back to translate-only.
+          translation = await deps.translate({
+            text: term,
+            targetLanguageCode: nativeLang,
+            onUsage,
+          });
+        }
       } catch {
-        // Best-effort: store the term alone if translation fails.
-        translation = null;
+        // Best-effort: store whatever we already have if enrichment fails.
       }
     }
 
     const inserted = await deps.db
       .insert(vocabItems)
-      .values({ userId, language, term, translation })
+      .values({ userId, language, term, translation, sourceSentence, article })
       .onConflictDoNothing()
       .returning();
 

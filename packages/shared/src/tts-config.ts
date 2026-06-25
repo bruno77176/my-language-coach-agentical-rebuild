@@ -55,6 +55,11 @@ export const TTS_SPEED_OPTIONS = [0.8, 0.9, 1.0, 1.1, 1.2] as const;
 
 // Gemini prebuilt voices are language-agnostic — the model speaks whatever
 // language is requested. id === name (Gemini takes the voice name directly).
+//
+// BRU-20 (answered 2026-06-25): these are NOT the limited AI-Studio *preview*
+// voices — they are the GA voices served by `gemini-2.5-flash-tts` over Cloud
+// TTS (see apps/api/src/providers/gemini.ts). Nothing to remove; safe to keep
+// in the Coach Voice Lab as premium options.
 export const GEMINI_TTS_VOICES = [
   { id: "Kore", name: "Kore" },
   { id: "Puck", name: "Puck" },

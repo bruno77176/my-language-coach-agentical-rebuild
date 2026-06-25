@@ -36,12 +36,14 @@ import {
   vocabDeckKey,
 } from "@/src/features/vocab/use-vocab-deck";
 import {
+  displayTerm,
   pronounceVocab,
   setVocabStarred,
   type VocabItem,
 } from "@/src/features/vocab/api";
 import { configureForRecording } from "@/src/lib/audio-session";
 import { playOnce } from "@/src/features/practice/audio-controller";
+import { useStopAudioOnBlur } from "@/src/features/practice/use-stop-audio-on-blur";
 
 const MAX_MASTERY = 3;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -54,6 +56,8 @@ type Outcome = "correct" | "wrong" | "peek";
 type Phase = "prompt" | "recording" | "checking" | "result";
 
 export default function VocabReviewScreen() {
+  // Stop the victory sound / any playback if the user navigates away (BRU-16).
+  useStopAudioOnBlur();
   const { starred } = useLocalSearchParams<{ starred?: string }>();
   const starredOnly = starred === "1";
   const qc = useQueryClient();
@@ -153,8 +157,8 @@ export default function VocabReviewScreen() {
   const card = queue[index]!;
   const promptText =
     direction === "native_to_target"
-      ? (card.translation ?? card.term)
-      : card.term;
+      ? (card.translation ?? displayTerm(card))
+      : displayTerm(card);
   const dirLabel =
     direction === "native_to_target"
       ? `${nativeLang.toUpperCase()} → ${targetLang.toUpperCase()}`
@@ -322,11 +326,22 @@ export default function VocabReviewScreen() {
             color={palette.ink}
             style={styles.word}
           >
-            {card.term}
+            {displayTerm(card)}
           </EditorialText>
           {card.translation ? (
             <EditorialText kind="bodyMd" align="center" color={palette.inkSoft}>
               {card.translation}
+            </EditorialText>
+          ) : null}
+          {card.sourceSentence ? (
+            <EditorialText
+              kind="bodySm"
+              italic
+              align="center"
+              color={palette.inkSoft}
+              style={styles.sourceSentence}
+            >
+              “{card.sourceSentence}”
             </EditorialText>
           ) : null}
           <Pressable style={styles.nextBtn} onPress={advance}>
@@ -534,6 +549,7 @@ const styles = StyleSheet.create({
   },
   word: { paddingHorizontal: spacing.md },
   hint: { marginTop: spacing.md, opacity: 0.8 },
+  sourceSentence: { marginTop: spacing.sm, paddingHorizontal: spacing.md },
   peek: { marginTop: spacing.lg, padding: spacing.sm },
   star: { position: "absolute", top: spacing.lg, left: spacing.lg },
   nextBtn: {

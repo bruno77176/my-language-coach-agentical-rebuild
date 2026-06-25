@@ -12,8 +12,11 @@ import { vocabDeckKey } from "./use-vocab-deck";
 export function useAddVocab(language: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { term: string; translation?: string }) =>
-      addVocab({ language, ...input }),
+    mutationFn: (input: {
+      term: string;
+      translation?: string;
+      source_sentence?: string;
+    }) => addVocab({ language, ...input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: vocabDeckKey(language) }),
   });
 }

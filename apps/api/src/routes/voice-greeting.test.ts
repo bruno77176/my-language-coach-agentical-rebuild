@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 import { createVoiceGreetingRoutes } from "./voice-greeting";
+import { voiceConfigForLanguage } from "../providers/voice-map";
 
 const userId = "00000000-0000-0000-0000-000000000001";
 
@@ -171,6 +172,30 @@ describe("POST /v1/voice/greeting/audio", () => {
     expect(hashes[0]).toBeTruthy();
     expect(hashes[1]).toBeTruthy();
     expect(hashes[0]).not.toBe(hashes[1]);
+  });
+
+  it("resolves a default-config greeting to the per-language native voice (BRU-19)", async () => {
+    // No config → the greeting must be synthesized with the SAME voice the
+    // session's turns use (the per-language native voice), not a generic
+    // default, so the greeting and the rest of the session sound identical.
+    const tts = vi.fn().mockResolvedValue({
+      audioBuffer: Buffer.from("x"),
+      contentType: "audio/mpeg",
+    });
+    const routes = createVoiceGreetingRoutes({
+      db: {} as never,
+      getCachedGreetingUrl: vi.fn().mockResolvedValue(null),
+      synthesizeSpeech: tts,
+      uploadGreeting: vi.fn().mockResolvedValue({ audioUrl: "https://x" }),
+    });
+    const app = appWithRoutes(routes);
+    await app.request("/v1/voice/greeting/audio", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ lang: "fr", name: "Bruno" }),
+    });
+    const passedConfig = tts.mock.calls[0]?.[0]?.config;
+    expect(passedConfig).toEqual(voiceConfigForLanguage("fr"));
   });
 
   it("uses sha1-truncated nameHash so 'Bruno' and 'bruno' share cache", async () => {

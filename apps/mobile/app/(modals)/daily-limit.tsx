@@ -18,6 +18,7 @@ import {
 } from "@language-coach/design-tokens";
 import { usePurchases } from "@/src/features/paywall/use-purchases";
 import { adExtension } from "@/src/lib/api-client";
+import { showRewardedAd } from "@/src/lib/rewarded-ad";
 import {
   useDailyCap,
   AD_EXTENSION_SECONDS,
@@ -86,7 +87,20 @@ export default function DailyLimitModal() {
   const onWatchAd = async () => {
     setAdBusy(true);
     try {
-      // STUB: no real ad yet — this grants +3 min server-side immediately.
+      // Show a real rewarded ad first; only grant the +3 min if the user
+      // actually earned the reward (watched it through). A failed load or an
+      // early dismissal grants nothing.
+      const earned = await showRewardedAd();
+      if (!earned) {
+        Alert.alert(
+          "No reward",
+          "The ad didn't finish, so no time was added. Please try again.",
+        );
+        return;
+      }
+      // Record the grant server-side (enforces the once-per-day cap). The
+      // backend doesn't yet verify the ad server-side — that lands with
+      // AdMob SSV later; the client gating above is the current guard.
       await adExtension();
       // Extend the live client budget too, so the session timer doesn't
       // immediately re-trigger the limit on resume.

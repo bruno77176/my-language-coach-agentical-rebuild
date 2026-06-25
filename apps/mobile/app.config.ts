@@ -19,6 +19,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "expo-audio",
     "expo-stream-audio",
     "expo-apple-authentication",
+    // AdMob (rewarded "watch an ad for +3 min"). Default to Google's official
+    // TEST app IDs so a build without real IDs still runs (and serves test ads)
+    // instead of crashing on launch — set ADMOB_ANDROID_APP_ID / ADMOB_IOS_APP_ID
+    // via eas.json for prod.
+    [
+      "react-native-google-mobile-ads",
+      {
+        androidAppId:
+          process.env.ADMOB_ANDROID_APP_ID ??
+          "ca-app-pub-3940256099942544~3347511713",
+        iosAppId:
+          process.env.ADMOB_IOS_APP_ID ??
+          "ca-app-pub-3940256099942544~1458002511",
+      },
+    ],
     withStripBootCompleted,
     withModularHeaders,
   ] as unknown as NonNullable<ExpoConfig["plugins"]>;
@@ -75,7 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "45",
+      buildNumber: "46",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -92,7 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 80,
+      versionCode: 81,
       // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
       // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
       edgeToEdgeEnabled: true,
@@ -129,6 +144,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
       EXPO_PUBLIC_REVENUECAT_IOS_KEY:
         process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+      // Rewarded ad unit IDs (per platform). Unset → the util falls back to
+      // Google's test ad unit, so dev/test builds still show (test) ads.
+      ADMOB_REWARDED_ANDROID: process.env.ADMOB_REWARDED_ANDROID,
+      ADMOB_REWARDED_IOS: process.env.ADMOB_REWARDED_IOS,
       eas: {
         projectId: "730e3dc2-1bf3-4ca3-94c4-1dc1795409f7",
       },

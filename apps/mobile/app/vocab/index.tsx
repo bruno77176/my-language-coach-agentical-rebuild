@@ -23,7 +23,7 @@ import {
   useRemoveVocab,
   useToggleStar,
 } from "@/src/features/vocab/use-vocab-mutations";
-import type { VocabItem } from "@/src/features/vocab/api";
+import { displayTerm, type VocabItem } from "@/src/features/vocab/api";
 
 export default function VocabDeckScreen() {
   const insets = useSafeAreaInsets();
@@ -182,11 +182,21 @@ function DeckRow({
     <View style={styles.row}>
       <View style={{ flex: 1 }}>
         <EditorialText kind="bodyLg" color={palette.ink}>
-          {item.term}
+          {displayTerm(item)}
         </EditorialText>
         {item.translation ? (
           <EditorialText kind="bodySm" color={palette.inkSoft}>
             {item.translation}
+          </EditorialText>
+        ) : null}
+        {item.sourceSentence ? (
+          <EditorialText
+            kind="bodySm"
+            italic
+            color={palette.inkSoft}
+            style={styles.sourceSentence}
+          >
+            “{item.sourceSentence}”
           </EditorialText>
         ) : null}
       </View>
@@ -240,6 +250,7 @@ const styles = StyleSheet.create({
   },
   masteredIcon: { marginRight: spacing.xs },
   iconBtn: { padding: spacing.xs },
+  sourceSentence: { marginTop: spacing.xs },
   cta: {
     position: "absolute",
     left: spacing.xl,

@@ -1,4 +1,5 @@
 import { LANGUAGES } from "@language-coach/shared";
+import { inviteLink } from "../sharing/share-text";
 
 export type TranscriptMessage = {
   role: "user" | "coach";
@@ -29,7 +30,5 @@ export function buildTranscript(input: TranscriptInput): string {
   for (const m of input.messages) {
     lines.push(`${m.role === "user" ? "You" : "Coach"}: ${m.text}`);
   }
-  if (input.messages.length > 0) lines.push("");
-  lines.push("Practice with me → https://www.mylanguagecoach.app");
-  return lines.join("\n");
+  return lines.join("\n") + "\n" + inviteLink();
 }

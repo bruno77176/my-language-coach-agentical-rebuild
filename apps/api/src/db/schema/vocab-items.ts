@@ -20,6 +20,11 @@ export const vocabItems = pgTable(
     language: text("language").notNull(),
     term: text("term").notNull(),
     translation: text("translation"),
+    // The phrase the word was saved from — shown in review for context (BRU-11).
+    sourceSentence: text("source_sentence"),
+    // Definite article for gendered nouns (der/die/das, le/la, …) so the word is
+    // learnt with its gender (BRU-31). Null for non-nouns / article-less langs.
+    article: text("article"),
     firstSeenMessageId: uuid("first_seen_message_id").references(
       () => messages.id,
       {

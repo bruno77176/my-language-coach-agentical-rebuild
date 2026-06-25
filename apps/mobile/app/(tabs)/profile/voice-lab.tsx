@@ -27,6 +27,7 @@ import {
   playOnce,
   resumePlayback,
 } from "@/src/features/practice/audio-controller";
+import { useStopAudioOnBlur } from "@/src/features/practice/use-stop-audio-on-blur";
 import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
 import {
   PROVIDER_LABELS,
@@ -81,6 +82,8 @@ function Chip({
 }
 
 export default function CoachVoiceScreen() {
+  // Stop the voice preview if the user navigates away mid-playback (BRU-16).
+  useStopAudioOnBlur();
   const savedConfig = useVoiceLab((s) => s.config);
   const setConfig = useVoiceLab((s) => s.setConfig);
   const [previewLang, setPreviewLang] = useState("es");
