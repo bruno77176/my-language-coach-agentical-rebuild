@@ -1,13 +1,29 @@
-import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Bubble, EditorialText } from "@/src/design";
 import { palette, spacing } from "@language-coach/design-tokens";
 import type { ChatMessage } from "./types";
 import { useTranslateMessage } from "./use-translate-message";
 import { fetchMessageAudio } from "./api-message-audio";
 import { playOnce } from "./audio-controller";
+
+// One-time hint shown under the first greeting so users discover that any word
+// the coach says can be tapped to save it to the deck (BRU-27 discoverability).
+const TAP_HINT_KEY = "vocab-tap-hint.v1";
+
+// Strip surrounding punctuation/quotes so tapping "Tisch." saves "Tisch".
+function cleanWord(raw: string): string {
+  return raw.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+}
 
 type Props = {
   message: ChatMessage;
@@ -36,12 +52,47 @@ export function MessageBubble({
   const [translation, setTranslation] = useState<string | null>(null);
   const [showingTranslation, setShowingTranslation] = useState(false);
   const [playingAudio, setPlayingAudio] = useState(false);
+  const [showTapHint, setShowTapHint] = useState(false);
   const translate = useTranslateMessage();
 
   const showsAsListening = listeningMode && !revealed;
 
   const isSoftError = message.id.startsWith("soft-");
   const isGreeting = message.isGreeting === true;
+  // Coach text (not listening placeholder, not an error bubble) gets per-word
+  // tap-to-save. User messages stay plain.
+  const wordsTappable = !isUser && !showsAsListening && !isSoftError;
+
+  // Surface the tap-to-save hint once, anchored to the greeting.
+  useEffect(() => {
+    if (!isGreeting) return;
+    let active = true;
+    void AsyncStorage.getItem(TAP_HINT_KEY).then((seen) => {
+      if (active && !seen) setShowTapHint(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [isGreeting]);
+
+  function dismissTapHint() {
+    setShowTapHint(false);
+    void AsyncStorage.setItem(TAP_HINT_KEY, "1");
+  }
+
+  function openSaveWord(rawWord: string) {
+    const word = cleanWord(rawWord);
+    if (!word) return;
+    if (showTapHint) dismissTapHint();
+    router.push({
+      pathname: "/(modals)/add-vocab",
+      params: {
+        prefill: word,
+        language: languageCode,
+        source: message.text,
+      },
+    });
+  }
 
   async function playAudio() {
     setPlayingAudio(true);
@@ -114,11 +165,16 @@ export function MessageBubble({
   }
 
   function handleLongPress() {
-    // Long-press any real bubble to save the word/phrase to the vocab deck.
+    // Long-press saves the WHOLE phrase (tapping a single word saves just that
+    // word). Either way the source sentence travels along for in-context review.
     if (isSoftError || showsAsListening) return;
     router.push({
       pathname: "/(modals)/add-vocab",
-      params: { prefill: message.text, language: languageCode },
+      params: {
+        prefill: message.text,
+        language: languageCode,
+        source: message.text,
+      },
     });
   }
 
@@ -137,8 +193,34 @@ export function MessageBubble({
       ) : (
         <>
           <EditorialText kind="bodyLg" color={textColor}>
-            {message.text}
+            {wordsTappable
+              ? message.text.split(/(\s+)/).map((tok, i) =>
+                  tok.trim() === "" ? (
+                    tok
+                  ) : (
+                    <Text
+                      key={i}
+                      onPress={() => openSaveWord(tok)}
+                      suppressHighlighting
+                    >
+                      {tok}
+                    </Text>
+                  ),
+                )
+              : message.text}
           </EditorialText>
+          {showTapHint ? (
+            <Pressable onPress={dismissTapHint} style={styles.tapHint}>
+              <Ionicons
+                name="hand-left-outline"
+                size={13}
+                color={palette.accent}
+              />
+              <EditorialText kind="bodySm" color={palette.inkSoft}>
+                Tip: tap any word to save it to your deck
+              </EditorialText>
+            </Pressable>
+          ) : null}
           {!isUser && showingTranslation && translation ? (
             <>
               <View style={styles.divider} />
@@ -231,4 +313,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   actionTap: { padding: spacing.xs },
+  tapHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
 });

@@ -9,10 +9,19 @@ export type VocabItem = {
   language: string;
   term: string;
   translation: string | null;
+  /** The sentence the word was saved from — shown in review for context. */
+  sourceSentence: string | null;
+  /** Definite article for gendered nouns (der/die/das, le/la, …), or null. */
+  article: string | null;
   mastery: number;
   starred: boolean;
   createdAt: string;
 };
+
+/** The word as it should be shown/learnt — with its gender article if any. */
+export function displayTerm(item: Pick<VocabItem, "term" | "article">): string {
+  return item.article ? `${item.article} ${item.term}` : item.term;
+}
 
 export type VocabDeckResponse = {
   items: VocabItem[];
@@ -44,6 +53,8 @@ export async function addVocab(input: {
   language: string;
   term: string;
   translation?: string;
+  /** The phrase the word was tapped from (BRU-11). */
+  source_sentence?: string;
 }): Promise<{ item: VocabItem }> {
   const res = await fetch(`${API_BASE_URL}/v1/vocab`, {
     method: "POST",

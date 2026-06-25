@@ -10,6 +10,7 @@ import {
 import type { Database } from "../db";
 import type { OnUsage } from "../providers/usage";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
+import { resolveTtsConfig } from "../providers/tts-router";
 
 export type SynthesizeGreetingFn = (input: {
   text: string;
@@ -84,7 +85,14 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
     }
     const { lang, name, config } = parsed.data;
     const nameHash = nameHashOf(name);
-    const voiceHash = voiceHashOf(config);
+    // Hash the RESOLVED voice (the one actually spoken), not the raw submitted
+    // config: for a default config the real voice comes from the per-language
+    // native map, so hashing the raw default would (a) collide across languages
+    // and (b) serve stale audio after the native-voice map changes. Resolving
+    // here keys the cache on the true voice and keeps the greeting in lock-step
+    // with the session's turns (BRU-19).
+    const resolved = resolveTtsConfig({ config, languageCode: lang });
+    const voiceHash = voiceHashOf(resolved);
 
     const cached = await deps.getCachedGreetingUrl({
       lang,
@@ -107,7 +115,7 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
       audio = await deps.synthesizeSpeech({
         text,
         languageCode: lang,
-        config,
+        config: resolved,
         onUsage,
       });
     } catch {

@@ -217,3 +217,103 @@ export async function translateMessage(
 
   return translation;
 }
+
+export type EnrichVocabInput = {
+  /** The word/phrase being saved. */
+  term: string;
+  /** The sentence it was saved from — disambiguates meaning + gender. */
+  sourceSentence?: string;
+  /** Language of the term (the user's target language). */
+  languageCode: string;
+  /** Language to translate into (the user's native language). */
+  nativeLanguageCode: string;
+  onUsage?: OnUsage;
+};
+
+export type EnrichVocabResult = {
+  /** Native-language translation, or null if it couldn't be produced. */
+  translation: string | null;
+  /**
+   * Definite article for a gendered noun in the term's language (der/die/das,
+   * le/la, el/la, il/lo/la, o/a, …). Null when the term isn't a gendered noun
+   * or the language doesn't mark gender on the article.
+   */
+  article: string | null;
+};
+
+/**
+ * One-shot vocab enrichment: translate a saved word AND (for gendered
+ * languages) recover its definite article so it can be learnt with its gender
+ * — e.g. German "Tisch" → article "der" (BRU-31). Uses the source sentence as
+ * context for accurate sense + gender. Returns nulls on any failure so saving
+ * still succeeds with whatever we have.
+ */
+export async function enrichVocab(
+  client: OpenAI,
+  input: EnrichVocabInput,
+): Promise<EnrichVocabResult> {
+  const targetLang = LANGUAGES.find((l) => l.code === input.languageCode);
+  const nativeLang = LANGUAGES.find((l) => l.code === input.nativeLanguageCode);
+  const targetName = targetLang?.englishName ?? input.languageCode;
+  const nativeName = nativeLang?.englishName ?? input.nativeLanguageCode;
+
+  const context = input.sourceSentence
+    ? `\nIt appears in this sentence: "${input.sourceSentence}"`
+    : "";
+
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content:
+          `You enrich a single ${targetName} vocabulary item for a language ` +
+          `learner. Reply with JSON only: ` +
+          `{"translation": string, "article": string|null}.\n` +
+          `- "translation": a concise ${nativeName} translation of the term ` +
+          `(the dictionary sense; no commentary, no quotes).\n` +
+          `- "article": the singular DEFINITE article that marks the noun's ` +
+          `gender in ${targetName} (e.g. der/die/das, le/la, el/la, ` +
+          `il/lo/la, o/a). Use null if the term is not a gendered noun, or if ` +
+          `${targetName} does not mark gender on its articles (e.g. English).`,
+      },
+      {
+        role: "user",
+        content: `Term: "${input.term}"${context}`,
+      },
+    ],
+  });
+
+  if (input.onUsage) {
+    void Promise.resolve(
+      input.onUsage({
+        provider: "openai",
+        operation: `chat:gpt-4o-mini`,
+        inputTokens: completion.usage?.prompt_tokens ?? 0,
+        outputTokens: completion.usage?.completion_tokens ?? 0,
+      }),
+    ).catch(() => {});
+  }
+
+  const raw = completion.choices[0]?.message?.content?.trim();
+  if (!raw) return { translation: null, article: null };
+  try {
+    const parsed = JSON.parse(raw) as {
+      translation?: unknown;
+      article?: unknown;
+    };
+    const translation =
+      typeof parsed.translation === "string" && parsed.translation.trim()
+        ? parsed.translation.trim()
+        : null;
+    const article =
+      typeof parsed.article === "string" && parsed.article.trim()
+        ? parsed.article.trim().toLowerCase()
+        : null;
+    return { translation, article };
+  } catch {
+    return { translation: null, article: null };
+  }
+}

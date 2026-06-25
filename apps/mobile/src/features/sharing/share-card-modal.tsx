@@ -68,9 +68,14 @@ export function ShareCardModal({ visible, onClose, caption, children }: Props) {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
         >
-          {/* collapsable=false keeps this a real, capturable view on Android. */}
-          <View ref={cardRef} collapsable={false} style={styles.cardWrap}>
-            {children}
+          {/* The drop shadow lives on the OUTER wrapper, NOT the captured view:
+              capturing a shadowed view bakes the black halo into the PNG as a
+              border (BRU-24). The ref'd view keeps only the rounded clip. */}
+          <View style={styles.cardShadow}>
+            {/* collapsable=false keeps this a real, capturable view on Android. */}
+            <View ref={cardRef} collapsable={false} style={styles.cardWrap}>
+              {children}
+            </View>
           </View>
           <Pressable
             onPress={onShare}
@@ -105,7 +110,10 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.lg,
   },
-  cardWrap: { borderRadius: radius.xl, overflow: "hidden", ...shadow.cta },
+  // Shadow on the wrapper (preview only — never captured).
+  cardShadow: { borderRadius: radius.xl, ...shadow.cta },
+  // Captured view: rounded clip only, no shadow → clean PNG edges.
+  cardWrap: { borderRadius: radius.xl, overflow: "hidden" },
   shareBtn: {
     backgroundColor: palette.ink,
     borderRadius: radius.lg,

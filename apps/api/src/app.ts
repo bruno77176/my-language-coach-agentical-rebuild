@@ -25,6 +25,7 @@ import {
   createOpenAI,
   streamChatCompletion,
   translateMessage,
+  enrichVocab,
 } from "./providers/openai";
 import { createElevenLabs } from "./providers/elevenlabs";
 import { makeSynthesizeSpeech } from "./providers/tts-router";
@@ -273,6 +274,7 @@ export function createApp(
       db,
       translate: (input) => translateMessage(openai, input),
       transcribe: (input) => transcribeAudio(deepgram, input),
+      enrichVocab: (input) => enrichVocab(openai, input),
     }),
   );
 

@@ -4,6 +4,16 @@ import type { DailyQuote, SupportedLang } from "@language-coach/shared";
 // tappable link to the app (an image can't be tapped; text URLs auto-linkify).
 export const APP_URL = "https://www.mylanguagecoach.app";
 
+/**
+ * The invite link as its own isolated final block. Share targets linkify a URL
+ * most reliably when it sits alone on the last line after a blank line — so
+ * conversation/feedback shares (BRU-32) use the exact same treatment as the
+ * quote share that already works. Callers should append this last.
+ */
+export function inviteLink(lead = "Practice with me"): string {
+  return `\n${lead} → ${APP_URL}`;
+}
+
 /** Quote + native-language translation + attribution + tappable app link. */
 export function buildQuoteText(
   quote: DailyQuote,
@@ -81,8 +91,8 @@ export function buildFeedbackText(input: FeedbackTextInput): string {
     for (const v of input.vocab) {
       lines.push(`• ${v.term} → ${v.translation}`);
     }
-    lines.push("");
   }
-  lines.push(`Practice with me → ${APP_URL}`);
-  return lines.join("\n");
+  // Trailing blank lines are folded into the isolated invite block.
+  while (lines[lines.length - 1] === "") lines.pop();
+  return lines.join("\n") + "\n" + inviteLink();
 }

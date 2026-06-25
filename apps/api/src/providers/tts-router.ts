@@ -63,6 +63,24 @@ function isDefaultTtsConfig(c: TtsConfig): boolean {
   );
 }
 
+/**
+ * Resolve the effective voice config for a request: a user-CHANGED config wins;
+ * a config equal to the default defers to the per-language native voice. This
+ * is the single source of truth for "which voice will actually be spoken" — the
+ * greeting route uses it so the greeting's voice (and its cache key) match the
+ * voice the rest of the session's turns will use (BRU-19).
+ */
+export function resolveTtsConfig(input: {
+  config?: TtsConfig;
+  languageCode?: string;
+}): TtsConfig {
+  const explicit =
+    input.config && !isDefaultTtsConfig(input.config)
+      ? input.config
+      : undefined;
+  return explicit ?? voiceConfigForLanguage(input.languageCode);
+}
+
 export function makeSynthesizeSpeech(deps: TtsDeps) {
   const openAiSynth = deps.synth?.openai ?? synthesizeSpeechOpenAI;
   const elevenSynth = deps.synth?.eleven ?? synthesizeSpeechElevenLabs;
@@ -73,11 +91,10 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
     // Priority: a user-CHANGED voice config wins; a config equal to the default
     // is ignored so the per-language native voice is used instead (which itself
     // falls back to DEFAULT_TTS_CONFIG for languages with no dedicated voice).
-    const explicit =
-      input.config && !isDefaultTtsConfig(input.config)
-        ? input.config
-        : undefined;
-    const config = explicit ?? voiceConfigForLanguage(input.languageCode);
+    const config = resolveTtsConfig({
+      config: input.config,
+      languageCode: input.languageCode,
+    });
     const shared = {
       text: input.text,
       voiceId: config.voiceId,

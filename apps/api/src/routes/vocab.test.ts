@@ -10,6 +10,8 @@ type VocabRow = {
   language: string;
   term: string;
   translation: string | null;
+  sourceSentence: string | null;
+  article: string | null;
   mastery: number;
   starred: boolean;
   createdAt: Date;
@@ -74,6 +76,8 @@ function makeFakeDb({
               language: vals.language!,
               term: vals.term!,
               translation: vals.translation ?? null,
+              sourceSentence: vals.sourceSentence ?? null,
+              article: vals.article ?? null,
               mastery: 0,
               starred: false,
               createdAt: new Date("2026-06-06T00:00:00Z"),
@@ -125,6 +129,8 @@ function row(over: Partial<VocabRow> = {}): VocabRow {
     language: "fr",
     term: "maison",
     translation: "house",
+    sourceSentence: null,
+    article: null,
     mastery: 0,
     starred: false,
     createdAt: new Date("2026-06-02T00:00:00Z"),
@@ -171,6 +177,35 @@ describe("vocab routes", () => {
     const body = (await res.json()) as { item: VocabRow };
     expect(body.item.translation).toBe("house");
     expect(translate).toHaveBeenCalled();
+  });
+
+  it("POST /v1/vocab enriches with the gender article + source sentence (BRU-31/11)", async () => {
+    translate.mockClear();
+    const db = makeFakeDb({
+      profile: { userId, targetLang: "de", nativeLang: "en" },
+    });
+    const enrichVocab = vi.fn(async () => ({
+      translation: "table",
+      article: "der",
+    }));
+    const app = appWithVocab(createVocabRoutes(deps(db, { enrichVocab })));
+    const res = await app.request("/v1/vocab", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        language: "de",
+        term: "Tisch",
+        source_sentence: "Ich habe einen Tisch gekauft.",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { item: VocabRow };
+    expect(body.item.translation).toBe("table");
+    expect(body.item.article).toBe("der");
+    expect(body.item.sourceSentence).toBe("Ich habe einen Tisch gekauft.");
+    // Enrichment replaces the translate-only path when wired.
+    expect(enrichVocab).toHaveBeenCalledOnce();
+    expect(translate).not.toHaveBeenCalled();
   });
 
   it("POST /v1/vocab returns 400 when term missing", async () => {
