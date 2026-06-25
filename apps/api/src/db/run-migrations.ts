@@ -29,12 +29,17 @@ async function main() {
   const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false });
 
   try {
-    // 1. Bootstrap tracking table
+    // 1. Bootstrap tracking table. Enable RLS at creation so a fresh project never
+    //    trips the Supabase "RLS Disabled in Public" advisor — this table is only
+    //    touched by the runner over DATABASE_URL (Postgres role bypasses RLS), so
+    //    default-deny (RLS on, no policies) hides it from the PostgREST Data API.
+    //    Existing databases are fixed by migration 0018_app_migrations_rls.sql.
     await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS __app_migrations (
         filename text PRIMARY KEY,
         applied_at timestamptz NOT NULL DEFAULT now()
       );
+      ALTER TABLE __app_migrations ENABLE ROW LEVEL SECURITY;
     `);
 
     // 2. Discover migration files
