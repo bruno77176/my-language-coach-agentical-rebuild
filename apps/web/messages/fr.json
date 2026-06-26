@@ -70,46 +70,13 @@
       "body": "Trois panneaux après chaque chat : moments réussis, corrections, et nouveau vocabulaire — à retrouver quand vous voulez."
     }
   },
-  "pricing": {
-    "title": "Gratuit pour commencer. Pro quand vous serez prêt.",
-    "subtitle": "Deux cafés par mois. Ou une tasse annuelle.",
-    "free": {
-      "label": "Gratuit",
-      "headline": "Tout ce qu'il faut pour commencer",
-      "price": "0 $",
-      "priceNote": "sans carte, sans essai",
-      "items": [
-        "5 minutes de conversation par jour",
-        "Regardez une courte pub pour 3 minutes de plus",
-        "Trois scénarios pour débuter — café, directions, soirée",
-        "Retour pour la session en cours + les 3 dernières",
-        "Mémoire de base entre les sessions"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Quand vous voulez tout débloquer",
-      "price": "7,99 $ / mois",
-      "priceAnnual": "ou 49,99 $ / an — économisez 48 %",
-      "priceNote": "Essai gratuit de 7 jours",
-      "items": [
-        "60 minutes de conversation par jour",
-        "Tous les 10 scénarios de jeu de rôle",
-        "Historique complet des retours",
-        "Mémoire profonde — points faibles, contexte personnel, thèmes",
-        "Résumé hebdomadaire de progression par e-mail"
-      ],
-      "highlight": "Meilleur choix"
-    },
-    "footnote": "Passez à Pro depuis l'app après votre inscription. Annulable à tout moment dans les paramètres de votre store."
-  },
   "languages": {
     "title": "Langues disponibles",
     "more": "+ d'autres bientôt"
   },
   "finalCta": {
     "title": "Prêt à commencer à parler ?",
-    "subtitle": "Gratuit à l'essai, sans carte. Pro à 7,99 $/mois si vous décidez de rester."
+    "subtitle": "Gratuit à l'essai, sans carte."
   },
   "footer": {
     "tagline": "Pratiquez les langues. Gagnez en confiance.",

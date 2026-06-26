@@ -10,15 +10,15 @@
 
 ## 0. Chiffres repris du doc de stratégie (pour rester cohérent)
 
-| Levier                     | Valeur canonique (doc stratégie)                                                              |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| Prix                       | **7,99 $/mois, 49,99 $/an (4,16 $/mois éq.), essai 7 jours opt-out**                          |
-| Net après commission store | 30 % → **5,59 $/mois** net (mensuel), **34,99 $/an** ≈ 2,92 $/mois (annuel)                   |
-| Free tier                  | **10 min/jour de voix**, 3 jeux de rôle/jour, 3 dernières sessions, mémoire de base gratuite  |
-| Coût à servir              | **~0,025 $/min API seul** ; **0,05–0,10 $/min "user-facing"** (infra + marge)                 |
-| Conversion                 | essai→payant **38–54 %** ; download→abonné **1,7 %** ; download→essai **3,7–8,9 %**           |
-| Cible                      | **1k MRR (40–50 % de proba)** — PAS une optimisation $10k+                                    |
-| Marge gros utilisateur     | À 60 min/mois un abonné Pro ne rapporte que **0–2 $/mois** de contribution ; les légers 3–5 $ |
+| Levier                     | Valeur canonique (doc stratégie)                                                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prix                       | **7,99 $/mois, 49,99 $/an (4,16 $/mois éq.), essai 7 jours opt-out**                                                                               |
+| Net après commission store | 30 % → **5,59 $/mois** net (mensuel), **34,99 $/an** ≈ 2,92 $/mois (annuel)                                                                        |
+| Free tier                  | **5 min/jour de voix** (10 min "lune de miel" les 3 premiers jours — voir §8), 3 jeux de rôle/jour, 3 dernières sessions, mémoire de base gratuite |
+| Coût à servir              | **~0,025 $/min API seul** ; **0,05–0,10 $/min "user-facing"** (infra + marge)                                                                      |
+| Conversion                 | essai→payant **38–54 %** ; download→abonné **1,7 %** ; download→essai **3,7–8,9 %**                                                                |
+| Cible                      | **1k MRR (40–50 % de proba)** — PAS une optimisation $10k+                                                                                         |
+| Marge gros utilisateur     | À 60 min/mois un abonné Pro ne rapporte que **0–2 $/mois** de contribution ; les légers 3–5 $                                                      |
 
 La couche pub ci-dessous se construit **par-dessus** ça, pas contre.
 
@@ -150,6 +150,54 @@ Le travail paywall + entitlements + quota journalier est déjà une tâche **Pla
 2. **Pubs uniquement comme mécanique d'extension de quota.** ✅ DÉCIDÉ. Aucune pub pour les abonnés ni les users en essai ; jamais de spam pub dans la boucle principale. La pub récompensée ne se déclenche qu'au moment « quota gratuit atteint → +3 min contre une pub ».
 3. **Pubs sur iOS ET Android, avec repli auto en non-personnalisé.** ✅ DÉCIDÉ. Intégrer AdMob une seule fois pour les deux plateformes, afficher la fenêtre de consentement ATT iOS, et laisser AdMob servir des pubs non personnalisées à ceux qui refusent. La vidéo récompensée est le format le moins pénalisé par le refus ATT, donc inutile de couper iOS. (Rappel : le consentement RGPD UMP en UE se gère de la même façon.)
 4. **Pubs partout (tous pays).** ✅ DÉCIDÉ. Dans ce design, le rôle premier de la pub récompensée est le **contrôle du coût + le coup de pouce conversion**, pas le revenu — elle a donc sa place même dans les pays à faible eCPM (elle borne quand même le coût des gratuits et pousse à s'abonner). Le revenu pub n'est qu'un bonus là où l'eCPM est élevé.
+
+---
+
+## 8. Affinage du plafond gratuit — « lune de miel → resserrement » (livré le 2026-06-26)
+
+La décision du §7 (« 5 min/jour de base ») est désormais **implémentée**, affinée d'un ajout : une **fenêtre de lune de miel**.
+
+### La décision
+
+- **Jours 1–3 (glissants, depuis l'inscription) : 10 min/jour.** De quoi atteindre le « aha » et créer une habitude quotidienne.
+- **Jour 4+ : 5 min/jour de base.** Le mur mord désormais chaque jour pour le learner engagé.
+- **Pub récompensée : +3 min, 1×/jour, uniquement au mur**, gardée en choix **secondaire** à côté de l'essai Pro.
+
+### Pourquoi une lune de miel (la science, pas seulement le coût)
+
+Le vrai problème d'un plafond généreux n'est pas le coût — c'est la **pression de conversion**. À 10–13 min/jour pour toujours, ton learner le plus motivé (= ton meilleur prospect) est _satisfait_ et n'a aucune raison de payer. La lune de miel résout la tension entre deux besoins :
+
+- **Construire l'habitude + la dotation d'abord** (jours 1–3 généreux) → l'utilisateur investit, crée une routine, commence à « posséder » le produit (effet de dotation).
+- **Puis créer un manque ressenti** (chute à 5 min) → l'**aversion à la perte** fait le travail : il avait 10, il sent le resserrement, et l'abo est le moyen évident de les récupérer. La coupure tombe en pleine conversation (pic d'engagement) = le meilleur moment de conversion.
+
+Benchmarks (2026) à l'appui : freemium→payant **3–5 %**, mais un **essai gratuit opt-out convertit à 25–60 %** — donc le mur doit pousser l'**essai 7 jours** en CTA primaire, la pub en sortie de secours. 82 % des essais démarrent au jour 0, donc la lune de miel avance aussi l'offre d'essai. Le gratuit de Talkpal est à 10 min/jour, donc la lune de miel reste compétitive à la première impression tandis que le régime permanent à 5 min protège la marge.
+
+### Réalité des coûts (rafraîchie sur les rate cards en prod)
+
+Par minute de conversation (seulement ~30 s STT + ~30 s TTS facturées par minute d'horloge) :
+
+| Stack                               | $/min            | Moteur du coût |
+| ----------------------------------- | ---------------- | -------------- |
+| Défaut (gpt-4o-mini-tts + Deepgram) | **~0,01 $**      | TTS ≈ 90 %     |
+| Premium (ElevenLabs)                | **~0,05–0,10 $** | TTS            |
+
+Chiffre de planif **~0,02 $/min**. Plafonds journaliers à plein usage : **5 min ≈ 3 $/mois**, 10 min ≈ 6 $/mois, 13 min ≈ 7,80 $/mois (la moyenne réelle est plus basse — l'usage atteint rarement le plafond — mais elle se concentre sur les heavy users, qui sont aussi les meilleurs prospects Pro).
+
+**La pub ne se paie toujours pas :** une vidéo récompensée rapporte ~0,005–0,02 $ ; les +3 min qu'elle débloque coûtent ~0,06 $ → elle ne récupère que **~15–30 %** des minutes offertes. Confirmé : la pub est un nudge / amortissement, pas un revenu. **Ne pas l'élargir.**
+
+**La marge Pro est mince aussi :** 7,99 $ → ~5,59 $ net (commission 30 %). Un Pro à plein 60 min/jour coûterait bien plus qu'il ne paie — le **plafond Pro 60 min/jour est une protection de marge**, pas une limite de générosité, et le TTS pas cher par défaut est obligatoire.
+
+### Implémentation (où ça vit)
+
+- `apps/api/src/env.ts` — `FREE_TIER_VOICE_SECONDS_PER_DAY` 600→**300** ; nouveaux `FREE_TIER_VOICE_SECONDS_PER_DAY_HONEYMOON=600`, `FREE_HONEYMOON_DAYS=3`. (Le `canUseSeconds` mensuel est legacy/non appliqué — le plafond journalier fait foi.)
+- `apps/api/src/lib/quota.ts` — `dailyCapSeconds()` lit maintenant `accountCreatedAt` et renvoie le plafond lune-de-miel dans la fenêtre, la base après. Date absente → base (défaut sûr).
+- `apps/api/src/routes/voice.ts` — passe `profile.createdAt` au calcul du plafond à chaque garde (début de session, tours, extension pub).
+- `apps/mobile/app/(modals)/daily-limit.tsx` — le mur met en avant l'**essai** (« Try Pro free — 60 min/day ») + une ligne de valeur framée sur la perte ; la pub reste secondaire.
+- `apps/mobile/app/(modals)/paywall.tsx` — les CTA mettent « Start free trial » en avant ; le « vs 10 min » obsolète corrigé en « vs 5 min ».
+
+### Ensuite (hors de ce lot)
+
+Ajouter `coût par MAU gratuit` + `taux de démarrage d'essai au mur` au dashboard admin, puis A/B la lune de miel vs 5 min fixe dès que le volume le permet (skills : `analytics`, `ab-testing`).
 
 ---
 

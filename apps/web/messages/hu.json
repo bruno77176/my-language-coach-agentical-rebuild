@@ -70,46 +70,13 @@
       "body": "Három panel minden chat után: sikerek, javítások és új szavak — bármikor visszatérhetsz hozzájuk."
     }
   },
-  "pricing": {
-    "title": "Ingyenes a kezdéshez. Pro, amikor készen állsz.",
-    "subtitle": "Havonta két kávé. Vagy évente egy.",
-    "free": {
-      "label": "Ingyenes",
-      "headline": "Minden ami a kezdéshez kell",
-      "price": "0 $",
-      "priceNote": "kártya nélkül, próbaidő nélkül",
-      "items": [
-        "Napi 5 perc beszélgetés",
-        "Nézz meg egy rövid hirdetést 3 további percért",
-        "Három kezdő helyzet — kávé, útbaigazítás, buli",
-        "Visszajelzés a jelenlegi szakaszra + az utolsó 3-ra",
-        "Alap memória a beszélgetések között"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Amikor mindent fel akarsz oldani",
-      "price": "7,99 $ / hó",
-      "priceAnnual": "vagy 49,99 $ / év — 48 % megtakarítás",
-      "priceNote": "7 napos ingyenes próba",
-      "items": [
-        "Napi 60 perc beszélgetés",
-        "Mind a 10 szerepjáték helyzet",
-        "Teljes visszajelzés-előzmény",
-        "Mély memória — gyenge pontok, személyes kontextus, témák",
-        "Heti előrehaladási összefoglaló e-mailben"
-      ],
-      "highlight": "A legjobb választás"
-    },
-    "footnote": "Válts Pro-ra az appon belül, miután regisztráltál. Bármikor lemondhatod a bolt beállításaiban."
-  },
   "languages": {
     "title": "Elérhető nyelvek",
     "more": "+ továbbiak hamarosan"
   },
   "finalCta": {
     "title": "Készen állsz beszélni?",
-    "subtitle": "Ingyenes kipróbálni, kártya nélkül. A Pro havi 7,99 $, ha úgy döntesz, hogy maradsz."
+    "subtitle": "Ingyenes kipróbálni, kártya nélkül."
   },
   "footer": {
     "tagline": "Gyakorold a nyelveket. Szerezz magabiztosságot.",

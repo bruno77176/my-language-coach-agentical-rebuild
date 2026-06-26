@@ -218,6 +218,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           proUntil: entitlement.proUntil,
           dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
           dailyResetAt: entitlement.dailyResetAt,
+          accountCreatedAt: profile?.createdAt ?? null,
         },
         tz,
         now,
@@ -254,6 +255,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           {
             plan: entitlement.plan as "free" | "pro",
             proUntil: entitlement.proUntil,
+            accountCreatedAt: profile?.createdAt ?? null,
           },
           now,
         )
@@ -329,6 +331,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         {
           plan: entitlement.plan as "free" | "pro",
           proUntil: entitlement.proUntil,
+          accountCreatedAt: profile?.createdAt ?? null,
         },
         now,
       ),

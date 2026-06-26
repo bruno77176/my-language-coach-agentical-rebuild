@@ -70,46 +70,13 @@
       "body": "Her sohbetten sonra üç panel: öne çıkanlar, düzeltmeler ve yeni kelimeler — istediğin zaman dönebilirsin."
     }
   },
-  "pricing": {
-    "title": "Başlamak ücretsiz. Hazır olunca Pro.",
-    "subtitle": "Ayda iki kahve. Ya da yılda bir.",
-    "free": {
-      "label": "Ücretsiz",
-      "headline": "Başlaman için gereken her şey",
-      "price": "0 $",
-      "priceNote": "kart yok, deneme yok",
-      "items": [
-        "Günde 5 dakika konuşma",
-        "Kısa bir reklam izle, 3 dakika daha kazan",
-        "Üç başlangıç senaryosu — kahve, yol tarifi, parti",
-        "Mevcut seans + son 3 için geri bildirim",
-        "Seanslar arası temel hafıza"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Her şeyin kilidini açmak istediğinde",
-      "price": "7,99 $ / ay",
-      "priceAnnual": "ya da 49,99 $ / yıl — %48 tasarruf",
-      "priceNote": "7 gün ücretsiz deneme",
-      "items": [
-        "Günde 60 dakika konuşma",
-        "10 rol oyunu senaryosunun tamamı",
-        "Tam geri bildirim geçmişi",
-        "Derin hafıza — zayıf yönler, kişisel bağlam, temalar",
-        "Haftalık e-posta ilerleme özeti"
-      ],
-      "highlight": "En iyi seçim"
-    },
-    "footnote": "Kaydolduktan sonra uygulamadan Pro'ya yükselt. Mağaza ayarlarından istediğin zaman iptal edebilirsin."
-  },
   "languages": {
     "title": "Mevcut diller",
     "more": "+ yenileri yolda"
   },
   "finalCta": {
     "title": "Konuşmaya hazır mısın?",
-    "subtitle": "Denemesi ücretsiz, kart gerekmez. Kalmaya karar verirsen Pro ayda $7,99."
+    "subtitle": "Denemesi ücretsiz, kart gerekmez."
   },
   "footer": {
     "tagline": "Dil pratiği yap. Özgüven kazan.",

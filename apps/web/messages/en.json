@@ -70,39 +70,6 @@
       "body": "Three panels after every chat: highlights, corrections, and new vocab — yours to revisit anytime."
     }
   },
-  "pricing": {
-    "title": "Free to start. Pro when you're ready.",
-    "subtitle": "Two coffees a month. Or one annual cup.",
-    "free": {
-      "label": "Free",
-      "headline": "Everything you need to start",
-      "price": "$0",
-      "priceNote": "no card, no trial",
-      "items": [
-        "5 minutes of conversation per day",
-        "Watch a short ad for 3 more minutes",
-        "Three starter scenarios — coffee, directions, party",
-        "Feedback for your current session + last 3",
-        "Basic memory across sessions"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "When you want everything unlocked",
-      "price": "$7.99 / month",
-      "priceAnnual": "or $49.99 / year — save 48%",
-      "priceNote": "7-day free trial",
-      "items": [
-        "60 minutes of conversation per day",
-        "All 10 role-play scenarios",
-        "Full feedback history",
-        "Deep memory — weak areas, personal context, themes",
-        "Weekly progress digest by email"
-      ],
-      "highlight": "Best value"
-    },
-    "footnote": "Upgrade from inside the app once you've signed up. Cancel anytime in your store settings."
-  },
   "languages": {
     "title": "Available languages",
     "more": "+ more coming soon"
@@ -138,7 +105,7 @@
   },
   "finalCta": {
     "title": "Ready to start talking?",
-    "subtitle": "Free to try, no card needed. Pro at $7.99/mo if you decide to stick around."
+    "subtitle": "Free to try, no card needed."
   },
   "footer": {
     "tagline": "Practice languages. Build confidence.",

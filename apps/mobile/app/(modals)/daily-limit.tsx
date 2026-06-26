@@ -161,6 +161,19 @@ export default function DailyLimitModal() {
             : `You've used your free ${capMinutes} minutes today.`}
         </EditorialText>
 
+        {/* Free users: loss-framed value nudge toward the trial (the real
+            conversion lever). Pro users at their own cap don't see it. */}
+        {!isPaidCap && (
+          <EditorialText
+            kind="bodyMd"
+            color={palette.inkSoft}
+            style={styles.body}
+          >
+            Keep the conversation going — Pro gives you 60 minutes a day, less
+            than a coffee a week.
+          </EditorialText>
+        )}
+
         {countdown ? (
           <EditorialText
             kind="bodyMd"
@@ -188,7 +201,7 @@ export default function DailyLimitModal() {
               style={styles.btnPrimary}
             >
               <EditorialText kind="bodyMd" color={palette.peach}>
-                Unlock everything — Go Pro
+                Try Pro free — 60 min/day
               </EditorialText>
             </Pressable>
 
