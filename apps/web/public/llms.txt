@@ -20,14 +20,12 @@ Adult, self-directed language learners preparing for travel, a move abroad, a jo
 - **vs. human tutors (italki, Preply)** — not a replacement; a low-pressure place to rehearse before and between real conversations, available 24/7, judgment-free, and affordable, with no scheduling.
 - **vs. general AI voice assistants** — purpose-built for learning: language-level memory, structured feedback, and guided role-plays that general assistants do not provide.
 
-## Pricing
+## Plans
 
-- **Free** — $0, no credit card. 5 minutes of conversation per day (watch a short ad for 3 minutes more), 3 starter scenarios, feedback for your current session plus the last 3, basic memory.
-- **Pro** — $7.99/month or $49.99/year (save 48%), with a 7-day free trial. All 10 scenarios, 60 minutes of conversation per day, full feedback history, deep memory, and a weekly progress email.
+Free to start — no credit card needed. An optional Pro upgrade is available inside the app.
 
 ## Links
 
 - Home: https://mylanguagecoach.app
-- Machine-readable pricing: https://mylanguagecoach.app/pricing.md
 - Privacy policy: https://mylanguagecoach.app/privacy
 - Terms: https://mylanguagecoach.app/terms

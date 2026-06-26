@@ -3,7 +3,6 @@ import { ValueStrip } from "@/components/ValueStrip";
 import { Features } from "@/components/Features";
 import { Showcase } from "@/components/Showcase";
 import { HowItWorks } from "@/components/HowItWorks";
-import { Pricing } from "@/components/Pricing";
 import { LanguagesStrip } from "@/components/LanguagesStrip";
 import { Faq } from "@/components/Faq";
 import { DownloadCTA } from "@/components/DownloadCTA";
@@ -61,9 +60,6 @@ export function LandingPage({ locale }: Props) {
       </Reveal>
       <Reveal>
         <HowItWorks messages={m.howItWorks} />
-      </Reveal>
-      <Reveal>
-        <Pricing messages={m.pricing} />
       </Reveal>
       <Reveal>
         <LanguagesStrip messages={m.languages} />

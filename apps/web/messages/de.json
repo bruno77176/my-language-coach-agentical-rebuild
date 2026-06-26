@@ -70,46 +70,13 @@
       "body": "Drei Bereiche nach jedem Chat: Höhepunkte, Korrekturen und neues Vokabular — jederzeit für dich abrufbar."
     }
   },
-  "pricing": {
-    "title": "Kostenlos starten. Pro, wenn du bereit bist.",
-    "subtitle": "Zwei Kaffees im Monat. Oder einer im Jahr.",
-    "free": {
-      "label": "Kostenlos",
-      "headline": "Alles, was du zum Loslegen brauchst",
-      "price": "0 €",
-      "priceNote": "keine Karte, keine Testphase",
-      "items": [
-        "5 Minuten Gespräch pro Tag",
-        "Kurze Werbung ansehen für 3 Minuten mehr",
-        "Drei Einstiegsszenarien — Kaffee, Wegbeschreibung, Party",
-        "Feedback für die aktuelle Sitzung + die letzten 3",
-        "Basis-Gedächtnis über Sitzungen hinweg"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Wenn du alles freischalten willst",
-      "price": "7,99 € / Monat",
-      "priceAnnual": "oder 49,99 € / Jahr — 48 % sparen",
-      "priceNote": "7 Tage gratis testen",
-      "items": [
-        "60 Minuten Gespräch pro Tag",
-        "Alle 10 Rollenspiel-Szenarien",
-        "Vollständige Feedback-Historie",
-        "Tiefes Gedächtnis — Schwächen, persönlicher Kontext, Themen",
-        "Wöchentliche Fortschritts-Mail"
-      ],
-      "highlight": "Bestes Angebot"
-    },
-    "footnote": "Upgrade in der App, nachdem du dich angemeldet hast. Jederzeit in deinen Store-Einstellungen kündbar."
-  },
   "languages": {
     "title": "Verfügbare Sprachen",
     "more": "+ weitere folgen"
   },
   "finalCta": {
     "title": "Bereit, loszureden?",
-    "subtitle": "Kostenlos testen, keine Karte nötig. Pro für 7,99 $/Mon., wenn du dabeibleiben willst."
+    "subtitle": "Kostenlos testen, keine Karte nötig."
   },
   "footer": {
     "tagline": "Sprachen üben. Selbstvertrauen aufbauen.",

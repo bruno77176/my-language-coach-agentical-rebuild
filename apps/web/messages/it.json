@@ -70,46 +70,13 @@
       "body": "Tre sezioni dopo ogni chat: punti forti, correzioni e vocaboli nuovi — da riguardare quando vuoi."
     }
   },
-  "pricing": {
-    "title": "Gratis per iniziare. Pro quando sei pronto.",
-    "subtitle": "Due caffè al mese. O uno l'anno.",
-    "free": {
-      "label": "Gratis",
-      "headline": "Tutto ciò che ti serve per iniziare",
-      "price": "0 €",
-      "priceNote": "senza carta, senza prova",
-      "items": [
-        "5 minuti di conversazione al giorno",
-        "Guarda un breve annuncio per 3 minuti in più",
-        "Tre scenari per iniziare — caffè, indicazioni, festa",
-        "Feedback per la sessione attuale + ultime 3",
-        "Memoria di base tra le sessioni"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Quando vuoi sbloccare tutto",
-      "price": "7,99 € / mese",
-      "priceAnnual": "o 49,99 € / anno — risparmi il 48%",
-      "priceNote": "7 giorni di prova gratuita",
-      "items": [
-        "60 minuti di conversazione al giorno",
-        "Tutti i 10 scenari di gioco di ruolo",
-        "Cronologia completa dei feedback",
-        "Memoria approfondita — punti deboli, contesto personale, temi",
-        "Riepilogo settimanale dei progressi via email"
-      ],
-      "highlight": "Miglior scelta"
-    },
-    "footnote": "Passa a Pro dall'app dopo esserti registrato. Annullabile in qualsiasi momento dalle impostazioni del tuo store."
-  },
   "languages": {
     "title": "Lingue disponibili",
     "more": "+ altre in arrivo"
   },
   "finalCta": {
     "title": "Pronto a iniziare a parlare?",
-    "subtitle": "Gratis da provare, senza carta. Pro a $7,99/mese se decidi di restare."
+    "subtitle": "Gratis da provare, senza carta."
   },
   "footer": {
     "tagline": "Pratica le lingue. Guadagna fiducia.",

@@ -70,46 +70,13 @@
       "body": "Trei panouri după fiecare chat: momente reușite, corectări și vocabular nou — la care poți reveni oricând."
     }
   },
-  "pricing": {
-    "title": "Gratuit la început. Pro când ești pregătit.",
-    "subtitle": "Două cafele pe lună. Sau una pe an.",
-    "free": {
-      "label": "Gratuit",
-      "headline": "Tot ce-ți trebuie ca să începi",
-      "price": "0 $",
-      "priceNote": "fără card, fără perioadă de probă",
-      "items": [
-        "5 minute de conversație pe zi",
-        "Vezi o reclamă scurtă pentru încă 3 minute",
-        "Trei scenarii de început — cafea, indicații, petrecere",
-        "Feedback pentru sesiunea curentă + ultimele 3",
-        "Memorie de bază între sesiuni"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Când vrei să deblochezi tot",
-      "price": "7,99 $ / lună",
-      "priceAnnual": "sau 49,99 $ / an — economisești 48 %",
-      "priceNote": "7 zile gratuite de probă",
-      "items": [
-        "60 de minute de conversație pe zi",
-        "Toate cele 10 scenarii de joc de rol",
-        "Istoric complet al feedback-ului",
-        "Memorie aprofundată — puncte slabe, context personal, teme",
-        "Rezumat săptămânal al progresului pe e-mail"
-      ],
-      "highlight": "Cea mai bună alegere"
-    },
-    "footnote": "Treci la Pro din aplicație după ce te înregistrezi. Poți anula oricând din setările magazinului tău."
-  },
   "languages": {
     "title": "Limbi disponibile",
     "more": "+ altele în curând"
   },
   "finalCta": {
     "title": "Gata să începi să vorbești?",
-    "subtitle": "Gratuit de încercat, fără card. Pro la $7,99/lună dacă decizi să rămâi."
+    "subtitle": "Gratuit de încercat, fără card."
   },
   "footer": {
     "tagline": "Exersează limbile. Câștigă încredere.",

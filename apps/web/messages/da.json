@@ -70,46 +70,13 @@
       "body": "Tre paneler efter hver chat: højdepunkter, rettelser og nye ord — dine at vende tilbage til."
     }
   },
-  "pricing": {
-    "title": "Gratis at starte. Pro når du er klar.",
-    "subtitle": "To kopper kaffe om måneden. Eller én om året.",
-    "free": {
-      "label": "Gratis",
-      "headline": "Alt hvad du behøver for at komme i gang",
-      "price": "0 $",
-      "priceNote": "intet kort, ingen prøveperiode",
-      "items": [
-        "5 minutters samtale om dagen",
-        "Se en kort reklame for 3 minutter mere",
-        "Tre startscenarier — kaffe, vejvisning, fest",
-        "Feedback for nuværende session + de seneste 3",
-        "Grundlæggende hukommelse mellem sessioner"
-      ]
-    },
-    "pro": {
-      "label": "Pro",
-      "headline": "Når du vil låse alt op",
-      "price": "7,99 $ / md.",
-      "priceAnnual": "eller 49,99 $ / år — spar 48 %",
-      "priceNote": "7 dages gratis prøveperiode",
-      "items": [
-        "60 minutters samtale om dagen",
-        "Alle 10 rollespilsscenarier",
-        "Komplet feedbackhistorik",
-        "Dybere hukommelse — svage punkter, personlig kontekst, temaer",
-        "Ugentligt fremskridtsresumé via e-mail"
-      ],
-      "highlight": "Bedste valg"
-    },
-    "footnote": "Opgrader til Pro inde i appen, efter du har tilmeldt dig. Annullér når som helst i butiksindstillingerne."
-  },
   "languages": {
     "title": "Tilgængelige sprog",
     "more": "+ flere på vej"
   },
   "finalCta": {
     "title": "Klar til at begynde at tale?",
-    "subtitle": "Gratis at prøve, intet kort kræves. Pro til $7,99/md hvis du beslutter at blive hængende."
+    "subtitle": "Gratis at prøve, intet kort kræves."
   },
   "footer": {
     "tagline": "Træn sprog. Få selvtillid.",
