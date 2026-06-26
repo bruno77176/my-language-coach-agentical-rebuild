@@ -19,7 +19,7 @@ const FEATURES_LIST = [
   "Memory that remembers you across sessions",
   "Full feedback history for every conversation",
   "All 10 role-play scenarios",
-  "60 min/day soft cap (vs 10 min on free)",
+  "60 min/day (vs 5 min on free)",
 ];
 
 export default function PaywallModal() {
@@ -89,7 +89,8 @@ export default function PaywallModal() {
             disabled={!!busy}
           >
             <EditorialText kind="bodyMd" color={palette.peach}>
-              Annual {annual ? `— ${annual.priceString}/yr` : ""} · save 48%
+              Start free trial{annual ? ` — then ${annual.priceString}/yr` : ""}{" "}
+              · save 48%
             </EditorialText>
           </Pressable>
           <Pressable
@@ -98,7 +99,8 @@ export default function PaywallModal() {
             disabled={!!busy}
           >
             <EditorialText kind="bodyMd" color={palette.ink}>
-              Monthly {monthly ? `— ${monthly.priceString}/mo` : ""}
+              Start free trial
+              {monthly ? ` — then ${monthly.priceString}/mo` : ""}
             </EditorialText>
           </Pressable>
           <EditorialText

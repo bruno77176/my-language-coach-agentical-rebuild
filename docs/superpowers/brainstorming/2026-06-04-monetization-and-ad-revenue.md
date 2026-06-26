@@ -10,15 +10,15 @@
 
 ## 0. Numbers carried over from the strategy doc (so we stay consistent)
 
-| Lever               | Canonical value (strategy doc)                                                   |
-| ------------------- | -------------------------------------------------------------------------------- |
-| Price               | **$7.99/mo, $49.99/yr ($4.16/mo eq.), 7-day opt-out trial**                      |
-| Net after store cut | 30% → **$5.59/mo** net (monthly), **$34.99/yr** ≈ $2.92/mo (annual)              |
-| Free tier           | **10 min/day voice**, 3 role-plays/day, last 3 sessions, basic memory free       |
-| Cost to serve       | **~$0.025/min API only**; **$0.05–0.10/min user-facing** (infra + margin)        |
-| Conversion          | trial→paid **38–54%**; download→subscriber **1.7%**; download→trial **3.7–8.9%** |
-| Target              | **$1k MRR (40–50% likely)** — NOT a $10k+ optimized play                         |
-| Heavy-user margin   | At 60 min/mo a Pro user nets only **$0–2/mo** contribution; light users $3–5     |
+| Lever               | Canonical value (strategy doc)                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Price               | **$7.99/mo, $49.99/yr ($4.16/mo eq.), 7-day opt-out trial**                                                                  |
+| Net after store cut | 30% → **$5.59/mo** net (monthly), **$34.99/yr** ≈ $2.92/mo (annual)                                                          |
+| Free tier           | **5 min/day voice** (10 min "honeymoon" for the first 3 days — see §8), 3 role-plays/day, last 3 sessions, basic memory free |
+| Cost to serve       | **~$0.025/min API only**; **$0.05–0.10/min user-facing** (infra + margin)                                                    |
+| Conversion          | trial→paid **38–54%**; download→subscriber **1.7%**; download→trial **3.7–8.9%**                                             |
+| Target              | **$1k MRR (40–50% likely)** — NOT a $10k+ optimized play                                                                     |
+| Heavy-user margin   | At 60 min/mo a Pro user nets only **$0–2/mo** contribution; light users $3–5                                                 |
 
 The ad layer below is built **on top of** these, not against them.
 
@@ -150,6 +150,54 @@ The paywall + entitlements + daily-quota work is already a **Plan 8** task (stra
 2. **Ads only as the quota-extension mechanic.** ✅ DECIDED. No ads shown to paying or trialing users; never ad-spam the core loop. The rewarded ad fires only at the "free quota reached → +3 min for an ad" moment.
 3. **Ads on BOTH iOS and Android, with auto non-personalized fallback.** ✅ DECIDED. Integrate AdMob once for both platforms, show the iOS ATT consent prompt, and let AdMob serve non-personalized ads to users who opt out. Rewarded video is the format least hurt by ATT opt-out, so no need to skip iOS. (Reminder: GDPR UMP consent in the EU is handled the same way.)
 4. **Ads everywhere (all geos).** ✅ DECIDED. In this design the rewarded ad's primary job is **cost-control + conversion nudge**, not revenue — so it earns its place even in low-eCPM geos (it still bounds free cost and pushes toward subscribing). Ad revenue is just a bonus where eCPM is high.
+
+---
+
+## 8. Free-cap refinement — "honeymoon → squeeze" (shipped 2026-06-26)
+
+The §7 decision ("5 min/day baseline") is now **implemented**, refined with one addition: a **honeymoon window**.
+
+### The decision
+
+- **Days 1–3 (rolling, from signup): 10 min/day.** Enough to reach the "aha" and build a daily habit.
+- **Day 4+: 5 min/day baseline.** The wall now bites every day for the engaged learner.
+- **Rewarded ad: +3 min, 1×/day, only at the wall**, kept as the **secondary** choice next to the Pro trial.
+
+### Why a honeymoon (the science, not just cost)
+
+The real problem with a generous cap isn't the cost — it's **conversion pressure**. At 10–13 min/day forever, your most motivated learner (your best prospect) is _satisfied_ and never feels a reason to pay. The honeymoon resolves the tension between two needs:
+
+- **Build the habit + endowment first** (generous days 1–3) → the user invests, forms a routine, and starts to "own" the product (endowment effect).
+- **Then create a felt gap** (drop to 5 min) → **loss aversion** does the work: they had 10, now they feel the squeeze, and the upgrade is the obvious way to get it back. The cut-off lands mid-conversation (peak engagement), which is the strongest conversion moment.
+
+Benchmarks (2026) backing the structure: freemium→paid is **3–5%**, but an **opt-out free trial converts at 25–60%** — so the wall must push the **7-day trial** as the primary CTA, with the ad as the escape hatch. 82% of trials start on day 0, so the honeymoon also front-loads the trial offer. Talkpal's free tier is 10 min/day, so the honeymoon stays competitive on first impression while the steady-state 5 min protects margin.
+
+### Cost reality (refreshed against the live rate cards)
+
+Per minute of conversation (only ~30 s STT + ~30 s TTS are billed per wall-clock minute):
+
+| Stack                                | $/min           | Driver    |
+| ------------------------------------ | --------------- | --------- |
+| Default (gpt-4o-mini-tts + Deepgram) | **~$0.01**      | TTS ≈ 90% |
+| Premium (ElevenLabs)                 | **~$0.05–0.10** | TTS       |
+
+Planning figure **~$0.02/min**. Daily caps at full use: **5 min ≈ $3/mo**, 10 min ≈ $6/mo, 13 min ≈ $7.80/mo (real average is lower — usage rarely maxes the cap — but it concentrates on heavy users, who are also the best Pro prospects).
+
+**The ad still doesn't pay for itself:** one rewarded view earns ~$0.005–0.02; the +3 min it grants costs ~$0.06 → it recovers only **~15–30%** of the minutes it unlocks. Confirmed: ads are a nudge/soft-offset, not revenue. Do **not** widen them.
+
+**Pro margin is thin too:** $7.99 → ~$5.59 net (30% cut). A Pro user at the full 60 min/day would cost far more than they pay — so the **60 min/day Pro cap is margin protection, not a generosity limit**, and cheap default TTS is mandatory.
+
+### Implementation (where it lives)
+
+- `apps/api/src/env.ts` — `FREE_TIER_VOICE_SECONDS_PER_DAY` 600→**300**; new `FREE_TIER_VOICE_SECONDS_PER_DAY_HONEYMOON=600`, `FREE_HONEYMOON_DAYS=3`. (Monthly `canUseSeconds` is legacy/unenforced — daily cap is authoritative.)
+- `apps/api/src/lib/quota.ts` — `dailyCapSeconds()` now reads the account's `accountCreatedAt` and returns the honeymoon cap inside the window, baseline after. Missing date → baseline (safe default).
+- `apps/api/src/routes/voice.ts` — threads `profile.createdAt` into the cap calc at all gates (session start, turns, ad-extension).
+- `apps/mobile/app/(modals)/daily-limit.tsx` — wall now leads with the **trial** ("Try Pro free — 60 min/day") + loss-framed value line; ad stays secondary.
+- `apps/mobile/app/(modals)/paywall.tsx` — CTAs lead with "Start free trial"; stale "vs 10 min" fixed to "vs 5 min".
+
+### Next (not in this change)
+
+Add `cost per free MAU` + `trial-start rate at the wall` to the admin dashboard, then A/B the honeymoon vs flat 5 min once volume allows (skills: `analytics`, `ab-testing`).
 
 ---
 

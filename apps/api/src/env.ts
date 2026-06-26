@@ -33,8 +33,17 @@ const EnvSchema = z.object({
 export type Env = z.infer<typeof EnvSchema>;
 
 // Voice loop tuning constants — consumed by quota helper (Task 8) and turn route (Task 9).
-export const FREE_TIER_VOICE_SECONDS_PER_MONTH = 30 * 60; // 30 minutes
-export const FREE_TIER_VOICE_SECONDS_PER_DAY = 600; // 10 minutes — free daily cap (wall-clock)
+// NOTE: the monthly cap below is legacy — `canUseSeconds` (monthly) is no longer
+// enforced by any route; the daily wall-clock cap is authoritative.
+export const FREE_TIER_VOICE_SECONDS_PER_MONTH = 30 * 60; // 30 minutes (legacy, unenforced)
+// Free daily cap (wall-clock). "Honeymoon → squeeze" model (2026-06-26): new
+// free accounts get the higher HONEYMOON cap for their first FREE_HONEYMOON_DAYS
+// (build the habit + reach the "aha"), then drop to the tighter baseline so the
+// daily wall bites every day and drives Pro conversion. The drop is what the
+// motivated learner — your best prospect — feels.
+export const FREE_TIER_VOICE_SECONDS_PER_DAY = 300; // 5 minutes — baseline free daily cap
+export const FREE_TIER_VOICE_SECONDS_PER_DAY_HONEYMOON = 600; // 10 minutes — first days
+export const FREE_HONEYMOON_DAYS = 3; // honeymoon window length (rolling, from signup)
 // Pro daily cap. As of 2026-06-10 this is a HARD cap (was a soft/warn-only cap).
 export const PRO_TIER_VOICE_SECONDS_PER_DAY = 3600; // 60 minutes
 // Back-compat alias (older imports referenced the "soft cap" name).
