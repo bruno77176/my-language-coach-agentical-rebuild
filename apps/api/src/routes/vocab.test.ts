@@ -14,8 +14,60 @@ type VocabRow = {
   article: string | null;
   mastery: number;
   starred: boolean;
+  srsBox: number;
+  dueAt: Date | null;
+  lastReviewedAt: Date | null;
   createdAt: Date;
 };
+
+// Minimal interpreters for the drizzle relational `where` / `orderBy` callbacks
+// so the fake db can actually filter + sort (needed for /review/today).
+const tProxy = new Proxy(
+  {},
+  { get: (_t, p) => ({ __key: String(p) }) },
+) as Record<string, { __key: keyof VocabRow }>;
+type Pred = (r: VocabRow) => boolean;
+const whereOps = {
+  eq:
+    (c: { __key: keyof VocabRow }, v: unknown): Pred =>
+    (r) =>
+      r[c.__key] === v,
+  and:
+    (...ps: Pred[]): Pred =>
+    (r) =>
+      ps.every((p) => p(r)),
+  isNull:
+    (c: { __key: keyof VocabRow }): Pred =>
+    (r) =>
+      r[c.__key] == null,
+  isNotNull:
+    (c: { __key: keyof VocabRow }): Pred =>
+    (r) =>
+      r[c.__key] != null,
+  lte:
+    (c: { __key: keyof VocabRow }, v: unknown): Pred =>
+    (r) => {
+      const x = r[c.__key];
+      return x != null && toMs(x) <= toMs(v);
+    },
+};
+const orderOps = {
+  asc: (c: { __key: keyof VocabRow }) => ({ key: c.__key, dir: 1 }),
+  desc: (c: { __key: keyof VocabRow }) => ({ key: c.__key, dir: -1 }),
+};
+function toMs(v: unknown): number {
+  if (v instanceof Date) return v.getTime();
+  if (typeof v === "number") return v;
+  return new Date(v as string).getTime();
+}
+function cmp(a: unknown, b: unknown): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+  if (a instanceof Date || b instanceof Date || typeof a === "number")
+    return toMs(a) - toMs(b);
+  return String(a).localeCompare(String(b));
+}
 
 function appWithVocab(routes: ReturnType<typeof createVocabRoutes>) {
   const app = new Hono<{ Variables: { userId: string } }>();
@@ -45,14 +97,32 @@ function makeFakeDb({
         findFirst: vi.fn(async () => profile),
       },
       vocabItems: {
-        findMany: vi.fn(async () =>
-          data
-            .filter((r) => r.userId === userId)
-            .sort(
-              (a, b) =>
-                a.mastery - b.mastery ||
-                b.createdAt.getTime() - a.createdAt.getTime(),
-            ),
+        findMany: vi.fn(
+          async (
+            cfg: {
+              where?: (t: typeof tProxy, ops: typeof whereOps) => Pred;
+              orderBy?: (
+                t: typeof tProxy,
+                ops: typeof orderOps,
+              ) => Array<{ key: keyof VocabRow; dir: number }>;
+              limit?: number;
+            } = {},
+          ) => {
+            let rows = data.filter((r) => r.userId === userId);
+            if (cfg.where) rows = rows.filter(cfg.where(tProxy, whereOps));
+            if (cfg.orderBy) {
+              const ord = cfg.orderBy(tProxy, orderOps);
+              rows = [...rows].sort((a, b) => {
+                for (const o of ord) {
+                  const c = cmp(a[o.key], b[o.key]) * o.dir;
+                  if (c) return c;
+                }
+                return 0;
+              });
+            }
+            if (typeof cfg.limit === "number") rows = rows.slice(0, cfg.limit);
+            return rows;
+          },
         ),
         findFirst: vi.fn(async () =>
           data.find((r) => r.id === fakeDb._matchId),
@@ -80,6 +150,9 @@ function makeFakeDb({
               article: vals.article ?? null,
               mastery: 0,
               starred: false,
+              srsBox: vals.srsBox ?? 1,
+              dueAt: vals.dueAt ?? null,
+              lastReviewedAt: vals.lastReviewedAt ?? null,
               createdAt: new Date("2026-06-06T00:00:00Z"),
             };
             data.push(row);
@@ -133,6 +206,9 @@ function row(over: Partial<VocabRow> = {}): VocabRow {
     article: null,
     mastery: 0,
     starred: false,
+    srsBox: 1,
+    dueAt: null,
+    lastReviewedAt: null,
     createdAt: new Date("2026-06-02T00:00:00Z"),
     ...over,
   };
@@ -219,8 +295,8 @@ describe("vocab routes", () => {
     expect(res.status).toBe(400);
   });
 
-  it("PATCH got_it increments mastery, capped at 3", async () => {
-    const db = makeFakeDb({ rows: [row({ mastery: 3 })] });
+  it("PATCH got_it promotes the Leitner box + sets a due date (BRU-30)", async () => {
+    const db = makeFakeDb({ rows: [row({ srsBox: 2, mastery: 1 })] });
     db._matchId = "a";
     const app = appWithVocab(createVocabRoutes(deps(db)));
     const res = await app.request("/v1/vocab/a", {
@@ -229,11 +305,15 @@ describe("vocab routes", () => {
       body: JSON.stringify({ result: "got_it" }),
     });
     expect(res.status).toBe(200);
-    expect(db._data.find((r) => r.id === "a")?.mastery).toBe(3);
+    const r = db._data.find((x) => x.id === "a")!;
+    expect(r.srsBox).toBe(3); // promoted one box
+    expect(r.mastery).toBe(2); // mirrored
+    expect(r.dueAt).toBeInstanceOf(Date); // scheduled
+    expect(r.lastReviewedAt).toBeInstanceOf(Date);
   });
 
-  it("PATCH still_learning resets mastery to 0", async () => {
-    const db = makeFakeDb({ rows: [row({ mastery: 2 })] });
+  it("PATCH still_learning drops to box 1 (BRU-30)", async () => {
+    const db = makeFakeDb({ rows: [row({ srsBox: 4, mastery: 3 })] });
     db._matchId = "a";
     const app = appWithVocab(createVocabRoutes(deps(db)));
     const res = await app.request("/v1/vocab/a", {
@@ -242,7 +322,10 @@ describe("vocab routes", () => {
       body: JSON.stringify({ result: "still_learning" }),
     });
     expect(res.status).toBe(200);
-    expect(db._data.find((r) => r.id === "a")?.mastery).toBe(0);
+    const r = db._data.find((x) => x.id === "a")!;
+    expect(r.srsBox).toBe(1);
+    expect(r.mastery).toBe(0);
+    expect(r.dueAt).toBeInstanceOf(Date);
   });
 
   it("PATCH starred toggles the starred flag", async () => {
@@ -282,8 +365,8 @@ describe("vocab routes", () => {
     expect(res.status).toBe(404);
   });
 
-  it("POST /:id/pronounce marks correct + bumps mastery when the transcript matches", async () => {
-    const db = makeFakeDb({ rows: [row({ term: "maison", mastery: 0 })] });
+  it("POST /:id/pronounce marks correct + advances the box when the transcript matches", async () => {
+    const db = makeFakeDb({ rows: [row({ term: "maison", srsBox: 1 })] });
     db._matchId = "a";
     const localTranscribe = vi.fn(async () => ({
       text: "maison",
@@ -301,11 +384,13 @@ describe("vocab routes", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { correct: boolean; heard: string };
     expect(body.correct).toBe(true);
-    expect(db._data.find((r) => r.id === "a")?.mastery).toBe(1);
+    const r = db._data.find((x) => x.id === "a")!;
+    expect(r.srsBox).toBe(2);
+    expect(r.dueAt).toBeInstanceOf(Date);
   });
 
-  it("POST /:id/pronounce marks incorrect + resets mastery on a wrong word", async () => {
-    const db = makeFakeDb({ rows: [row({ term: "maison", mastery: 2 })] });
+  it("POST /:id/pronounce marks incorrect + resets the box on a wrong word", async () => {
+    const db = makeFakeDb({ rows: [row({ term: "maison", srsBox: 3 })] });
     db._matchId = "a";
     const localTranscribe = vi.fn(async () => ({
       text: "chien",
@@ -323,7 +408,7 @@ describe("vocab routes", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { correct: boolean };
     expect(body.correct).toBe(false);
-    expect(db._data.find((r) => r.id === "a")?.mastery).toBe(0);
+    expect(db._data.find((x) => x.id === "a")?.srsBox).toBe(1);
   });
 
   it("POST /:id/pronounce treats a failed transcription as incorrect", async () => {
@@ -345,6 +430,53 @@ describe("vocab routes", () => {
     const body = (await res.json()) as { correct: boolean };
     expect(body.correct).toBe(false);
     expect(db._data.find((r) => r.id === "a")?.mastery).toBe(0);
+  });
+
+  it("GET /review/today returns due-first then new fill, with counts (BRU-30)", async () => {
+    const now = Date.now();
+    const past = new Date(now - 86_400_000); // due yesterday
+    const future = new Date(now + 7 * 86_400_000); // not due yet
+    const db = makeFakeDb({
+      rows: [
+        row({
+          id: "due1",
+          term: "alpha",
+          dueAt: past,
+          createdAt: new Date("2026-06-01T00:00:00Z"),
+        }),
+        row({ id: "notdue", term: "beta", dueAt: future }),
+        row({
+          id: "new1",
+          term: "gamma",
+          dueAt: null,
+          createdAt: new Date("2026-06-02T00:00:00Z"),
+        }),
+        row({
+          id: "new2",
+          term: "delta",
+          dueAt: null,
+          createdAt: new Date("2026-06-03T00:00:00Z"),
+        }),
+      ],
+    });
+    const app = appWithVocab(createVocabRoutes(deps(db)));
+    const res = await app.request("/v1/vocab/review/today?language=fr");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      items: VocabRow[];
+      dueCount: number;
+      newCount: number;
+      remainingTotal: number;
+    };
+    expect(body.dueCount).toBe(1); // only due1 (past); notdue is in the future
+    expect(body.newCount).toBe(2); // new1 + new2
+    expect(body.remainingTotal).toBe(3);
+    const ids = body.items.map((i) => i.id);
+    expect(ids[0]).toBe("due1"); // due first
+    expect(ids).toContain("new1");
+    expect(ids).toContain("new2");
+    expect(ids).not.toContain("notdue");
+    expect(body.items).toHaveLength(3); // 1 due + 2 new, under the 15 cap
   });
 
   it("DELETE removes the row and returns ok", async () => {

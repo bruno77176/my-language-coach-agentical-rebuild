@@ -15,6 +15,11 @@ export type VocabItem = {
   article: string | null;
   mastery: number;
   starred: boolean;
+  /** Spaced-repetition (BRU-30): Leitner box 1..6. */
+  srsBox: number;
+  /** When the word is next due (ISO), or null = new / not yet introduced. */
+  dueAt: string | null;
+  lastReviewedAt: string | null;
   createdAt: string;
 };
 
@@ -28,6 +33,34 @@ export type VocabDeckResponse = {
   dueCount: number;
   starredCount: number;
 };
+
+/** The scheduled daily review session (BRU-30): ≤15 due-first then new fill. */
+export type ReviewTodayResponse = {
+  items: VocabItem[];
+  dueCount: number;
+  newCount: number;
+  remainingTotal: number;
+};
+
+export async function fetchReviewToday(
+  language: string,
+): Promise<ReviewTodayResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/v1/vocab/review/today?language=${encodeURIComponent(language)}`,
+    {
+      headers: {
+        authorization: await authHeader(),
+        ...clientPlatformHeader(),
+      },
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`fetchReviewToday ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<ReviewTodayResponse>;
+}
+
 export type ReviewResult = "got_it" | "still_learning";
 
 export async function fetchVocabDeck(

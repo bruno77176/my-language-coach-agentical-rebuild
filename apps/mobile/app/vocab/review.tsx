@@ -33,7 +33,9 @@ import {
 import { useProfile } from "@/src/features/auth/use-profile";
 import {
   useVocabDeck,
+  useReviewToday,
   vocabDeckKey,
+  reviewTodayKey,
 } from "@/src/features/vocab/use-vocab-deck";
 import {
   displayTerm,
@@ -45,7 +47,6 @@ import { configureForRecording } from "@/src/lib/audio-session";
 import { playOnce } from "@/src/features/practice/audio-controller";
 import { useStopAudioOnBlur } from "@/src/features/practice/use-stop-audio-on-blur";
 
-const MAX_MASTERY = 3;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const VICTORY_SOUND = require("../../assets/sounds/victory.mp3");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -64,23 +65,30 @@ export default function VocabReviewScreen() {
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
   const nativeLang = profile?.native_lang ?? "en";
-  const { data } = useVocabDeck(targetLang, starredOnly);
+  // Starred mode is an off-schedule "cram" of every starred word; the default
+  // mode is the spaced-repetition daily session (≤15, due-first then new fill).
+  const { data: deck } = useVocabDeck(targetLang, starredOnly);
+  const { data: today } = useReviewToday(targetLang, !starredOnly);
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
-  // Snapshot the queue once on first load so server-side mastery updates don't
+  // Snapshot the queue once on first load so server-side schedule updates don't
   // reshuffle it mid-game.
   const [queue, setQueue] = useState<VocabItem[] | null>(null);
   useEffect(() => {
-    if (queue || !data) return;
-    const due = data.items.filter((i) => i.mastery < MAX_MASTERY);
-    setQueue(due.length > 0 ? due : data.items);
-  }, [data, queue]);
+    if (queue) return;
+    if (starredOnly) {
+      if (deck) setQueue(deck.items);
+    } else if (today) {
+      setQueue(today.items);
+    }
+  }, [deck, today, queue, starredOnly]);
 
-  // Refresh the deck (Home count, mastery) when leaving the game.
+  // Refresh the deck + today's queue (Home count) when leaving the game.
   useEffect(() => {
     return () => {
       void qc.invalidateQueries({ queryKey: vocabDeckKey(targetLang) });
+      void qc.invalidateQueries({ queryKey: reviewTodayKey(targetLang) });
     };
   }, [qc, targetLang]);
 
@@ -130,7 +138,9 @@ export default function VocabReviewScreen() {
       <Screen variant="gradient">
         <View style={styles.center}>
           <EditorialText kind="bodyMd" color={palette.inkSoft}>
-            Nothing to review yet.
+            {starredOnly
+              ? "No starred words yet."
+              : "You're all caught up for today ✓"}
           </EditorialText>
           <Pressable style={styles.smallBtn} onPress={() => router.back()}>
             <EditorialText kind="bodyMd" color={palette.peach}>

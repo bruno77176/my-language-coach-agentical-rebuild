@@ -33,6 +33,11 @@ export const vocabItems = pgTable(
     ),
     mastery: integer("mastery").notNull().default(0),
     starred: boolean("starred").notNull().default(false),
+    // Spaced-repetition scheduling (BRU-30). srsBox = Leitner box 1..6; dueAt =
+    // when next due (null = new / not yet introduced); lastReviewedAt = last review.
+    srsBox: integer("srs_box").notNull().default(1),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

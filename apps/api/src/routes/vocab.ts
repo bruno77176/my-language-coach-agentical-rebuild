@@ -1,12 +1,17 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { and, asc, desc, eq, type SQL } from "drizzle-orm";
+import { and, eq, type SQL } from "drizzle-orm";
 import type { Database } from "../db";
 import { vocabItems } from "../db/schema";
 import type { OnUsage } from "../providers/usage";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
 import { isPronunciationCorrect } from "../lib/vocab-match";
+import { nextSchedule, masteryForBox } from "../lib/srs";
+
+// Cards shown in a single daily review session (BRU-30): due reviews first,
+// then new words fill up to this target.
+const DAILY_REVIEW_TARGET = 15;
 
 export type TranslateInput = {
   text: string;
@@ -78,11 +83,61 @@ export function createVocabRoutes(deps: VocabDeps) {
         if (starredOnly) clauses.push(e(t.starred, true));
         return a(...clauses);
       },
-      orderBy: (t) => [asc(t.mastery), desc(t.createdAt)],
+      orderBy: (t, { asc: as, desc: de }) => [as(t.mastery), de(t.createdAt)],
     });
     const dueCount = items.filter((i) => i.mastery < MAX_MASTERY).length;
     const starredCount = items.filter((i) => i.starred).length;
     return c.json({ items, dueCount, starredCount });
+  });
+
+  // GET /v1/vocab/review/today?language=xx — the scheduled daily session
+  // (BRU-30): up to DAILY_REVIEW_TARGET cards, due reviews first (oldest-due),
+  // then new (never-introduced) words to fill the rest. Decks are small, so we
+  // read the full due/new sets to also report accurate counts for the Home copy.
+  routes.get("/review/today", async (c) => {
+    const userId = c.get("userId");
+    let language = c.req.query("language");
+    if (!language) {
+      const profile = await deps.db.query.profiles.findFirst({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      });
+      language = profile?.targetLang ?? "en";
+    }
+    const lang = language;
+    const now = new Date();
+
+    // Already-introduced words that have come due, oldest-due first.
+    const dueAll = await deps.db.query.vocabItems.findMany({
+      where: (t, { eq: e, and: a, isNotNull, lte }) =>
+        a(
+          e(t.userId, userId),
+          e(t.language, lang),
+          isNotNull(t.dueAt),
+          lte(t.dueAt, now),
+        ),
+      orderBy: (t, { asc: as }) => [as(t.dueAt)],
+    });
+    // Never-introduced words, oldest-saved first.
+    const newAll = await deps.db.query.vocabItems.findMany({
+      where: (t, { eq: e, and: a, isNull }) =>
+        a(e(t.userId, userId), e(t.language, lang), isNull(t.dueAt)),
+      orderBy: (t, { asc: as }) => [as(t.createdAt)],
+    });
+
+    const dueQueue = dueAll.slice(0, DAILY_REVIEW_TARGET);
+    const newQueue = newAll.slice(
+      0,
+      Math.max(0, DAILY_REVIEW_TARGET - dueQueue.length),
+    );
+    const items = [...dueQueue, ...newQueue];
+
+    return c.json({
+      items,
+      dueCount: dueAll.length,
+      newCount: newAll.length,
+      // Total words still ahead overall (due + not-yet-introduced).
+      remainingTotal: dueAll.length + newAll.length,
+    });
   });
 
   // POST /v1/vocab — manual add; auto-translate when translation omitted.
@@ -175,15 +230,25 @@ export function createVocabRoutes(deps: VocabDeps) {
       return c.json({ error: { code: "NOT_FOUND" } }, 404);
     }
 
-    const set =
-      "result" in parsed.data
-        ? {
-            mastery:
-              parsed.data.result === "got_it"
-                ? Math.min(row.mastery + 1, MAX_MASTERY)
-                : 0,
-          }
-        : { starred: parsed.data.starred };
+    let set: Partial<typeof vocabItems.$inferInsert>;
+    if ("result" in parsed.data) {
+      // Apply the Leitner transition (single source of truth in srs.ts) and
+      // mirror the legacy mastery counter so existing UI keeps working.
+      const correct = parsed.data.result === "got_it";
+      const { box, dueAt } = nextSchedule({
+        box: row.srsBox,
+        correct,
+        now: new Date(),
+      });
+      set = {
+        srsBox: box,
+        dueAt,
+        lastReviewedAt: new Date(),
+        mastery: masteryForBox(box),
+      };
+    } else {
+      set = { starred: parsed.data.starred };
+    }
 
     const updated = await deps.db
       .update(vocabItems)
@@ -237,10 +302,21 @@ export function createVocabRoutes(deps: VocabDeps) {
     }
 
     const correct = isPronunciationCorrect(heard, row.term);
-    const mastery = correct ? Math.min(row.mastery + 1, MAX_MASTERY) : 0;
+    // Advance the spaced-repetition schedule (same transition as the manual
+    // got_it/still_learning path) and mirror the legacy mastery counter.
+    const { box, dueAt } = nextSchedule({
+      box: row.srsBox,
+      correct,
+      now: new Date(),
+    });
     const updated = await deps.db
       .update(vocabItems)
-      .set({ mastery })
+      .set({
+        srsBox: box,
+        dueAt,
+        lastReviewedAt: new Date(),
+        mastery: masteryForBox(box),
+      })
       .where(and(eq(vocabItems.id, id), eq(vocabItems.userId, userId)))
       .returning();
 
