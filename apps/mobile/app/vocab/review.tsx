@@ -175,9 +175,8 @@ export default function VocabReviewScreen() {
     spin.value = withTiming(180, { duration: 450 });
     // Per-card haptic feedback; the victory sound is reserved for a perfect run.
     Vibration.vibrate(next === "wrong" ? 120 : 35);
-    if (next === "correct") {
-      advanceTimer.current = setTimeout(advance, 1400);
-    }
+    // Always wait for the user to tap "Next" — even on a correct answer — so
+    // they get time to review the card (no auto-advance).
   }
 
   async function onMicPress() {

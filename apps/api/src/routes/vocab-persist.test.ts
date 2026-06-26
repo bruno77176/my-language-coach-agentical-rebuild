@@ -12,7 +12,12 @@ describe("persistVocab", () => {
       userId: "u1",
       language: "fr",
       vocab: [
-        { term: "maison", translation: "house" },
+        {
+          term: "maison",
+          translation: "house",
+          source_phrase: "J'habite dans une maison.",
+          article: "la",
+        },
         { term: "chien", translation: "dog" },
       ],
     });
@@ -23,6 +28,8 @@ describe("persistVocab", () => {
       language: "fr",
       term: "maison",
       translation: "house",
+      sourceSentence: "J'habite dans une maison.",
+      article: "la",
     });
     expect(onConflictDoNothing).toHaveBeenCalledTimes(2);
   });
@@ -45,6 +52,8 @@ describe("persistVocab", () => {
       language: "fr",
       term: "chat",
       translation: null,
+      sourceSentence: null,
+      article: null,
     });
   });
 

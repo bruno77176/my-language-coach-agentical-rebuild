@@ -16,8 +16,17 @@ type DailyCapState = {
   usedAtStartSeconds: number;
   bonusSeconds: number; // granted by rewarded-ad extensions this session
   resetAt: string | null;
-  setBudget: (b: { cap: number; used: number; resetAt: string | null }) => void;
+  // Rewarded-ad extensions left today (1/day). null = unknown. Drives whether
+  // the daily-limit screen lets the user watch another ad, surviving remounts.
+  adExtensionsRemaining: number | null;
+  setBudget: (b: {
+    cap: number;
+    used: number;
+    resetAt: string | null;
+    adExtensionsRemaining?: number | null;
+  }) => void;
   addBonus: (seconds: number) => void;
+  setAdExtensionsRemaining: (n: number) => void;
   clear: () => void;
 };
 
@@ -26,21 +35,25 @@ export const useDailyCap = create<DailyCapState>((set) => ({
   usedAtStartSeconds: 0,
   bonusSeconds: 0,
   resetAt: null,
+  adExtensionsRemaining: null,
   setBudget: (b) =>
     set({
       capSeconds: b.cap,
       usedAtStartSeconds: b.used,
       bonusSeconds: 0,
       resetAt: b.resetAt,
+      adExtensionsRemaining: b.adExtensionsRemaining ?? null,
     }),
   addBonus: (seconds) =>
     set((s) => ({ bonusSeconds: s.bonusSeconds + seconds })),
+  setAdExtensionsRemaining: (n) => set({ adExtensionsRemaining: n }),
   clear: () =>
     set({
       capSeconds: null,
       usedAtStartSeconds: 0,
       bonusSeconds: 0,
       resetAt: null,
+      adExtensionsRemaining: null,
     }),
 }));
 

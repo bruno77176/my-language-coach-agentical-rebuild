@@ -154,6 +154,7 @@ export function useConversation(
             cap: session.daily_cap_seconds,
             used: session.daily_used_seconds ?? 0,
             resetAt: session.reset_at ?? null,
+            adExtensionsRemaining: session.ad_extensions_remaining ?? null,
           });
         }
 

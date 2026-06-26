@@ -15,6 +15,9 @@ export const VocabItemSchema = z.object({
   term: z.string().min(1).max(120),
   translation: z.string().min(1).max(120),
   source_phrase: z.string().max(280).optional(),
+  // Gender article for the deck (der/die/das, le/la…); null for non-nouns /
+  // languages without gendered articles.
+  article: z.string().max(16).nullable().optional(),
 });
 
 export const SessionFeedbackSchema = z
