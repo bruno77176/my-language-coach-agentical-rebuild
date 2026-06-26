@@ -21,7 +21,10 @@ import { useTodayStats } from "@/src/features/home/use-today-stats";
 import { QuoteCard } from "@/src/features/home/quote-card";
 import { TodayProgress } from "@/src/features/home/today-progress";
 import { useOfflineQuote } from "@/src/features/home/use-offline-quote";
-import { useVocabDeck } from "@/src/features/vocab/use-vocab-deck";
+import {
+  useVocabDeck,
+  useReviewToday,
+} from "@/src/features/vocab/use-vocab-deck";
 import { supabase } from "@/src/lib/supabase";
 import { buildQuoteCaption } from "@/src/features/sharing/share-text";
 import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
@@ -55,6 +58,7 @@ export default function HomeScreen() {
   const { data: streak } = useCurrentStreak();
   const cachedQuote = useOfflineQuote(profile ?? null);
   const { data: vocab } = useVocabDeck(profile?.target_lang);
+  const { data: reviewToday } = useReviewToday(profile?.target_lang);
 
   // Block on spinner if profile hasn't loaded AND there's no cached quote, OR
   // if we have no profile and no cached quote at all (e.g., anonymous user
@@ -120,8 +124,8 @@ export default function HomeScreen() {
                 Review your words
               </EditorialText>
               <EditorialText kind="bodySm" color={palette.inkSoft}>
-                {vocab.dueCount > 0
-                  ? `${vocab.dueCount} to review`
+                {reviewToday && reviewToday.items.length > 0
+                  ? `${reviewToday.items.length} to review today`
                   : "All caught up — browse anytime"}
               </EditorialText>
             </View>
