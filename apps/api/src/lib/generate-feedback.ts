@@ -21,7 +21,7 @@ const SYSTEM_PROMPT = `You are a language-coaching feedback writer. You receive 
 You output ONLY a JSON object with three arrays:
 - highlights (0-3 items): things the STUDENT said well. Each: { phrase, why }. "phrase" in the target language, "why" in the student's native language, max one sentence.
 - corrections (0-3 items): clear mistakes the STUDENT made. Each: { you_said, better, explanation }. "you_said" is what the student actually said; "better" is the corrected form; "explanation" is one short sentence in the student's native language.
-- vocab (0-8 items): new or interesting words / expressions worth remembering. Prefer items from the student's speech but include 1-2 from the coach if the student likely doesn't know them. Each: { term, translation, source_phrase }.
+- vocab (0-8 items): new or interesting words / expressions worth remembering. Prefer items from the student's speech but include 1-2 from the coach if the student likely doesn't know them. Each: { term, translation, source_phrase, article }. "source_phrase" is the sentence from the transcript where the term appeared (so it can be reviewed in context). "article" is the singular DEFINITE article that marks the noun's gender in the target language (e.g. der/die/das, le/la, el/la, il/lo/la, o/a); use null when the term is not a gendered noun or the target language does not mark gender on its articles (e.g. English).
 
 Rules:
 - If uncertain about a grammar rule, omit the correction rather than fabricate.

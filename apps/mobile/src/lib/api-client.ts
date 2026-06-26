@@ -39,6 +39,9 @@ export type StartSessionResponse = {
   daily_used_seconds?: number;
   daily_cap_seconds?: number;
   reset_at?: string;
+  // Rewarded-ad extensions left today (1/day). Lets the limit screen disable
+  // the "watch an ad" button across remounts.
+  ad_extensions_remaining?: number;
 };
 
 /**

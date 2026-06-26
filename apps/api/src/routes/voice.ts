@@ -258,11 +258,21 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           now,
         )
       : FREE_TIER_VOICE_SECONDS_PER_DAY;
+    // Rewarded-ad extensions left today (1/day) so the limit screen can keep
+    // the "watch an ad" button disabled across remounts, not just within one.
+    const extSameDay =
+      entitlement != null &&
+      localDayKey(entitlement.dailyResetAt, tz) === localDayKey(now, tz);
+    const extUsedToday = extSameDay ? entitlement.dailyAdExtensions : 0;
     return c.json({
       conversation_id: inserted[0]!.id,
       daily_used_seconds: used,
       daily_cap_seconds: cap,
       reset_at: nextLocalMidnightUtc(now, tz).toISOString(),
+      ad_extensions_remaining: Math.max(
+        0,
+        MAX_AD_EXTENSIONS_PER_DAY - extUsedToday,
+      ),
     });
   });
 

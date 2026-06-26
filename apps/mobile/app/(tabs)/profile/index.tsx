@@ -27,7 +27,6 @@ import { SignInMethodsSheet } from "@/src/features/profile/sign-in-methods-sheet
 import { ChangePasswordSheet } from "@/src/features/profile/change-password-sheet";
 import { DeleteAccountSheet } from "@/src/features/profile/delete-account-sheet";
 import { useIdentities } from "@/src/features/auth/use-identities";
-import { showToast } from "@/src/lib/toast";
 import {
   EditorialText,
   GlassCard,
@@ -229,10 +228,8 @@ export default function ProfileScreen() {
           <GlassCard padding="sm" radiusToken="lg" style={styles.sectionCard}>
             <ProfileRow
               label="Upgrade to Pro"
-              value="Coming soon"
-              onPress={() =>
-                showToast("Pro launches soon — we'll let you know.")
-              }
+              value="Go Pro →"
+              onPress={() => router.push("/(modals)/paywall")}
               isLast
             />
           </GlassCard>

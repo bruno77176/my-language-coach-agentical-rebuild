@@ -4,7 +4,15 @@ import { vocabItems } from "../db/schema";
 export type PersistVocabInput = {
   userId: string;
   language: string;
-  vocab: Array<{ term: string; translation?: string | null }>;
+  vocab: Array<{
+    term: string;
+    translation?: string | null;
+    // The transcript sentence the term came from (shown in review) + the gender
+    // article, mirrored into the deck so feedback-saved words match manually
+    // saved ones.
+    source_phrase?: string | null;
+    article?: string | null;
+  }>;
 };
 
 // Upsert session-extracted vocab into the persistent flashcard deck. Deduped
@@ -23,6 +31,8 @@ export async function persistVocab(
         language: input.language,
         term: v.term,
         translation: v.translation ?? null,
+        sourceSentence: v.source_phrase ?? null,
+        article: v.article ?? null,
       })
       .onConflictDoNothing();
   }

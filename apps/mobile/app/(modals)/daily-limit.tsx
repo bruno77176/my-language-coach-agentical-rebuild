@@ -68,6 +68,11 @@ export default function DailyLimitModal() {
   const isPaidCap = capSeconds != null && capSeconds > 600;
   const [adBusy, setAdBusy] = useState(false);
   const [adUsedUp, setAdUsedUp] = useState(false);
+  // Server-authoritative count of rewarded-ad extensions left today (1/day),
+  // loaded at session start. Survives closing/reopening this modal, so the user
+  // can't watch a second ad after spending their daily allowance.
+  const adExtensionsRemaining = useDailyCap((s) => s.adExtensionsRemaining);
+  const noAdsLeft = adUsedUp || adExtensionsRemaining === 0;
 
   // Return the user to where they came from once the limit is lifted (upgrade
   // or ad). "resume": the conversation is still mounted underneath → just pop.
@@ -85,6 +90,12 @@ export default function DailyLimitModal() {
   }, [isPro, onUnlocked]);
 
   const onWatchAd = async () => {
+    // Don't even show an ad if the daily allowance is already spent — the
+    // server would reject the grant and the user would have watched for nothing.
+    if (noAdsLeft) {
+      setAdUsedUp(true);
+      return;
+    }
     setAdBusy(true);
     try {
       // Show a real rewarded ad first; only grant the +3 min if the user
@@ -100,8 +111,14 @@ export default function DailyLimitModal() {
       }
       // Record the grant server-side (enforces the once-per-day cap). The
       // backend doesn't yet verify the ad server-side — that lands with
-      // AdMob SSV later; the client gating above is the current guard.
-      await adExtension();
+      // AdMob SSV later; the client gating above is the current guard. Mirror
+      // the remaining count into the store so the button stays disabled even
+      // after this modal is closed and reopened.
+      const resp = await adExtension();
+      useDailyCap
+        .getState()
+        .setAdExtensionsRemaining(resp.extensions_remaining);
+      if (resp.extensions_remaining <= 0) setAdUsedUp(true);
       // Extend the live client budget too, so the session timer doesn't
       // immediately re-trigger the limit on resume.
       useDailyCap.getState().addBonus(AD_EXTENSION_SECONDS);
@@ -110,6 +127,7 @@ export default function DailyLimitModal() {
       const msg = String(e);
       if (msg.includes("409") || msg.includes("AD_LIMIT")) {
         setAdUsedUp(true);
+        useDailyCap.getState().setAdExtensionsRemaining(0);
       } else {
         Alert.alert("Couldn't add time", msg);
       }
@@ -176,14 +194,17 @@ export default function DailyLimitModal() {
 
             <Pressable
               onPress={onWatchAd}
-              disabled={adBusy || adUsedUp}
-              style={[styles.btnSecondary, (adBusy || adUsedUp) && styles.busy]}
+              disabled={adBusy || noAdsLeft}
+              style={[
+                styles.btnSecondary,
+                (adBusy || noAdsLeft) && styles.busy,
+              ]}
             >
               {adBusy ? (
                 <ActivityIndicator color={palette.ink} />
               ) : (
                 <EditorialText kind="bodyMd" color={palette.ink}>
-                  {adUsedUp
+                  {noAdsLeft
                     ? "No more ad time today"
                     : "Watch an ad for +3 min"}
                 </EditorialText>
