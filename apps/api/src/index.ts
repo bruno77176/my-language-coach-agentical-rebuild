@@ -5,6 +5,7 @@ import { createDb } from "./db";
 import { loadEnv } from "./env";
 import { initSentry } from "./lib/sentry";
 import { startPushRunner } from "./jobs/push-runner";
+import { startDigestWorker } from "./jobs/digest-runner";
 import { createVoiceLiveRoute } from "./routes/voice-live";
 import { makeLoadContext } from "./routes/voice-live-context";
 import { createSupabaseLocalVerifier } from "./lib/local-jwt-verifier";
@@ -80,3 +81,6 @@ injectWebSocket(server);
 // Plan 8 M5: start the push notification scheduler. Polls every 60s for
 // due rows and fires them via Expo Push.
 startPushRunner(db);
+
+// Plan 8+: between-session agentic memory digest (Pro). Own OpenAI client.
+startDigestWorker(db, createOpenAI(env));
