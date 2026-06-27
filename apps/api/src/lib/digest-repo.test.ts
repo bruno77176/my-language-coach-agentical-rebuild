@@ -84,3 +84,77 @@ describe("makeDigestDeps", () => {
     expect(v.srIntervalDays).toBeUndefined();
   });
 });
+
+describe("makeDigestDeps onUsage forwarding", () => {
+  it("calls onUsage when extractItems is invoked", async () => {
+    const db = fakeDb();
+    const mockOpenai = {
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue({
+            choices: [{ message: { content: '{"items":[]}' } }],
+            usage: { prompt_tokens: 1, completion_tokens: 1 },
+          }),
+        },
+      },
+    } as any;
+    const onUsageSpy = vi.fn();
+    const deps = makeDigestDeps(
+      db,
+      mockOpenai,
+      { userId: "u1", conversationId: "c1", languageCode: "de" },
+      onUsageSpy,
+    );
+
+    await deps.extractItems([{ role: "user", text: "x" }], "de");
+
+    expect(onUsageSpy).toHaveBeenCalled();
+  });
+
+  it("calls onUsage when embed is invoked", async () => {
+    const db = fakeDb();
+    const mockOpenai = {
+      embeddings: {
+        create: vi.fn().mockResolvedValue({
+          data: [{ index: 0, embedding: [0.1, 0.2] }],
+          usage: { prompt_tokens: 1, total_tokens: 1 },
+        }),
+      },
+    } as any;
+    const onUsageSpy = vi.fn();
+    const deps = makeDigestDeps(
+      db,
+      mockOpenai,
+      { userId: "u1", conversationId: "c1", languageCode: "de" },
+      onUsageSpy,
+    );
+
+    await deps.embed(["x"]);
+
+    expect(onUsageSpy).toHaveBeenCalled();
+  });
+
+  it("works without onUsage (backward compat)", async () => {
+    const db = fakeDb();
+    const mockOpenai = {
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue({
+            choices: [{ message: { content: '{"items":[]}' } }],
+            usage: { prompt_tokens: 1, completion_tokens: 1 },
+          }),
+        },
+      },
+    } as any;
+    const deps = makeDigestDeps(db, mockOpenai, {
+      userId: "u1",
+      conversationId: "c1",
+      languageCode: "de",
+    });
+
+    // Should not throw
+    await expect(
+      deps.extractItems([{ role: "user", text: "x" }], "de"),
+    ).resolves.not.toThrow();
+  });
+});

@@ -4,6 +4,7 @@ import type { Database } from "../db";
 import { coachMemory } from "../db/schema";
 import { selectMemoryForPrompt } from "./select-memory";
 import { generateLessonPlan } from "./generate-lesson-plan";
+import type { OnUsage } from "../providers/usage";
 
 /**
  * After a digest run, generate a next-lesson plan from the user's top memory
@@ -16,6 +17,7 @@ export async function runPlanGeneration(
   db: Database,
   openai: OpenAI,
   input: { userId: string; languageCode: string },
+  onUsage?: OnUsage,
 ): Promise<void> {
   const { userId, languageCode } = input;
 
@@ -43,6 +45,7 @@ export async function runPlanGeneration(
     items,
     proficiencyLevel,
     languageCode,
+    onUsage,
   });
   if (!plan) return;
 
