@@ -10,9 +10,19 @@ type Props = {
   nativeLang: SupportedLang;
   /** When provided, a small share icon shows in the card's top-right. */
   onShare?: () => void;
+  /** Whether the user has liked this quote (BRU-9). */
+  liked?: boolean;
+  /** When provided, a heart toggle shows next to share. */
+  onToggleLike?: () => void;
 };
 
-export function QuoteCard({ quote, nativeLang, onShare }: Props) {
+export function QuoteCard({
+  quote,
+  nativeLang,
+  onShare,
+  liked,
+  onToggleLike,
+}: Props) {
   const [showTranslation, setShowTranslation] = useState(false);
   const translation = quote.translations[nativeLang];
   const showsTranslation =
@@ -32,20 +42,36 @@ export function QuoteCard({ quote, nativeLang, onShare }: Props) {
           >
             ✦ Quote of the day
           </EditorialText>
-          {onShare ? (
-            <Pressable
-              onPress={onShare}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Share quote"
-            >
-              <Ionicons
-                name="share-social-outline"
-                size={16}
-                color={palette.inkSoft}
-              />
-            </Pressable>
-          ) : null}
+          <View style={styles.actions}>
+            {onToggleLike ? (
+              <Pressable
+                onPress={onToggleLike}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={liked ? "Unlike quote" : "Like quote"}
+              >
+                <Ionicons
+                  name={liked ? "heart" : "heart-outline"}
+                  size={17}
+                  color={liked ? palette.coral : palette.inkSoft}
+                />
+              </Pressable>
+            ) : null}
+            {onShare ? (
+              <Pressable
+                onPress={onShare}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Share quote"
+              >
+                <Ionicons
+                  name="share-social-outline"
+                  size={16}
+                  color={palette.inkSoft}
+                />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
         <EditorialText kind="displayMd" italic>
           &ldquo;{quote.original.text}&rdquo;
@@ -96,6 +122,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   label: { letterSpacing: 1.5 },
+  actions: { flexDirection: "row", alignItems: "center", gap: spacing.base },
   attribution: { marginTop: spacing.md },
   divider: {
     height: StyleSheet.hairlineWidth,

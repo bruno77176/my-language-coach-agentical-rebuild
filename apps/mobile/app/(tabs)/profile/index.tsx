@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   View,
 } from "react-native";
@@ -27,6 +28,7 @@ import { SignInMethodsSheet } from "@/src/features/profile/sign-in-methods-sheet
 import { ChangePasswordSheet } from "@/src/features/profile/change-password-sheet";
 import { DeleteAccountSheet } from "@/src/features/profile/delete-account-sheet";
 import { useIdentities } from "@/src/features/auth/use-identities";
+import { APP_URL } from "@/src/features/sharing/share-text";
 import {
   EditorialText,
   GlassCard,
@@ -230,6 +232,15 @@ export default function ProfileScreen() {
               label="Upgrade to Pro"
               value="Go Pro →"
               onPress={() => router.push("/(modals)/paywall")}
+            />
+            <ProfileRow
+              label="Share with a friend"
+              value="↗"
+              onPress={() =>
+                void Share.share({
+                  message: `I'm practising languages by voice with Lisa on My Language Coach — try it: ${APP_URL}`,
+                })
+              }
               isLast
             />
           </GlassCard>

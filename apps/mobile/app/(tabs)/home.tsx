@@ -25,6 +25,10 @@ import {
   useVocabDeck,
   useReviewToday,
 } from "@/src/features/vocab/use-vocab-deck";
+import {
+  useQuoteLikes,
+  useToggleQuoteLike,
+} from "@/src/features/quotes/use-quote-likes";
 import { supabase } from "@/src/lib/supabase";
 import { buildQuoteCaption } from "@/src/features/sharing/share-text";
 import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
@@ -59,6 +63,8 @@ export default function HomeScreen() {
   const cachedQuote = useOfflineQuote(profile ?? null);
   const { data: vocab } = useVocabDeck(profile?.target_lang);
   const { data: reviewToday } = useReviewToday(profile?.target_lang);
+  const { data: likedQuoteIds } = useQuoteLikes();
+  const toggleQuoteLike = useToggleQuoteLike();
 
   // Block on spinner if profile hasn't loaded AND there's no cached quote, OR
   // if we have no profile and no cached quote at all (e.g., anonymous user
@@ -106,6 +112,13 @@ export default function HomeScreen() {
           quote={quote}
           nativeLang={nativeLang}
           onShare={() => setShareQuote(true)}
+          liked={(likedQuoteIds ?? []).includes(quote.id)}
+          onToggleLike={() =>
+            toggleQuoteLike.mutate({
+              quoteId: quote.id,
+              liked: !(likedQuoteIds ?? []).includes(quote.id),
+            })
+          }
         />
 
         <TodayProgress

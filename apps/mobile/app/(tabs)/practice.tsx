@@ -39,6 +39,7 @@ import { TopStatusBar } from "@/src/features/practice/top-status-bar";
 import { EndSessionCTA } from "@/src/features/practice/end-session-cta";
 import { useSessionTimer } from "@/src/features/practice/use-session-timer";
 import { useGoalReward } from "@/src/features/practice/use-goal-reward";
+import { maybeRequestReviewOnGoal } from "@/src/lib/review-prompt";
 import { GoalReward } from "@/src/features/practice/goal-reward";
 import {
   ConfirmSheet,
@@ -131,9 +132,11 @@ function PracticeChooser() {
 
   const onScenario = () => router.push("/(modals)/role-play-picker");
   const onFree = () => router.replace("/(tabs)/practice?start=free");
+  // A recent session opens its saved TRANSCRIPT (BRU-29); the feedback report
+  // is reachable from there.
   const onReview = (id: string, secondsSpoken: number) =>
     router.push({
-      pathname: "/(modals)/end-of-session",
+      pathname: "/(modals)/transcript",
       params: { conversationId: id, secondsSpoken: String(secondsSpoken) },
     });
 
@@ -332,6 +335,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     persistActive,
     start,
     stop,
+    bargein,
     end,
     dismissError,
     toggleListeningMode,
@@ -450,6 +454,14 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     alreadyReachedToday,
   });
 
+  // BRU-10: hitting the daily goal is a peak moment — ask for an in-app rating
+  // (throttled, OS-gated). Delay so the celebration toast plays first.
+  useEffect(() => {
+    if (!rewardTriggered) return;
+    const t = setTimeout(() => void maybeRequestReviewOnGoal(), 4500);
+    return () => clearTimeout(t);
+  }, [rewardTriggered]);
+
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   const [listHeight, setListHeight] = useState(0);
   // Track the live message count so the scroll helper can run from callbacks
@@ -510,13 +522,15 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     return () => clearTimeout(id);
   }, [messages.length, centerLatest]);
 
-  const isBusy =
-    state.phase === "processing" || state.phase === "loading-session";
+  // Keep the mic tappable while the coach is speaking so a tap can barge in
+  // (BRU-17); only block it during the initial session load.
+  const isBusy = state.phase === "loading-session";
   const isRecording = state.phase === "recording";
 
   const onMicPress = () => {
     if (state.phase === "idle") void start();
     else if (state.phase === "recording") void stop();
+    else if (state.phase === "processing") void bargein();
   };
 
   const feedbackBlurb = memoryEnabled
@@ -761,7 +775,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
           >
             <ActivityIndicator size="small" color={palette.accent} />
             <EditorialText kind="bodySm" color={palette.inkSoft}>
-              Coach is thinking…
+              Coach is replying — tap the mic to jump in
             </EditorialText>
           </GlassCard>
         )}

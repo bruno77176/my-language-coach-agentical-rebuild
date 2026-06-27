@@ -26,7 +26,7 @@ import {
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
 import { fetchGreetingAudio } from "./api-greeting";
-import { playOnce } from "./audio-controller";
+import { playOnce, stopActivePlayer } from "./audio-controller";
 import { useVoiceLab } from "@/src/features/voice-lab/voice-lab-store";
 import { useDailyCap } from "./daily-cap-store";
 // expo-file-system v19's default export is the new File/Paths API; the simple
@@ -131,6 +131,11 @@ export function useConversation(
   // successful turn (in the for-await success path below) so a user who
   // upgrades and starts a new day can be re-prompted next time.
   const paywallShownRef = useRef(false);
+  // Barge-in (BRU-17): the active turn's audio queue, so a tap can flush it;
+  // and a flag so the in-flight stop() doesn't reset to "idle" after we've
+  // already moved to "recording".
+  const currentAudioQueueRef = useRef<AudioQueue | null>(null);
+  const bargedInRef = useRef(false);
 
   // Reset reveals when listening mode toggles
   useEffect(() => {
@@ -500,6 +505,7 @@ export function useConversation(
         elapsedDeltaSeconds,
       );
       const audioQueue = createAudioQueue();
+      currentAudioQueueRef.current = audioQueue;
 
       const outcome = await consumeCoachStream(events, audioQueue, (text) => {
         setMessages((prev) => [
@@ -544,8 +550,44 @@ export function useConversation(
 
       await audioQueue.waitForDrain();
       paywallShownRef.current = false;
+      if (currentAudioQueueRef.current === audioQueue)
+        currentAudioQueueRef.current = null;
+      // If the user barged in, bargein() already moved us to "recording" — don't
+      // clobber that by resetting to idle.
+      if (bargedInRef.current) {
+        bargedInRef.current = false;
+        return;
+      }
       setState({ phase: "idle", conversationId });
     } catch (err) {
+      currentAudioQueueRef.current = null;
+      if (bargedInRef.current) {
+        bargedInRef.current = false;
+        return;
+      }
+      setState({ phase: "error", message: (err as Error).message });
+    }
+  }
+
+  // Barge-in (BRU-17): tap while the coach is speaking to cut its audio short
+  // and immediately start recording your reply — no waiting for the full
+  // message to finish playing.
+  async function bargein() {
+    if (state.phase !== "processing") return;
+    const conversationId = state.conversationId;
+    bargedInRef.current = true;
+    // Kill the audio playing right now + drop queued/incoming chunks from the
+    // still-running coach stream.
+    stopActivePlayer();
+    currentAudioQueueRef.current?.hardStop();
+    try {
+      await configureForRecording();
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+      recordingStartedAtRef.current = Date.now();
+      setState({ phase: "recording", conversationId });
+    } catch (err) {
+      bargedInRef.current = false;
       setState({ phase: "error", message: (err as Error).message });
     }
   }
@@ -611,6 +653,7 @@ export function useConversation(
     persistActive,
     start,
     stop,
+    bargein,
     end,
     dismissError,
     toggleListeningMode,

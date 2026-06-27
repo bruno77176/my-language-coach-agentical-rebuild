@@ -15,3 +15,4 @@ export * from "./revenue-events";
 export * from "./coach-memory";
 export * from "./session-feedback";
 export * from "./push-schedule";
+export * from "./quote-likes";
