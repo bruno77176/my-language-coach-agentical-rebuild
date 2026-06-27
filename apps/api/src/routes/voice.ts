@@ -49,6 +49,7 @@ import { persistVocab } from "./vocab-persist";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
+import { selectMemoryForPrompt } from "../lib/select-memory";
 
 export type SynthesizeSpeechFn = (input: RoutedTtsInput) => Promise<TtsResult>;
 
@@ -506,6 +507,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         ? ("deep" as const)
         : ("basic" as const);
 
+    const memoryItems =
+      memoryDepth === "deep" && profile.memoryEnabled
+        ? await selectMemoryForPrompt(deps.db, {
+            userId,
+            languageCode: conversation.language,
+          })
+        : [];
+
     return streamSSE(c, async (stream) => {
       try {
         // 1. Get the user's turn text: typed (BRU-45) or transcribed from audio.
@@ -579,6 +588,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           memory,
           memoryDepth,
           scenario: scenarioFragment,
+          memoryItems,
         });
         const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
         const promptMessages: ChatMessage[] = [

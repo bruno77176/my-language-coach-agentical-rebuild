@@ -13,6 +13,7 @@ export type CoachPromptInput = {
   userDisplayName: string;
   memory?: CoachMemory | null;
   memoryDepth?: MemoryDepth; // defaults to "basic" when memory provided
+  memoryItems?: { type: string; content: string }[];
   scenario?: CoachScenarioFragment | null;
 };
 
@@ -56,6 +57,12 @@ function deepMemoryBlock(memory: CoachMemory): string {
   return parts.join(" ");
 }
 
+function memoryItemsBlock(items: { type: string; content: string }[]): string {
+  if (items.length === 0) return "";
+  const lines = items.map((i) => `- ${i.content}`).join(" ");
+  return `Specific things you remember about them (reference naturally, never list mechanically): ${lines}`;
+}
+
 export function buildCoachSystemPrompt(input: CoachPromptInput): string {
   const lang =
     LANGUAGES.find((l) => l.code === input.targetLanguage) ?? LANGUAGES[0]!;
@@ -93,7 +100,9 @@ export function buildCoachSystemPrompt(input: CoachPromptInput): string {
     const depth = input.memoryDepth ?? "basic";
     const basic = basicMemoryBlock(input.memory);
     const deep = depth === "deep" ? deepMemoryBlock(input.memory) : "";
-    const ctxParts = [basic, deep].filter(Boolean);
+    const itemsBlock =
+      depth === "deep" ? memoryItemsBlock(input.memoryItems ?? []) : "";
+    const ctxParts = [basic, deep, itemsBlock].filter(Boolean);
     if (ctxParts.length > 0) {
       blocks.push(
         `<context>${ctxParts.join(" ")} Reference these naturally when relevant — do not list them robotically. If the user falls silent or says they don't know what to talk about, take initiative: pick something from what you know about them (a recent topic, their job, hobbies, family, location, or learning motivations) and start a thread of conversation around it. Don't ask "what do you want to talk about?" — propose something specific based on them.</context>`,
