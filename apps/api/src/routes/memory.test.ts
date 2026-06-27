@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import { Hono } from "hono";
 import { createMemoryRoutes } from "./memory";
 
@@ -353,6 +353,37 @@ describe("memory routes", () => {
       expect(body.items[0]?.content).toBe("bonjour");
       expect(body.items[0]?.language_code).toBe("fr");
       expect(body.items[1]?.id).toBe("item-uuid-2");
+
+      // Assert ownership/active filter: capture the where callback passed to findMany
+      // and invoke it with spies to prove it scopes to userId + status='active'.
+      const findManyMock = db.query.memoryItems.findMany;
+      const whereFn = findManyMock.mock.calls[0]?.[0]?.where as
+        | ((
+            t: Record<string, unknown>,
+            ops: {
+              eq: (col: unknown, val: unknown) => unknown;
+              and: (...args: unknown[]) => unknown;
+            },
+          ) => unknown)
+        | undefined;
+      expect(whereFn).toBeDefined();
+      const eqCalls: Array<[unknown, unknown]> = [];
+      const eqSpy = (col: unknown, val: unknown) => {
+        eqCalls.push([col, val]);
+        return { col, val };
+      };
+      const andSpy = (...args: unknown[]) => args;
+      const t = {
+        userId: "userId",
+        status: "status",
+        languageCode: "languageCode",
+      };
+      whereFn!(t, { eq: eqSpy, and: andSpy });
+      // Must scope to the authenticated user and only 'active' items
+      expect(eqCalls).toContainEqual([t.userId, userId]);
+      expect(eqCalls).toContainEqual([t.status, "active"]);
+      // Must NOT add a languageCode filter when no ?language_code= param was provided
+      expect(eqCalls.map(([col]) => col)).not.toContain(t.languageCode);
     });
 
     it("passes the language_code query param and calls findMany", async () => {
@@ -376,6 +407,35 @@ describe("memory routes", () => {
       const res = await app.request("/v1/memory/items?language_code=fr");
       expect(res.status).toBe(200);
       expect(db.query.memoryItems.findMany).toHaveBeenCalled();
+
+      // Assert ownership/active/language filter via the where callback.
+      const findManyMock = db.query.memoryItems.findMany;
+      const whereFn = findManyMock.mock.calls[0]?.[0]?.where as
+        | ((
+            t: Record<string, unknown>,
+            ops: {
+              eq: (col: unknown, val: unknown) => unknown;
+              and: (...args: unknown[]) => unknown;
+            },
+          ) => unknown)
+        | undefined;
+      expect(whereFn).toBeDefined();
+      const eqCalls: Array<[unknown, unknown]> = [];
+      const eqSpy = (col: unknown, val: unknown) => {
+        eqCalls.push([col, val]);
+        return { col, val };
+      };
+      const andSpy = (...args: unknown[]) => args;
+      const t = {
+        userId: "userId",
+        status: "status",
+        languageCode: "languageCode",
+      };
+      whereFn!(t, { eq: eqSpy, and: andSpy });
+      // Must scope to the authenticated user, only 'active' items, and the requested language
+      expect(eqCalls).toContainEqual([t.userId, userId]);
+      expect(eqCalls).toContainEqual([t.status, "active"]);
+      expect(eqCalls).toContainEqual([t.languageCode, "fr"]);
     });
   });
 
@@ -391,6 +451,14 @@ describe("memory routes", () => {
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ ok: true });
       expect(db.delete).toHaveBeenCalled();
+      // Guards that .where() was applied — dropping it would silently delete ALL memory items.
+      // (Full cross-user IDOR assertion, i.e. that userId is scoped in the WHERE, requires an
+      // integration test — the opaque drizzle `and(eq(...), eq(...))` object can't be inspected
+      // from a unit-level mock.)
+      const deletedWhere = (
+        db.delete.mock.results[0]?.value as { where: Mock } | undefined
+      )?.where;
+      expect(deletedWhere).toHaveBeenCalledTimes(1);
     });
   });
 });
