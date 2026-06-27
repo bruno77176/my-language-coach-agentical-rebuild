@@ -8,6 +8,7 @@ import {
   entitlements,
   coachMemory,
   sessionFeedback,
+  digestJobs,
 } from "../db/schema";
 import type { Database } from "../db";
 import {
@@ -1055,6 +1056,29 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         });
       }
     })();
+
+    // Agentic memory (Pro): enqueue a between-session digest. Cheap row insert;
+    // the worker Pro/consent-gates and does the heavy lifting. Idempotent on conversationId.
+    if (profile.memoryEnabled) {
+      void (async () => {
+        try {
+          await deps.db
+            .insert(digestJobs)
+            .values({
+              userId,
+              conversationId,
+              languageCode: conversation.language,
+            })
+            .onConflictDoNothing();
+        } catch (err) {
+          reportError(err, {
+            where: "voice.end.digest-enqueue",
+            userId,
+            conversationId,
+          });
+        }
+      })();
+    }
 
     // Plan 8 M2: insert pending feedback row, then fire gen job. Fire-and-forget.
     void (async () => {

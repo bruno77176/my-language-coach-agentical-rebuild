@@ -24,73 +24,94 @@ import { loadEnv } from "../env";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = join(__dirname, "migrations");
 
+/**
+ * Core migration loop. Takes an already-connected postgres-js client and applies
+ * any unapplied `.sql` migrations from the migrations directory in alphabetical
+ * order. Returns the count of newly-applied migrations.
+ *
+ * Exported so integration tests can call `applyMigrations(sql)` to bootstrap
+ * the schema against a real Postgres without needing to spawn a sub-process.
+ */
+export async function applyMigrations(
+  sql: ReturnType<typeof postgres>,
+): Promise<number> {
+  // 1. Bootstrap tracking table. Enable RLS at creation so a fresh project never
+  //    trips the Supabase "RLS Disabled in Public" advisor — this table is only
+  //    touched by the runner over DATABASE_URL (Postgres role bypasses RLS), so
+  //    default-deny (RLS on, no policies) hides it from the PostgREST Data API.
+  //    Existing databases are fixed by migration 0018_app_migrations_rls.sql.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS __app_migrations (
+      filename text PRIMARY KEY,
+      applied_at timestamptz NOT NULL DEFAULT now()
+    );
+    ALTER TABLE __app_migrations ENABLE ROW LEVEL SECURITY;
+  `);
+
+  // 2. Discover migration files
+  const all = await readdir(MIGRATIONS_DIR);
+  const files = all.filter((f) => f.endsWith(".sql")).sort();
+
+  if (files.length === 0) {
+    console.log("No migration files found.");
+    return 0;
+  }
+
+  // 3. Discover already-applied migrations
+  const applied = new Set<string>(
+    (
+      await sql<{ filename: string }[]>`SELECT filename FROM __app_migrations`
+    ).map((r) => r.filename),
+  );
+
+  // 4. Apply each unapplied file
+  let appliedCount = 0;
+  for (const file of files) {
+    if (applied.has(file)) {
+      console.log(`SKIP   ${file} (already applied)`);
+      continue;
+    }
+    const path = join(MIGRATIONS_DIR, file);
+    const body = await readFile(path, "utf8");
+    console.log(`APPLY  ${file} (${body.length} bytes)`);
+
+    try {
+      // postgres-js's simple() mode sends the entire string as a single
+      // simple-query message, which preserves plpgsql $$ blocks correctly.
+      await sql.unsafe(body).simple();
+      await sql`INSERT INTO __app_migrations (filename) VALUES (${file})`;
+      appliedCount++;
+      console.log(`OK     ${file}`);
+    } catch (err) {
+      console.error(`FAIL   ${file}`);
+      console.error(err);
+      throw err;
+    }
+  }
+
+  return appliedCount;
+}
+
 async function main() {
   const env = loadEnv();
   const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false });
 
   try {
-    // 1. Bootstrap tracking table. Enable RLS at creation so a fresh project never
-    //    trips the Supabase "RLS Disabled in Public" advisor — this table is only
-    //    touched by the runner over DATABASE_URL (Postgres role bypasses RLS), so
-    //    default-deny (RLS on, no policies) hides it from the PostgREST Data API.
-    //    Existing databases are fixed by migration 0018_app_migrations_rls.sql.
-    await sql.unsafe(`
-      CREATE TABLE IF NOT EXISTS __app_migrations (
-        filename text PRIMARY KEY,
-        applied_at timestamptz NOT NULL DEFAULT now()
-      );
-      ALTER TABLE __app_migrations ENABLE ROW LEVEL SECURITY;
-    `);
-
-    // 2. Discover migration files
-    const all = await readdir(MIGRATIONS_DIR);
-    const files = all.filter((f) => f.endsWith(".sql")).sort();
-
-    if (files.length === 0) {
-      console.log("No migration files found.");
-      return;
-    }
-
-    // 3. Discover already-applied migrations
-    const applied = new Set<string>(
-      (
-        await sql<{ filename: string }[]>`SELECT filename FROM __app_migrations`
-      ).map((r) => r.filename),
-    );
-
-    // 4. Apply each unapplied file
-    let appliedCount = 0;
-    for (const file of files) {
-      if (applied.has(file)) {
-        console.log(`SKIP   ${file} (already applied)`);
-        continue;
-      }
-      const path = join(MIGRATIONS_DIR, file);
-      const body = await readFile(path, "utf8");
-      console.log(`APPLY  ${file} (${body.length} bytes)`);
-
-      try {
-        // postgres-js's simple() mode sends the entire string as a single
-        // simple-query message, which preserves plpgsql $$ blocks correctly.
-        await sql.unsafe(body).simple();
-        await sql`INSERT INTO __app_migrations (filename) VALUES (${file})`;
-        appliedCount++;
-        console.log(`OK     ${file}`);
-      } catch (err) {
-        console.error(`FAIL   ${file}`);
-        console.error(err);
-        process.exitCode = 1;
-        return;
-      }
-    }
-
+    const appliedCount = await applyMigrations(sql);
     console.log(`\nDone. Applied ${appliedCount} new migration(s).`);
+  } catch {
+    // applyMigrations already logged the failure details.
+    process.exitCode = 1;
   } finally {
     await sql.end({ timeout: 5 });
   }
 }
 
-main().catch((err) => {
-  console.error("Migration runner crashed:", err);
-  process.exit(1);
-});
+// Guard: only execute when run directly as a CLI script, not when imported as a
+// module (e.g., from integration tests that import `applyMigrations`).
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error("Migration runner crashed:", err);
+    process.exit(1);
+  });
+}
