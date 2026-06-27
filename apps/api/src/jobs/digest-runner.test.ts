@@ -132,7 +132,8 @@ describe("processOneJob", () => {
       profile: enabledProfile,
     });
     const result = await processOneJob(db, {} as any, run);
-    expect(result).toBe("skipped");
+    // Returns "idle" on error so the drain loop exits and retry happens next tick
+    expect(result).toBe("idle");
     const lastSet = db._sets[db._sets.length - 1];
     expect(lastSet).toMatchObject({ status: "pending", lastError: "boom" });
   });
@@ -146,7 +147,8 @@ describe("processOneJob", () => {
       profile: enabledProfile,
     });
     const result = await processOneJob(db, {} as any, run);
-    expect(result).toBe("skipped");
+    // Returns "idle" on error so the drain loop exits (job is now "failed")
+    expect(result).toBe("idle");
     const lastSet = db._sets[db._sets.length - 1];
     expect(lastSet).toMatchObject({ status: "failed", lastError: "too many" });
   });

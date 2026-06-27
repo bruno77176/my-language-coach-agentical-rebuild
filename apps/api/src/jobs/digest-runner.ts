@@ -58,8 +58,11 @@ async function defaultRun(
 
 /**
  * Claim one job and process it. Returns:
- * - "idle"      — no pending jobs
- * - "skipped"   — user not Pro, memory disabled, or error (retried later)
+ * - "idle"      — no pending jobs, OR an error occurred (deliberately stops the
+ *                 drain loop so the still-pending job is retried on the NEXT
+ *                 30 s tick rather than being burst-retried in the same tick)
+ * - "skipped"   — user not Pro or memory disabled (job marked "done"; safe to
+ *                 continue draining because no retry is needed)
  * - "processed" — pipeline ran successfully
  *
  * The optional `run` parameter is injectable for unit tests.
@@ -114,7 +117,11 @@ export async function processOneJob(
       .set({ status: newStatus, lastError: errMsg, updatedAt: new Date() })
       .where(eq(digestJobs.id, job.id));
     reportError(err, { where: "digest-runner.processOneJob", jobId: job.id });
-    return "skipped";
+    // Return "idle" (not "skipped") so the drain loop in startDigestWorker
+    // exits after an error. The job is still "pending" (unless exhausted →
+    // "failed"), so it will be retried on the next 30 s tick instead of being
+    // burst-retried in the same tick.
+    return "idle";
   }
 }
 
