@@ -5,6 +5,7 @@ import { digestJobs } from "../db/schema";
 import type { DigestJobRow } from "../db/schema";
 import { loadTranscript, makeDigestDeps } from "../lib/digest-repo";
 import { runDigest } from "../lib/run-digest";
+import { runPlanGeneration } from "../lib/run-plan-generation";
 import { reportError } from "../lib/sentry";
 
 const MAX_ATTEMPTS = 3;
@@ -50,10 +51,26 @@ async function defaultRun(
   job: DigestJobRow,
 ): Promise<unknown> {
   const transcript = await loadTranscript(db, job.conversationId);
-  return runDigest(
+  const result = await runDigest(
     { transcript, languageCode: job.languageCode },
     makeDigestDeps(db, openai, job),
   );
+
+  // Best-effort: generate and persist a next-lesson plan from the user's top
+  // memory items. A failure here must NEVER fail the digest job — we wrap it
+  // in its own try/catch and only report the error to Sentry.
+  // This runs in defaultRun (not in processOneJob) so tests that inject a
+  // stub `run` function bypass this step and stay green.
+  try {
+    await runPlanGeneration(db, openai, {
+      userId: job.userId,
+      languageCode: job.languageCode,
+    });
+  } catch (err) {
+    reportError(err, { where: "digest.plan-generation", jobId: job.id });
+  }
+
+  return result;
 }
 
 /**
