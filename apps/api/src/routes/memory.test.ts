@@ -331,6 +331,45 @@ describe("memory routes", () => {
   });
 
   describe("GET /v1/memory/items", () => {
+    it("returns 400 for an unknown language_code query param", async () => {
+      const db = makeFakeDb();
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/items?language_code=klingon");
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as {
+        error: { code: string; message: string };
+      };
+      expect(body.error.code).toBe("BAD_REQUEST");
+      expect(body.error.message).toBe("Unknown language");
+      // Must NOT hit the db when the param is invalid.
+      expect(db.query.memoryItems.findMany).not.toHaveBeenCalled();
+    });
+
+    it("returns 200 for a valid language_code query param", async () => {
+      const db = makeFakeDb({
+        memoryItemRows: [
+          {
+            id: "item-uuid-fr",
+            userId,
+            languageCode: "fr",
+            type: "vocabulary",
+            content: "bonjour",
+            salience: 0.8,
+            status: "active",
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            lastSeenAt: new Date("2026-01-01T00:00:00Z"),
+          },
+        ],
+      });
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/items?language_code=fr");
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { items: Array<{ id: string }> };
+      expect(body.items).toHaveLength(1);
+    });
+
     it("returns the user's active memory items mapped to the response shape", async () => {
       const db = makeFakeDb({
         memoryItemRows: [

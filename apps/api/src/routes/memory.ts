@@ -129,6 +129,12 @@ export function createMemoryRoutes(deps: MemoryDeps) {
   routes.get("/items", async (c) => {
     const userId = c.get("userId");
     const lang = c.req.query("language_code");
+    if (lang !== undefined && !LANGUAGE_CODES.includes(lang)) {
+      return c.json(
+        { error: { code: "BAD_REQUEST", message: "Unknown language" } },
+        400,
+      );
+    }
     const rows = await deps.db.query.memoryItems.findMany({
       where: (t, { eq: e, and: a }) =>
         lang
