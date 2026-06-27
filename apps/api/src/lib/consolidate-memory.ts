@@ -1,6 +1,7 @@
 import type { MemoryItemType } from "@language-coach/shared";
 
 export function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 0;
   let dot = 0,
     na = 0,
     nb = 0;
