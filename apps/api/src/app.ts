@@ -31,6 +31,7 @@ import { createElevenLabs } from "./providers/elevenlabs";
 import { makeSynthesizeSpeech } from "./providers/tts-router";
 import { makeGoogleAccessTokenProvider } from "./lib/google-tts-auth";
 import { createMessagesRoutes } from "./routes/messages";
+import { createQuoteLikesRoutes } from "./routes/quote-likes";
 import { createMemoryRoutes } from "./routes/memory";
 import { createVocabRoutes } from "./routes/vocab";
 import { createFeedbackRoutes } from "./routes/feedback";
@@ -287,6 +288,7 @@ export function createApp(
   );
 
   app.route("/v1/progress", createWeeklySummaryRoutes({ db }));
+  app.route("/v1/quotes", createQuoteLikesRoutes({ db }));
 
   return app;
 }

@@ -19,10 +19,14 @@ export class AudioQueue {
   private nextToPlay = 0;
   private playing = false;
   private drainResolvers: Array<() => void> = [];
+  private stopped = false;
 
   constructor(private deps: AudioQueueDeps) {}
 
   enqueue(chunk: Chunk): void {
+    // After a hard stop (barge-in), ignore any further chunks the in-flight
+    // stream is still pushing — they must not start playing.
+    if (this.stopped) return;
     this.chunks.set(chunk.index, chunk);
     if (!this.playing) {
       void this.drain();
@@ -40,6 +44,19 @@ export class AudioQueue {
     this.drainResolvers = [];
   }
 
+  /**
+   * Permanently stop this queue (barge-in): drop queued chunks, ignore future
+   * enqueues, and resolve any pending waitForDrain() so the awaiting turn can
+   * unwind. The active player itself is stopped separately by the caller.
+   */
+  hardStop(): void {
+    this.stopped = true;
+    this.chunks.clear();
+    this.playing = false;
+    const resolvers = this.drainResolvers.splice(0);
+    for (const r of resolvers) r();
+  }
+
   /** Resolves when the queue has finished playing everything currently enqueued. */
   waitForDrain(): Promise<void> {
     if (!this.playing && !this.chunks.has(this.nextToPlay)) {
@@ -52,7 +69,7 @@ export class AudioQueue {
 
   private async drain(): Promise<void> {
     this.playing = true;
-    while (this.chunks.has(this.nextToPlay)) {
+    while (!this.stopped && this.chunks.has(this.nextToPlay)) {
       const chunk = this.chunks.get(this.nextToPlay)!;
       try {
         await this.deps.playChunk(chunk);

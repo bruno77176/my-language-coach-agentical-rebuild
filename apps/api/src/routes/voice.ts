@@ -188,6 +188,35 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     return c.json({ sessions: rows });
   });
 
+  // GET /v1/voice/sessions/:id/messages — the full saved transcript of a past
+  // conversation (BRU-29), ownership-checked, oldest message first.
+  routes.get("/sessions/:id/messages", async (c) => {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const conv = await deps.db.query.conversations.findFirst({
+      where: (t, { eq: e, and: a }) => a(e(t.id, id), e(t.userId, userId)),
+    });
+    if (!conv) {
+      return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+    const rows = await deps.db.query.messages.findMany({
+      where: (t, { eq: e }) => e(t.conversationId, id),
+      orderBy: (t, { asc: as }) => [as(t.createdAt)],
+    });
+    return c.json({
+      language: conv.language,
+      startedAt: conv.startedAt,
+      messages: rows.map((m) => ({
+        id: m.id,
+        role: m.role,
+        text: m.text,
+        translation: m.translation,
+        isGreeting: m.isGreeting,
+        createdAt: m.createdAt,
+      })),
+    });
+  });
+
   routes.post("/sessions", async (c) => {
     const userId = c.get("userId");
     const body = await c.req.json().catch(() => ({}));
