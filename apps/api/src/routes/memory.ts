@@ -179,6 +179,14 @@ export function createMemoryRoutes(deps: MemoryDeps) {
           eq(coachMemory.languageCode, languageCode),
         ),
       );
+    await deps.db
+      .delete(memoryItems)
+      .where(
+        and(
+          eq(memoryItems.userId, userId),
+          eq(memoryItems.languageCode, languageCode),
+        ),
+      );
     return c.json({ ok: true });
   });
 

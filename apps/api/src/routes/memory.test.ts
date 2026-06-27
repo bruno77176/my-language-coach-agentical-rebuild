@@ -302,7 +302,31 @@ describe("memory routes", () => {
 
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ ok: true });
-      expect(db.delete).toHaveBeenCalled();
+      // Two deletes: coachMemory row + memoryItems for the same (userId, languageCode).
+      expect(db.delete).toHaveBeenCalledTimes(2);
+      const coachMemoryWhere = (
+        db.delete.mock.results[0]?.value as { where: Mock } | undefined
+      )?.where;
+      const memoryItemsWhere = (
+        db.delete.mock.results[1]?.value as { where: Mock } | undefined
+      )?.where;
+      expect(coachMemoryWhere).toHaveBeenCalledTimes(1);
+      expect(memoryItemsWhere).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns 400 for an unknown language code", async () => {
+      const db = makeFakeDb();
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/klingon", {
+        method: "DELETE",
+      });
+
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as { error: { code: string } };
+      expect(body.error.code).toBe("BAD_REQUEST");
+      // No delete should have been issued.
+      expect(db.delete).not.toHaveBeenCalled();
     });
   });
 
