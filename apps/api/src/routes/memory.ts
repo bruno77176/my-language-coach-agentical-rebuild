@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import type { Database } from "../db";
-import { coachMemory, profiles } from "../db/schema";
+import { coachMemory, memoryItems, profiles } from "../db/schema";
 import {
   CoachMemorySchema,
   LANGUAGES,
@@ -125,6 +125,42 @@ export function createMemoryRoutes(deps: MemoryDeps) {
     return c.json({ ok: true });
   });
 
+  // GET /v1/memory/items?language_code=xx — the user's active memory items
+  routes.get("/items", async (c) => {
+    const userId = c.get("userId");
+    const lang = c.req.query("language_code");
+    const rows = await deps.db.query.memoryItems.findMany({
+      where: (t, { eq: e, and: a }) =>
+        lang
+          ? a(
+              e(t.userId, userId),
+              e(t.status, "active"),
+              e(t.languageCode, lang),
+            )
+          : a(e(t.userId, userId), e(t.status, "active")),
+      orderBy: (t, { desc: d }) => [d(t.salience), d(t.lastSeenAt)],
+    });
+    return c.json({
+      items: rows.map((r) => ({
+        id: r.id,
+        type: r.type,
+        content: r.content,
+        language_code: r.languageCode,
+        created_at: r.createdAt,
+      })),
+    });
+  });
+
+  // DELETE /v1/memory/items/:id — delete one item (ownership-scoped)
+  routes.delete("/items/:id", async (c) => {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    await deps.db
+      .delete(memoryItems)
+      .where(and(eq(memoryItems.id, id), eq(memoryItems.userId, userId)));
+    return c.json({ ok: true });
+  });
+
   // DELETE /v1/memory/:languageCode
   routes.delete("/:languageCode", async (c) => {
     const userId = c.get("userId");
@@ -141,6 +177,14 @@ export function createMemoryRoutes(deps: MemoryDeps) {
         and(
           eq(coachMemory.userId, userId),
           eq(coachMemory.languageCode, languageCode),
+        ),
+      );
+    await deps.db
+      .delete(memoryItems)
+      .where(
+        and(
+          eq(memoryItems.userId, userId),
+          eq(memoryItems.languageCode, languageCode),
         ),
       );
     return c.json({ ok: true });

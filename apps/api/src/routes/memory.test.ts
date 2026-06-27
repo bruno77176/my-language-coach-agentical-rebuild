@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import { Hono } from "hono";
 import { createMemoryRoutes } from "./memory";
 
@@ -17,6 +17,18 @@ type MemoryRow = {
 
 type ProfileRow = { userId: string; memoryEnabled: boolean };
 
+type MemoryItemRow = {
+  id: string;
+  userId: string;
+  languageCode: string;
+  type: string;
+  content: string;
+  salience: number;
+  status: string;
+  createdAt: Date;
+  lastSeenAt: Date;
+};
+
 function appWithMemory(routes: ReturnType<typeof createMemoryRoutes>) {
   const app = new Hono<{ Variables: { userId: string } }>();
   app.use("*", async (c, next) => {
@@ -30,6 +42,7 @@ function appWithMemory(routes: ReturnType<typeof createMemoryRoutes>) {
 function makeFakeDb({
   memoryRows = [] as MemoryRow[],
   profile = { userId, memoryEnabled: true } as ProfileRow | undefined,
+  memoryItemRows = [] as MemoryItemRow[],
 } = {}) {
   const rows: MemoryRow[] = [...memoryRows];
   const profileRow: ProfileRow | undefined = profile
@@ -49,6 +62,13 @@ function makeFakeDb({
       profiles: {
         // Global consent flag lives on the profile now.
         findFirst: vi.fn(async (_opts: { where?: unknown }) => profileRow),
+      },
+      memoryItems: {
+        findMany: vi.fn(
+          async (_opts: { where?: unknown; orderBy?: unknown }) => [
+            ...memoryItemRows,
+          ],
+        ),
       },
     },
     insert: vi.fn(() => ({
@@ -282,7 +302,187 @@ describe("memory routes", () => {
 
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual({ ok: true });
+      // Two deletes: coachMemory row + memoryItems for the same (userId, languageCode).
+      expect(db.delete).toHaveBeenCalledTimes(2);
+      const coachMemoryWhere = (
+        db.delete.mock.results[0]?.value as { where: Mock } | undefined
+      )?.where;
+      const memoryItemsWhere = (
+        db.delete.mock.results[1]?.value as { where: Mock } | undefined
+      )?.where;
+      expect(coachMemoryWhere).toHaveBeenCalledTimes(1);
+      expect(memoryItemsWhere).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns 400 for an unknown language code", async () => {
+      const db = makeFakeDb();
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/klingon", {
+        method: "DELETE",
+      });
+
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as { error: { code: string } };
+      expect(body.error.code).toBe("BAD_REQUEST");
+      // No delete should have been issued.
+      expect(db.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("GET /v1/memory/items", () => {
+    it("returns the user's active memory items mapped to the response shape", async () => {
+      const db = makeFakeDb({
+        memoryItemRows: [
+          {
+            id: "item-uuid-1",
+            userId,
+            languageCode: "fr",
+            type: "vocabulary",
+            content: "bonjour",
+            salience: 0.8,
+            status: "active",
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            lastSeenAt: new Date("2026-01-01T00:00:00Z"),
+          },
+          {
+            id: "item-uuid-2",
+            userId,
+            languageCode: "fr",
+            type: "grammar",
+            content: "subjunctive mood",
+            salience: 0.6,
+            status: "active",
+            createdAt: new Date("2026-01-02T00:00:00Z"),
+            lastSeenAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ],
+      });
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/items");
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        items: Array<{
+          id: string;
+          type: string;
+          content: string;
+          language_code: string;
+          created_at: string;
+        }>;
+      };
+      expect(body.items).toHaveLength(2);
+      expect(body.items[0]?.id).toBe("item-uuid-1");
+      expect(body.items[0]?.type).toBe("vocabulary");
+      expect(body.items[0]?.content).toBe("bonjour");
+      expect(body.items[0]?.language_code).toBe("fr");
+      expect(body.items[1]?.id).toBe("item-uuid-2");
+
+      // Assert ownership/active filter: capture the where callback passed to findMany
+      // and invoke it with spies to prove it scopes to userId + status='active'.
+      const findManyMock = db.query.memoryItems.findMany;
+      const whereFn = findManyMock.mock.calls[0]?.[0]?.where as
+        | ((
+            t: Record<string, unknown>,
+            ops: {
+              eq: (col: unknown, val: unknown) => unknown;
+              and: (...args: unknown[]) => unknown;
+            },
+          ) => unknown)
+        | undefined;
+      expect(whereFn).toBeDefined();
+      const eqCalls: Array<[unknown, unknown]> = [];
+      const eqSpy = (col: unknown, val: unknown) => {
+        eqCalls.push([col, val]);
+        return { col, val };
+      };
+      const andSpy = (...args: unknown[]) => args;
+      const t = {
+        userId: "userId",
+        status: "status",
+        languageCode: "languageCode",
+      };
+      whereFn!(t, { eq: eqSpy, and: andSpy });
+      // Must scope to the authenticated user and only 'active' items
+      expect(eqCalls).toContainEqual([t.userId, userId]);
+      expect(eqCalls).toContainEqual([t.status, "active"]);
+      // Must NOT add a languageCode filter when no ?language_code= param was provided
+      expect(eqCalls.map(([col]) => col)).not.toContain(t.languageCode);
+    });
+
+    it("passes the language_code query param and calls findMany", async () => {
+      const db = makeFakeDb({
+        memoryItemRows: [
+          {
+            id: "item-uuid-1",
+            userId,
+            languageCode: "fr",
+            type: "vocabulary",
+            content: "bonjour",
+            salience: 0.8,
+            status: "active",
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            lastSeenAt: new Date("2026-01-01T00:00:00Z"),
+          },
+        ],
+      });
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/items?language_code=fr");
+      expect(res.status).toBe(200);
+      expect(db.query.memoryItems.findMany).toHaveBeenCalled();
+
+      // Assert ownership/active/language filter via the where callback.
+      const findManyMock = db.query.memoryItems.findMany;
+      const whereFn = findManyMock.mock.calls[0]?.[0]?.where as
+        | ((
+            t: Record<string, unknown>,
+            ops: {
+              eq: (col: unknown, val: unknown) => unknown;
+              and: (...args: unknown[]) => unknown;
+            },
+          ) => unknown)
+        | undefined;
+      expect(whereFn).toBeDefined();
+      const eqCalls: Array<[unknown, unknown]> = [];
+      const eqSpy = (col: unknown, val: unknown) => {
+        eqCalls.push([col, val]);
+        return { col, val };
+      };
+      const andSpy = (...args: unknown[]) => args;
+      const t = {
+        userId: "userId",
+        status: "status",
+        languageCode: "languageCode",
+      };
+      whereFn!(t, { eq: eqSpy, and: andSpy });
+      // Must scope to the authenticated user, only 'active' items, and the requested language
+      expect(eqCalls).toContainEqual([t.userId, userId]);
+      expect(eqCalls).toContainEqual([t.status, "active"]);
+      expect(eqCalls).toContainEqual([t.languageCode, "fr"]);
+    });
+  });
+
+  describe("DELETE /v1/memory/items/:id", () => {
+    it("calls db.delete and returns { ok: true }", async () => {
+      const db = makeFakeDb();
+      const app = appWithMemory(createMemoryRoutes({ db: db as never }));
+
+      const res = await app.request("/v1/memory/items/item-uuid-1", {
+        method: "DELETE",
+      });
+
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ ok: true });
       expect(db.delete).toHaveBeenCalled();
+      // Guards that .where() was applied — dropping it would silently delete ALL memory items.
+      // (Full cross-user IDOR assertion, i.e. that userId is scoped in the WHERE, requires an
+      // integration test — the opaque drizzle `and(eq(...), eq(...))` object can't be inspected
+      // from a unit-level mock.)
+      const deletedWhere = (
+        db.delete.mock.results[0]?.value as { where: Mock } | undefined
+      )?.where;
+      expect(deletedWhere).toHaveBeenCalledTimes(1);
     });
   });
 });
