@@ -35,6 +35,8 @@ import { usePurchases } from "@/src/features/paywall/use-purchases";
 import type { ChatMessage } from "@/src/features/practice/types";
 import { MessageBubble } from "@/src/features/practice/MessageBubble";
 import { MicButton } from "@/src/features/practice/MicButton";
+import { RecordingWaveform } from "@/src/features/practice/RecordingWaveform";
+import { TextComposer } from "@/src/features/practice/TextComposer";
 import { TopStatusBar } from "@/src/features/practice/top-status-bar";
 import { EndSessionCTA } from "@/src/features/practice/end-session-cta";
 import { useSessionTimer } from "@/src/features/practice/use-session-timer";
@@ -336,6 +338,8 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     start,
     stop,
     bargein,
+    submitText,
+    recorder,
     end,
     dismissError,
     toggleListeningMode,
@@ -779,12 +783,20 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             </EditorialText>
           </GlassCard>
         )}
+        {state.phase === "recording" && (
+          <RecordingWaveform recorder={recorder} />
+        )}
         <EndSessionCTA visible={userTurnCount >= 1} onPress={confirmAndEnd} />
-        <MicButton
-          onPress={onMicPress}
-          isRecording={isRecording}
-          isBusy={isBusy}
-        />
+        <View style={activeStyles.composerRow}>
+          {state.phase === "idle" && (
+            <TextComposer onSubmit={submitText} disabled={isBusy} />
+          )}
+          <MicButton
+            onPress={onMicPress}
+            isRecording={isRecording}
+            isBusy={isBusy}
+          />
+        </View>
       </View>
 
       <GoalReward
@@ -882,6 +894,13 @@ const activeStyles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+  },
+  composerRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    alignSelf: "stretch",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
   },
   processingPill: {
     flexDirection: "row",

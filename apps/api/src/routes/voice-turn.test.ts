@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 import {
   createVoiceRoutes,
@@ -6,6 +6,7 @@ import {
   type UploadCoachAudioChunkFn,
 } from "./voice";
 import { ProviderError } from "../providers/deepgram";
+import { __resetRateLimit } from "../lib/rate-limit";
 
 const userId = "00000000-0000-0000-0000-000000000001";
 const conversationId = "11111111-1111-1111-1111-111111111111";
@@ -245,6 +246,10 @@ function makeAudioFormData(byteLength: number): FormData {
 }
 
 describe("POST /v1/voice/sessions/:id/turns", () => {
+  // The per-user burst limiter (BRU-35) is module-level state; reset it so the
+  // shared test userId doesn't trip it across the many turns these tests fire.
+  beforeEach(() => __resetRateLimit());
+
   it("emits transcription, reply-chunk events, and done on happy path (multi-sentence)", async () => {
     const { app, transcribeAudio, synthesizeSpeech, uploadCoachAudioChunk } =
       setupRoute();

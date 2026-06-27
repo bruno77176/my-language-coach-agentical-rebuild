@@ -256,6 +256,47 @@ export function streamTurn(
     );
   }
 
+  return streamTurnForm(conversationId, form);
+}
+
+/**
+ * Send a TEXT turn (BRU-45) — same pipeline as streamTurn, but the body carries
+ * the typed message instead of audio (the server skips STT).
+ */
+export function streamTurnText(
+  conversationId: string,
+  text: string,
+  voiceConfig?: TtsConfig,
+  elapsedDeltaSeconds?: number,
+): {
+  events: AsyncIterable<TurnEvent>;
+  close: () => void;
+} {
+  const form = new FormData();
+  form.append("text", text);
+  if (voiceConfig) {
+    form.append("voice_config", JSON.stringify(voiceConfig));
+  }
+  if (
+    typeof elapsedDeltaSeconds === "number" &&
+    Number.isFinite(elapsedDeltaSeconds)
+  ) {
+    form.append(
+      "elapsed_delta_seconds",
+      String(Math.max(0, Math.round(elapsedDeltaSeconds))),
+    );
+  }
+  return streamTurnForm(conversationId, form);
+}
+
+/** Shared SSE machinery for a turn request (audio or text). */
+function streamTurnForm(
+  conversationId: string,
+  form: FormData,
+): {
+  events: AsyncIterable<TurnEvent>;
+  close: () => void;
+} {
   const url = `${API_BASE_URL}/v1/voice/sessions/${conversationId}/turns`;
 
   let es: EventSource<TurnEventName> | null = null;

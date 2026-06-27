@@ -19,6 +19,7 @@ import {
   MAX_AD_EXTENSIONS_PER_DAY,
 } from "../env";
 import { canUseSecondsDaily, dailyUsed, dailyCapSeconds } from "../lib/quota";
+import { allowRequest } from "../lib/rate-limit";
 import { localDayKey, nextLocalMidnightUtc } from "../lib/daily-window";
 import { ProviderError } from "../providers/deepgram";
 import type { TranscribeInput, TranscribeResult } from "../providers/deepgram";
@@ -371,6 +372,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
 
   routes.post("/sessions/:id/turns", async (c) => {
     const userId = c.get("userId");
+    // Burst guard (BRU-35): cap turns/sec per user so a runaway client can't
+    // rack up provider spend. Layered on top of the daily usage quota.
+    if (!allowRequest(`turn:${userId}`, 3, 1000)) {
+      return c.json(
+        { error: { code: "RATE_LIMITED", message: "Slow down a moment." } },
+        429,
+      );
+    }
     const conversationId = c.req.param("id");
     const platform = platformFromHeader(c.req.header("X-Client-Platform"));
     const inlineAudio = clientSupportsInlineAudio(
@@ -394,29 +403,37 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
-    // Multipart audio body
+    // Multipart body: either a recorded `audio` file OR typed `text` (BRU-45,
+    // type-or-talk). Text turns skip STT and run the same LLM + TTS pipeline.
     const formData = await c.req.formData().catch(() => null);
     const file = formData?.get("audio");
-    if (!(file instanceof File)) {
-      return c.json(
-        { error: { code: "BAD_REQUEST", message: "Missing audio" } },
-        400,
-      );
-    }
-    const audioBuffer = Buffer.from(await file.arrayBuffer());
-
-    // Quick size guards
-    if (audioBuffer.byteLength > MAX_AUDIO_BYTES) {
-      return c.json(
-        { error: { code: "AUDIO_TOO_LONG", message: "Max 60s" } },
-        413,
-      );
-    }
-    if (audioBuffer.byteLength < MIN_AUDIO_BYTES) {
-      return c.json(
-        { error: { code: "AUDIO_TOO_SHORT", message: "Min 1s" } },
-        422,
-      );
+    const textField = formData?.get("text");
+    const typedText =
+      !(file instanceof File) && typeof textField === "string"
+        ? textField.trim().slice(0, 2000)
+        : "";
+    let audioBuffer: Buffer | null = null;
+    if (!typedText) {
+      if (!(file instanceof File)) {
+        return c.json(
+          { error: { code: "BAD_REQUEST", message: "Missing audio or text" } },
+          400,
+        );
+      }
+      audioBuffer = Buffer.from(await file.arrayBuffer());
+      // Quick size guards (audio only)
+      if (audioBuffer.byteLength > MAX_AUDIO_BYTES) {
+        return c.json(
+          { error: { code: "AUDIO_TOO_LONG", message: "Max 60s" } },
+          413,
+        );
+      }
+      if (audioBuffer.byteLength < MIN_AUDIO_BYTES) {
+        return c.json(
+          { error: { code: "AUDIO_TOO_SHORT", message: "Min 1s" } },
+          422,
+        );
+      }
     }
 
     // Fetch the three independent per-turn reads concurrently. These were
@@ -490,45 +507,52 @@ export function createVoiceRoutes(deps: VoiceDeps) {
 
     return streamSSE(c, async (stream) => {
       try {
-        // 1. Transcribe
-        const stt = await deps.transcribeAudio({
-          audioBuffer,
-          languageCode: conversation.language,
-          onUsage,
-        });
+        // 1. Get the user's turn text: typed (BRU-45) or transcribed from audio.
+        let userText: string;
+        let speechSeconds = 0;
+        if (typedText) {
+          userText = typedText;
+        } else {
+          const stt = await deps.transcribeAudio({
+            audioBuffer: audioBuffer!,
+            languageCode: conversation.language,
+            onUsage,
+          });
+          // Bounds on actual duration
+          if (stt.durationSeconds > MAX_TURN_AUDIO_SECONDS) {
+            await stream.writeSSE({
+              event: "error",
+              data: JSON.stringify({
+                code: "AUDIO_TOO_LONG",
+                message: "Max 60s",
+                retryable: false,
+              }),
+            });
+            return;
+          }
+          if (stt.durationSeconds < MIN_TURN_AUDIO_SECONDS) {
+            await stream.writeSSE({
+              event: "error",
+              data: JSON.stringify({
+                code: "AUDIO_TOO_SHORT",
+                message: "Min 1s",
+                retryable: true,
+              }),
+            });
+            return;
+          }
+          userText = stt.text;
+          speechSeconds = Math.round(stt.durationSeconds);
+        }
         await stream.writeSSE({
           event: "transcription",
-          data: JSON.stringify({ text: stt.text }),
+          data: JSON.stringify({ text: userText }),
         });
-
-        // Bounds on actual duration
-        if (stt.durationSeconds > MAX_TURN_AUDIO_SECONDS) {
-          await stream.writeSSE({
-            event: "error",
-            data: JSON.stringify({
-              code: "AUDIO_TOO_LONG",
-              message: "Max 60s",
-              retryable: false,
-            }),
-          });
-          return;
-        }
-        if (stt.durationSeconds < MIN_TURN_AUDIO_SECONDS) {
-          await stream.writeSSE({
-            event: "error",
-            data: JSON.stringify({
-              code: "AUDIO_TOO_SHORT",
-              message: "Min 1s",
-              retryable: true,
-            }),
-          });
-          return;
-        }
 
         // 2. Insert user message
         const userMsgRows = await deps.db
           .insert(messages)
-          .values({ conversationId, role: "user", text: stt.text })
+          .values({ conversationId, role: "user", text: userText })
           .returning({ id: messages.id });
         const userMsgId = userMsgRows[0]!.id;
 
@@ -645,7 +669,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         //  - dailyVoiceSecondsUsed tracks elapsed *conversation* wall-clock time
         //    (the on-screen timer), reported by the client per turn and clamped
         //    against tampering / long idle gaps. Resets at local midnight.
-        const speechSeconds = Math.round(stt.durationSeconds);
+        //  speechSeconds is 0 for typed turns (no voice). (computed above)
         const elapsedRaw = Number(formData?.get("elapsed_delta_seconds") ?? 0);
         const wallclockDelta = Number.isFinite(elapsedRaw)
           ? Math.min(
