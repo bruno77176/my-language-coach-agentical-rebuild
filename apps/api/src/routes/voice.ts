@@ -42,6 +42,7 @@ import type {
   SessionFeedback,
   TtsConfig,
   SupportedLang,
+  LessonPlan,
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { runTurn } from "./run-turn";
@@ -589,6 +590,10 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           memoryDepth,
           scenario: scenarioFragment,
           memoryItems,
+          lessonPlan:
+            memoryDepth === "deep" && profile.memoryEnabled
+              ? ((memoryRow?.nextPlan as LessonPlan | null) ?? null)
+              : null,
         });
         const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
         const promptMessages: ChatMessage[] = [

@@ -1,5 +1,6 @@
 import { LANGUAGES } from "./languages";
 import type { CoachMemory } from "./coach-memory-schema";
+import type { LessonPlan } from "./memory-items-schema";
 
 export type MemoryDepth = "basic" | "deep";
 
@@ -14,6 +15,7 @@ export type CoachPromptInput = {
   memory?: CoachMemory | null;
   memoryDepth?: MemoryDepth; // defaults to "basic" when memory provided
   memoryItems?: { type: string; content: string }[];
+  lessonPlan?: LessonPlan | null;
   scenario?: CoachScenarioFragment | null;
 };
 
@@ -63,6 +65,16 @@ function memoryItemsBlock(items: { type: string; content: string }[]): string {
   return `Specific things you remember about them (reference naturally, never list mechanically): ${lines}`;
 }
 
+function lessonPlanBlock(plan: LessonPlan | null | undefined): string {
+  if (!plan) return "";
+  const parts = [`For this session, gently steer toward: ${plan.focus}.`];
+  if (plan.target_structures.length)
+    parts.push(`Try to practice: ${plan.target_structures.join(", ")}.`);
+  if (plan.callbacks.length)
+    parts.push(`You can naturally call back to: ${plan.callbacks.join(", ")}.`);
+  return parts.join(" ");
+}
+
 export function buildCoachSystemPrompt(input: CoachPromptInput): string {
   const lang =
     LANGUAGES.find((l) => l.code === input.targetLanguage) ?? LANGUAGES[0]!;
@@ -102,7 +114,8 @@ export function buildCoachSystemPrompt(input: CoachPromptInput): string {
     const deep = depth === "deep" ? deepMemoryBlock(input.memory) : "";
     const itemsBlock =
       depth === "deep" ? memoryItemsBlock(input.memoryItems ?? []) : "";
-    const ctxParts = [basic, deep, itemsBlock].filter(Boolean);
+    const planBlock = depth === "deep" ? lessonPlanBlock(input.lessonPlan) : "";
+    const ctxParts = [basic, deep, itemsBlock, planBlock].filter(Boolean);
     if (ctxParts.length > 0) {
       blocks.push(
         `<context>${ctxParts.join(" ")} Reference these naturally when relevant — do not list them robotically. If the user falls silent or says they don't know what to talk about, take initiative: pick something from what you know about them (a recent topic, their job, hobbies, family, location, or learning motivations) and start a thread of conversation around it. Don't ask "what do you want to talk about?" — propose something specific based on them.</context>`,
