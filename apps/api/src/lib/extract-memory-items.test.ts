@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { extractMemoryItems } from "./extract-memory-items";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 function clientReturning(jsonContent: string) {
   return {
     chat: {

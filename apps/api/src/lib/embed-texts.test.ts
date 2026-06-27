@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { embedTexts } from "./embed-texts";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 function fakeClient(vectors: number[][]) {
   return {
     embeddings: {
