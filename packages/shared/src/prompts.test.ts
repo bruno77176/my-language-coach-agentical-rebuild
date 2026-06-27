@@ -109,3 +109,27 @@ describe("buildCoachSystemPrompt", () => {
     expect(out).not.toContain("Talked about food.");
   });
 });
+
+describe("buildCoachSystemPrompt memory items", () => {
+  const base = {
+    targetLanguage: "de",
+    userDisplayName: "Bruno",
+    memory: emptyCoachMemory(),
+  };
+  it("includes items in the deep tier", () => {
+    const p = buildCoachSystemPrompt({
+      ...base,
+      memoryDepth: "deep",
+      memoryItems: [{ type: "persona_detail", content: "has a dog named Rex" }],
+    });
+    expect(p).toContain("has a dog named Rex");
+  });
+  it("omits items in the basic (free) tier", () => {
+    const p = buildCoachSystemPrompt({
+      ...base,
+      memoryDepth: "basic",
+      memoryItems: [{ type: "persona_detail", content: "has a dog named Rex" }],
+    });
+    expect(p).not.toContain("has a dog named Rex");
+  });
+});
