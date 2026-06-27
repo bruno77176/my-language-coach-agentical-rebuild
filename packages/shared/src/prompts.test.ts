@@ -133,3 +133,43 @@ describe("buildCoachSystemPrompt memory items", () => {
     expect(p).not.toContain("has a dog named Rex");
   });
 });
+
+describe("buildCoachSystemPrompt lesson plan", () => {
+  const base = {
+    targetLanguage: "de",
+    userDisplayName: "Bruno",
+    memory: emptyCoachMemory(),
+  };
+  it("renders the lesson plan focus in the deep tier", () => {
+    const p = buildCoachSystemPrompt({
+      ...base,
+      memoryDepth: "deep",
+      lessonPlan: {
+        focus: "dative prepositions",
+        target_structures: ["mit + dative"],
+        suggested_topics: ["cooking"],
+        callbacks: ["their dog Rex"],
+      },
+    });
+    expect(p).toContain("dative prepositions");
+    expect(p).toContain("mit + dative");
+    expect(p).toContain("their dog Rex");
+  });
+  it("omits the lesson plan in the basic (free) tier", () => {
+    const p = buildCoachSystemPrompt({
+      ...base,
+      memoryDepth: "basic",
+      lessonPlan: {
+        focus: "dative prepositions",
+        target_structures: ["mit + dative"],
+        suggested_topics: ["cooking"],
+        callbacks: ["their dog Rex"],
+      },
+    });
+    expect(p).not.toContain("dative prepositions");
+  });
+  it("is backward compatible when lessonPlan is absent", () => {
+    const p = buildCoachSystemPrompt({ ...base, memoryDepth: "deep" });
+    expect(p).toContain("Lisa");
+  });
+});
