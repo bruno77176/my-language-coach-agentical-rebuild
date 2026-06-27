@@ -52,4 +52,35 @@ describe("makeDigestDeps", () => {
       expect.objectContaining({ salience: 0.8 }),
     );
   });
+
+  it("seeds SR fields on a mistake insert", async () => {
+    const db = fakeDb();
+    const deps = makeDigestDeps(db, {} as any, {
+      userId: "u1",
+      conversationId: "c1",
+      languageCode: "de",
+    });
+    await deps.insertItem({
+      type: "mistake",
+      content: "dative wrong",
+      embedding: [1, 0],
+    });
+    const v = db._insertValues.mock.calls[0][0];
+    expect(v.srIntervalDays).toBe(1);
+    expect(v.srEase).toBe(2.5);
+    expect(v.dueAt).toBeInstanceOf(Date);
+  });
+
+  it("does NOT set SR fields on a non-mistake insert", async () => {
+    const db = fakeDb();
+    const deps = makeDigestDeps(db, {} as any, {
+      userId: "u1",
+      conversationId: "c1",
+      languageCode: "de",
+    });
+    await deps.insertItem({ type: "fact", content: "B", embedding: [0, 1] });
+    const v = db._insertValues.mock.calls[0][0];
+    expect(v.dueAt).toBeUndefined();
+    expect(v.srIntervalDays).toBeUndefined();
+  });
 });

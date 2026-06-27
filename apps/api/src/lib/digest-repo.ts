@@ -36,6 +36,14 @@ export function makeDigestDeps(
       }));
     },
     insertItem: async (item) => {
+      const sr =
+        item.type === "mistake"
+          ? {
+              dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              srIntervalDays: 1,
+              srEase: 2.5,
+            }
+          : {};
       await db.insert(memoryItems).values({
         userId,
         languageCode,
@@ -43,6 +51,7 @@ export function makeDigestDeps(
         content: item.content,
         embedding: item.embedding,
         sourceConversationId: conversationId,
+        ...sr,
       });
     },
     bumpItem: async (id, newSalience) => {
