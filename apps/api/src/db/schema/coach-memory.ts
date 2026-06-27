@@ -20,6 +20,10 @@ export const coachMemory = pgTable(
     weakAreas: jsonb("weak_areas").notNull().default([]),
     personalContext: jsonb("personal_context").notNull().default({}),
     lastSessionSummary: text("last_session_summary"),
+    nextPlan: jsonb("next_plan"),
+    nextPlanGeneratedAt: timestamp("next_plan_generated_at", {
+      withTimezone: true,
+    }),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
