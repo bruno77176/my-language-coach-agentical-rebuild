@@ -16,3 +16,5 @@ export * from "./coach-memory";
 export * from "./session-feedback";
 export * from "./push-schedule";
 export * from "./quote-likes";
+export * from "./memory-items";
+export * from "./digest-jobs";
