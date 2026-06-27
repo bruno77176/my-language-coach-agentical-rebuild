@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, lt } from "drizzle-orm";
 import type OpenAI from "openai";
 import type { Database } from "../db";
 import { digestJobs } from "../db/schema";
@@ -34,6 +34,30 @@ export async function claimNextJob(db: Database): Promise<DigestJobRow | null> {
     .returning();
 
   return claimed ?? null;
+}
+
+/**
+ * Requeue stale running jobs — jobs that are stuck in "running" status for
+ * longer than `staleMs` milliseconds (default 10 minutes). This guards against
+ * process crashes or restarts that leave jobs permanently in-flight.
+ *
+ * Returns the number of jobs requeued.
+ */
+export async function requeueStaleJobs(
+  db: Database,
+  staleMs = 600_000,
+): Promise<number> {
+  const rows = await db
+    .update(digestJobs)
+    .set({ status: "pending", updatedAt: new Date() })
+    .where(
+      and(
+        eq(digestJobs.status, "running"),
+        lt(digestJobs.updatedAt, new Date(Date.now() - staleMs)),
+      ),
+    )
+    .returning();
+  return rows.length;
 }
 
 /**
@@ -162,6 +186,7 @@ export function startDigestWorker(
 ) {
   const tick = async () => {
     try {
+      await requeueStaleJobs(db);
       while ((await processOneJob(db, openai)) !== "idle") {
         // drain until no pending jobs remain
       }
