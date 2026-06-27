@@ -2,6 +2,7 @@ import type { DeepgramClient } from "@deepgram/sdk";
 import { DeepgramClient as DeepgramClientCtor } from "@deepgram/sdk";
 import type { Env } from "../env";
 import type { OnUsage } from "./usage";
+import { withTimeout } from "../lib/timeout";
 
 export type TranscribeInput = {
   audioBuffer: Buffer;
@@ -53,12 +54,17 @@ export async function transcribeAudio(
   const model = deepgramModelForLanguage(input.languageCode);
   let response;
   try {
-    response = await client.listen.v1.media.transcribeFile(input.audioBuffer, {
-      model,
-      language: input.languageCode,
-      smart_format: true,
-      punctuate: true,
-    });
+    // Bound the STT call so a slow Deepgram can't hang the turn (BRU-35).
+    response = await withTimeout(
+      client.listen.v1.media.transcribeFile(input.audioBuffer, {
+        model,
+        language: input.languageCode,
+        smart_format: true,
+        punctuate: true,
+      }),
+      12_000,
+      "Deepgram STT",
+    );
   } catch (err) {
     throw new ProviderError(
       "STT_PROVIDER_FAILURE",

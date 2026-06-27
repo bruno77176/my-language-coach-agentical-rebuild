@@ -18,6 +18,7 @@ import { configureForRecording } from "@/src/lib/audio-session";
 import {
   startSession,
   streamTurn,
+  streamTurnText,
   streamOpening,
   endSession,
   isDailyQuotaError,
@@ -120,7 +121,12 @@ export function useConversation(
     Date.now(),
   );
 
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  // isMeteringEnabled surfaces a live amplitude on the recorder status, which
+  // drives the recording waveform (BRU-44).
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
   const conversationIdRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
   // Wall-clock timestamp of the previous turn (or session start). The delta to
@@ -592,6 +598,83 @@ export function useConversation(
     }
   }
 
+  // Type-or-talk (BRU-45): send a typed message through the same turn pipeline
+  // as voice (the server skips STT). Coach still replies with voice.
+  async function submitText(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed || state.phase !== "idle") return;
+    const conversationId = state.conversationId;
+    setState({ phase: "processing", conversationId });
+    try {
+      const vl = useVoiceLab.getState();
+      const voiceOverride = vl.config;
+      const elapsedDeltaSeconds = Math.max(
+        0,
+        Math.round((Date.now() - lastTurnAtRef.current) / 1000),
+      );
+      lastTurnAtRef.current = Date.now();
+      const { events } = streamTurnText(
+        conversationId,
+        trimmed,
+        voiceOverride,
+        elapsedDeltaSeconds,
+      );
+      const audioQueue = createAudioQueue();
+      currentAudioQueueRef.current = audioQueue;
+      // The server echoes the typed message as a transcription event, so the
+      // user bubble is inserted via the same path as a voice turn.
+      const outcome = await consumeCoachStream(events, audioQueue, (t) => {
+        setMessages((prev) => [
+          ...prev,
+          { id: `u-${Date.now()}`, role: "user", text: t },
+        ]);
+        setUserTurnCount((n) => n + 1);
+        setLastActivityAt(Date.now());
+      });
+
+      if (outcome.kind === "limit") {
+        await audioQueue.waitForDrain();
+        if (!paywallShownRef.current) {
+          paywallShownRef.current = true;
+          router.push({
+            pathname: "/(modals)/daily-limit",
+            params: {
+              mode: "resume",
+              ...(outcome.resetAt ? { resetAt: outcome.resetAt } : {}),
+            },
+          });
+        }
+        setState({ phase: "idle", conversationId });
+        return;
+      }
+      if (outcome.kind === "soft-error") {
+        await audioQueue.waitForDrain();
+        setState({ phase: "idle", conversationId });
+        return;
+      }
+      if (outcome.kind === "fatal-error") {
+        throw new Error(`${outcome.code}: ${outcome.message}`);
+      }
+
+      await audioQueue.waitForDrain();
+      paywallShownRef.current = false;
+      if (currentAudioQueueRef.current === audioQueue)
+        currentAudioQueueRef.current = null;
+      if (bargedInRef.current) {
+        bargedInRef.current = false;
+        return;
+      }
+      setState({ phase: "idle", conversationId });
+    } catch (err) {
+      currentAudioQueueRef.current = null;
+      if (bargedInRef.current) {
+        bargedInRef.current = false;
+        return;
+      }
+      setState({ phase: "error", message: (err as Error).message });
+    }
+  }
+
   async function end(): Promise<{
     conversationId: string | null;
     secondsSpoken: number;
@@ -654,6 +737,8 @@ export function useConversation(
     start,
     stop,
     bargein,
+    submitText,
+    recorder,
     end,
     dismissError,
     toggleListeningMode,

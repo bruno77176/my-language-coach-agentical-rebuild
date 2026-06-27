@@ -6,7 +6,15 @@ import { LANGUAGES, type TtsStyle } from "@language-coach/shared";
 import { openAiStylePhrase, pacePhrase } from "./tts-config";
 
 export function createOpenAI(env: Env): OpenAI {
-  return new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  // Bound every OpenAI call (LLM stream, TTS, translate, enrich) with a request
+  // timeout + a couple of retries so a slow/transient provider can't hang a turn
+  // and hold a Fly concurrency slot indefinitely (BRU-35). The SDK retries on
+  // 429/5xx/connection errors with backoff.
+  return new OpenAI({
+    apiKey: env.OPENAI_API_KEY,
+    timeout: 12_000,
+    maxRetries: 2,
+  });
 }
 
 export type ChatMessage = {
