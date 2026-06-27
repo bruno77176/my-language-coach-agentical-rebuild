@@ -7,6 +7,7 @@ import { loadTranscript, makeDigestDeps } from "../lib/digest-repo";
 import { runDigest } from "../lib/run-digest";
 import { runPlanGeneration } from "../lib/run-plan-generation";
 import { reportError } from "../lib/sentry";
+import { makeOnUsage } from "../lib/usage-bridge";
 
 const MAX_ATTEMPTS = 3;
 
@@ -50,10 +51,16 @@ async function defaultRun(
   openai: OpenAI,
   job: DigestJobRow,
 ): Promise<unknown> {
+  const onUsage = makeOnUsage(db, {
+    userId: job.userId,
+    platform: "server",
+    conversationId: job.conversationId,
+  });
+
   const transcript = await loadTranscript(db, job.conversationId);
   const result = await runDigest(
     { transcript, languageCode: job.languageCode },
-    makeDigestDeps(db, openai, job),
+    makeDigestDeps(db, openai, job, onUsage),
   );
 
   // Best-effort: generate and persist a next-lesson plan from the user's top
@@ -62,10 +69,12 @@ async function defaultRun(
   // This runs in defaultRun (not in processOneJob) so tests that inject a
   // stub `run` function bypass this step and stay green.
   try {
-    await runPlanGeneration(db, openai, {
-      userId: job.userId,
-      languageCode: job.languageCode,
-    });
+    await runPlanGeneration(
+      db,
+      openai,
+      { userId: job.userId, languageCode: job.languageCode },
+      onUsage,
+    );
   } catch (err) {
     reportError(err, { where: "digest.plan-generation", jobId: job.id });
   }
