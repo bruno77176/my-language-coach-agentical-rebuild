@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
-import { processOneJob } from "./digest-runner";
+import { processOneJob, requeueStaleJobs } from "./digest-runner";
 
 const FUTURE_DATE = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 
@@ -68,6 +68,27 @@ const claimedJob = { ...pendingJob, status: "running", attempts: 1 };
 const proEntitlement = { plan: "pro", proUntil: FUTURE_DATE };
 const freeEntitlement = { plan: "free", proUntil: null };
 const enabledProfile = { memoryEnabled: true };
+
+describe("requeueStaleJobs", () => {
+  it("issues the update and returns the count of requeued rows", async () => {
+    const fakeRows = [{ id: "job-1" }, { id: "job-2" }];
+    const returning = vi.fn().mockResolvedValue(fakeRows);
+    const where = vi.fn().mockReturnValue({ returning });
+    const set = vi.fn().mockReturnValue({ where });
+    const db = { update: vi.fn().mockReturnValue({ set }) } as any;
+
+    const count = await requeueStaleJobs(db, 600_000);
+
+    expect(db.update).toHaveBeenCalledOnce();
+    expect(set).toHaveBeenCalledOnce();
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "pending" }),
+    );
+    expect(where).toHaveBeenCalledOnce();
+    expect(returning).toHaveBeenCalledOnce();
+    expect(count).toBe(2);
+  });
+});
 
 describe("processOneJob", () => {
   it("returns idle when no pending job", async () => {
