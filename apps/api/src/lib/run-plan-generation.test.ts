@@ -105,4 +105,35 @@ describe("runPlanGeneration", () => {
     expect(openai.chat.completions.create).toHaveBeenCalledOnce();
     expect(db.update).not.toHaveBeenCalled();
   });
+
+  it("calls onUsage when plan is generated", async () => {
+    const db = makeDb({
+      coachMemoryRow: { proficiencyLevel: "B1" },
+      memoryItems: [{ type: "mistake", content: "dative wrong" }],
+    });
+    const openai = makeOpenAI(VALID_PLAN_JSON);
+    const onUsageSpy = vi.fn();
+
+    await runPlanGeneration(
+      db,
+      openai,
+      { userId: "u1", languageCode: "de" },
+      onUsageSpy,
+    );
+
+    expect(onUsageSpy).toHaveBeenCalled();
+  });
+
+  it("works without onUsage (backward compat)", async () => {
+    const db = makeDb({
+      coachMemoryRow: { proficiencyLevel: "B1" },
+      memoryItems: [{ type: "mistake", content: "dative wrong" }],
+    });
+    const openai = makeOpenAI(VALID_PLAN_JSON);
+
+    // Should not throw
+    await expect(
+      runPlanGeneration(db, openai, { userId: "u1", languageCode: "de" }),
+    ).resolves.toBeUndefined();
+  });
 });

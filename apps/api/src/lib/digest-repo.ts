@@ -7,18 +7,20 @@ import { embedTexts } from "./embed-texts";
 import type { TranscriptTurn } from "./extract-memory";
 import type { RunDigestDeps } from "./run-digest";
 import type { MemoryItemType } from "@language-coach/shared";
+import type { OnUsage } from "../providers/usage";
 
 export function makeDigestDeps(
   db: Database,
   openai: OpenAI,
   job: { userId: string; conversationId: string; languageCode: string },
+  onUsage?: OnUsage,
 ): RunDigestDeps {
   const { userId, conversationId, languageCode } = job;
 
   return {
     extractItems: (transcript, lang) =>
-      extractMemoryItems(openai, { transcript, languageCode: lang }),
-    embed: (texts) => embedTexts(openai, texts),
+      extractMemoryItems(openai, { transcript, languageCode: lang, onUsage }),
+    embed: (texts) => embedTexts(openai, texts, { onUsage }),
     getActiveItems: async () => {
       const rows = await db.query.memoryItems.findMany({
         where: (t, { eq: e, and: a }) =>
