@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -306,10 +308,36 @@ function RecentSessionRow({
 // Active conversation
 // ============================================================
 
+// Current on-screen keyboard height (0 when hidden) so the absolutely-positioned
+// mic/text bar can lift above the keyboard instead of being covered (BRU-53).
+function useKeyboardHeight(): number {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const showEvt =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const show = Keyboard.addListener(showEvt, (e) =>
+      setHeight(e.endCoordinates?.height ?? 0),
+    );
+    const hide = Keyboard.addListener(hideEvt, () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return height;
+}
+
 function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   useAudioSessionInit();
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
+  // Base clearance above the tab bar; while the keyboard is up, float the bar
+  // just above it so the text composer stays visible (BRU-53).
   const micBarBottom = insets.bottom + TAB_BAR_RESERVE;
+  const barBottom =
+    keyboardHeight > 0 ? keyboardHeight + spacing.sm : micBarBottom;
   const { data: profile } = useProfile();
   const targetLang = profile?.target_lang ?? "en";
   const displayName = profile?.display_name ?? "there";
@@ -729,7 +757,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             // list room to lift the newest bubble all the way up to the vertical
             // center (viewPosition 0.5). Floor at the mic-bar clearance so the
             // bottom of a short conversation never tucks under the mic bar.
-            paddingBottom: Math.max(micBarBottom + 96, listHeight * 0.5),
+            paddingBottom: Math.max(barBottom + 96, listHeight * 0.5),
           },
         ]}
         ListEmptyComponent={
@@ -770,7 +798,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         shareMessages={messages.map((m) => ({ role: m.role, text: m.text }))}
       />
 
-      <View style={[activeStyles.micBar, { bottom: micBarBottom }]}>
+      <View style={[activeStyles.micBar, { bottom: barBottom }]}>
         {state.phase === "processing" && (
           <GlassCard
             radiusToken="pill"
