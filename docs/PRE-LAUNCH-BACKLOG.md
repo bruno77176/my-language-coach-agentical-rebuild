@@ -14,12 +14,13 @@ Legend — Type: 🐛 bug · ✨ feature · 💰 monetization · 🎬 marketing 
 
 ## 🟢 NOW — the headline pre-launch push
 
-### 1. 💰🐛 Time-limit gate — fix the UX _and_ verify it enforces
+### 1. 💰🐛 Time-limit gate — hard block + warm "limit reached" screen
 
-The current behaviour is broken in two ways:
+_Root cause found + design drafted 2026-06-21 (brainstorm, not yet built)._
 
-- **UX:** the error message is ugly and fires too late. It should surface **much earlier** and gracefully. _(Bruno flagged this as important.)_
-- **Correctness:** it's unclear whether the cap actually **blocks starting another conversation** — it may not be enforcing at all. Verify enforcement, not just the message.
+- **The leak (boundary case):** the server _does_ 429 a fully-capped user at session start (`POST /sessions`), and the client already redirects to the limit screen before the greeting. But `canUseSecondsDaily` allows a session whenever `used < cap` **strictly** — so a user with even 10–20s left passes the gate, hears the greeting, then gets blocked on the first turn. That's the "it let me in, greeted me, then blocked me" confusion. Secondary path: a user with **no entitlement row** skips the start gate entirely (`voice.ts` `if (entitlement)`).
+- **Fix (hard block):** add `MIN_SESSION_START_SECONDS` (~30s, in `env.ts`) and in `POST /sessions` return the same `429 DAILY_QUOTA_EXCEEDED` when `remaining = cap - used < MIN_SESSION_START_SECONDS`. Reuses the existing client `mode:"restart"` redirect — no client logic change, the greeting just never plays.
+- **Warm screen:** rebuild `app/(modals)/daily-limit.tsx` to reuse the celebration look — the animated Lisa Lottie (`assets/avatar.json`) delivering the Pro invitation herself in a speech bubble (warm, motivating, no AI-vs-human framing). Keep the countdown, Go-Pro CTA, watch-ad option, `resume`/`restart` modes, isPro auto-dismiss, and server-cap-driven messaging (free vs. the Pro-at-60min variant, which gets no upsell). No confetti/sound here (it's an upsell, not a reward) — just a soft fade-in.
 
 Tightly coupled to subscriptions/feature-gates below (the gate is what enforces the cap).
 
@@ -32,7 +33,11 @@ RevenueCat was **started then stopped halfway** — this is _resume_, not start-
 - **Free:** 5 min per session, with **+3 min** unlock by watching a rewarded ad, **or** Pro subscription to remove the cap.
 - **Pro:** 60 min.
 
-Depends on #1 (enforcement) and #2 (entitlements).
+Depends on #1 (enforcement) and #2 (entitlements). The rewarded-ad **wiring** is broken out as #19 (currently a stub).
+
+### 19. 💰🐛 Wire the real rewarded ad — currently a stub _(wanted in the next build)_
+
+The "Watch an ad for +3 min" flow calls `adExtension()`, which **grants the +3 min server-side immediately with no actual ad** (`app/(modals)/daily-limit.tsx` — explicitly marked STUB). Wire a real rewarded-ad SDK so the grant only happens after a completed ad view. Bruno wants this in the **next build**. Depends on #3 (caps/unlock plumbing already exists).
 
 ### 4. ✨ Sharing — with an install / marketing link every time
 
@@ -55,9 +60,9 @@ A "like" button on quotes that saves them to a personal collection.
 
 Prompt happy users to share the app or leave a store review. Growth/ASO loop — relates to the **aso** and **referrals** skills.
 
-### 7. ✨ Word deck — always show the example phrase
+### 7. ✨ Word deck — always show the example phrase / review in context
 
-For every saved word, always include **the phrase/sentence where the word was found** as an example, not just the word in isolation.
+For every saved word, always include **the phrase/sentence where the word was found** as an example, not just the word in isolation. _(Bruno 2026-06-21:)_ this is also how he wants to **review** — show the original sentence from the conversation the word came from, so review happens in context, not as isolated words. (Capture the source sentence at save time — ties into #20's word-only selection.)
 
 ### 8. ✨ Prompt improvement
 
@@ -74,6 +79,25 @@ UI translated into the supported languages + a language selector in Profile. Alr
 ### 11. 🎬 Promotional videos
 
 Produce promo videos for the app (store listing / marketing / social). Relates to the **video** and **aso** skills.
+
+### 20. ✨🐛 Tap-to-save word — select the word only + make it discoverable
+
+Two parts:
+
+- **Selection:** tapping a message to save a word to the deck currently **pre-selects the whole sentence**. Pre-select **just the tapped word** instead (much better). Files: `MessageBubble.tsx` + the vocab-save flow.
+- **Discoverability:** nobody knows you can tap a message to save a word. Add some guidance (first-run hint / affordance) so the feature is findable. _(Bruno 2026-06-21.)_ Feeds the source-sentence capture in #7.
+
+### 21. ✨🐛 Goal celebration — small non-blocking popup, stay in the conversation
+
+The goal-reached celebration (`src/features/practice/goal-reward.tsx`) is **too invasive** — it's a full-screen overlay that interrupts the conversation for ~4s. Make it a **small popup/toast that doesn't stop the conversation and doesn't leave the practice screen**. Keep the confetti and sound; use a **smaller avatar** that fits the popup. _(Bruno 2026-06-21.)_
+
+### 22. ✨ Save the conversations themselves, not just the feedback
+
+Today only end-of-session **feedback** is persisted/reviewable. Bruno wants the **full conversation transcripts** saved too. Re-point "Recent sessions" so it opens the **past conversation**, and from there reach its feedback — **or** save conversations only and let the user **generate feedback on demand with a button**. _(Bruno 2026-06-21 — decide which model.)_ Touches `sessions/recent`, the chooser's recent-session rows (`practice.tsx`), and `end-of-session`.
+
+### 23. ✨ Word deck — science-based spaced-repetition review
+
+The deck has no review scheduling: with 100+ German words there's no way to actually get through them. Add a **pedagogically sound spaced-repetition** flow — review a sensible **amount per day** and rotate items in a research-backed order (e.g. SM-2/Leitner-style intervals). _(Bruno 2026-06-21.)_ Pairs with #7 (review in context).
 
 ### 16. ✨❓ Lisa — deep, evolving human-like persona
 
@@ -95,7 +119,7 @@ Any sound must **stop immediately** when navigating from one screen to another. 
 
 ### 13. 🐛 Can't interrupt the coach voice
 
-The user should be able to **barge-in / interrupt** the coach's voice message at any time.
+The user should be able to **barge-in / interrupt** the coach's voice message at any time. _(Bruno 2026-06-21:)_ one click should **stop the coach mid-message and immediately hand the mic to the user** — no waiting for the full reply to finish playing before they can take their turn.
 
 ### 14. 🐛 Timer never stops
 
@@ -108,6 +132,16 @@ The greeting message is spoken with a **different voice** than the rest of the s
 ### 17. 🐛 Shared images have a black border — make exports impeccable
 
 Shared cards (quote / conversation / feedback) export with a black frame around the rounded card instead of a clean edge — visible on every share, a marketing surface. **Root cause:** the captured `cardWrap` has `borderRadius` + `overflow:'hidden'` + a shadow; `captureRef(..., {format:'png'})` grabs the bounding rectangle, so the rounded-corner/shadow margin is transparent → composites to black in WhatsApp & co. **Fix (recommended):** capture the gradient `CardFrame` full-bleed (no rounded corners / no shadow on the captured node) so there's zero transparency. Files: `share-card-modal.tsx`, `share-cards.tsx`. → **Linear BRU-24.**
+
+---
+
+### 24. 🐛 Word deck — save words WITH their article (gender)
+
+German words are saved **without their article** (e.g. `Tisch` instead of `der Tisch`); same problem for French, Italian, and likely other gendered languages. The article carries the gender and is essential to learn the word correctly — capture and store it at save time, and show it in the deck/review. _(Bruno 2026-06-21.)_ Important data-quality bug.
+
+### 25. 🐛 Share conversation / feedback — link isn't clickable
+
+When sharing a **quote**, the marketing-site link is clickable. When sharing a **conversation** or **feedback**, the link is **not clickable**. Make every shared link tappable. _(Bruno 2026-06-21.)_ Related to #4 (every share carries an install/marketing link) and #17 (share-card export quality) — same share surfaces.
 
 ---
 

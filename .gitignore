@@ -48,3 +48,4 @@ skills-lock.json
 # Build artifacts / backups
 apps/mobile/build-out.json
 *.local-bak
+.vercel
