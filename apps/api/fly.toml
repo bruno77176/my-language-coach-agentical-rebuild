@@ -10,6 +10,15 @@ primary_region = "arn"  # Stockholm — co-located with Supabase eu-north-1
   NODE_ENV = "production"
   PORT = "8080"
 
+# Apply DB migrations before each release (idempotent — skips already-applied
+# ones). Runs in the built image (tsx + the .sql migrations are present) with
+# the prod env from Fly secrets. If a migration fails the release fails and the
+# deploy is aborted — so code can never ship ahead of its schema again (the
+# cause of the 2026-06-27 voice-turns outage). Verified by running this exact
+# command in the live machine via `fly ssh` before wiring it in.
+[deploy]
+  release_command = "/bin/sh -c 'cd /app/apps/api && node --import tsx src/db/run-migrations.ts'"
+
 [http_service]
   internal_port = 8080
   force_https = true
