@@ -20,11 +20,17 @@ import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
 import { FeedbackShareCard } from "@/src/features/sharing/share-cards";
 
 export default function EndOfSessionScreen() {
-  const { conversationId, secondsSpoken } = useLocalSearchParams<{
-    conversationId: string;
+  const { conversationId, checkpointId, secondsSpoken } = useLocalSearchParams<{
+    conversationId?: string;
+    // Set when viewing a continuous-thread segment's feedback (keyed on the
+    // checkpoint); otherwise feedback is keyed on the conversation.
+    checkpointId?: string;
     secondsSpoken?: string;
   }>();
-  const { data } = useSessionFeedback(conversationId ?? null);
+  const { data } = useSessionFeedback(
+    checkpointId ?? conversationId ?? null,
+    checkpointId ? "checkpoint" : "session",
+  );
   const [shareOpen, setShareOpen] = useState(false);
 
   const goHome = () => router.replace("/(tabs)/home");

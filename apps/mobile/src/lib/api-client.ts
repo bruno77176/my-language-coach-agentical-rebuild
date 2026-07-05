@@ -32,8 +32,27 @@ export function clientCapabilitiesHeader(): {
   return { "X-Client-Capabilities": "inline-audio" };
 }
 
+// A persisted message as returned when opening a continuous thread (or paging).
+export type ThreadMessageDTO = {
+  id: string;
+  role: "user" | "coach";
+  text: string;
+  translation: string | null;
+  isGreeting: boolean;
+  createdAt: string;
+};
+
 export type StartSessionResponse = {
   conversation_id: string;
+  // 'thread' = the continuous per-language conversation; 'session' = a scenario.
+  kind?: "thread" | "session";
+  // True only on the very first open of a language's thread → the client greets
+  // once; on every later open it stays silent and just continues.
+  is_new_thread?: boolean;
+  // The thread's most recent page of messages (oldest→newest), for continuous
+  // scrollback. Absent/empty for scenarios and first-ever thread opens.
+  messages?: ThreadMessageDTO[];
+  has_more?: boolean;
   // Daily wall-clock budget so the client can enforce the cap locally + show a
   // countdown. Optional for back-compat with older API responses.
   daily_used_seconds?: number;
@@ -93,6 +112,72 @@ export async function startSession(
     throw new Error(`startSession ${res.status}: ${text}`);
   }
   return res.json() as Promise<StartSessionResponse>;
+}
+
+export type CheckpointResponse = {
+  checkpoint_id: string | null;
+  seconds_spoken: number;
+  goal_reached: boolean;
+};
+
+/**
+ * "Wrap up & get feedback" for a continuous thread: close the open segment
+ * (feedback + coach-memory + streak) WITHOUT ending the thread or clearing the
+ * chat. `checkpoint_id` is null when there was nothing new to wrap up.
+ */
+export async function checkpointSession(
+  conversationId: string,
+): Promise<CheckpointResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/v1/voice/sessions/${conversationId}/checkpoint`,
+    {
+      method: "POST",
+      headers: {
+        authorization: await authHeader(),
+        ...clientPlatformHeader(),
+      },
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`checkpointSession ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<CheckpointResponse>;
+}
+
+export type ThreadMessagesPage = {
+  messages: ThreadMessageDTO[];
+  has_more: boolean;
+};
+
+/**
+ * Load an older page of a thread's messages for "load earlier" scrollback.
+ * `before` is the oldest currently-loaded message's ISO createdAt (exclusive).
+ */
+export async function fetchThreadMessages(
+  conversationId: string,
+  before: string,
+  limit = 30,
+): Promise<ThreadMessagesPage> {
+  const params = new URLSearchParams({ before, limit: String(limit) });
+  const res = await fetch(
+    `${API_BASE_URL}/v1/voice/sessions/${conversationId}/messages?${params}`,
+    {
+      headers: {
+        authorization: await authHeader(),
+        ...clientPlatformHeader(),
+      },
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`fetchThreadMessages ${res.status}: ${text}`);
+  }
+  const json = (await res.json()) as {
+    messages: ThreadMessageDTO[];
+    has_more?: boolean;
+  };
+  return { messages: json.messages, has_more: json.has_more ?? false };
 }
 
 export type AdExtensionResponse = {

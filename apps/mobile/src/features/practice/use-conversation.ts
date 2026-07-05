@@ -21,8 +21,11 @@ import {
   streamTurnText,
   streamOpening,
   endSession,
+  checkpointSession,
+  fetchThreadMessages,
   isDailyQuotaError,
   type TurnEvent,
+  type ThreadMessageDTO,
 } from "@/src/lib/api-client";
 import type { ChatMessage, ConversationState } from "./types";
 import { AudioQueue } from "./audio-queue";
@@ -99,6 +102,19 @@ async function fetchPersonalizedGreetingUrl(
   }
 }
 
+// Map a persisted thread message (from the API) to an on-screen ChatMessage.
+// Loaded history has real server ids (translate/share work); a stored translation
+// is surfaced as clientTranslation so the 🌐 toggle is instant without a refetch.
+function dtoToChatMessage(m: ThreadMessageDTO): ChatMessage {
+  return {
+    id: m.id,
+    role: m.role,
+    text: m.text,
+    isGreeting: m.isGreeting,
+    clientTranslation: m.translation ?? undefined,
+  };
+}
+
 // playOnce lives in audio-controller.ts — it's the canonical "play one
 // source through the global slot" function used by greeting, chunks, and
 // per-message repeat. Centralizing it ensures every player is cleaned up
@@ -120,6 +136,10 @@ export function useConversation(
   const [lastActivityAt, setLastActivityAt] = useState<number>(() =>
     Date.now(),
   );
+  // Continuous-thread scrollback: whether older messages remain to page in, and
+  // the oldest loaded message's createdAt (the "load earlier" cursor).
+  const [hasMore, setHasMore] = useState(false);
+  const oldestCreatedAtRef = useRef<string | null>(null);
 
   // isMeteringEnabled surfaces a live amplitude on the recorder status, which
   // drives the recording waveform (BRU-44).
@@ -175,6 +195,19 @@ export function useConversation(
           setMessages([]);
           await runOpening(conversation_id, () => cancelled);
           return;
+        }
+
+        // Continuous conversation: if this language's thread already has history,
+        // seed it and continue with NO greeting (WhatsApp-style). Greet only on
+        // the very first open of the thread.
+        const history = session.messages ?? [];
+        const isNewThread = session.is_new_thread ?? history.length === 0;
+        if (!isNewThread && history.length > 0) {
+          setMessages(history.map(dtoToChatMessage));
+          oldestCreatedAtRef.current = history[0]?.createdAt ?? null;
+          setHasMore(session.has_more ?? false);
+          setState({ phase: "idle", conversationId: conversation_id });
+          return; // no greeting, no greeting audio — just pick up where we left off
         }
 
         const greetingText = buildGreeting(
@@ -675,6 +708,10 @@ export function useConversation(
     }
   }
 
+  // End the current practice. Scenarios truly end (/end → feedback). Free-form
+  // threads instead CHECKPOINT ("Wrap up & get feedback"): the thread is never
+  // ended, so the next open continues with full history and no greeting. Returns
+  // a conversationId only when there's feedback to show (a checkpoint was made).
   async function end(): Promise<{
     conversationId: string | null;
     secondsSpoken: number;
@@ -684,13 +721,41 @@ export function useConversation(
       await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
       return { conversationId: null, secondsSpoken: 0 };
     }
-    const result = await endSession(conversationId);
+    if (scenarioId) {
+      const result = await endSession(conversationId);
+      await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
+      return { conversationId, secondsSpoken: result.seconds_spoken ?? 0 };
+    }
+    // Continuous thread → checkpoint the open segment (feedback + memory +
+    // streak) without ending it.
+    const result = await checkpointSession(conversationId);
     await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
-    return {
-      conversationId,
-      secondsSpoken: result.seconds_spoken ?? 0,
-    };
+    if (!result.checkpoint_id) {
+      // Nothing new since the last checkpoint — just leave, no feedback screen.
+      return { conversationId: null, secondsSpoken: 0 };
+    }
+    return { conversationId, secondsSpoken: result.seconds_spoken ?? 0 };
   }
+
+  // Continuous-thread "load earlier": page in older messages above the current
+  // scrollback. No-op when there's nothing older to load.
+  const loadEarlier = useCallback(async () => {
+    const id = conversationIdRef.current;
+    const before = oldestCreatedAtRef.current;
+    if (!id || !before || !hasMore) return;
+    try {
+      const page = await fetchThreadMessages(id, before);
+      if (page.messages.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      oldestCreatedAtRef.current = page.messages[0]?.createdAt ?? before;
+      setMessages((prev) => [...page.messages.map(dtoToChatMessage), ...prev]);
+      setHasMore(page.has_more);
+    } catch {
+      // best-effort — a failed page load shouldn't break the conversation
+    }
+  }, [hasMore]);
 
   function dismissError() {
     if (state.phase !== "error") return;
@@ -740,6 +805,8 @@ export function useConversation(
     submitText,
     recorder,
     end,
+    hasMore,
+    loadEarlier,
     dismissError,
     toggleListeningMode,
     revealMessage,

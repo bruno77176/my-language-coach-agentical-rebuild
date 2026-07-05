@@ -20,15 +20,21 @@ export type ConversationTranscript = {
   messages: TranscriptMessage[];
 };
 
+export type TranscriptKind = "session" | "checkpoint";
+
 async function fetchTranscript(
-  conversationId: string,
+  id: string,
+  kind: TranscriptKind,
 ): Promise<ConversationTranscript> {
-  const res = await fetch(
-    `${API_BASE_URL}/v1/voice/sessions/${conversationId}/messages`,
-    {
-      headers: { authorization: await authHeader(), ...clientPlatformHeader() },
-    },
-  );
+  // A continuous-thread segment is scoped to its checkpoint range; a legacy/
+  // scenario session is the whole conversation.
+  const path =
+    kind === "checkpoint"
+      ? `/v1/voice/checkpoints/${id}/messages`
+      : `/v1/voice/sessions/${id}/messages`;
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { authorization: await authHeader(), ...clientPlatformHeader() },
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`fetchTranscript ${res.status}: ${text}`);
@@ -36,10 +42,13 @@ async function fetchTranscript(
   return res.json() as Promise<ConversationTranscript>;
 }
 
-export function useConversationTranscript(conversationId: string | undefined) {
+export function useConversationTranscript(
+  id: string | undefined,
+  kind: TranscriptKind = "session",
+) {
   return useQuery({
-    queryKey: ["conversation-transcript", conversationId ?? ""] as const,
-    queryFn: () => fetchTranscript(conversationId!),
-    enabled: !!conversationId,
+    queryKey: ["conversation-transcript", kind, id ?? ""] as const,
+    queryFn: () => fetchTranscript(id!, kind),
+    enabled: !!id,
   });
 }

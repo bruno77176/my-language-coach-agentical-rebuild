@@ -138,10 +138,18 @@ function PracticeChooser() {
   const onFree = () => router.replace("/(tabs)/practice?start=free");
   // A recent session opens its saved TRANSCRIPT (BRU-29); the feedback report
   // is reachable from there.
-  const onReview = (id: string, secondsSpoken: number) =>
+  const onReview = (
+    id: string,
+    kind: "session" | "checkpoint" | undefined,
+    secondsSpoken: number,
+  ) =>
     router.push({
       pathname: "/(modals)/transcript",
-      params: { conversationId: id, secondsSpoken: String(secondsSpoken) },
+      params: {
+        conversationId: id,
+        kind: kind ?? "session",
+        secondsSpoken: String(secondsSpoken),
+      },
     });
 
   return (
@@ -240,7 +248,7 @@ function PracticeChooser() {
             key={s.id}
             session={s}
             nativeLang={nativeLang}
-            onPress={() => onReview(s.id, s.secondsSpoken)}
+            onPress={() => onReview(s.id, s.kind, s.secondsSpoken)}
           />
         ))}
 
@@ -369,10 +377,16 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     submitText,
     recorder,
     end,
+    hasMore,
+    loadEarlier,
     dismissError,
     toggleListeningMode,
     revealMessage,
   } = useConversation(targetLang, displayName, nativeLang, scenarioId);
+
+  // Free-form practice is a continuous per-language thread; role-play scenarios
+  // are one-off sessions. The label + wrap-up semantics differ (see end()).
+  const isThread = !scenarioId;
 
   const { data: todayStats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
@@ -656,8 +670,10 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       });
     }
     actions.push({
-      label: "Leave without saving",
-      kind: "destructive",
+      // A thread is never lost by leaving (it's saved + continues next time), so
+      // this isn't destructive there — it just skips generating feedback now.
+      label: isThread ? "Leave for now" : "Leave without saving",
+      kind: isThread ? "default" : "destructive",
       onPress: () => {
         setEndDialog(null);
         runDiscard(fallback);
@@ -665,7 +681,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     });
     if (userTurnCount >= 1) {
       actions.push({
-        label: "End & see feedback",
+        label: isThread ? "Wrap up & get feedback" : "End & see feedback",
         kind: "primary",
         onPress: () => {
           setEndDialog(null);
@@ -729,6 +745,18 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         ref={flatListRef}
         data={messages}
         keyExtractor={(m) => m.id}
+        ListHeaderComponent={
+          hasMore ? (
+            <Pressable
+              onPress={() => void loadEarlier()}
+              style={{ paddingVertical: spacing.sm, alignItems: "center" }}
+            >
+              <EditorialText kind="bodySm" color={palette.accent}>
+                Load earlier messages
+              </EditorialText>
+            </Pressable>
+          ) : null
+        }
         renderItem={({ item }) => (
           <MessageBubble
             message={item}
