@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { streamSSE, type SSEStreamingApi } from "hono/streaming";
-import { eq, sql, and, desc, isNotNull } from "drizzle-orm";
+import { eq, sql, and, desc, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import {
   conversations,
@@ -9,6 +9,7 @@ import {
   coachMemory,
   sessionFeedback,
   digestJobs,
+  sessionCheckpoints,
 } from "../db/schema";
 import type { Database } from "../db";
 import {
@@ -172,32 +173,127 @@ async function writeReplyChunk(
 export function createVoiceRoutes(deps: VoiceDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
 
-  // GET /v1/voice/sessions/recent — Plan 8 follow-up: chooser screen
-  // shows the user's last 5 completed sessions with feedback status so
-  // they can review past coaching reports.
+  // GET /v1/voice/sessions/recent — chooser screen shows the user's last 5
+  // practiced segments with feedback status. Two sources, merged newest-first:
+  //  - continuous-thread CHECKPOINTS (kind:'checkpoint', open via checkpoint id)
+  //  - legacy/scenario ended sessions (kind:'session', open via conversation id)
+  // The thread rows themselves never appear (ended_at stays NULL).
   routes.get("/sessions/recent", async (c) => {
     const userId = c.get("userId");
-    const rows = await deps.db
-      .select({
-        id: conversations.id,
-        language: conversations.language,
-        scenarioId: conversations.scenarioId,
-        startedAt: conversations.startedAt,
-        endedAt: conversations.endedAt,
-        secondsSpoken: conversations.secondsSpoken,
-        feedbackStatus: sessionFeedback.status,
+    const [legacyRows, checkpointRows] = await Promise.all([
+      deps.db
+        .select({
+          id: conversations.id,
+          language: conversations.language,
+          scenarioId: conversations.scenarioId,
+          startedAt: conversations.startedAt,
+          endedAt: conversations.endedAt,
+          secondsSpoken: conversations.secondsSpoken,
+          feedbackStatus: sessionFeedback.status,
+        })
+        .from(conversations)
+        .leftJoin(
+          sessionFeedback,
+          and(
+            eq(sessionFeedback.conversationId, conversations.id),
+            isNull(sessionFeedback.checkpointId),
+          ),
+        )
+        .where(
+          and(
+            eq(conversations.userId, userId),
+            isNotNull(conversations.endedAt),
+          ),
+        )
+        .orderBy(desc(conversations.endedAt))
+        .limit(5),
+      deps.db
+        .select({
+          id: sessionCheckpoints.id,
+          conversationId: sessionCheckpoints.conversationId,
+          language: sessionCheckpoints.language,
+          startedAt: sessionCheckpoints.startedAt,
+          endedAt: sessionCheckpoints.endedAt,
+          secondsSpoken: sessionCheckpoints.secondsSpoken,
+          feedbackStatus: sessionFeedback.status,
+        })
+        .from(sessionCheckpoints)
+        .leftJoin(
+          sessionFeedback,
+          eq(sessionFeedback.checkpointId, sessionCheckpoints.id),
+        )
+        .where(eq(sessionCheckpoints.userId, userId))
+        .orderBy(desc(sessionCheckpoints.endedAt))
+        .limit(5),
+    ]);
+
+    const sessions = [
+      ...legacyRows.map((r) => ({
+        id: r.id,
+        kind: "session" as const,
+        conversationId: r.id,
+        language: r.language,
+        scenarioId: r.scenarioId,
+        startedAt: r.startedAt,
+        endedAt: r.endedAt,
+        secondsSpoken: r.secondsSpoken,
+        feedbackStatus: r.feedbackStatus,
+      })),
+      ...checkpointRows.map((r) => ({
+        id: r.id,
+        kind: "checkpoint" as const,
+        conversationId: r.conversationId,
+        language: r.language,
+        scenarioId: null as string | null,
+        startedAt: r.startedAt,
+        endedAt: r.endedAt,
+        secondsSpoken: r.secondsSpoken,
+        feedbackStatus: r.feedbackStatus,
+      })),
+    ]
+      .sort((a, b) => {
+        const at = a.endedAt ? new Date(a.endedAt).getTime() : 0;
+        const bt = b.endedAt ? new Date(b.endedAt).getTime() : 0;
+        return bt - at;
       })
-      .from(conversations)
-      .leftJoin(
-        sessionFeedback,
-        eq(sessionFeedback.conversationId, conversations.id),
-      )
-      .where(
-        and(eq(conversations.userId, userId), isNotNull(conversations.endedAt)),
-      )
-      .orderBy(desc(conversations.endedAt))
-      .limit(5);
-    return c.json({ sessions: rows });
+      .slice(0, 5);
+
+    return c.json({ sessions });
+  });
+
+  // GET /v1/voice/checkpoints/:id/messages — transcript of one thread segment,
+  // ownership-checked, scoped to the checkpoint's (started_at, ended_at] range.
+  routes.get("/checkpoints/:id/messages", async (c) => {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const cp = await deps.db.query.sessionCheckpoints.findFirst({
+      where: (t, { eq: e, and: a }) => a(e(t.id, id), e(t.userId, userId)),
+    });
+    if (!cp) {
+      return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+    const rows = await deps.db.query.messages.findMany({
+      where: (t, { eq: e, and: a, gt: g, lte }) =>
+        a(
+          e(t.conversationId, cp.conversationId),
+          g(t.createdAt, cp.startedAt),
+          lte(t.createdAt, cp.endedAt),
+        ),
+      orderBy: (t, { asc: as }) => [as(t.createdAt)],
+    });
+    return c.json({
+      language: cp.language,
+      startedAt: cp.startedAt,
+      endedAt: cp.endedAt,
+      messages: rows.map((m) => ({
+        id: m.id,
+        role: m.role,
+        text: m.text,
+        translation: m.translation,
+        isGreeting: m.isGreeting,
+        createdAt: m.createdAt,
+      })),
+    });
   });
 
   // GET /v1/voice/sessions/:id/messages — the full saved transcript of a past
