@@ -1,8 +1,9 @@
-import { and, eq, isNull, lte } from "drizzle-orm";
+import { and, eq, isNull, lte, gt, or, sql } from "drizzle-orm";
 import { pushSchedule } from "../db/schema";
 import type { Database } from "../db";
+import type { PushKind } from "@language-coach/shared";
 
-export type PushKind = "day-1-feedback" | "day-2-warmup" | "day-7-summary";
+export type { PushKind };
 
 export type SchedulePushInput = {
   userId: string;
@@ -103,29 +104,70 @@ export async function markSent(db: Database, id: string): Promise<void> {
     .where(eq(pushSchedule.id, id));
 }
 
-export function bodyFor(kind: PushKind): {
-  title: string;
-  body: string;
-  data?: { url: string };
-} {
-  switch (kind) {
-    case "day-1-feedback":
-      return {
-        title: "Your first feedback report is ready",
-        body: "Your coach has notes from yesterday's session. Take a look.",
-        data: { url: "mylanguagecoach:///(tabs)/practice" },
-      };
-    case "day-2-warmup":
-      return {
-        title: "5 minutes with your coach?",
-        body: "A quick warmup keeps the streak alive.",
-        data: { url: "mylanguagecoach:///(tabs)/practice" },
-      };
-    case "day-7-summary":
-      return {
-        title: "Your first week with your coach",
-        body: "See your progress so far.",
-        data: { url: "mylanguagecoach:///(tabs)/progress/weekly-summary" },
-      };
+/**
+ * Schedule a friendly "come back" reminder for users who have lapsed — no
+ * message activity for `lapseDays`. Idempotent: skips a user who already has an
+ * unsent reminder pending, or one sent within `minResendDays`, so a lapsed user
+ * is nudged at most ~weekly, never spammed. Only users with a registered push
+ * token are considered (nothing to send otherwise). Sends at ~9am the user's
+ * next local day. Returns how many reminders were scheduled.
+ */
+export async function scheduleInactivityReminders(
+  db: Database,
+  now: Date,
+  opts: { lapseDays?: number; minResendDays?: number; limit?: number } = {},
+): Promise<number> {
+  const lapseDays = opts.lapseDays ?? 3;
+  const minResendDays = opts.minResendDays ?? 6;
+  const limit = opts.limit ?? 500;
+  const lapseCutoff = new Date(now.getTime() - lapseDays * 86_400_000);
+  const resendCutoff = new Date(now.getTime() - minResendDays * 86_400_000);
+
+  // Last activity = newest message across the user's conversations (works for
+  // threads, whose conversations.started_at is just the thread-creation time).
+  const res = await db.execute(sql`
+    SELECT c.user_id AS user_id, p.timezone AS timezone
+    FROM messages m
+    JOIN conversations c ON c.id = m.conversation_id
+    JOIN profiles p ON p.user_id = c.user_id
+    WHERE EXISTS (SELECT 1 FROM push_tokens pt WHERE pt.user_id = c.user_id)
+    GROUP BY c.user_id, p.timezone
+    HAVING MAX(m.created_at) < ${lapseCutoff.toISOString()}
+    LIMIT ${limit}
+  `);
+  const rows = (
+    Array.isArray(res) ? res : ((res as { rows?: unknown[] }).rows ?? [])
+  ) as Array<{ user_id: string; timezone: string | null }>;
+
+  let scheduled = 0;
+  for (const r of rows) {
+    const userId = r.user_id;
+    const tz = r.timezone ?? "UTC";
+    // Idempotency: skip if a reminder is pending (unsent) or was sent recently.
+    const recent = await db.query.pushSchedule.findFirst({
+      where: (t, { eq: e, and: a }) =>
+        a(
+          e(t.userId, userId),
+          e(t.kind, "inactivity-reminder"),
+          or(isNull(t.sentAt), gt(t.sentAt, resendCutoff)),
+        ),
+    });
+    if (recent) continue;
+    // onConflictDoNothing backstops the read-then-write race across concurrent
+    // sweeps (e.g. two machines during a deploy) via the partial unique index
+    // push_schedule_pending_inactivity_uniq (migration 0024). Count only rows
+    // that actually inserted.
+    const insertedRow = await db
+      .insert(pushSchedule)
+      .values({
+        userId,
+        kind: "inactivity-reminder",
+        sendAt: computeDay1At(now, tz),
+        payload: {},
+      })
+      .onConflictDoNothing()
+      .returning({ id: pushSchedule.id });
+    if (insertedRow.length > 0) scheduled++;
   }
+  return scheduled;
 }

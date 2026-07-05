@@ -223,6 +223,19 @@ function PracticeChooser() {
           </EditorialText>
         </Pressable>
 
+        <Pressable
+          onPress={() => router.push("/vocab")}
+          style={chooserStyles.card}
+        >
+          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
+            📇 Review your words
+          </EditorialText>
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            Practise the words you&apos;ve saved from your conversations —
+            spaced out so they stick.
+          </EditorialText>
+        </Pressable>
+
         <EditorialText
           kind="bodySm"
           color={palette.inkSoft}

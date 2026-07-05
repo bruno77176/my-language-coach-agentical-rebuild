@@ -3,6 +3,7 @@ export * from "./languages";
 export * from "./prompts";
 export * from "./daily-quotes";
 export * from "./greetings";
+export * from "./push-copy";
 export * from "./coach-fallbacks";
 export * from "./coach-memory-schema";
 export * from "./feedback-schema";

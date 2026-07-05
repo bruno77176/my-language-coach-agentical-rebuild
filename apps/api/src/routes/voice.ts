@@ -726,6 +726,11 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         proUntil: entitlement.proUntil,
         dailyVoiceSecondsUsed: entitlement.dailyVoiceSecondsUsed,
         dailyResetAt: entitlement.dailyResetAt,
+        // BUGFIX: the turn gate previously omitted accountCreatedAt, so honeymoon
+        // users were cut at the 300s baseline while /sessions promised them 600s
+        // (the voice went silent mid-conversation with time still on the clock).
+        // Include it so the gate matches the cap the client was told.
+        accountCreatedAt: profile?.createdAt ?? null,
       },
       tz,
     );

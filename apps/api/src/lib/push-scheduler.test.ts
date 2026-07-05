@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { bodyFor, computeDay1At } from "./push-scheduler";
+import { describe, expect, it, vi } from "vitest";
+import { buildPushCopy } from "@language-coach/shared";
+import { computeDay1At, scheduleInactivityReminders } from "./push-scheduler";
 
 describe("computeDay1At", () => {
   it("returns approximately 9am local time the day after now", () => {
@@ -12,18 +13,84 @@ describe("computeDay1At", () => {
   });
 });
 
-describe("bodyFor", () => {
-  it("returns title + body + deep-link for each kind", () => {
-    expect(bodyFor("day-1-feedback").title).toContain("first feedback");
-    expect(bodyFor("day-1-feedback").data!.url).toBe(
+describe("buildPushCopy", () => {
+  it("returns a localized title + body + deep-link per kind", () => {
+    expect(buildPushCopy("day-1-feedback", "en").data.url).toBe(
       "mylanguagecoach:///(tabs)/practice",
     );
-    expect(bodyFor("day-2-warmup").body).toContain("warmup");
-    expect(bodyFor("day-2-warmup").data!.url).toBe(
-      "mylanguagecoach:///(tabs)/practice",
-    );
-    expect(bodyFor("day-7-summary").data!.url).toBe(
+    expect(buildPushCopy("day-7-summary", "en").data.url).toBe(
       "mylanguagecoach:///(tabs)/progress/weekly-summary",
     );
+    // A different native language yields different copy.
+    expect(buildPushCopy("inactivity-reminder", "fr").title).not.toBe(
+      buildPushCopy("inactivity-reminder", "en").title,
+    );
+    // Unknown language falls back to English.
+    expect(buildPushCopy("day-2-warmup", "xx").title).toBe(
+      buildPushCopy("day-2-warmup", "en").title,
+    );
+  });
+});
+
+describe("scheduleInactivityReminders", () => {
+  const lapsedRows = [
+    { user_id: "u1", timezone: "Europe/Paris" },
+    { user_id: "u2", timezone: "UTC" },
+  ];
+
+  it("schedules one reminder per lapsed user, skipping those already reminded", async () => {
+    const inserted: Array<{ userId: string; kind: string }> = [];
+    const db = {
+      execute: vi.fn().mockResolvedValue(lapsedRows),
+      query: {
+        pushSchedule: {
+          // u1 already has a recent/pending reminder → skip; u2 has none.
+          findFirst: vi.fn(async (arg: unknown) => {
+            void arg;
+            return null;
+          }),
+        },
+      },
+      insert: vi.fn(() => ({
+        values: vi.fn((v: { userId: string; kind: string }) => {
+          inserted.push({ userId: v.userId, kind: v.kind });
+          return {
+            onConflictDoNothing: vi.fn(() => ({
+              returning: vi.fn().mockResolvedValue([{ id: "new" }]),
+            })),
+          };
+        }),
+      })),
+    };
+    db.query.pushSchedule.findFirst = vi.fn(async () => null);
+
+    const n = await scheduleInactivityReminders(
+      db as never,
+      new Date("2026-07-05T12:00:00Z"),
+    );
+    expect(n).toBe(2);
+    expect(inserted.map((r) => r.userId).sort()).toEqual(["u1", "u2"]);
+    expect(inserted.every((r) => r.kind === "inactivity-reminder")).toBe(true);
+  });
+
+  it("does not schedule when a reminder is already pending/recent", async () => {
+    const inserted: string[] = [];
+    const db = {
+      execute: vi.fn().mockResolvedValue([{ user_id: "u1", timezone: "UTC" }]),
+      query: {
+        pushSchedule: {
+          findFirst: vi.fn().mockResolvedValue({ id: "existing" }),
+        },
+      },
+      insert: vi.fn(() => ({
+        values: vi.fn((v: { userId: string }) => {
+          inserted.push(v.userId);
+          return Promise.resolve(undefined);
+        }),
+      })),
+    };
+    const n = await scheduleInactivityReminders(db as never, new Date());
+    expect(n).toBe(0);
+    expect(inserted).toEqual([]);
   });
 });

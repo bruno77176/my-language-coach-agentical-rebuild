@@ -35,6 +35,7 @@ import { createQuoteLikesRoutes } from "./routes/quote-likes";
 import { createMemoryRoutes } from "./routes/memory";
 import { createVocabRoutes } from "./routes/vocab";
 import { createFeedbackRoutes } from "./routes/feedback";
+import { createPushRoutes } from "./routes/push";
 import { createWeeklySummaryRoutes } from "./routes/weekly-summary";
 import { createVoiceGreetingRoutes } from "./routes/voice-greeting";
 import {
@@ -289,6 +290,7 @@ export function createApp(
 
   app.route("/v1/progress", createWeeklySummaryRoutes({ db }));
   app.route("/v1/quotes", createQuoteLikesRoutes({ db }));
+  app.route("/v1/push", createPushRoutes({ db }));
 
   return app;
 }
