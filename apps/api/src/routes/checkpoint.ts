@@ -365,6 +365,19 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
     now: newestAt,
   });
 
+  // Schedule onboarding pushes on the user's first completed segment. Free-form
+  // threads reach this path (not /end), so without it a thread-only user would
+  // never get the day-1/2/7 pushes. Idempotent — skips if already scheduled.
+  void (async () => {
+    try {
+      const { scheduleOnboardingPushes } =
+        await import("./../lib/push-scheduler");
+      await scheduleOnboardingPushes(db, conversation.userId, profile.timezone);
+    } catch {
+      // idempotent + isolated; failures swallowed
+    }
+  })();
+
   void runFeedbackAndMemory({
     db,
     deps,

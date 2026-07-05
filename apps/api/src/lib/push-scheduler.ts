@@ -132,7 +132,7 @@ export async function scheduleInactivityReminders(
     JOIN profiles p ON p.user_id = c.user_id
     WHERE EXISTS (SELECT 1 FROM push_tokens pt WHERE pt.user_id = c.user_id)
     GROUP BY c.user_id, p.timezone
-    HAVING MAX(m.created_at) < ${lapseCutoff}
+    HAVING MAX(m.created_at) < ${lapseCutoff.toISOString()}
     LIMIT ${limit}
   `);
   const rows = (
@@ -153,12 +153,21 @@ export async function scheduleInactivityReminders(
         ),
     });
     if (recent) continue;
-    await schedulePush(db, {
-      userId,
-      kind: "inactivity-reminder",
-      sendAt: computeDay1At(now, tz),
-    });
-    scheduled++;
+    // onConflictDoNothing backstops the read-then-write race across concurrent
+    // sweeps (e.g. two machines during a deploy) via the partial unique index
+    // push_schedule_pending_inactivity_uniq (migration 0024). Count only rows
+    // that actually inserted.
+    const insertedRow = await db
+      .insert(pushSchedule)
+      .values({
+        userId,
+        kind: "inactivity-reminder",
+        sendAt: computeDay1At(now, tz),
+        payload: {},
+      })
+      .onConflictDoNothing()
+      .returning({ id: pushSchedule.id });
+    if (insertedRow.length > 0) scheduled++;
   }
   return scheduled;
 }

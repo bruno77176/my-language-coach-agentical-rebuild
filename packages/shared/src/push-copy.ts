@@ -249,13 +249,19 @@ export const PUSH_COPY: Record<PushKind, Record<SupportedLang, PushCopy>> = {
 
 /**
  * Localized push copy for a kind, in the user's native language (falls back to
- * English for unmapped codes). Returns the Expo push payload shape.
+ * English for unmapped codes). Returns the Expo push payload shape. Defensive
+ * against an unknown `kind` (push_schedule.kind is free text) — falls back to a
+ * safe generic reminder rather than throwing, so one stray row can't stall the
+ * whole send queue.
  */
 export function buildPushCopy(
-  kind: PushKind,
+  kind: string,
   nativeLang: string,
 ): { title: string; body: string; data: { url: string } } {
-  const byLang = PUSH_COPY[kind];
+  const byLang =
+    PUSH_COPY[kind as PushKind] ?? PUSH_COPY["inactivity-reminder"];
   const copy = byLang[nativeLang as SupportedLang] ?? byLang.en;
-  return { title: copy.title, body: copy.body, data: { url: DEEP_LINK[kind] } };
+  const url =
+    DEEP_LINK[kind as PushKind] ?? "mylanguagecoach:///(tabs)/practice";
+  return { title: copy.title, body: copy.body, data: { url } };
 }

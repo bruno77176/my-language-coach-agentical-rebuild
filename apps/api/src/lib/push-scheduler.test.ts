@@ -54,11 +54,14 @@ describe("scheduleInactivityReminders", () => {
       insert: vi.fn(() => ({
         values: vi.fn((v: { userId: string; kind: string }) => {
           inserted.push({ userId: v.userId, kind: v.kind });
-          return Promise.resolve(undefined);
+          return {
+            onConflictDoNothing: vi.fn(() => ({
+              returning: vi.fn().mockResolvedValue([{ id: "new" }]),
+            })),
+          };
         }),
       })),
     };
-    // Make u1 look already-reminded by returning a row only for u1.
     db.query.pushSchedule.findFirst = vi.fn(async () => null);
 
     const n = await scheduleInactivityReminders(
