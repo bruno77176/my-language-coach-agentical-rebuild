@@ -22,10 +22,6 @@ import { QuoteCard } from "@/src/features/home/quote-card";
 import { TodayProgress } from "@/src/features/home/today-progress";
 import { useOfflineQuote } from "@/src/features/home/use-offline-quote";
 import {
-  useVocabDeck,
-  useReviewToday,
-} from "@/src/features/vocab/use-vocab-deck";
-import {
   useQuoteLikes,
   useToggleQuoteLike,
 } from "@/src/features/quotes/use-quote-likes";
@@ -61,8 +57,6 @@ export default function HomeScreen() {
   const { data: stats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
   const cachedQuote = useOfflineQuote(profile ?? null);
-  const { data: vocab } = useVocabDeck(profile?.target_lang);
-  const { data: reviewToday } = useReviewToday(profile?.target_lang);
   const { data: likedQuoteIds } = useQuoteLikes();
   const toggleQuoteLike = useToggleQuoteLike();
 
@@ -126,28 +120,6 @@ export default function HomeScreen() {
           dailyGoalMinutes={dailyGoalMinutes}
         />
 
-        {vocab && vocab.items.length > 0 ? (
-          <Pressable
-            style={styles.vocabCard}
-            onPress={() => router.push("/vocab")}
-            hitSlop={8}
-          >
-            <View style={{ flex: 1 }}>
-              <EditorialText kind="bodyLg" color={palette.ink}>
-                Review your words
-              </EditorialText>
-              <EditorialText kind="bodySm" color={palette.inkSoft}>
-                {reviewToday && reviewToday.items.length > 0
-                  ? `${reviewToday.items.length} to review today`
-                  : "All caught up — browse anytime"}
-              </EditorialText>
-            </View>
-            <EditorialText kind="displayMd" color={palette.accent}>
-              {vocab.items.length}
-            </EditorialText>
-          </Pressable>
-        ) : null}
-
         <Pressable
           style={styles.cta}
           onPress={() => router.push("/(tabs)/practice")}
@@ -204,17 +176,4 @@ const styles = StyleSheet.create({
     ...shadow.cta,
   },
   ctaText: { fontWeight: "600" },
-  vocabCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    // Opaque cream, not translucent glassStrong: on Android a translucent
-    // background + elevation (shadow.cta) makes the compositor paint an opaque
-    // inner rectangle inset from the rounded card — the "greyish border" Bruno
-    // flagged. Cream is opaque and matches the other cards on the gradient.
-    backgroundColor: palette.cream,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: spacing.md,
-    ...shadow.cta,
-  },
 });
