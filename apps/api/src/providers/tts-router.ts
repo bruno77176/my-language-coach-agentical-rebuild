@@ -50,6 +50,12 @@ export type TtsDeps = {
 // Inworld, so we can't reuse the requested voiceId on the fallback path.
 const FALLBACK_VOICE_ID = "nova";
 
+// Minimum plausible audio size. A provider can return HTTP 200 with an empty /
+// truncated stream on a soft limit (ElevenLabs concurrency/quota) — real speech
+// audio is far larger than this, so anything below it is treated as "no audio"
+// and triggers the OpenAI fallback rather than shipping a silent message.
+const MIN_TTS_BYTES = 256;
+
 // The mobile Voice Lab always sends a config, defaulting to DEFAULT_TTS_CONFIG
 // (one English voice). Treat a config equal to the default as "no explicit
 // choice" so the per-language native voice wins — only a Voice Lab config the
@@ -103,30 +109,45 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
       style: config.style,
       onUsage: input.onUsage,
     };
+    let result: TtsResult | undefined;
+    let primaryErr: unknown;
     try {
       switch (config.provider) {
         case "elevenlabs":
-          return await elevenSynth(deps.eleven, shared);
+          result = await elevenSynth(deps.eleven, shared);
+          break;
         case "gemini":
-          return await geminiSynth(deps.geminiAuth, shared);
+          result = await geminiSynth(deps.geminiAuth, shared);
+          break;
         case "inworld":
-          return await inworldSynth(deps.inworldKey, shared);
+          result = await inworldSynth(deps.inworldKey, shared);
+          break;
         default:
-          return await openAiSynth(deps.openai, shared);
+          result = await openAiSynth(deps.openai, shared);
       }
     } catch (err) {
-      // A non-OpenAI provider failed (rate limit, outage, bad response). Degrade
-      // to OpenAI's reliable default voice so the user still gets audio instead
-      // of a "TTS failed" message. If OpenAI itself was the request, propagate.
-      if (config.provider === "openai") throw err;
-      console.warn(
-        `[tts] provider "${config.provider}" failed (${(err as Error).message}); ` +
-          `falling back to OpenAI "${FALLBACK_VOICE_ID}"`,
-      );
-      return openAiSynth(deps.openai, {
-        ...shared,
-        voiceId: FALLBACK_VOICE_ID,
-      });
+      primaryErr = err;
     }
+
+    // The provider produced real audio → use it.
+    if (result && result.audioBuffer.length >= MIN_TTS_BYTES) return result;
+
+    // Otherwise the provider either threw OR returned empty/truncated audio
+    // (which would render as a SILENT coach message). Degrade to OpenAI's
+    // reliable default voice so the user always hears something — even a backup
+    // voice is better than silence. If OpenAI itself was the request, there's
+    // nothing better to fall back to, so surface the failure.
+    if (config.provider === "openai") {
+      if (primaryErr) throw primaryErr;
+      throw new Error("OpenAI TTS returned empty audio");
+    }
+    console.warn(
+      `[tts] provider "${config.provider}" ${
+        primaryErr
+          ? `failed (${(primaryErr as Error).message})`
+          : "returned empty audio"
+      }; falling back to OpenAI "${FALLBACK_VOICE_ID}"`,
+    );
+    return openAiSynth(deps.openai, { ...shared, voiceId: FALLBACK_VOICE_ID });
   };
 }

@@ -3,7 +3,12 @@ import { DEFAULT_TTS_CONFIG } from "@language-coach/shared";
 import { makeSynthesizeSpeech } from "./tts-router";
 
 describe("makeSynthesizeSpeech", () => {
-  const result = { audioBuffer: Buffer.from([1]), contentType: "audio/mpeg" };
+  // A realistic-sized buffer (real speech audio is far larger than the
+  // MIN_TTS_BYTES=256 "empty/truncated" threshold the router guards against).
+  const result = {
+    audioBuffer: Buffer.alloc(512, 1),
+    contentType: "audio/mpeg",
+  };
   const GEMINI_AUTH = async () => "ya29.tok";
 
   function deps(overrides: Record<string, unknown>) {
@@ -151,6 +156,33 @@ describe("makeSynthesizeSpeech", () => {
       }),
     ).rejects.toThrow("openai down");
     expect(openai).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to OpenAI when the provider returns empty/silent audio (no throw)", async () => {
+    // ElevenLabs can close a stream with ~0 bytes on a soft limit WITHOUT
+    // throwing — that must not surface as a silent coach message.
+    const eleven = vi.fn().mockResolvedValue({
+      audioBuffer: Buffer.alloc(0),
+      contentType: "audio/mpeg",
+    });
+    const openai = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ eleven, openai }));
+    const out = await synth({
+      text: "hola",
+      languageCode: "es",
+      config: {
+        provider: "elevenlabs",
+        voiceId: "EXAVITQu4vr4xnSDxMaL",
+        speed: 1.0,
+        style: "warm",
+      },
+    });
+    expect(out).toBe(result);
+    expect(eleven).toHaveBeenCalled();
+    expect(openai).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ voiceId: "nova" }),
+    );
   });
 
   it("inworld config routes to Inworld with the key", async () => {
