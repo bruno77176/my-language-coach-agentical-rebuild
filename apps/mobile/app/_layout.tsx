@@ -26,6 +26,7 @@ import { useAuthStore } from "@/src/features/auth/auth-store";
 import { ErrorBoundary } from "@/src/design";
 import { IntroScreen } from "@/src/features/intro/IntroScreen";
 import { useColdStart } from "@/src/features/intro/use-cold-start";
+import { useRegisterPushToken } from "@/src/features/notifications/use-register-push";
 
 // RevenueCat public SDK keys are platform-specific (goog_… for the Play
 // Store, appl_… for the App Store). Both ship in the client bundle via
@@ -107,6 +108,10 @@ export default function RootLayout() {
       void Purchases.logIn(session.user.id).catch(() => {});
     }
   }, [session?.user?.id]);
+
+  // Register the device's push token once signed in, so the server can send
+  // friendly native-language reminders (permission is requested here).
+  useRegisterPushToken(session?.user?.id);
 
   // Global auth gate: when the user signs out from anywhere (e.g. Profile),
   // route them back to the sign-in screen. The route group check prevents
