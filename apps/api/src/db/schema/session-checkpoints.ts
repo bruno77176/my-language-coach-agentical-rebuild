@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { conversations } from "./conversations";
 import { profiles } from "./profiles";
@@ -41,6 +42,12 @@ export const sessionCheckpoints = pgTable(
     convEndedIdx: index("checkpoints_conv_ended_idx").on(
       t.conversationId,
       t.endedAt.desc(),
+    ),
+    // One checkpoint per segment start → concurrent same-segment checkpoints
+    // can't double-fire streak/feedback/digest.
+    convStartUniq: uniqueIndex("session_checkpoints_conv_start_uniq").on(
+      t.conversationId,
+      t.startedAt,
     ),
   }),
 );

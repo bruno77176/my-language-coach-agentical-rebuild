@@ -140,6 +140,7 @@ export function useConversation(
   // the oldest loaded message's createdAt (the "load earlier" cursor).
   const [hasMore, setHasMore] = useState(false);
   const oldestCreatedAtRef = useRef<string | null>(null);
+  const loadingEarlierRef = useRef(false);
 
   // isMeteringEnabled surfaces a live amplitude on the recorder status, which
   // drives the recording waveform (BRU-44).
@@ -742,7 +743,10 @@ export function useConversation(
   const loadEarlier = useCallback(async () => {
     const id = conversationIdRef.current;
     const before = oldestCreatedAtRef.current;
-    if (!id || !before || !hasMore) return;
+    // In-flight guard: a rapid double-tap must not fetch + prepend the same page
+    // twice (which would duplicate messages and their React keys).
+    if (!id || !before || !hasMore || loadingEarlierRef.current) return;
+    loadingEarlierRef.current = true;
     try {
       const page = await fetchThreadMessages(id, before);
       if (page.messages.length === 0) {
@@ -754,6 +758,8 @@ export function useConversation(
       setHasMore(page.has_more);
     } catch {
       // best-effort — a failed page load shouldn't break the conversation
+    } finally {
+      loadingEarlierRef.current = false;
     }
   }, [hasMore]);
 

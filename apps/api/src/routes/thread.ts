@@ -89,7 +89,9 @@ export async function loadThreadMessages(
       opts.before
         ? a(e(t.conversationId, conversationId), lt(t.createdAt, opts.before))
         : e(t.conversationId, conversationId),
-    orderBy: (t, { desc: d }) => [d(t.createdAt)],
+    // Secondary key keeps ordering deterministic when two rows share a
+    // millisecond timestamp (stable pages across "load earlier" cursors).
+    orderBy: (t, { desc: d }) => [d(t.createdAt), d(t.id)],
     limit: opts.limit + 1,
   });
   const hasMore = rows.length > opts.limit;

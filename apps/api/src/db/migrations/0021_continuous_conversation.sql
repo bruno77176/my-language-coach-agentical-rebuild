@@ -27,6 +27,11 @@ CREATE TABLE IF NOT EXISTS session_checkpoints (
 );
 CREATE INDEX IF NOT EXISTS checkpoints_user_ended_idx ON session_checkpoints (user_id, ended_at DESC);
 CREATE INDEX IF NOT EXISTS checkpoints_conv_ended_idx ON session_checkpoints (conversation_id, ended_at DESC);
+-- Idempotency: a segment is uniquely identified by its start (the previous
+-- checkpoint's ended_at, or thread start). Two concurrent checkpoints of the same
+-- open segment compute the same started_at → only one insert wins, so streak /
+-- feedback / digest never double-fire.
+CREATE UNIQUE INDEX IF NOT EXISTS session_checkpoints_conv_start_uniq ON session_checkpoints (conversation_id, started_at);
 
 -- RLS: the API talks to Postgres over DATABASE_URL (bypasses RLS); these policies
 -- are defense-in-depth for the PostgREST Data API, matching the owner-scoped

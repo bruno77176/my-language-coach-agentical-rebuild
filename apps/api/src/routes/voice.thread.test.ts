@@ -112,6 +112,7 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
           findFirst: vi.fn().mockResolvedValue({
             id: convId,
             userId,
+            kind: "thread",
             language: "de",
             startedAt: new Date(),
           }),
@@ -152,6 +153,7 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
           findFirst: vi.fn().mockResolvedValue({
             id: convId,
             userId,
+            kind: "thread",
             language: "de",
             startedAt,
           }),
@@ -172,10 +174,14 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
         },
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
       },
+      // The checkpoint insert uses onConflictDoNothing(...).returning(); other
+      // inserts (feedback/digest) await onConflictDoNothing() directly.
       insert: vi.fn(() => ({
         values: vi.fn(() => ({
-          returning: vi.fn().mockResolvedValue([{ id: "cp1" }]),
-          onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+          onConflictDoNothing: vi.fn(() => ({
+            returning: vi.fn().mockResolvedValue([{ id: "cp1" }]),
+          })),
+          onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
         })),
       })),
       update: vi.fn(() => ({
@@ -197,5 +203,74 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
     expect(body.seconds_spoken).toBe(300);
     // Streak upsert ran.
     expect(db.execute).toHaveBeenCalled();
+  });
+
+  it("400s a checkpoint against a non-thread (scenario/legacy) conversation", async () => {
+    const convId = "11111111-1111-1111-1111-111111111111";
+    const db = {
+      query: {
+        conversations: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValue({ id: convId, userId, kind: "session" }),
+        },
+      },
+    };
+    const routes = createVoiceRoutes({ db: db as never, ...noopProviderDeps });
+    const res = await appWithVoice(routes).request(
+      `/v1/voice/sessions/${convId}/checkpoint`,
+      { method: "POST" },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("no-ops when the checkpoint insert loses the idempotency race", async () => {
+    const convId = "11111111-1111-1111-1111-111111111111";
+    const startedAt = new Date("2026-07-05T10:00:00Z");
+    const newestAt = new Date("2026-07-05T10:05:00Z");
+    const db = {
+      query: {
+        conversations: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: convId,
+            userId,
+            kind: "thread",
+            language: "de",
+            startedAt,
+          }),
+        },
+        profiles: {
+          findFirst: vi.fn().mockResolvedValue({
+            timezone: "UTC",
+            dailyGoalMinutes: 10,
+            memoryEnabled: false,
+            nativeLang: "en",
+          }),
+        },
+        sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        messages: {
+          findFirst: vi.fn().mockResolvedValue({ createdAt: newestAt }),
+        },
+      },
+      // A concurrent checkpoint already closed this segment → insert returns [].
+      insert: vi.fn(() => ({
+        values: vi.fn(() => ({
+          onConflictDoNothing: vi.fn(() => ({
+            returning: vi.fn().mockResolvedValue([]),
+          })),
+        })),
+      })),
+      execute: vi.fn().mockResolvedValue([]),
+    };
+    const routes = createVoiceRoutes({ db: db as never, ...noopProviderDeps });
+    const res = await appWithVoice(routes).request(
+      `/v1/voice/sessions/${convId}/checkpoint`,
+      { method: "POST" },
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { checkpoint_id: string | null };
+    expect(body.checkpoint_id).toBeNull();
+    // No streak upsert on the losing path.
+    expect(db.execute).not.toHaveBeenCalled();
   });
 });

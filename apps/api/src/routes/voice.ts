@@ -309,7 +309,13 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     const beforeParam = c.req.query("before");
     const limitParam = c.req.query("limit");
     if (beforeParam || limitParam) {
-      const before = beforeParam ? new Date(beforeParam) : undefined;
+      const parsedBefore = beforeParam ? new Date(beforeParam) : undefined;
+      // Drop an unparseable ?before= rather than letting Invalid Date reach the
+      // query (which would 500).
+      const before =
+        parsedBefore && !Number.isNaN(parsedBefore.getTime())
+          ? parsedBefore
+          : undefined;
       const limit = Math.min(
         Math.max(Number(limitParam) || THREAD_HISTORY_PAGE_SIZE, 1),
         100,
@@ -511,6 +517,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     });
     if (!conversation) {
       return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+    // Checkpoints are a thread-only concept. A scenario/legacy conversation ends
+    // via /end (and would otherwise get a duplicate, phantom checkpoint row).
+    if (conversation.kind !== "thread") {
+      return c.json(
+        { error: { code: "BAD_REQUEST", message: "Not a thread" } },
+        400,
+      );
     }
     const profile = await deps.db.query.profiles.findFirst({
       where: (t, { eq: e }) => e(t.userId, userId),

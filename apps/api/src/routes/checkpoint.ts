@@ -43,15 +43,23 @@ export async function upsertStreakDay(
     timeZone: args.timezone,
   }).format(args.now);
   const dailyGoalSeconds = args.dailyGoalMinutes * 60;
-  const goalReached = args.secondsSpoken >= dailyGoalSeconds;
-  await db.execute(sql`
+  const segmentGoalReached = args.secondsSpoken >= dailyGoalSeconds;
+  const res = await db.execute(sql`
     INSERT INTO streak_days (user_id, date, seconds_spoken, goal_reached)
-    VALUES (${args.userId}, ${todayInTz}, ${args.secondsSpoken}, ${goalReached})
+    VALUES (${args.userId}, ${todayInTz}, ${args.secondsSpoken}, ${segmentGoalReached})
     ON CONFLICT (user_id, date)
     DO UPDATE SET
       seconds_spoken = streak_days.seconds_spoken + ${args.secondsSpoken},
       goal_reached = streak_days.goal_reached OR (streak_days.seconds_spoken + ${args.secondsSpoken} >= ${dailyGoalSeconds})
+    RETURNING goal_reached
   `);
+  // Report the CUMULATIVE day goal (several short segments can add up to it),
+  // not just this segment. Fall back to the per-segment value if the driver's
+  // result shape is unavailable (e.g. in unit tests with a stubbed execute).
+  const rows = Array.isArray(res)
+    ? (res as Array<{ goal_reached?: boolean }>)
+    : ((res as { rows?: Array<{ goal_reached?: boolean }> })?.rows ?? []);
+  const goalReached = rows[0]?.goal_reached ?? segmentGoalReached;
   return { goalReached };
 }
 
@@ -337,7 +345,16 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
       endedAt: newestAt,
       secondsSpoken,
     })
+    // Idempotent per segment (unique on conversation_id + started_at): a
+    // concurrent checkpoint of the same open segment loses here and bails, so
+    // streak/feedback/digest never double-fire.
+    .onConflictDoNothing({
+      target: [sessionCheckpoints.conversationId, sessionCheckpoints.startedAt],
+    })
     .returning({ id: sessionCheckpoints.id });
+  if (inserted.length === 0) {
+    return null; // another checkpoint already closed this segment
+  }
   const checkpointId = inserted[0]!.id;
 
   const { goalReached } = await upsertStreakDay(db, {

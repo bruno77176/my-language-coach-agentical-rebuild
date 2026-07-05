@@ -81,7 +81,16 @@ async function defaultRun(
     conversationId: job.conversationId,
   });
 
-  const transcript = await loadTranscript(db, job.conversationId);
+  // Continuous-thread checkpoints scope the digest to the segment; scenario/
+  // legacy jobs (no checkpoint_id) digest the whole conversation.
+  let range: { start: Date; end: Date } | undefined;
+  if (job.checkpointId) {
+    const cp = await db.query.sessionCheckpoints.findFirst({
+      where: (t, { eq: e }) => e(t.id, job.checkpointId!),
+    });
+    if (cp) range = { start: cp.startedAt, end: cp.endedAt };
+  }
+  const transcript = await loadTranscript(db, job.conversationId, range);
   const result = await runDigest(
     { transcript, languageCode: job.languageCode },
     makeDigestDeps(db, openai, job, onUsage),
