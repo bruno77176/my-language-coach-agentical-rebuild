@@ -47,6 +47,7 @@ import type {
 import type { OnUsage } from "../providers/usage";
 import { runTurn } from "./run-turn";
 import { persistVocab } from "./vocab-persist";
+import { upsertStreakDay, runFeedbackAndMemory } from "./checkpoint";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
@@ -975,24 +976,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       .set({ endedAt, secondsSpoken: sessionDurationSec })
       .where(eq(conversations.id, conversationId));
 
-    // Compute today's date in user's local TZ (e.g. "2026-05-09").
-    const todayInTz = new Intl.DateTimeFormat("en-CA", {
-      timeZone: profile.timezone,
-    }).format(new Date());
-
-    const dailyGoalSeconds = profile.dailyGoalMinutes * 60;
-    const goalReached = sessionDurationSec >= dailyGoalSeconds;
-
-    // Upsert streak_days for today: add this session's duration, OR-set
-    // goal_reached.
-    await deps.db.execute(sql`
-      INSERT INTO streak_days (user_id, date, seconds_spoken, goal_reached)
-      VALUES (${userId}, ${todayInTz}, ${sessionDurationSec}, ${goalReached})
-      ON CONFLICT (user_id, date)
-      DO UPDATE SET
-        seconds_spoken = streak_days.seconds_spoken + ${sessionDurationSec},
-        goal_reached = streak_days.goal_reached OR (streak_days.seconds_spoken + ${sessionDurationSec} >= ${dailyGoalSeconds})
-    `);
+    // Upsert today's streak (shared with the thread-checkpoint path).
+    const { goalReached } = await upsertStreakDay(deps.db, {
+      userId,
+      timezone: profile.timezone,
+      secondsSpoken: sessionDurationSec,
+      dailyGoalMinutes: profile.dailyGoalMinutes,
+      now: endedAt,
+    });
 
     // Plan 8 M5: schedule Day 1/2/7 push notifications on the first session end.
     // scheduleOnboardingPushes is idempotent: it skips if a day-1-feedback row
@@ -1007,155 +998,21 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       }
     })();
 
-    // Plan 8 M1: fire-and-forget memory extraction. Never block the response.
-    void (async () => {
-      try {
-        // Global consent gate: skip extraction entirely when memory is off.
-        if (!profile.memoryEnabled) return;
-        const memoryRow = await deps.db.query.coachMemory.findFirst({
-          where: (t, { eq: e, and: a }) =>
-            a(e(t.userId, userId), e(t.languageCode, conversation.language)),
-        });
-        const existingMemory =
-          parseCoachMemoryRow(memoryRow) ?? emptyCoachMemory();
-        const transcript = await deps.db.query.messages.findMany({
-          where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
-        });
-        const ttranscript = transcript.map((m) => ({
-          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
-          text: m.text,
-        }));
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-          conversationId,
-        });
-        const updated = await deps.extractMemory({
-          existingMemory,
-          transcript: ttranscript,
-          languageCode: conversation.language,
-          onUsage,
-        });
-        if (!updated) return; // parse failure already handled inside extractMemory
-        await deps.db
-          .insert(coachMemory)
-          .values({
-            userId,
-            languageCode: conversation.language,
-            proficiencyLevel: updated.proficiency_level ?? null,
-            recentTopics: updated.recent_topics,
-            weakAreas: updated.weak_areas,
-            personalContext: updated.personal_context,
-            lastSessionSummary: updated.last_session_summary ?? null,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [coachMemory.userId, coachMemory.languageCode],
-            set: {
-              proficiencyLevel: updated.proficiency_level ?? null,
-              recentTopics: updated.recent_topics,
-              weakAreas: updated.weak_areas,
-              personalContext: updated.personal_context,
-              lastSessionSummary: updated.last_session_summary ?? null,
-              updatedAt: new Date(),
-            },
-          });
-      } catch (err) {
-        // Memory extraction never breaks the user-visible flow, but we still
-        // want failures surfaced in Sentry so silent regressions are visible.
-        reportError(err, {
-          where: "voice.end.memory-extract",
-          userId,
-          conversationId,
-        });
-      }
-    })();
-
-    // Agentic memory (Pro): enqueue a between-session digest. Cheap row insert;
-    // the worker Pro/consent-gates and does the heavy lifting. Idempotent on conversationId.
-    if (profile.memoryEnabled) {
-      void (async () => {
-        try {
-          await deps.db
-            .insert(digestJobs)
-            .values({
-              userId,
-              conversationId,
-              languageCode: conversation.language,
-            })
-            .onConflictDoNothing();
-        } catch (err) {
-          reportError(err, {
-            where: "voice.end.digest-enqueue",
-            userId,
-            conversationId,
-          });
-        }
-      })();
-    }
-
-    // Plan 8 M2: insert pending feedback row, then fire gen job. Fire-and-forget.
-    void (async () => {
-      try {
-        await deps.db
-          .insert(sessionFeedback)
-          .values({
-            conversationId,
-            status: "pending",
-            highlights: [],
-            corrections: [],
-            vocab: [],
-          })
-          .onConflictDoNothing();
-
-        const transcript = await deps.db.query.messages.findMany({
-          where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
-        });
-        const ttranscript = transcript.map((m) => ({
-          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
-          text: m.text,
-        }));
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-          conversationId,
-        });
-        const fb = await deps.generateFeedback({
-          transcript: ttranscript,
-          languageCode: conversation.language,
-          nativeLanguageCode: profile.nativeLang,
-          onUsage,
-        });
-        if (!fb) {
-          await deps.db
-            .update(sessionFeedback)
-            .set({ status: "failed" })
-            .where(eq(sessionFeedback.conversationId, conversationId));
-          return;
-        }
-        await deps.db
-          .update(sessionFeedback)
-          .set({
-            status: "ready",
-            highlights: fb.highlights,
-            corrections: fb.corrections,
-            vocab: fb.vocab,
-          })
-          .where(eq(sessionFeedback.conversationId, conversationId));
-
-        // Mirror the extracted vocab into the persistent flashcard deck.
-        await persistVocab(deps.db, {
-          userId,
-          language: conversation.language,
-          vocab: fb.vocab,
-        });
-      } catch {
-        // Already reported via reportError inside generate-feedback;
-        // outer catch swallows DB errors so /end response isn't blocked.
-      }
-    })();
+    // Feedback + coach-memory + digest for the whole conversation (scenario /
+    // legacy path: since=null, checkpointId=null → keyed on conversation_id).
+    // Fire-and-forget; never blocks the response.
+    void runFeedbackAndMemory({
+      db: deps.db,
+      deps,
+      userId,
+      conversationId,
+      language: conversation.language,
+      nativeLang: profile.nativeLang,
+      memoryEnabled: profile.memoryEnabled,
+      platform: platformFromHeader(c.req.header("X-Client-Platform")),
+      since: null,
+      checkpointId: null,
+    });
 
     return c.json({
       seconds_spoken: sessionDurationSec,
