@@ -72,9 +72,21 @@ export function makeDigestDeps(
 export async function loadTranscript(
   db: Database,
   conversationId: string,
+  // For a continuous-thread checkpoint, scope to the segment's
+  // (start, end] range — otherwise a never-ending thread would re-summarize its
+  // entire (unbounded, growing) history on every checkpoint. Absent for
+  // scenario/legacy digests (whole conversation).
+  range?: { start: Date; end: Date },
 ): Promise<TranscriptTurn[]> {
   const messages = await db.query.messages.findMany({
-    where: (t, { eq: e }) => e(t.conversationId, conversationId),
+    where: (t, { eq: e, and: a, gt: g, lte }) =>
+      range
+        ? a(
+            e(t.conversationId, conversationId),
+            g(t.createdAt, range.start),
+            lte(t.createdAt, range.end),
+          )
+        : e(t.conversationId, conversationId),
     orderBy: (t, { asc: a }) => [a(t.createdAt)],
   });
   return messages.map((m) => ({

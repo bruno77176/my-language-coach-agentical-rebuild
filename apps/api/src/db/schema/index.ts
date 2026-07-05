@@ -14,6 +14,7 @@ export * from "./upfront-costs";
 export * from "./revenue-events";
 export * from "./coach-memory";
 export * from "./session-feedback";
+export * from "./session-checkpoints";
 export * from "./push-schedule";
 export * from "./quote-likes";
 export * from "./memory-items";

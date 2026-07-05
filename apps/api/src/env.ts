@@ -62,6 +62,15 @@ export const MAX_TURN_WALLCLOCK_DELTA_SECONDS = 180;
 export const AD_EXTENSION_SECONDS = 180;
 export const MAX_AD_EXTENSIONS_PER_DAY = 1;
 
+// Continuous conversation ("infinite thread"). A per-language free-form thread
+// never "ends": feedback + coach-memory + streak fire on a *checkpoint* instead
+// (manual "Wrap up" or auto on inactivity). If the newest message in a thread is
+// older than this when the user re-opens it, the stale segment is auto-checkpointed
+// before continuing — so closing the app still earns feedback/memory/streak.
+export const INACTIVITY_CHECKPOINT_MINUTES = 30;
+// How many messages to return on thread open (and per "load earlier" page).
+export const THREAD_HISTORY_PAGE_SIZE = 30;
+
 export function loadEnv(): Env {
   const result = EnvSchema.safeParse(process.env);
   if (!result.success) {

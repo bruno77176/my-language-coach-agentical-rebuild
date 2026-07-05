@@ -138,10 +138,18 @@ function PracticeChooser() {
   const onFree = () => router.replace("/(tabs)/practice?start=free");
   // A recent session opens its saved TRANSCRIPT (BRU-29); the feedback report
   // is reachable from there.
-  const onReview = (id: string, secondsSpoken: number) =>
+  const onReview = (
+    id: string,
+    kind: "session" | "checkpoint" | undefined,
+    secondsSpoken: number,
+  ) =>
     router.push({
       pathname: "/(modals)/transcript",
-      params: { conversationId: id, secondsSpoken: String(secondsSpoken) },
+      params: {
+        conversationId: id,
+        kind: kind ?? "session",
+        secondsSpoken: String(secondsSpoken),
+      },
     });
 
   return (
@@ -240,7 +248,7 @@ function PracticeChooser() {
             key={s.id}
             session={s}
             nativeLang={nativeLang}
-            onPress={() => onReview(s.id, s.secondsSpoken)}
+            onPress={() => onReview(s.id, s.kind, s.secondsSpoken)}
           />
         ))}
 
@@ -369,10 +377,16 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     submitText,
     recorder,
     end,
+    hasMore,
+    loadEarlier,
     dismissError,
     toggleListeningMode,
     revealMessage,
   } = useConversation(targetLang, displayName, nativeLang, scenarioId);
+
+  // Free-form practice is a continuous per-language thread; role-play scenarios
+  // are one-off sessions. The label + wrap-up semantics differ (see end()).
+  const isThread = !scenarioId;
 
   const { data: todayStats } = useTodayStats();
   const { data: streak } = useCurrentStreak();
@@ -496,6 +510,9 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
 
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   const [listHeight, setListHeight] = useState(0);
+  // While loading an EARLIER page, suppress the auto-center-on-newest so the
+  // prepend doesn't snap the viewport back to the bottom (BRU continuous-convo).
+  const suppressCenterRef = useRef(false);
   // Track the live message count so the scroll helper can run from callbacks
   // (onContentSizeChange) without going stale.
   const msgCountRef = useRef(0);
@@ -515,6 +532,8 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
   const centerLatest = useCallback(() => {
     const n = msgCountRef.current;
     if (n === 0) return;
+    // Don't fight a "load earlier" prepend by yanking back to the newest row.
+    if (suppressCenterRef.current) return;
     flatListRef.current?.scrollToIndex({
       index: n - 1,
       viewPosition: 0.5,
@@ -544,6 +563,17 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
     },
     [],
   );
+
+  // "Load earlier": suppress auto-centering across the prepend + the layout
+  // events it triggers, then re-enable so live turns center again.
+  const onLoadEarlier = useCallback(() => {
+    suppressCenterRef.current = true;
+    void loadEarlier().finally(() => {
+      setTimeout(() => {
+        suppressCenterRef.current = false;
+      }, 500);
+    });
+  }, [loadEarlier]);
 
   // Re-center when a message is added. onContentSizeChange covers a streaming
   // reply that grows in place; this covers the append itself, with a frame's
@@ -656,16 +686,20 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       });
     }
     actions.push({
-      label: "Leave without saving",
-      kind: "destructive",
+      // A thread is never lost by leaving (it's saved + continues next time), so
+      // this isn't destructive there — it just skips generating feedback now.
+      label: isThread ? "Leave for now" : "Leave without saving",
+      kind: isThread ? "default" : "destructive",
       onPress: () => {
         setEndDialog(null);
         runDiscard(fallback);
       },
     });
-    if (userTurnCount >= 1) {
+    // Threads can be wrapped up whenever there's anything in the chat (even on a
+    // reopened thread with no fresh turn yet); scenarios need a real turn first.
+    if (isThread ? messages.length > 0 : userTurnCount >= 1) {
       actions.push({
-        label: "End & see feedback",
+        label: isThread ? "Wrap up & get feedback" : "End & see feedback",
         kind: "primary",
         onPress: () => {
           setEndDialog(null);
@@ -729,6 +763,19 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         ref={flatListRef}
         data={messages}
         keyExtractor={(m) => m.id}
+        maintainVisibleContentPosition={{ minIndexForVisible: 1 }}
+        ListHeaderComponent={
+          hasMore ? (
+            <Pressable
+              onPress={onLoadEarlier}
+              style={{ paddingVertical: spacing.sm, alignItems: "center" }}
+            >
+              <EditorialText kind="bodySm" color={palette.accent}>
+                Load earlier messages
+              </EditorialText>
+            </Pressable>
+          ) : null
+        }
         renderItem={({ item }) => (
           <MessageBubble
             message={item}
@@ -814,7 +861,10 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
         {state.phase === "recording" && (
           <RecordingWaveform recorder={recorder} />
         )}
-        <EndSessionCTA visible={userTurnCount >= 1} onPress={confirmAndEnd} />
+        <EndSessionCTA
+          visible={isThread ? messages.length > 0 : userTurnCount >= 1}
+          onPress={confirmAndEnd}
+        />
         <View style={activeStyles.composerRow}>
           {state.phase === "idle" && (
             <TextComposer onSubmit={submitText} disabled={isBusy} />

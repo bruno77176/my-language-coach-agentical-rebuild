@@ -12,18 +12,22 @@ export type FeedbackResponse =
   | { status: "failed" }
   | ({ status: "ready" } & SessionFeedback);
 
+export type FeedbackKind = "session" | "checkpoint";
+
 async function fetchFeedback(
-  conversationId: string,
+  id: string,
+  kind: FeedbackKind,
 ): Promise<FeedbackResponse> {
-  const res = await fetch(
-    `${API_BASE_URL}/v1/sessions/${conversationId}/feedback`,
-    {
-      headers: {
-        authorization: await authHeader(),
-        ...clientPlatformHeader(),
-      },
+  const path =
+    kind === "checkpoint"
+      ? `/v1/checkpoints/${id}/feedback`
+      : `/v1/sessions/${id}/feedback`;
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      authorization: await authHeader(),
+      ...clientPlatformHeader(),
     },
-  );
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`fetchFeedback ${res.status}: ${text}`);
@@ -31,15 +35,18 @@ async function fetchFeedback(
   return res.json() as Promise<FeedbackResponse>;
 }
 
-export function useSessionFeedback(conversationId: string | null) {
+export function useSessionFeedback(
+  id: string | null,
+  kind: FeedbackKind = "session",
+) {
   return useQuery<FeedbackResponse>({
-    queryKey: ["session-feedback", conversationId],
-    enabled: !!conversationId,
+    queryKey: ["session-feedback", kind, id],
+    enabled: !!id,
     refetchInterval: (q) => {
       const data = q.state.data;
       if (data && data.status === "pending") return 1500;
       return false;
     },
-    queryFn: () => fetchFeedback(conversationId!),
+    queryFn: () => fetchFeedback(id!, kind),
   });
 }

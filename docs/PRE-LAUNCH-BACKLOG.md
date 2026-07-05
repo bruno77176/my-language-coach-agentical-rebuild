@@ -12,7 +12,49 @@ Legend — Type: 🐛 bug · ✨ feature · 💰 monetization · 🎬 marketing 
 
 ---
 
+## ✅ Status audit — 2026-07-05
+
+Verified against the codebase (not checkboxes). **Most of the original backlog is shipped.** Status: ✅ done · 🟡 partial · ⬜ not done.
+
+| #   | Item                             | Status | Note (if not done)                                                                                                                                    |
+| --- | -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Time-limit gate + warm screen    | 🟡     | Start gate exists but no `MIN_SESSION_START_SECONDS` warm threshold; no-entitlement users skip the start gate; `daily-limit.tsx` has no animated Lisa |
+| 2   | Wire subscriptions (RevenueCat)  | ✅     | Purchasable + entitlements + gates end-to-end                                                                                                         |
+| 3   | Time caps + ad unlock            | ✅     | Enforced server-side (per **day**, not per session)                                                                                                   |
+| 19  | Real rewarded ad                 | 🟡     | Real AdMob client wired; server-side ad verification (SSV) still a stub                                                                               |
+| 4   | Share carries install link       | ✅     | All three share types include the link                                                                                                                |
+| 5   | Like a quote → save              | 🟡     | Like/persist works; **no collection screen** to browse liked quotes                                                                                   |
+| 6   | Share-app / leave-review prompt  | ✅     | Store-review prompt + profile share row                                                                                                               |
+| 7   | Word deck: source sentence       | ✅     | Captured + shown in deck/review                                                                                                                       |
+| 8   | Prompt improvement               | ⬜     | No dedicated quality pass yet (`packages/shared/src/prompts.ts`)                                                                                      |
+| 9   | Avatar / picture upload          | ⬜     | Only generated initial-circle; no image picker                                                                                                        |
+| 10  | App UI i18n                      | ⬜     | No i18n framework in mobile; UI is hard-coded EN                                                                                                      |
+| 11  | Promotional videos               | ⬜     | No video assets                                                                                                                                       |
+| 12  | Audio stop on navigation         | ✅     | `stopAllPlayback()` on blur                                                                                                                           |
+| 13  | Interrupt coach voice (barge-in) | ✅     | Done for push-to-talk; Live WS mode still lacks it                                                                                                    |
+| 14  | Timer never stops                | ✅     | Timer pauses on blur / end                                                                                                                            |
+| 15  | Greeting voice ≠ session         | ✅     | Both resolve the same voice (BRU-19)                                                                                                                  |
+| 16  | Lisa deep persona                | ⬜     | Only a name + tone; no canon                                                                                                                          |
+| 17  | Shared images black border       | ✅     | Shadow removed from captured node (minor rounded-corner residue possible)                                                                             |
+| 18  | "Discover Lisa" game             | ⬜     | Blocked on #16                                                                                                                                        |
+| 20  | Tap-to-save word only + hint     | ✅     | Per-word tap + first-run hint                                                                                                                         |
+| 21  | Goal celebration toast           | ✅     | Non-blocking toast, confetti kept                                                                                                                     |
+| 22  | Save conversations               | ✅     | Full transcripts persisted + viewable                                                                                                                 |
+| 23  | Spaced-repetition review         | ✅     | Leitner SRS scheduler                                                                                                                                 |
+| 24  | Save words with article          | ✅     | `der Tisch` etc., LLM-derived                                                                                                                         |
+| 25  | Share link clickable             | ✅     | Isolated-line link treatment                                                                                                                          |
+| I1  | Gemini preview voices?           | ✅     | Resolved — they're GA voices, nothing to remove                                                                                                       |
+| I2  | Notifications strategy           | 🟡     | Infra + onboarding drip exist; **missing recurring/inactivity re-engagement + prefs UI** → now tracked as **#27**                                     |
+
+**Still open:** 1 🟡, 19 🟡, 5 🟡, 8, 9, 10, 11, 16, 18, plus new #26 & #27 below.
+
+---
+
 ## 🟢 NOW — the headline pre-launch push
+
+### 26. ✨ Continuous conversation — one infinite thread per language (WhatsApp-style) _(in progress 2026-07-05)_
+
+Today every Practice open creates a new conversation row, wipes the chat, and replays the greeting — so you "start over" every time, which feels unnatural. Make free-form practice **one continuous thread per language**: re-opening shows your prior messages and continues, **no greeting on re-entry** (greet once on the very first conversation for a language), coach continues with context. Feedback + coach-memory + streak decouple from "session end" into a **"Wrap up & get feedback" checkpoint** (doesn't clear the chat) plus an **auto-checkpoint on 30-min inactivity** so closing the app still earns them. Role-play scenarios keep today's behavior (separate, in-character, explicit end). Quotas unaffected (daily wall-clock cap still bounds the thread). → **Spec:** [`docs/superpowers/specs/2026-07-05-continuous-conversation-design.md`](./superpowers/specs/2026-07-05-continuous-conversation-design.md).
 
 ### 1. 💰🐛 Time-limit gate — hard block + warm "limit reached" screen
 
@@ -79,6 +121,10 @@ UI translated into the supported languages + a language selector in Profile. Alr
 ### 11. 🎬 Promotional videos
 
 Produce promo videos for the app (store listing / marketing / social). Relates to the **video** and **aso** skills.
+
+### 27. ✨ Friendly-reminder / re-engagement notifications _(upgraded from I2)_
+
+Prevent early churn — nudge people back after they download so they don't stop using the app. **Infra already exists** (verified 2026-07-05): `expo-notifications`, `push_tokens`/`push_schedule` tables, a 60s `push-runner`, and a Day-1/2/7 onboarding drip (`push-scheduler.ts`). **What's missing:** recurring practice/streak reminders, **inactivity-triggered re-engagement** ("you haven't practiced in N days"), anything beyond day 7, and a **notification-preferences/opt-out toggle** in Profile. Tie the messaging into the **churn-prevention** skill (retention nudges, not just reminders). Pairs with #26 (a lapsed thread is a natural re-engagement hook).
 
 ### 20. ✨🐛 Tap-to-save word — select the word only + make it discoverable
 

@@ -22,12 +22,15 @@ export default function TranscriptScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     conversationId?: string;
+    kind?: string;
     secondsSpoken?: string;
   }>();
-  const conversationId = one(params.conversationId);
+  // `conversationId` carries the id to open: a checkpoint id when kind is
+  // 'checkpoint' (a continuous-thread segment), else a conversation id.
+  const openId = one(params.conversationId);
+  const kind = one(params.kind) === "checkpoint" ? "checkpoint" : "session";
   const secondsSpoken = one(params.secondsSpoken);
-  const { data, isLoading, isError } =
-    useConversationTranscript(conversationId);
+  const { data, isLoading, isError } = useConversationTranscript(openId, kind);
   const [showTr, setShowTr] = useState<Record<string, boolean>>({});
 
   const langName = data
@@ -43,10 +46,13 @@ export default function TranscriptScreen() {
     : "";
 
   const onFeedback = () => {
-    if (!conversationId) return;
+    if (!openId) return;
     router.push({
       pathname: "/(modals)/end-of-session",
-      params: { conversationId, secondsSpoken: secondsSpoken ?? "0" },
+      params:
+        kind === "checkpoint"
+          ? { checkpointId: openId, secondsSpoken: secondsSpoken ?? "0" }
+          : { conversationId: openId, secondsSpoken: secondsSpoken ?? "0" },
     });
   };
 

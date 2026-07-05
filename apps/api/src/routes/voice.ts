@@ -1,14 +1,13 @@
 import { Hono } from "hono";
 import { streamSSE, type SSEStreamingApi } from "hono/streaming";
-import { eq, sql, and, desc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import {
   conversations,
   messages,
   entitlements,
-  coachMemory,
   sessionFeedback,
-  digestJobs,
+  sessionCheckpoints,
 } from "../db/schema";
 import type { Database } from "../db";
 import {
@@ -18,6 +17,8 @@ import {
   FREE_TIER_VOICE_SECONDS_PER_DAY,
   AD_EXTENSION_SECONDS,
   MAX_AD_EXTENSIONS_PER_DAY,
+  INACTIVITY_CHECKPOINT_MINUTES,
+  THREAD_HISTORY_PAGE_SIZE,
 } from "../env";
 import { canUseSecondsDaily, dailyUsed, dailyCapSeconds } from "../lib/quota";
 import { allowRequest } from "../lib/rate-limit";
@@ -31,7 +32,6 @@ import { parseTtsConfig } from "../providers/tts-config";
 import {
   buildCoachSystemPrompt,
   parseCoachMemoryRow,
-  emptyCoachMemory,
   ROLE_PLAY_SCENARIOS,
   getOpeningLine,
   buildGreeting,
@@ -46,7 +46,12 @@ import type {
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { runTurn } from "./run-turn";
-import { persistVocab } from "./vocab-persist";
+import {
+  upsertStreakDay,
+  runFeedbackAndMemory,
+  maybeCheckpoint,
+} from "./checkpoint";
+import { resolveThread, loadThreadMessages } from "./thread";
 import { SentenceBuffer } from "../lib/sentence-buffer";
 import { makeOnUsage, platformFromHeader } from "../lib/usage-bridge";
 import { reportError } from "../lib/sentry";
@@ -164,32 +169,127 @@ async function writeReplyChunk(
 export function createVoiceRoutes(deps: VoiceDeps) {
   const routes = new Hono<{ Variables: { userId: string } }>();
 
-  // GET /v1/voice/sessions/recent — Plan 8 follow-up: chooser screen
-  // shows the user's last 5 completed sessions with feedback status so
-  // they can review past coaching reports.
+  // GET /v1/voice/sessions/recent — chooser screen shows the user's last 5
+  // practiced segments with feedback status. Two sources, merged newest-first:
+  //  - continuous-thread CHECKPOINTS (kind:'checkpoint', open via checkpoint id)
+  //  - legacy/scenario ended sessions (kind:'session', open via conversation id)
+  // The thread rows themselves never appear (ended_at stays NULL).
   routes.get("/sessions/recent", async (c) => {
     const userId = c.get("userId");
-    const rows = await deps.db
-      .select({
-        id: conversations.id,
-        language: conversations.language,
-        scenarioId: conversations.scenarioId,
-        startedAt: conversations.startedAt,
-        endedAt: conversations.endedAt,
-        secondsSpoken: conversations.secondsSpoken,
-        feedbackStatus: sessionFeedback.status,
+    const [legacyRows, checkpointRows] = await Promise.all([
+      deps.db
+        .select({
+          id: conversations.id,
+          language: conversations.language,
+          scenarioId: conversations.scenarioId,
+          startedAt: conversations.startedAt,
+          endedAt: conversations.endedAt,
+          secondsSpoken: conversations.secondsSpoken,
+          feedbackStatus: sessionFeedback.status,
+        })
+        .from(conversations)
+        .leftJoin(
+          sessionFeedback,
+          and(
+            eq(sessionFeedback.conversationId, conversations.id),
+            isNull(sessionFeedback.checkpointId),
+          ),
+        )
+        .where(
+          and(
+            eq(conversations.userId, userId),
+            isNotNull(conversations.endedAt),
+          ),
+        )
+        .orderBy(desc(conversations.endedAt))
+        .limit(5),
+      deps.db
+        .select({
+          id: sessionCheckpoints.id,
+          conversationId: sessionCheckpoints.conversationId,
+          language: sessionCheckpoints.language,
+          startedAt: sessionCheckpoints.startedAt,
+          endedAt: sessionCheckpoints.endedAt,
+          secondsSpoken: sessionCheckpoints.secondsSpoken,
+          feedbackStatus: sessionFeedback.status,
+        })
+        .from(sessionCheckpoints)
+        .leftJoin(
+          sessionFeedback,
+          eq(sessionFeedback.checkpointId, sessionCheckpoints.id),
+        )
+        .where(eq(sessionCheckpoints.userId, userId))
+        .orderBy(desc(sessionCheckpoints.endedAt))
+        .limit(5),
+    ]);
+
+    const sessions = [
+      ...legacyRows.map((r) => ({
+        id: r.id,
+        kind: "session" as const,
+        conversationId: r.id,
+        language: r.language,
+        scenarioId: r.scenarioId,
+        startedAt: r.startedAt,
+        endedAt: r.endedAt,
+        secondsSpoken: r.secondsSpoken,
+        feedbackStatus: r.feedbackStatus,
+      })),
+      ...checkpointRows.map((r) => ({
+        id: r.id,
+        kind: "checkpoint" as const,
+        conversationId: r.conversationId,
+        language: r.language,
+        scenarioId: null as string | null,
+        startedAt: r.startedAt,
+        endedAt: r.endedAt,
+        secondsSpoken: r.secondsSpoken,
+        feedbackStatus: r.feedbackStatus,
+      })),
+    ]
+      .sort((a, b) => {
+        const at = a.endedAt ? new Date(a.endedAt).getTime() : 0;
+        const bt = b.endedAt ? new Date(b.endedAt).getTime() : 0;
+        return bt - at;
       })
-      .from(conversations)
-      .leftJoin(
-        sessionFeedback,
-        eq(sessionFeedback.conversationId, conversations.id),
-      )
-      .where(
-        and(eq(conversations.userId, userId), isNotNull(conversations.endedAt)),
-      )
-      .orderBy(desc(conversations.endedAt))
-      .limit(5);
-    return c.json({ sessions: rows });
+      .slice(0, 5);
+
+    return c.json({ sessions });
+  });
+
+  // GET /v1/voice/checkpoints/:id/messages — transcript of one thread segment,
+  // ownership-checked, scoped to the checkpoint's (started_at, ended_at] range.
+  routes.get("/checkpoints/:id/messages", async (c) => {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const cp = await deps.db.query.sessionCheckpoints.findFirst({
+      where: (t, { eq: e, and: a }) => a(e(t.id, id), e(t.userId, userId)),
+    });
+    if (!cp) {
+      return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+    const rows = await deps.db.query.messages.findMany({
+      where: (t, { eq: e, and: a, gt: g, lte }) =>
+        a(
+          e(t.conversationId, cp.conversationId),
+          g(t.createdAt, cp.startedAt),
+          lte(t.createdAt, cp.endedAt),
+        ),
+      orderBy: (t, { asc: as }) => [as(t.createdAt)],
+    });
+    return c.json({
+      language: cp.language,
+      startedAt: cp.startedAt,
+      endedAt: cp.endedAt,
+      messages: rows.map((m) => ({
+        id: m.id,
+        role: m.role,
+        text: m.text,
+        translation: m.translation,
+        isGreeting: m.isGreeting,
+        createdAt: m.createdAt,
+      })),
+    });
   });
 
   // GET /v1/voice/sessions/:id/messages — the full saved transcript of a past
@@ -202,6 +302,38 @@ export function createVoiceRoutes(deps: VoiceDeps) {
     });
     if (!conv) {
       return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+    // Continuous-thread pagination: `?before=<ISO>&limit=<n>` walks older pages
+    // ("load earlier"). Without params, returns the full transcript oldest-first
+    // (legacy behavior, used by the past-session transcript view).
+    const beforeParam = c.req.query("before");
+    const limitParam = c.req.query("limit");
+    if (beforeParam || limitParam) {
+      const parsedBefore = beforeParam ? new Date(beforeParam) : undefined;
+      // Drop an unparseable ?before= rather than letting Invalid Date reach the
+      // query (which would 500).
+      const before =
+        parsedBefore && !Number.isNaN(parsedBefore.getTime())
+          ? parsedBefore
+          : undefined;
+      const limit = Math.min(
+        Math.max(Number(limitParam) || THREAD_HISTORY_PAGE_SIZE, 1),
+        100,
+      );
+      const { messages: page, hasMore } = await loadThreadMessages(
+        deps.db,
+        id,
+        {
+          limit,
+          before,
+        },
+      );
+      return c.json({
+        language: conv.language,
+        startedAt: conv.startedAt,
+        messages: page,
+        has_more: hasMore,
+      });
     }
     const rows = await deps.db.query.messages.findMany({
       where: (t, { eq: e }) => e(t.conversationId, id),
@@ -270,16 +402,6 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       }
     }
 
-    const inserted = await deps.db
-      .insert(conversations)
-      .values({
-        userId,
-        language: parsed.data.language,
-        topicId: parsed.data.topic_id ?? null,
-        scenarioId: parsed.data.scenario_id ?? null,
-      })
-      .returning({ id: conversations.id });
-
     // Surface the current budget so the client can enforce the cap locally
     // (stop the session timer) and show an accurate countdown.
     const used = entitlement ? dailyUsed(entitlement, tz, now) : 0;
@@ -299,8 +421,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       entitlement != null &&
       localDayKey(entitlement.dailyResetAt, tz) === localDayKey(now, tz);
     const extUsedToday = extSameDay ? entitlement.dailyAdExtensions : 0;
-    return c.json({
-      conversation_id: inserted[0]!.id,
+    const budget = {
       daily_used_seconds: used,
       daily_cap_seconds: cap,
       reset_at: nextLocalMidnightUtc(now, tz).toISOString(),
@@ -308,6 +429,136 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         0,
         MAX_AD_EXTENSIONS_PER_DAY - extUsedToday,
       ),
+    };
+
+    // Role-play scenarios keep the one-off session model (fresh row, /end path,
+    // in-character opener). They never join the continuous thread.
+    if (parsed.data.scenario_id) {
+      const inserted = await deps.db
+        .insert(conversations)
+        .values({
+          userId,
+          language: parsed.data.language,
+          topicId: parsed.data.topic_id ?? null,
+          scenarioId: parsed.data.scenario_id,
+          kind: "session",
+        })
+        .returning({ id: conversations.id });
+      return c.json({
+        conversation_id: inserted[0]!.id,
+        kind: "session",
+        is_new_thread: false,
+        messages: [],
+        has_more: false,
+        ...budget,
+      });
+    }
+
+    // Free-form practice → the single persistent per-language thread.
+    const thread = await resolveThread(deps.db, userId, parsed.data.language);
+    // Auto-checkpoint a stale open segment before continuing, so a user who just
+    // closed the app last time still earns feedback/memory/streak for it.
+    if (!thread.isNew && profile) {
+      try {
+        await maybeCheckpoint({
+          db: deps.db,
+          deps,
+          conversation: {
+            id: thread.conversationId,
+            userId,
+            language: parsed.data.language,
+            startedAt: thread.startedAt,
+          },
+          profile: {
+            timezone: tz,
+            dailyGoalMinutes: profile.dailyGoalMinutes,
+            memoryEnabled: profile.memoryEnabled,
+            nativeLang: profile.nativeLang,
+          },
+          platform: platformFromHeader(c.req.header("X-Client-Platform")),
+          now,
+          force: false,
+          inactivityMs: INACTIVITY_CHECKPOINT_MINUTES * 60_000,
+        });
+      } catch (err) {
+        reportError(err, {
+          where: "voice.sessions.auto-checkpoint",
+          userId,
+          conversationId: thread.conversationId,
+        });
+      }
+    }
+    const { messages: history, hasMore } = await loadThreadMessages(
+      deps.db,
+      thread.conversationId,
+      { limit: THREAD_HISTORY_PAGE_SIZE },
+    );
+    return c.json({
+      conversation_id: thread.conversationId,
+      kind: "thread",
+      // Greet only when the thread has no history at all (first-ever open).
+      is_new_thread: history.length === 0,
+      messages: history,
+      has_more: hasMore,
+      ...budget,
+    });
+  });
+
+  // POST /v1/voice/sessions/:id/checkpoint — "Wrap up & get feedback" for a
+  // continuous thread. Closes the open segment (feedback + coach-memory +
+  // streak) WITHOUT ending the thread or clearing the chat. No-op if nothing new
+  // has been said since the last checkpoint.
+  routes.post("/sessions/:id/checkpoint", async (c) => {
+    const userId = c.get("userId");
+    const conversationId = c.req.param("id");
+    const conversation = await deps.db.query.conversations.findFirst({
+      where: (t, { eq: e, and: a }) =>
+        a(e(t.id, conversationId), e(t.userId, userId)),
+    });
+    if (!conversation) {
+      return c.json({ error: { code: "NOT_FOUND" } }, 404);
+    }
+    // Checkpoints are a thread-only concept. A scenario/legacy conversation ends
+    // via /end (and would otherwise get a duplicate, phantom checkpoint row).
+    if (conversation.kind !== "thread") {
+      return c.json(
+        { error: { code: "BAD_REQUEST", message: "Not a thread" } },
+        400,
+      );
+    }
+    const profile = await deps.db.query.profiles.findFirst({
+      where: (t, { eq: e }) => e(t.userId, userId),
+    });
+    if (!profile) {
+      return c.json(
+        { error: { code: "INTERNAL", message: "No profile" } },
+        500,
+      );
+    }
+    const result = await maybeCheckpoint({
+      db: deps.db,
+      deps,
+      conversation: {
+        id: conversation.id,
+        userId,
+        language: conversation.language,
+        startedAt: conversation.startedAt,
+      },
+      profile: {
+        timezone: profile.timezone,
+        dailyGoalMinutes: profile.dailyGoalMinutes,
+        memoryEnabled: profile.memoryEnabled,
+        nativeLang: profile.nativeLang,
+      },
+      platform: platformFromHeader(c.req.header("X-Client-Platform")),
+      now: new Date(),
+      force: true,
+      inactivityMs: 0,
+    });
+    return c.json({
+      checkpoint_id: result?.checkpointId ?? null,
+      seconds_spoken: result?.secondsSpoken ?? 0,
+      goal_reached: result?.goalReached ?? false,
     });
   });
 
@@ -975,24 +1226,14 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       .set({ endedAt, secondsSpoken: sessionDurationSec })
       .where(eq(conversations.id, conversationId));
 
-    // Compute today's date in user's local TZ (e.g. "2026-05-09").
-    const todayInTz = new Intl.DateTimeFormat("en-CA", {
-      timeZone: profile.timezone,
-    }).format(new Date());
-
-    const dailyGoalSeconds = profile.dailyGoalMinutes * 60;
-    const goalReached = sessionDurationSec >= dailyGoalSeconds;
-
-    // Upsert streak_days for today: add this session's duration, OR-set
-    // goal_reached.
-    await deps.db.execute(sql`
-      INSERT INTO streak_days (user_id, date, seconds_spoken, goal_reached)
-      VALUES (${userId}, ${todayInTz}, ${sessionDurationSec}, ${goalReached})
-      ON CONFLICT (user_id, date)
-      DO UPDATE SET
-        seconds_spoken = streak_days.seconds_spoken + ${sessionDurationSec},
-        goal_reached = streak_days.goal_reached OR (streak_days.seconds_spoken + ${sessionDurationSec} >= ${dailyGoalSeconds})
-    `);
+    // Upsert today's streak (shared with the thread-checkpoint path).
+    const { goalReached } = await upsertStreakDay(deps.db, {
+      userId,
+      timezone: profile.timezone,
+      secondsSpoken: sessionDurationSec,
+      dailyGoalMinutes: profile.dailyGoalMinutes,
+      now: endedAt,
+    });
 
     // Plan 8 M5: schedule Day 1/2/7 push notifications on the first session end.
     // scheduleOnboardingPushes is idempotent: it skips if a day-1-feedback row
@@ -1007,155 +1248,21 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       }
     })();
 
-    // Plan 8 M1: fire-and-forget memory extraction. Never block the response.
-    void (async () => {
-      try {
-        // Global consent gate: skip extraction entirely when memory is off.
-        if (!profile.memoryEnabled) return;
-        const memoryRow = await deps.db.query.coachMemory.findFirst({
-          where: (t, { eq: e, and: a }) =>
-            a(e(t.userId, userId), e(t.languageCode, conversation.language)),
-        });
-        const existingMemory =
-          parseCoachMemoryRow(memoryRow) ?? emptyCoachMemory();
-        const transcript = await deps.db.query.messages.findMany({
-          where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
-        });
-        const ttranscript = transcript.map((m) => ({
-          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
-          text: m.text,
-        }));
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-          conversationId,
-        });
-        const updated = await deps.extractMemory({
-          existingMemory,
-          transcript: ttranscript,
-          languageCode: conversation.language,
-          onUsage,
-        });
-        if (!updated) return; // parse failure already handled inside extractMemory
-        await deps.db
-          .insert(coachMemory)
-          .values({
-            userId,
-            languageCode: conversation.language,
-            proficiencyLevel: updated.proficiency_level ?? null,
-            recentTopics: updated.recent_topics,
-            weakAreas: updated.weak_areas,
-            personalContext: updated.personal_context,
-            lastSessionSummary: updated.last_session_summary ?? null,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [coachMemory.userId, coachMemory.languageCode],
-            set: {
-              proficiencyLevel: updated.proficiency_level ?? null,
-              recentTopics: updated.recent_topics,
-              weakAreas: updated.weak_areas,
-              personalContext: updated.personal_context,
-              lastSessionSummary: updated.last_session_summary ?? null,
-              updatedAt: new Date(),
-            },
-          });
-      } catch (err) {
-        // Memory extraction never breaks the user-visible flow, but we still
-        // want failures surfaced in Sentry so silent regressions are visible.
-        reportError(err, {
-          where: "voice.end.memory-extract",
-          userId,
-          conversationId,
-        });
-      }
-    })();
-
-    // Agentic memory (Pro): enqueue a between-session digest. Cheap row insert;
-    // the worker Pro/consent-gates and does the heavy lifting. Idempotent on conversationId.
-    if (profile.memoryEnabled) {
-      void (async () => {
-        try {
-          await deps.db
-            .insert(digestJobs)
-            .values({
-              userId,
-              conversationId,
-              languageCode: conversation.language,
-            })
-            .onConflictDoNothing();
-        } catch (err) {
-          reportError(err, {
-            where: "voice.end.digest-enqueue",
-            userId,
-            conversationId,
-          });
-        }
-      })();
-    }
-
-    // Plan 8 M2: insert pending feedback row, then fire gen job. Fire-and-forget.
-    void (async () => {
-      try {
-        await deps.db
-          .insert(sessionFeedback)
-          .values({
-            conversationId,
-            status: "pending",
-            highlights: [],
-            corrections: [],
-            vocab: [],
-          })
-          .onConflictDoNothing();
-
-        const transcript = await deps.db.query.messages.findMany({
-          where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
-        });
-        const ttranscript = transcript.map((m) => ({
-          role: (m.role === "coach" ? "coach" : "user") as "coach" | "user",
-          text: m.text,
-        }));
-        const onUsage = makeOnUsage(deps.db, {
-          userId,
-          platform: platformFromHeader(c.req.header("X-Client-Platform")),
-          conversationId,
-        });
-        const fb = await deps.generateFeedback({
-          transcript: ttranscript,
-          languageCode: conversation.language,
-          nativeLanguageCode: profile.nativeLang,
-          onUsage,
-        });
-        if (!fb) {
-          await deps.db
-            .update(sessionFeedback)
-            .set({ status: "failed" })
-            .where(eq(sessionFeedback.conversationId, conversationId));
-          return;
-        }
-        await deps.db
-          .update(sessionFeedback)
-          .set({
-            status: "ready",
-            highlights: fb.highlights,
-            corrections: fb.corrections,
-            vocab: fb.vocab,
-          })
-          .where(eq(sessionFeedback.conversationId, conversationId));
-
-        // Mirror the extracted vocab into the persistent flashcard deck.
-        await persistVocab(deps.db, {
-          userId,
-          language: conversation.language,
-          vocab: fb.vocab,
-        });
-      } catch {
-        // Already reported via reportError inside generate-feedback;
-        // outer catch swallows DB errors so /end response isn't blocked.
-      }
-    })();
+    // Feedback + coach-memory + digest for the whole conversation (scenario /
+    // legacy path: since=null, checkpointId=null → keyed on conversation_id).
+    // Fire-and-forget; never blocks the response.
+    void runFeedbackAndMemory({
+      db: deps.db,
+      deps,
+      userId,
+      conversationId,
+      language: conversation.language,
+      nativeLang: profile.nativeLang,
+      memoryEnabled: profile.memoryEnabled,
+      platform: platformFromHeader(c.req.header("X-Client-Platform")),
+      since: null,
+      checkpointId: null,
+    });
 
     return c.json({
       seconds_spoken: sessionDurationSec,

@@ -7,6 +7,11 @@ import {
 
 export type RecentSession = {
   id: string;
+  // 'checkpoint' = a continuous-thread practice segment (open via checkpoint id);
+  // 'session' = a legacy/scenario ended conversation. Older API responses omit it.
+  kind?: "checkpoint" | "session";
+  // The thread/conversation the item belongs to.
+  conversationId?: string;
   language: string;
   scenarioId: string | null;
   startedAt: string;
