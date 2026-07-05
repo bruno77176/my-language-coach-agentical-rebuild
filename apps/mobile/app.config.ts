@@ -107,7 +107,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 90,
+      versionCode: 91,
+      // Firebase Cloud Messaging config — required for Android push tokens
+      // (getExpoPushTokenAsync). Without it the native FCM SDK is unconfigured
+      // and token retrieval fails silently. Pairs with the FCM V1 service-account
+      // key uploaded to EAS. Not a secret (ships inside the APK).
+      googleServicesFile: "./google-services.json",
       // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
       // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
       edgeToEdgeEnabled: true,

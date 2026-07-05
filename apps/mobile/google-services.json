@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "902569104387",
+    "project_id": "my-language-coach",
+    "storage_bucket": "my-language-coach.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902569104387:android:0d5b3b6ac5fbc574a9ea36",
+        "android_client_info": {
+          "package_name": "com.anonymous.mylanguagecoach"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiktVwBY-oli_yALiZlKtU49KJCKr4jgI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
