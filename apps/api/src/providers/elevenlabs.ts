@@ -81,8 +81,20 @@ export async function synthesizeSpeech(
     });
   }
 
+  const audioBuffer = Buffer.concat(chunks);
+  // ElevenLabs can close the stream with 0 bytes on a soft limit (concurrency /
+  // quota) WITHOUT throwing — which would otherwise surface as a silent coach
+  // message. Treat empty audio as a failure so the router falls back to OpenAI.
+  if (audioBuffer.length === 0) {
+    throw new ProviderError(
+      "TTS_PROVIDER_FAILURE",
+      502,
+      "ElevenLabs returned empty audio",
+    );
+  }
+
   return {
-    audioBuffer: Buffer.concat(chunks),
+    audioBuffer,
     contentType: "audio/mpeg",
   };
 }
