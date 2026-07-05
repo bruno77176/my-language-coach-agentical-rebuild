@@ -8,7 +8,7 @@ export const digestJobs = pgTable("digest_jobs", {
   userId: uuid("user_id")
     .notNull()
     .references(() => profiles.userId, { onDelete: "cascade" }),
-  // The column-level `.unique()` was dropped in migration 0021: a continuous
+  // The column-level `.unique()` was dropped in migration 0023: a continuous
   // thread enqueues one digest per checkpoint, so conversation_id repeats.
   // Idempotency is now partial-unique per row type (conversation_id for
   // scenario/legacy, checkpoint_id for thread checkpoints).

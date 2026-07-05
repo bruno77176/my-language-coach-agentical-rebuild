@@ -5,7 +5,7 @@ import { sessionCheckpoints } from "./session-checkpoints";
 export const sessionFeedback = pgTable("session_feedback", {
   // No longer a primary key: a continuous thread has many checkpoints, each with
   // its own feedback row (same conversation_id, distinct checkpoint_id). Dedup is
-  // enforced by partial unique indexes in migration 0021:
+  // enforced by partial unique indexes in migration 0023:
   //   - scenario/legacy rows (checkpoint_id NULL) are unique on conversation_id
   //   - thread rows are unique on checkpoint_id
   conversationId: uuid("conversation_id")

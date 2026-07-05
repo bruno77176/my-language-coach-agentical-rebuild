@@ -20,7 +20,7 @@ export const conversations = pgTable(
     // 'session' = a one-off session (legacy sessions + role-play scenarios, which
     // still use the /end path). 'thread' = the single persistent per-language
     // free-form conversation ("continuous conversation" — one per user+language,
-    // scenario_id NULL, ended_at stays NULL forever). See migration 0021.
+    // scenario_id NULL, ended_at stays NULL forever). See migration 0023.
     kind: text("kind").notNull().default("session"),
     topicId: uuid("topic_id").references(() => topics.id, {
       onDelete: "set null",
