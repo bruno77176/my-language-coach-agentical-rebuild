@@ -4,6 +4,7 @@ import {
   sessionFeedback,
   coachMemory,
   digestJobs,
+  sessionCheckpoints,
 } from "../db/schema";
 import type { Database } from "../db";
 import { parseCoachMemoryRow, emptyCoachMemory } from "@language-coach/shared";
@@ -252,4 +253,113 @@ export async function runFeedbackAndMemory(
       });
     }
   })();
+}
+
+export type MaybeCheckpointArgs = {
+  db: Database;
+  deps: FeedbackMemoryDeps;
+  conversation: {
+    id: string;
+    userId: string;
+    language: string;
+    startedAt: Date;
+  };
+  profile: {
+    timezone: string;
+    dailyGoalMinutes: number;
+    memoryEnabled: boolean;
+    nativeLang: string;
+  };
+  platform: string;
+  now: Date;
+  /** force=true → checkpoint whenever un-checkpointed messages exist (manual wrap-up).
+   *  force=false → only when the newest message is older than inactivityMs (auto). */
+  force: boolean;
+  inactivityMs: number;
+};
+
+/**
+ * Close the current open segment of a thread into a checkpoint, if warranted.
+ * Returns null when there's nothing to checkpoint (no new messages, or not yet
+ * stale for the auto path). Otherwise inserts a session_checkpoints row, updates
+ * the streak, and fires feedback + memory for the segment (fire-and-forget).
+ */
+export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
+  checkpointId: string;
+  secondsSpoken: number;
+  goalReached: boolean;
+} | null> {
+  const {
+    db,
+    deps,
+    conversation,
+    profile,
+    platform,
+    now,
+    force,
+    inactivityMs,
+  } = args;
+
+  const last = await db.query.sessionCheckpoints.findFirst({
+    where: (t, { eq: e }) => e(t.conversationId, conversation.id),
+    orderBy: (t, { desc: d }) => [d(t.endedAt)],
+  });
+  const since = last?.endedAt ?? conversation.startedAt;
+
+  // Newest un-checkpointed message (segment upper bound = last activity).
+  const newest = await db.query.messages.findFirst({
+    where: (t, { eq: e, and: a, gt: g }) =>
+      a(e(t.conversationId, conversation.id), g(t.createdAt, since)),
+    orderBy: (t, { desc: d }) => [d(t.createdAt)],
+  });
+  if (!newest) return null; // nothing new since the last checkpoint
+
+  const newestAt = new Date(newest.createdAt);
+  if (!force && now.getTime() - newestAt.getTime() <= inactivityMs) {
+    return null; // segment still active — don't auto-checkpoint yet
+  }
+
+  const sinceDate = new Date(since);
+  // Count practice as first→last activity in the segment, not wall-clock-to-now,
+  // so a long idle gap before an auto-checkpoint doesn't inflate the streak.
+  const secondsSpoken = Math.max(
+    0,
+    Math.floor((newestAt.getTime() - sinceDate.getTime()) / 1000),
+  );
+
+  const inserted = await db
+    .insert(sessionCheckpoints)
+    .values({
+      conversationId: conversation.id,
+      userId: conversation.userId,
+      language: conversation.language,
+      startedAt: sinceDate,
+      endedAt: newestAt,
+      secondsSpoken,
+    })
+    .returning({ id: sessionCheckpoints.id });
+  const checkpointId = inserted[0]!.id;
+
+  const { goalReached } = await upsertStreakDay(db, {
+    userId: conversation.userId,
+    timezone: profile.timezone,
+    secondsSpoken,
+    dailyGoalMinutes: profile.dailyGoalMinutes,
+    now: newestAt,
+  });
+
+  void runFeedbackAndMemory({
+    db,
+    deps,
+    userId: conversation.userId,
+    conversationId: conversation.id,
+    language: conversation.language,
+    nativeLang: profile.nativeLang,
+    memoryEnabled: profile.memoryEnabled,
+    platform,
+    since: sinceDate,
+    checkpointId,
+  });
+
+  return { checkpointId, secondsSpoken, goalReached };
 }

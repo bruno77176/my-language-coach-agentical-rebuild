@@ -27,18 +27,23 @@ function appWithVoice(routes: ReturnType<typeof createVoiceRoutes>) {
 }
 
 describe("POST /v1/voice/sessions", () => {
-  it("creates a conversation and returns its id", async () => {
+  it("opens the per-language thread and returns its id (first open → is_new_thread)", async () => {
     const conversationId = "11111111-1111-1111-1111-111111111111";
     const fakeDb = {
-      // Session-start now runs the daily-cap gate, which reads the entitlement
-      // + profile. Undefined entitlement → gate skipped, budget defaults.
+      // Session-start runs the daily-cap gate (entitlement+profile) then resolves
+      // the free-form thread (conversations.findFirst → none → insert; messages
+      // → none). Undefined entitlement → gate skipped, budget defaults.
       query: {
         entitlements: { findFirst: vi.fn().mockResolvedValue(undefined) },
         profiles: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        conversations: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        messages: { findMany: vi.fn().mockResolvedValue([]) },
       },
       insert: vi.fn(() => ({
         values: vi.fn(() => ({
-          returning: vi.fn().mockResolvedValue([{ id: conversationId }]),
+          returning: vi
+            .fn()
+            .mockResolvedValue([{ id: conversationId, startedAt: new Date() }]),
         })),
       })),
     };
@@ -53,8 +58,16 @@ describe("POST /v1/voice/sessions", () => {
       body: JSON.stringify({ language: "es" }),
     });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { conversation_id: string };
+    const body = (await res.json()) as {
+      conversation_id: string;
+      kind: string;
+      is_new_thread: boolean;
+      messages: unknown[];
+    };
     expect(body.conversation_id).toBe(conversationId);
+    expect(body.kind).toBe("thread");
+    expect(body.is_new_thread).toBe(true);
+    expect(body.messages).toEqual([]);
   });
 
   it("returns 400 when language missing", async () => {
