@@ -72,9 +72,9 @@ describe("GET /v1/voice/sessions/recent", () => {
     };
     // Newest (checkpoint on 07-05) first.
     expect(body.sessions.map((s) => s.id)).toEqual(["cp-new", "conv-legacy"]);
-    expect(body.sessions[0].kind).toBe("checkpoint");
-    expect(body.sessions[0].conversationId).toBe("thread-de");
-    expect(body.sessions[1].kind).toBe("session");
+    expect(body.sessions[0]!.kind).toBe("checkpoint");
+    expect(body.sessions[0]!.conversationId).toBe("thread-de");
+    expect(body.sessions[1]!.kind).toBe("session");
   });
 });
 

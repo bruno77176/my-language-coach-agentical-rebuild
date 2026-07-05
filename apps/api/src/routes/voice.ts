@@ -1,14 +1,12 @@
 import { Hono } from "hono";
 import { streamSSE, type SSEStreamingApi } from "hono/streaming";
-import { eq, sql, and, desc, isNotNull, isNull } from "drizzle-orm";
+import { eq, and, desc, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import {
   conversations,
   messages,
   entitlements,
-  coachMemory,
   sessionFeedback,
-  digestJobs,
   sessionCheckpoints,
 } from "../db/schema";
 import type { Database } from "../db";
@@ -34,7 +32,6 @@ import { parseTtsConfig } from "../providers/tts-config";
 import {
   buildCoachSystemPrompt,
   parseCoachMemoryRow,
-  emptyCoachMemory,
   ROLE_PLAY_SCENARIOS,
   getOpeningLine,
   buildGreeting,
@@ -49,7 +46,6 @@ import type {
 } from "@language-coach/shared";
 import type { OnUsage } from "../providers/usage";
 import { runTurn } from "./run-turn";
-import { persistVocab } from "./vocab-persist";
 import {
   upsertStreakDay,
   runFeedbackAndMemory,

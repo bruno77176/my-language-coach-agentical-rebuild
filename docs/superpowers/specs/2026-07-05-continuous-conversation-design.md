@@ -140,7 +140,7 @@ On the thread `id`, over messages with `created_at > last_checkpoint_ended_at`
    over the segment transcript (same as the current end path, range-scoped).
 6. Enqueue **digest job** keyed on `checkpoint_id`.
 7. **Do not** set `ended_at` on the thread. Return `{ checkpoint_id, seconds_spoken,
-   goal_reached }`.
+goal_reached }`.
    `scheduleOnboardingPushes` stays idempotent-per-user and runs here too (first checkpoint).
 
 ### Auto-checkpoint on inactivity

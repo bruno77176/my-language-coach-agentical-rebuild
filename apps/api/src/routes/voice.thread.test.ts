@@ -149,14 +149,12 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
     const db = {
       query: {
         conversations: {
-          findFirst: vi
-            .fn()
-            .mockResolvedValue({
-              id: convId,
-              userId,
-              language: "de",
-              startedAt,
-            }),
+          findFirst: vi.fn().mockResolvedValue({
+            id: convId,
+            userId,
+            language: "de",
+            startedAt,
+          }),
         },
         profiles: {
           findFirst: vi.fn().mockResolvedValue({
