@@ -44,7 +44,7 @@ export default function TargetLangStep() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <ProgressDots step={2} total={4} />
+        <ProgressDots step={2} total={5} />
 
         <EditorialText kind="displayLg">
           What language do you want to learn?
@@ -74,7 +74,7 @@ export default function TargetLangStep() {
 
       <View style={styles.footer}>
         <Pressable
-          onPress={() => router.push("/(onboarding)/daily-goal")}
+          onPress={() => router.push("/(onboarding)/level")}
           disabled={!selected}
           style={[styles.cta, !selected && styles.ctaDisabled]}
         >

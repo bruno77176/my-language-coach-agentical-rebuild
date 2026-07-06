@@ -2,6 +2,7 @@ import type { Database } from "../db";
 import {
   buildCoachSystemPrompt,
   parseCoachMemoryRow,
+  toProficiencyLevel,
   ROLE_PLAY_SCENARIOS,
 } from "@language-coach/shared";
 import type { ChatMessage } from "../providers/openai";
@@ -51,6 +52,9 @@ export function makeLoadContext(db: Database) {
       targetLanguage: conversation.language,
       userDisplayName: profile.displayName,
       nativeLanguage: profile.nativeLang,
+      declaredLevel: toProficiencyLevel(
+        profile.selfDeclaredLevels?.[conversation.language],
+      ),
       memory,
       memoryDepth: "basic",
       scenario: scenario

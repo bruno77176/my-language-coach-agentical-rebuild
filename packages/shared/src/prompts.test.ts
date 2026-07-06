@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCoachSystemPrompt, coachReplyModel } from "./prompts";
+import { toProficiencyLevel } from "./proficiency";
 import { emptyCoachMemory, type CoachMemory } from "./coach-memory-schema";
 
 describe("buildCoachSystemPrompt", () => {
@@ -170,6 +171,43 @@ describe("coachReplyModel (audit §5 AI-3)", () => {
     expect(coachReplyModel("de", "A1")).toBe("gpt-4o-mini");
     expect(coachReplyModel("es", "A2")).toBe("gpt-4o-mini");
     expect(coachReplyModel("it", null)).toBe("gpt-4o-mini");
+  });
+});
+
+describe("self-declared level fallback (seed-then-refine)", () => {
+  it("uses the declared level when the AI hasn't inferred one", () => {
+    expect(
+      buildCoachSystemPrompt({
+        targetLanguage: "de",
+        userDisplayName: "B",
+        declaredLevel: "B1",
+      }),
+    ).toContain("~B1");
+  });
+
+  it("prefers the AI-inferred memory level over the declared one", () => {
+    const p = buildCoachSystemPrompt({
+      targetLanguage: "de",
+      userDisplayName: "B",
+      declaredLevel: "A1",
+      memory: { ...emptyCoachMemory(), proficiency_level: "B2" },
+    });
+    expect(p).toContain("~B2");
+  });
+
+  it("coachReplyModel respects the declared level (B1 → gpt-4o)", () => {
+    expect(coachReplyModel("de", toProficiencyLevel("B1"))).toBe("gpt-4o");
+  });
+});
+
+describe("toProficiencyLevel", () => {
+  it("passes CEFR codes and rejects junk", () => {
+    expect(toProficiencyLevel("B1")).toBe("B1");
+    expect(toProficiencyLevel("C2")).toBe("C2");
+    expect(toProficiencyLevel("banana")).toBeNull();
+    expect(toProficiencyLevel("")).toBeNull();
+    expect(toProficiencyLevel(null)).toBeNull();
+    expect(toProficiencyLevel(undefined)).toBeNull();
   });
 });
 

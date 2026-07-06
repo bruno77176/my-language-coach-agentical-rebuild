@@ -15,6 +15,11 @@ export type CoachPromptInput = {
   // The learner's native language (ISO 639-1). Drives the L1 escape hatch — the
   // coach may add a short clarification in this language for absolute beginners.
   nativeLanguage?: string;
+  // The learner's SELF-DECLARED CEFR level (onboarding / profile). Used only as
+  // a fallback when the AI hasn't inferred a level yet (new user) — so the coach
+  // adapts from turn 1 instead of defaulting to a guess. Once memory holds an
+  // AI-inferred level, that takes precedence (seed-then-refine).
+  declaredLevel?: CoachMemory["proficiency_level"];
   memory?: CoachMemory | null;
   memoryDepth?: MemoryDepth; // defaults to "basic" when memory provided
   memoryItems?: { type: string; content: string }[];
@@ -119,7 +124,7 @@ export function buildCoachSystemPrompt(input: CoachPromptInput): string {
   // + complexity, a real correction policy (recast at A1–A2, one explained
   // correction at B1+), a high learner talk-ratio, an L1 escape hatch, STT-error
   // tolerance, honest-if-asked, and in-character safety deflection.
-  const level = input.memory?.proficiency_level ?? null;
+  const level = input.memory?.proficiency_level ?? input.declaredLevel ?? null;
   const levelDesc =
     level ??
     "unknown — assume a cautious A2 and adjust as you learn how they cope";

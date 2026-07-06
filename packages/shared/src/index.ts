@@ -6,6 +6,7 @@ export * from "./greetings";
 export * from "./push-copy";
 export * from "./coach-fallbacks";
 export * from "./coach-memory-schema";
+export * from "./proficiency";
 export * from "./feedback-schema";
 export * from "./role-play-scenarios";
 export * from "./role-play-openings";

@@ -45,7 +45,7 @@ export default function NativeLangStep() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <ProgressDots step={1} total={4} />
+        <ProgressDots step={1} total={5} />
 
         <EditorialText kind="displayLg">Your native language?</EditorialText>
         <EditorialText kind="bodyMd" color={palette.inkSoft}>

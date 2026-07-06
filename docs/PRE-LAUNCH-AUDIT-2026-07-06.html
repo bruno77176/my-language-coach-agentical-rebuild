@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pre-Launch Audit — My Language Coach — 2026-07-06</title>
+<style>
+  :root{
+    --bg:#faf7f2; --card:#ffffff; --ink:#2b2620; --muted:#6f675c; --line:#e8e1d6;
+    --accent:#e8590c; --accent-soft:#fff1e6;
+    --p0:#c92a2a; --p0-bg:#fff0f0; --p1:#e8590c; --p1-bg:#fff4ec; --p2:#b08900; --p2-bg:#fdf7e3; --p3:#5c7c3f; --p3-bg:#f0f6ea;
+    --ok:#2b8a3e; --ok-bg:#ebfbee; --bad:#c92a2a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#171412; --card:#211d19; --ink:#ece5da; --muted:#a89c8d; --line:#37312a;
+      --accent:#ff8b47; --accent-soft:#33251b;
+      --p0:#ff8787; --p0-bg:#3a2020; --p1:#ffa94d; --p1-bg:#382718; --p2:#ffd43b; --p2-bg:#332d15; --p3:#a9d18e; --p3-bg:#22301c;
+      --ok:#69db7c; --ok-bg:#1d3323; --bad:#ff8787; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1060px;margin:0 auto;padding:32px 20px 80px}
+  header.hero{background:linear-gradient(135deg,var(--accent-soft),transparent);border:1px solid var(--line);border-radius:16px;padding:28px 30px;margin-bottom:28px}
+  h1{font-size:26px;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:14px}
+  h2{font-size:21px;margin:44px 0 12px;padding-top:18px;border-top:2px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 10px}
+  p{margin:10px 0}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .P0{background:var(--p0-bg);color:var(--p0)} .P1{background:var(--p1-bg);color:var(--p1)}
+  .P2{background:var(--p2-bg);color:var(--p2)} .P3{background:var(--p3-bg);color:var(--p3)}
+  .OK{background:var(--ok-bg);color:var(--ok)}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--p0);border-radius:12px;padding:18px 22px;margin:18px 0;font-size:15.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:18px 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat .n{font-size:22px;font-weight:800} .stat .l{font-size:12.5px;color:var(--muted)}
+  .tablebox{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th{position:sticky;top:0;background:var(--card);text-align:left;padding:10px 12px;border-bottom:2px solid var(--line);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  code{font:12.5px/1.5 ui-monospace,Consolas,monospace;background:var(--accent-soft);padding:1px 5px;border-radius:5px;word-break:break-word}
+  .good{background:var(--ok-bg);border:1px solid var(--line);border-left:5px solid var(--ok);border-radius:12px;padding:14px 20px;margin:16px 0}
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 22px;margin:20px 0}
+  .toc a{display:inline-block;margin:3px 14px 3px 0;font-size:14px}
+  ul{margin:8px 0;padding-left:22px} li{margin:5px 0}
+  .neg{color:var(--bad);font-weight:700} .pos{color:var(--ok);font-weight:700}
+  .phase{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin:12px 0}
+  .phase b{color:var(--accent)}
+  .check td:first-child{width:70%}
+  .epic{margin:20px 0 6px;font-weight:700;color:var(--accent)}
+  .foot{margin-top:50px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body><div class="wrap">
+
+<header class="hero">
+  <h1>🔍 Pre-Launch Full Audit — My Language Coach</h1>
+  <div class="sub"><b>2026-07-06</b> · 7 parallel code-grounded audits (Product/UX · Bugs/QA · Security · Infra · AI quality · Monetization · Store/Marketing) · every finding verified in source with file:line evidence · live store pages &amp; site inspected · builds on the 2026-06-27 audit</div>
+</header>
+
+<div class="verdict">
+<b>Verdict: the product is good — much better than its economics, its measurability, and its store presence. Don't spend a euro on ads yet.</b>
+The core loop is polished and differentiated (persistent Lisa + cross-session memory is a wedge no major competitor has), security is genuinely strong, and most June-27 P0s got fixed. Four clusters gate the launch — all closeable in the ~8 weeks before the natural early-September window:
+<ol>
+<li><b>Unit economics are upside-down, by accident.</b> Two decisions you already made — cheap TTS for free users, "Coach's voice = Pro" — were never wired. ElevenLabs (5–10× cost) serves everyone; a typical <i>free</i> user costs $4–10/mo and even the average Pro subscriber is margin-negative. The quota debit also trusts a client-reported number, and the RevenueCat webhook strips Pro the moment auto-renew is toggled off.</li>
+<li><b>You're flying blind.</b> PostHog never initialized, no MMP/SKAdNetwork/pixels, Deepgram rate cards under-report costs 10×, admin dashboard 500s, zero alerting.</li>
+<li><b>Two P0 data-corruption bugs</b> shipped with continuous conversation: <code>/end</code> on the infinite thread corrupts streaks and sends the whole transcript to OpenAI; checkpoint math counts idle days as practice time.</li>
+<li><b>The store pages score ~29/100.</b> No iOS subtitle, Play category = "Tools", zero ratings, no video, EN-only FR metadata, screenshots blank on weak connections.</li>
+</ol>
+</div>
+
+<div class="grid">
+  <div class="stat"><div class="n">63</div><div class="l">actionable findings (all verified in source)</div></div>
+  <div class="stat"><div class="n" style="color:var(--p0)">17 P0</div><div class="l">launch gates before ad spend</div></div>
+  <div class="stat"><div class="n" style="color:var(--ok)">✅ Strong</div><div class="l">security, RLS, deletion, TTS fallback engineering</div></div>
+  <div class="stat"><div class="n">~8 wks</div><div class="l">to an early-September paid launch — plan in §8</div></div>
+</div>
+
+<nav class="toc"><b>Sections:</b><br>
+<a href="#s1">1 · Product/UX</a> <a href="#s2">2 · Bugs/QA</a> <a href="#s3">3 · Security/Privacy</a> <a href="#s4">4 · Infrastructure</a> <a href="#s5">5 · AI quality</a> <a href="#s6">6 · Monetization</a> <a href="#s7">7 · Store/Marketing</a> <a href="#s8">8 · Launch plan</a> <a href="#s9">9 · Linear backlog</a>
+</nav>
+
+<h2 id="s1">1 · Product / UX</h2>
+<p><b>Funnel reality (TikTok-ad user):</b> best case ~12–15 taps + 2 OS permission prompts over 2–3 minutes before the first spoken exchange (email path adds an OTP inbox round-trip). The magic moment — Lisa greeting by name, in the target language, with voice — is genuinely strong once reached. Everything before it leaks:</p>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Finding</th><th>Evidence</th><th>Fix</th></tr>
+<tr><td>UX-1</td><td><span class="pill P0">P0</span></td><td><b>Forced signup before any value</b>; auth defaults to "Sign in" tab, no value prop, no Lisa</td><td><code>app/index.tsx:18</code>, <code>sign-in.tsx:35</code></td><td>Hours: create-account default + value line. Days: guest mode</td></tr>
+<tr><td>UX-2</td><td><span class="pill P1">P1</span></td><td><b>Push permission fired instantly at signup</b> — iOS denial near-permanent, kills the retention system</td><td><code>_layout.tsx:114</code></td><td>Post-first-goal soft-ask</td></tr>
+<tr><td>UX-3</td><td><span class="pill P1">P1</span></td><td>Onboarding collects, never sells; no proficiency question; dots say 4, steps are 5; surprise consent screen</td><td><code>name.tsx:80</code>, <code>daily-goal.tsx:48</code></td><td>Level question, fix dots, value copy, defer consent</td></tr>
+<tr><td>UX-4</td><td><span class="pill P0">P0</span></td><td><b>Daily-limit wall is a cold text screen</b>; 10s-remaining users get greeted then blocked; entitlement-less users skip the gate</td><td><code>quota.ts:119</code>, <code>voice.ts:379</code></td><td>Backlog #1: MIN_SESSION_START_SECONDS + warm Lisa screen</td></tr>
+<tr><td>UX-5</td><td><span class="pill P1">P1</span></td><td><b>Paywall promises ≠ product</b>: "full feedback history" isn't gated anywhere; memory wording undifferentiated; ElevenLabs voices NOT gated despite approved spec</td><td><code>paywall.tsx:18-23</code>, <code>voice-lab.tsx</code></td><td>Ship voice gate; honest bullets (60 min, scenarios, deep memory)</td></tr>
+<tr><td>UX-6</td><td><span class="pill P1">P1</span></td><td><b>Paywall only reactive</b> — no onboarding-end or post-first-feedback moment (the 2 highest-intent points)</td><td>4 call sites (grep)</td><td>Proactive trial paywall after first feedback</td></tr>
+<tr><td>UX-7</td><td><span class="pill P1">P1</span></td><td><b>EN-only shell</b> for a French learner from a French ad — auth, onboarding, paywall, limit screen</td><td>backlog #10</td><td>French-first acquisition path</td></tr>
+<tr><td>UX-8</td><td><span class="pill P1">P1</span></td><td>"Save 48%" + "7-day trial" hardcoded, not RC-derived — dashboard change makes the app lie (review risk)</td><td><code>paywall.tsx:93-111</code></td><td>Compute from offering; Udemy 2-card layout</td></tr>
+<tr><td>UX-9</td><td><span class="pill P2">P2</span></td><td>zh/ja/ko missing bundled greeting fallback → first audio can be <b>English</b></td><td><code>use-conversation.ts:57-70</code></td><td>Add 3 MP3s</td></tr>
+<tr><td>UX-10</td><td><span class="pill P2">P2</span></td><td>Mic-permission dead end: Android path shown on iOS, no openSettings button</td><td><code>use-conversation.ts:483</code></td><td>Platform copy + Open Settings</td></tr>
+<tr><td>UX-11</td><td><span class="pill P2">P2</span></td><td>Pro users see "Go Pro"; no Manage-subscription; no notification prefs/opt-out</td><td><code>profile/index.tsx:231</code></td><td>Conditional rows + prefs toggle</td></tr>
+<tr><td>UX-12</td><td><span class="pill P2">P2</span></td><td>First-run lands on Home → chooser (2+ extra taps); MicButton has no a11y label</td><td><code>MicButton.tsx:17</code></td><td>Deep-link first-run; label</td></tr>
+<tr><td>UX-13</td><td><span class="pill P3">P3</span></td><td>Liked quotes go nowhere (no collection screen)</td><td>backlog #5</td><td>Build screen or remove button</td></tr>
+</table></div>
+<div class="good"><b>Will convert (feature in marketing):</b> personalized voice greeting · WhatsApp-style continuous thread with auto-checkpoint · barge-in · errors surfaced as in-character coach messages · server-authoritative quota UX with midnight countdown · timezone-correct streak with grace day · SRS vocab with pronunciation checks.</div>
+<p><b>Free-cap tension:</b> UX audit says extend honeymoon to 7 days; monetization audit says the honeymoon→squeeze design fits your "few free, most convert" goal. <b>Recommendation:</b> keep 10min×3d→5min, fix wall warmth + proactive paywall, instrument wall-hit→paywall→trial, revisit with data.</p>
+
+<h2 id="s2">2 · Bugs / QA</h2>
+<p>Test suite green (362 passed). TEMP diag logging verified reverted. Shipped-and-verified since June: barge-in, TTS fallback #84, audio-leak #86, honeymoon fix #83.</p>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Bug</th><th>Evidence</th><th>Fix</th></tr>
+<tr><td>QA-1</td><td><span class="pill P0">P0</span></td><td><b>Stale-session guard calls <code>/end</code> on the infinite thread</b> — seconds computed from thread <i>creation date</i> (weeks!) → corrupted streak/goal/stats + <b>entire thread transcript sent to OpenAI</b>; ended thread pollutes recent-sessions</td><td><code>use-stale-session-guard.ts:71</code>, <code>voice.ts:1184-1276</code></td><td>Reject/convert <code>kind='thread'</code> in /end; guard checkpoints threads</td></tr>
+<tr><td>QA-2</td><td><span class="pill P0">P0</span></td><td><b>Checkpoint seconds include the idle gap between sessions</b> — every returning user's practice time/streak/summary inflated by hours or days</td><td><code>checkpoint.ts:315,330-336</code></td><td>Segment start = first un-checkpointed message</td></tr>
+<tr><td>QA-3</td><td><span class="pill P1">P1</span></td><td>Start-gate leak (backlog #1): strict <code>used &lt; cap</code> + entitlement-less bypass → 500 on first turn</td><td><code>quota.ts:119</code>, <code>voice.ts:379</code></td><td>= UX-4</td></tr>
+<tr><td>QA-4</td><td><span class="pill P1">P1</span></td><td><b>Full unbounded thread history loaded every turn</b>, sliced to 20 in JS — degrades linearly with account age, forever</td><td><code>voice.ts:827-854</code></td><td>limit-20 desc query</td></tr>
+<tr><td>QA-5</td><td><span class="pill P1">P1</span></td><td><b>RC CANCELLATION/BILLING_ISSUE strips Pro immediately</b> (should keep until expiry); silent 0-row webhook updates; swallowed logIn failures → paid user stuck free</td><td><code>revenuecat-webhook.ts:23-52</code>, <code>_layout.tsx:108</code></td><td>Only EXPIRATION deactivates; rowcount+Sentry; /billing/sync</td></tr>
+<tr><td>QA-6</td><td><span class="pill P2">P2</span></td><td>Recording &gt;60s = fatal error, speech lost (no cap/countdown; AUDIO_TOO_LONG not soft)</td><td><code>voice.ts:789-798</code></td><td>Auto-stop ~55s + soft error</td></tr>
+<tr><td>QA-7</td><td><span class="pill P2">P2</span></td><td>Any SSE error kills the client stream, but chunk TTS failures are non-fatal server-side → truncated replies</td><td><code>api-client.ts:519-537</code></td><td>Distinct chunk-error event</td></tr>
+<tr><td>QA-8</td><td><span class="pill P2">P2</span></td><td>Read-modify-write races on quota usage + ad-extension 1/day check</td><td><code>voice.ts:963-972,590-611</code></td><td>Atomic increments; conditional WHERE</td></tr>
+<tr><td>QA-9</td><td><span class="pill P2">P2</span></td><td>Auto-checkpoint only on next open — no server sweep → no feedback/streak until user returns</td><td><code>voice.ts:461-490</code></td><td>Stale-segment sweep in a runner</td></tr>
+<tr><td>QA-10</td><td><span class="pill P2">P2</span></td><td>No AppState handling for recording — call/background mid-recording ships truncated audio</td><td><code>use-conversation.ts:477-496</code></td><td>Stop+discard on background</td></tr>
+<tr><td>QA-11</td><td><span class="pill P3">P3</span></td><td>TZ captured once, never refreshed; invalid tz would 500 every quota check</td><td><code>daily-window.ts:14-21</code></td><td>Refresh on launch; UTC fallback</td></tr>
+<tr><td>QA-12</td><td><span class="pill P3">P3</span></td><td>coach-chunk MP3 cache files never deleted</td><td><code>use-conversation.ts:347</code></td><td>Sweep on launch</td></tr>
+<tr><td>QA-13</td><td><span class="pill P3">P3</span></td><td>Raw "Network request failed" strings offline, no retry CTA</td><td><code>practice.tsx:743</code></td><td>Friendly copy + retry</td></tr>
+</table></div>
+<p><b>Test gaps:</b> <code>maybeCheckpoint</code> has zero direct tests (why QA-2 slipped) · no /end-vs-thread test · no mobile tests for use-conversation/stale-guard · RC webhook tests assert the <i>wrong</i> CANCELLATION semantics · voice cascade has zero integration coverage. <b>Manual device matrix before launch:</b> RC sandbox lifecycle, kill-app-mid-turn + next-day relaunch, mic denied twice, phone call mid-recording, airplane mode mid-turn, 70s monologue, two devices one account.</p>
+
+<h2 id="s3">3 · Security / Privacy</h2>
+<div class="good"><b>Posture: strong.</b> SecureStore migration done properly (chunked adapter, migrates + wipes plaintext). RLS complete and correct (USING + WITH CHECK) on every table incl. all new ones; every route also enforces ownership in the query — no user-A→user-B path found. WS auth sound. Admin/internal/webhook all authenticated. <b>No committed secrets</b> (full scan; google-services.json is client-safe by design). Account deletion enumeration-safe + cascades everywhere. Prompt-injection bounded. Zod + parameterized queries throughout.</div>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Finding</th><th>Fix</th></tr>
+<tr><td>SEC-1</td><td><span class="pill P1">P1</span></td><td><b>Rate limiter only on /turns.</b> Unthrottled provider endpoints: voice preview ("no quota"), greeting audio (cache bypass via name), translate, message-audio, vocab enrich/pronounce, opening. No per-provider spend ceiling (June P0-4 still open)</td><td>Shared limiter middleware everywhere + daily spend guard</td></tr>
+<tr><td>SEC-2</td><td><span class="pill P1">P1</span></td><td>CVEs: 1 critical/10 high — next@14.2.18 (web+admin, DoS/SSRF), hono CORS HIGH, ws DoS</td><td>Bump next/hono/ws</td></tr>
+<tr><td>SEC-3</td><td><span class="pill P2">P2</span></td><td>SSE error events leak raw internal error text (HTTP handler is clean; SSE path bypasses it)</td><td>Generic INTERNAL message</td></tr>
+<tr><td>SEC-4</td><td><span class="pill P2">P2</span></td><td><b>Privacy policy names the wrong providers</b> (says OpenAI STT + Google TTS; reality Deepgram + ElevenLabs/Gemini/OpenAI); iOS nutrition label inconsistent with mic/user-content/purchases; no minors clause</td><td>Correct providers; redo labels; add under-16 clause</td></tr>
+<tr><td>SEC-5</td><td><span class="pill P2">P2</span></td><td>Live-voice logs full user transcripts at warn level</td><td>Redact before GA</td></tr>
+<tr><td>SEC-6</td><td><span class="pill P2">P2</span></td><td>JWT verifier skips aud/iss assertion (defense-in-depth)</td><td>Add audience/issuer</td></tr>
+<tr><td>SEC-7</td><td><span class="pill P1">P1</span></td><td><b>Legacy Render keys still hot</b> (OpenAI + Google TTS) — the standing ops liability</td><td>Rotate/revoke, confirm</td></tr>
+</table></div>
+
+<h2 id="s4">4 · Infrastructure / Scalability</h2>
+<p>June P0s: pool <span class="pos">fixed</span> (20 + statement timeout) · provider timeouts <span class="pos">mostly fixed</span> (OpenAI 12s+retries, Deepgram 12s, Gemini 8s) <span class="neg">except ElevenLabs — the default</span> · burst limit <span class="pos">exists</span>, spend ceiling <span class="neg">doesn't</span> · single machine <span class="neg">unchanged</span>.</p>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Finding</th><th>Fix</th></tr>
+<tr><td>INF-1</td><td><span class="pill P0">P0</span></td><td><b>ElevenLabs has no timeout</b> — unbounded stream on the default voice path; a hang hangs the turn (fallback fires on throw/empty, not hang)</td><td>withTimeout ~10s (~1 hour)</td></tr>
+<tr><td>INF-2</td><td><span class="pill P0">P0</span></td><td><b>Zero alerting</b> — no Sentry rules, no uptime monitor, no spend alarm, cost dashboard 500s. You'd learn about outages from users, bills from the invoice</td><td>Sentry rules + uptime ping + daily spend tripwire (cron mechanism exists) + fix admin 500</td></tr>
+<tr><td>INF-3</td><td><span class="pill P1">P1</span></td><td>Unbounded thread-history read per turn (= QA-4)</td><td>limit-20 query</td></tr>
+<tr><td>INF-4</td><td><span class="pill P1">P1</span></td><td><b>Deploy ungated:</b> fires parallel to CI; tsx = no compile step (type-broken commit ships); no migration step; manual rollback</td><td>Gate on CI; migrate step; runbook</td></tr>
+<tr><td>INF-5</td><td><span class="pill P1">P1</span></td><td><b>Account deletion breaks past 1,000 users</b> (listUsers page-1 scan) — GDPR/store compliance flow</td><td>Lookup by email filter</td></tr>
+<tr><td>INF-6</td><td><span class="pill P1">P1</span></td><td>1 machine, hard_limit 250 on 1GB with buffered base64 audio = the June OOM shape at scale</td><td>2 machines + pgbouncer + hard_limit ≈60</td></tr>
+<tr><td>INF-7</td><td><span class="pill P2">P2</span></td><td>No graceful shutdown — deploys hard-kill in-flight turns</td><td>SIGTERM drain</td></tr>
+<tr><td>INF-8</td><td><span class="pill P2">P2</span></td><td>Push runner can double-send (no atomic claim) — bites at 2 machines</td><td>Claim pattern from digest worker</td></tr>
+<tr><td>INF-9</td><td><span class="pill P2">P2</span></td><td>usage_events: 15–30M rows/mo at 5K DAU; matview scans it</td><td>Rollup + 90d retention</td></tr>
+<tr><td>INF-10</td><td><span class="pill P2">P2</span></td><td>Voice-live pre-GA blockers: no timeout, no cost recording, no quota, unbounded session array</td><td>Before opening allowlist</td></tr>
+<tr><td>INF-11</td><td><span class="pill P3">P3</span></td><td>Deepgram timeout doesn't abort underlying request; Supabase backup posture unverified</td><td>Confirm PITR in dashboard</td></tr>
+</table></div>
+<div class="good"><b>Verified solid:</b> digest job queue (atomic claim, reaper, Pro-gate, pgvector CI test) · idempotency discipline everywhere · indexes on every traced hot query · memory retrieval bounded top-K 8 · quota gates at start AND per turn · fire-and-forget cost recording · DB-exercising health check.</div>
+
+<h2 id="s5">5 · AI quality / Pedagogy</h2>
+<p>Scenario prompts are the best writing in the repo (B+). The core problem: <b>the coach's entire teaching strategy is one sentence</b> (<code>prompts.ts:103</code>) — grade D+ as pedagogy.</p>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Finding</th><th>Fix</th></tr>
+<tr><td>AI-1</td><td><span class="pill P0">P0</span></td><td><b>No correction policy, level adaptation, or L1 support.</b> Mini will correct every slip (kills A2 fluency), explain in the target language (A1 users can't understand their own corrections — no native-language field exists), never adjust complexity. Absolute beginners cannot survive</td><td>One ~350-token block: CEFR-adaptive length; recast ≤1/turn at A1-A2, one explained correction at B1+; question-per-turn talk ratio; L1 escape hatch (backlog #8 — 1 day, highest quality ROI)</td></tr>
+<tr><td>AI-2</td><td><span class="pill P0">P0</span></td><td><b>10 of 15 languages get an English-accent voice</b> — only en/de/es/fr/it mapped; ja/zh/ko/ru/tr/pt/sv/da/ro/hu fall back to "Sarah"</td><td>Native voice IDs or Gemini TTS for CJK — at least for every ad-market language</td></tr>
+<tr><td>AI-3</td><td><span class="pill P1">P1</span></td><td><b>Coach runs on gpt-4o-mini, not gpt-4o</b> (docs claim 4o). Weaker corrections in inflected langs + CJK; wrong corrections are worse than none. (LLM ≈ $0.001/min mini vs ~$0.013/min 4o — small next to TTS savings)</td><td>A/B 4o for B1+/CJK; fix docs either way</td></tr>
+<tr><td>AI-4</td><td><span class="pill P1">P1</span></td><td><b>STT-error blindness</b>: coach corrects Deepgram's errors; feedback blames users for words they didn't say; mistranscriptions poison weak_areas</td><td>One sentence in each prompt: treat garble as mishearing</td></tr>
+<tr><td>AI-5</td><td><span class="pill P1">P1</span></td><td><b>Prompt instructs deception</b> ("if asked, you are simply Lisa") — violates your own honesty rule; trust + review risk</td><td>Honest-if-asked line ("I'm an AI coach — here to help you rehearse")</td></tr>
+<tr><td>AI-6</td><td><span class="pill P1">P1</span></td><td>No safety/off-topic instruction — default refusals break character</td><td>Deflect-and-steer sentence, in character</td></tr>
+<tr><td>AI-7</td><td><span class="pill P1">P1</span></td><td><b>No eval infrastructure</b> — a prompt tweak silently changes 15 langs × 10 scenarios</td><td>~20 golden transcripts + LLM-judge vitest suite (env-flagged)</td></tr>
+<tr><td>AI-8</td><td><span class="pill P2">P2</span></td><td>Returning-after-N-days invisible: no timestamps in history, static daily greeting</td><td>"Last exchange N days ago" context + dynamic greeting</td></tr>
+<tr><td>AI-9</td><td><span class="pill P2">P2</span></td><td>Feedback runs on 1-turn segments; no impact prioritization</td><td>≥4-turn gate + prioritize recurring mistakes</td></tr>
+<tr><td>AI-10</td><td><span class="pill P2">P2</span></td><td>Memory hygiene: mistake-SRS fields dead code; suggested_topics never injected; one bad extraction erases CEFR level; no salience decay/contradiction handling; scenarios ignore level</td><td>Wire or delete; inject; sticky level; level→register</td></tr>
+<tr><td>AI-11</td><td><span class="pill P2">P2</span></td><td>No pinyin/furigana anywhere; non-EN/FR scenario openings are unreviewed MT</td><td>reading field for CJK; native review</td></tr>
+</table></div>
+<div class="good"><b>Verified good:</b> 1–3 sentence reply constraint · feedback anti-hallucination rules ("omit rather than fabricate") · native-language explanations · article-with-gender vocab with source-sentence disambiguation · zh→nova-2 · consent-gating consistent everywhere · fallback lines for all 15 languages · free tier gets basic memory so the paywall claim is honest.</div>
+
+<h2 id="s6">6 · Monetization / Costs</h2>
+<p>Config: free 300s/day (600s × 3 days), Pro 3600s, ad +180s ×1/day · $7.99/mo, $49.99/yr, 7-day trial · 15% store cut → net $6.79/mo ($3.54/mo on annual).</p>
+<div class="tablebox"><table>
+<tr><th>Profile</th><th>Cost today (ElevenLabs)</th><th>Cheap stack</th><th>Net revenue</th><th>Margin today</th></tr>
+<tr><td>Free, typical (3 min/day)</td><td><b>$4.50–11/mo</b></td><td>$0.90–2.25</td><td>~$0</td><td class="neg">−$4 to −$10</td></tr>
+<tr><td>Free, maxed (8 min/day)</td><td><b>$12–29/mo</b></td><td>$2.40–6</td><td>~$0.30 ads</td><td class="neg">−$12 to −$29</td></tr>
+<tr><td>Trial, 7d (15 min/day)</td><td><b>$5–13/trial</b></td><td>$1–2.60</td><td>$0</td><td>pure CAC</td></tr>
+<tr><td>Pro monthly (15 min/day)</td><td><b>$22–54/mo</b></td><td>$4.50–11</td><td>$6.79</td><td class="neg">negative</td></tr>
+<tr><td>Pro at 60-min cap</td><td>$90–216/mo</td><td>$18–45</td><td>$6.79</td><td class="neg">catastrophic</td></tr>
+</table></div>
+<p>Breakeven per Pro monthly: ~2.8 min/day on today's stack vs ~12.5 min/day on the cheap stack. <b class="neg">The average Pro subscriber currently loses money.</b></p>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Finding</th><th>Fix</th></tr>
+<tr><td>MON-1</td><td><span class="pill P0">P0</span></td><td><b>ElevenLabs (5–10×) serves free users</b> — TTS resolution takes no entitlement input; your own brainstorm's conclusion was never wired</td><td>Thread isPro into resolveTtsConfig. <b>Biggest lever in the codebase</b></td></tr>
+<tr><td>MON-2</td><td><span class="pill P0">P0</span></td><td><b>"Coach's voice = Pro" (approved spec) never implemented</b> — free clients can POST an EL voice_config; the flagship paid differentiator is missing AND a cost bypass</td><td>Ship the gate (server + Voice Lab)</td></tr>
+<tr><td>MON-3</td><td><span class="pill P0">P0</span></td><td><b>Quota debit is client-reported</b> — sending 0 never debits → unlimited free usage ≈ $80–700/day per abuser</td><td>Server floor from measured STT/TTS seconds</td></tr>
+<tr><td>MON-4</td><td><span class="pill P1">P1</span></td><td>RC webhook over-revokes + silent 0-row updates (= QA-5)</td><td>See QA-5</td></tr>
+<tr><td>MON-5</td><td><span class="pill P1">P1</span></td><td><b>iOS purchases unverified in prod</b> — if the ASC runbook is unfinished, every iOS install is unmonetizable</td><td>One sandbox purchase, today</td></tr>
+<tr><td>MON-6</td><td><span class="pill P1">P1</span></td><td><b>Deepgram rate cards 10× too low</b> — dashboard under-reports STT; tuning would use wrong data</td><td>Fix + re-seed</td></tr>
+<tr><td>MON-7</td><td><span class="pill P1">P1</span></td><td>Role-play Pro gate is client-only</td><td>Server check</td></tr>
+<tr><td>MON-8</td><td><span class="pill P1">P1</span></td><td>Rewarded-ad SSV stub — +3min curl-able (bounded 1/day)</td><td>AdMob SSV</td></tr>
+<tr><td>MON-9</td><td><span class="pill P2">P2</span></td><td>Un-quota'd freebies (translate, pronounce, gpt-4o feedback for free); site JSON-LD declares $7.99 while pricing UI was removed</td><td>Rate limits + reconcile pricing decision</td></tr>
+<tr><td>MON-10</td><td><span class="pill P2">P2</span></td><td>Paywall far from approved Udemy pattern (stacked buttons, hardcoded savings, no per-month framing)</td><td>2 cards, annual pre-selected, computed savings</td></tr>
+</table></div>
+<p><b>Pricing recommendation:</b> once MON-1/2 make Pro tangible, <b>test $9.99/mo</b> (you're the category floor: Speak $20, Babbel ~$14, TalkPal ~$10); annual $49.99–59.99 as "$4.16/mo — best value". Keep the 7-day trial but serve trials the cheap TTS stack. Keep ads exactly as designed (1/day, wall-only). <b>Coherent Pro story after fixes:</b> premium native voices + 60 min/day + deep memory &amp; lesson plans + all 10 scenarios.</p>
+
+<h2 id="s7">7 · Store / Marketing</h2>
+<p><b>ASO scorecard (live listings, strict): ≈29/100 — F.</b> The product is far better than its listings.</p>
+<div class="tablebox"><table>
+<tr><th>#</th><th>Sev</th><th>Finding</th><th>Fix</th></tr>
+<tr><td>MKT-1</td><td><span class="pill P0">P0</span></td><td><b>No attribution stack at all</b>: no MMP, no SKAdNetwork, no TikTok/Meta pixels, PostHog dead (placeholder keys, never initialized). iOS install campaigns literally cannot be measured</td><td>AppsFlyer/Adjust + SKAN + pixels; PostHog init + ~10 funnel events</td></tr>
+<tr><td>MKT-2</td><td><span class="pill P0">P0</span></td><td><b>Store pages burn traffic</b>: iOS subtitle EMPTY, keyword field empty; <b>Play category = "Tools"</b>; generic descriptions missing Lisa/memory/15-langs; screenshots blank on weak connections (#28)</td><td>Subtitle "AI speaking practice with Lisa"; keywords; Tools→Education; compressed screenshots; rewritten descriptions</td></tr>
+<tr><td>MKT-3</td><td><span class="pill P0">P0</span></td><td><b>Zero social proof</b> — no displayed rating on either store</td><td>Seed 25–50 honest ratings pre-spend</td></tr>
+<tr><td>MKT-4</td><td><span class="pill P0">P0</span></td><td><b>No video anywhere</b> for a voice product; site visitor can't hear Lisa</td><td>3 UGC videos → best = store preview; 20s hear-Lisa hero demo</td></tr>
+<tr><td>MKT-5</td><td><span class="pill P1">P1</span></td><td>FR store metadata 100% English on both stores (site is localized; stores aren't)</td><td>FR listings end-to-end</td></tr>
+<tr><td>MKT-6</td><td><span class="pill P1">P1</span></td><td>Site: no pricing section; canonical/og:url renders non-www (NEXT_PUBLIC_SITE_URL bug); og:image 1024×500 crops badly; badges carry no campaign params; universal links only /auth/*</td><td>Fix canonical + og; ?pt=&amp;ct= / &amp;referrer= params; pricing + social-proof slots</td></tr>
+<tr><td>MKT-7</td><td><span class="pill P2">P2</span></td><td>Personal Gmail as public contact; privacy policy hosted on flycricket</td><td>support@mylanguagecoach.app; host on domain</td></tr>
+<tr><td>MKT-8</td><td><span class="pill P3">P3</span></td><td>com.anonymous.* Play package visible in ad URLs (immutable)</td><td>Accept + document</td></tr>
+</table></div>
+<p><b>Positioning (the wedge):</b> every competitor sells a tutor or lessons; <b>none has a named coach who remembers you across sessions</b> — yours does, in shipped code. <i>"Rehearse real conversations with Lisa — a coach in 15 languages who remembers what you told her last week — and be ready for the moments that matter."</i> Never "better than a human"; always "ready for the real conversation."</p>
+<p><b>3 UGC ad concepts</b> (15–30s, captioned, all end on the talk-to-Lisa loop): <b>①"She remembered."</b> Monday: tell Lisa about Friday's interview. Thursday: "Alors, prêt pour ton entretien demain ?" — the memory reveal is the hook. <b>②"Rehearse it before it's real."</b> 30s boulangerie role-play, then do it for real. <b>③"Too shy to speak? Same."</b> POV whisper-practice, gentle correction, feedback card.</p>
+<p><b>Timing:</b> early September (back-to-school) — ~8 weeks out, exactly enough for the plan below.</p>
+
+<h2 id="s8">8 · Launch plan &amp; readiness</h2>
+<div class="phase"><b>Phase 1 — Stop the bleed, don't corrupt data (wk 1–2):</b> TTS tiering + voice-Pro gate (MON-1/2) · server quota floor (MON-3) · thread-end + checkpoint-seconds fixes + tests (QA-1/2) · start-gate + warm limit screen (UX-4) · ElevenLabs timeout (INF-1) · RC webhook lifecycle + /billing/sync (QA-5) · iOS sandbox purchase (MON-5) · rate-card ×10 (MON-6) · SSE error hygiene (SEC-3).</div>
+<div class="phase"><b>Phase 2 — See everything (wk 2–3):</b> PostHog + funnel events (MKT-1a) · MMP + SKAN + pixels (MKT-1b) · alerting trio + admin-500 fix (INF-2) · deploy gate + migrations + rollback runbook (INF-4) · 2 machines + pooler (INF-6) · CVE bumps (SEC-2).</div>
+<div class="phase"><b>Phase 3 — Convert better, teach better (wk 3–6):</b> auth front door (UX-1) · push timing (UX-2) · proactive paywall + Udemy repackage (UX-6/8) · coach-prompt rewrite (AI-1/4/5/6) · native voices for ad-market languages (AI-2) · eval harness (AI-7) · French acquisition path (UX-7) · rate-limit middleware (SEC-1) · scenario gate + AdMob SSV (MON-7/8) · recording cap + checkpoint sweep (QA-6/9).</div>
+<div class="phase"><b>Phase 4 — Store &amp; creative (wk 5–8, parallel):</b> listing overhaul + screenshots (MKT-2) · FR metadata (MKT-5) · ratings seeding (MKT-3) · 3 UGC videos + store preview + hear-Lisa hero (MKT-4) · site fixes (MKT-6) · privacy-policy/label corrections (SEC-4) · legacy key rotation (SEC-7).</div>
+<div class="phase"><b>Soft launch (wk 7–8):</b> €10–20/day TikTok FR+EN against the instrumented funnel for 1–2 weeks; verify CPI, activation, wall-hit→paywall→trial→paid; only then scale.</div>
+
+<h3>Launch readiness scorecard</h3>
+<div class="tablebox"><table class="check">
+<tr><th>Gate</th><th>Today</th></tr>
+<tr><td>Unit economics positive per Pro sub</td><td><span class="pill P0">❌ MON-1/2</span></td></tr>
+<tr><td>Quota not client-trusted</td><td><span class="pill P0">❌ MON-3</span></td></tr>
+<tr><td>Core loop data-correct (streaks/stats)</td><td><span class="pill P0">❌ QA-1/2</span></td></tr>
+<tr><td>Funnel instrumented + ad attribution</td><td><span class="pill P0">❌ MKT-1</span></td></tr>
+<tr><td>Alerting: errors, uptime, spend</td><td><span class="pill P0">❌ INF-2</span></td></tr>
+<tr><td>iOS purchase verified in sandbox</td><td><span class="pill P1">❓ MON-5</span></td></tr>
+<tr><td>RC lifecycle correct (cancel ≠ revoke)</td><td><span class="pill P1">❌ QA-5</span></td></tr>
+<tr><td>≥2 machines; provider calls all time-bounded</td><td><span class="pill P1">❌ INF-1/6</span></td></tr>
+<tr><td>Store listing: subtitle/keywords/category/screenshots</td><td><span class="pill P0">❌ MKT-2</span></td></tr>
+<tr><td>≥25 ratings on both stores; video creative exists</td><td><span class="pill P0">❌ MKT-3/4</span></td></tr>
+<tr><td>Coach prompt has correction/level policy</td><td><span class="pill P0">❌ AI-1</span></td></tr>
+<tr><td>Every ad-market language has a native voice</td><td><span class="pill P0">❌ AI-2</span></td></tr>
+<tr><td>Privacy policy/labels accurate</td><td><span class="pill P2">❌ SEC-4</span></td></tr>
+<tr><td>Security posture / RLS / secrets / deletion</td><td><span class="pill OK">✅ solid</span></td></tr>
+<tr><td>CI green, tests passing</td><td><span class="pill OK">✅</span></td></tr>
+</table></div>
+
+<h3>Feature add / modify / remove</h3>
+<ul>
+<li><b>Add:</b> proactive paywall · notification prefs · Manage-subscription row · level question in onboarding · mic Open-Settings recovery · CJK greeting fallbacks · site pricing section (your call — you removed it deliberately, but it pre-qualifies payers).</li>
+<li><b>Modify:</b> limit screen (warm Lisa) · paywall (Udemy cards, honest bullets) · onboarding (sell + fix dots + defer consent) · coach prompt (the rewrite) · greeting (dynamic, memory-aware).</li>
+<li><b>Remove/hide for launch:</b> "full feedback history" paywall bullet · quote-like button until the collection exists · voice-live stays hidden (correct) · dead mistake-SRS seeding (wire or delete).</li>
+<li><b>Explicitly NOT needed:</b> speech-to-speech realtime · full i18n beyond French · avatar upload · Lisa persona game (#16/#18 — post-launch retention bets) · guest mode can fast-follow if the create-account default moves the numbers.</li>
+</ul>
+
+<h2 id="s9">9 · Linear backlog (63 cards, ready to import)</h2>
+<p>P0 = launch gate · P1 = before scale-up · P2 = fast-follow. Full card list with descriptions is in <code>docs/PRE-LAUNCH-AUDIT-2026-07-06.md</code> §9 — epics: <b>Economics &amp; Billing</b> (10) · <b>Data-correctness bugs</b> (8) · <b>Infra &amp; Ops</b> (11) · <b>Security &amp; Privacy</b> (6) · <b>Funnel &amp; UX</b> (11) · <b>AI quality</b> (8) · <b>Store &amp; Marketing</b> (9).</p>
+
+<div class="foot">Generated 2026-07-06 · 7 parallel code-grounded audits, every finding verified against source (file:line) before inclusion · prior audit 2026-06-27 · severities reflect impact on a paid-acquisition launch targeting hundreds of paying users at 10K-user scale.</div>
+
+</div></body>
+</html>

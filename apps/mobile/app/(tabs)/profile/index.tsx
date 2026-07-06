@@ -15,14 +15,20 @@ import {
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
 import { useRouter } from "expo-router";
-import { LANGUAGES, type SupportedLang } from "@language-coach/shared";
+import {
+  LANGUAGES,
+  PROFICIENCY_LEVELS,
+  type SupportedLang,
+} from "@language-coach/shared";
 import { palette, radius, spacing } from "@language-coach/design-tokens";
 import { useProfile } from "@/src/features/auth/use-profile";
 import { supabase } from "@/src/lib/supabase";
 import { useUpdateProfile } from "@/src/features/profile/use-update-profile";
+import { useSetLevel } from "@/src/features/profile/use-set-level";
 import { ProfileRow } from "@/src/features/profile/profile-row";
 import { EditNameSheet } from "@/src/features/profile/edit-name-sheet";
 import { EditGoalSheet } from "@/src/features/profile/edit-goal-sheet";
+import { EditLevelSheet } from "@/src/features/profile/edit-level-sheet";
 import { EditLanguageSheet } from "@/src/features/profile/edit-language-sheet";
 import { SignInMethodsSheet } from "@/src/features/profile/sign-in-methods-sheet";
 import { ChangePasswordSheet } from "@/src/features/profile/change-password-sheet";
@@ -39,6 +45,12 @@ import {
 function langDisplay(code: string): string {
   const lang = LANGUAGES.find((l) => l.code === code);
   return lang ? `${lang.flag} ${lang.englishName}` : code;
+}
+
+function levelDisplay(code: string | undefined): string {
+  if (!code) return "Set level";
+  const l = PROFICIENCY_LEVELS.find((x) => x.code === code);
+  return l ? `${l.code} · ${l.label}` : code;
 }
 
 function avatarColorFor(userId: string): string {
@@ -60,10 +72,12 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { data: profile } = useProfile();
   const update = useUpdateProfile(profile?.user_id ?? "");
+  const setLevel = useSetLevel();
   const nameRef = useRef<BottomSheetModal>(null);
   const nativeRef = useRef<BottomSheetModal>(null);
   const targetRef = useRef<BottomSheetModal>(null);
   const goalRef = useRef<BottomSheetModal>(null);
+  const levelRef = useRef<BottomSheetModal>(null);
   const signInMethodsRef = useRef<BottomSheetModal>(null);
   const changePasswordRef = useRef<BottomSheetModal>(null);
   const deleteAccountRef = useRef<BottomSheetModal>(null);
@@ -73,6 +87,14 @@ export default function ProfileScreen() {
   if (!profile) return null;
 
   const email = (profile as { email?: string }).email ?? "";
+
+  const declaredLevels =
+    (profile as { self_declared_levels?: Record<string, string> | null })
+      .self_declared_levels ?? {};
+  const declaredLevel = declaredLevels[profile.target_lang] ?? "";
+  const targetLangName =
+    LANGUAGES.find((l) => l.code === profile.target_lang)?.englishName ??
+    "your language";
 
   const onSignOut = () => {
     Alert.alert("Sign out?", "You'll need to sign in again.", [
@@ -207,6 +229,11 @@ export default function ProfileScreen() {
           </EditorialText>
           <GlassCard padding="sm" radiusToken="lg" style={styles.sectionCard}>
             <ProfileRow
+              label={`Your ${targetLangName} level`}
+              value={levelDisplay(declaredLevel)}
+              onPress={() => levelRef.current?.present()}
+            />
+            <ProfileRow
               label="Coach's Memory"
               value="View & edit"
               onPress={() => router.push("/(tabs)/profile/memory")}
@@ -311,6 +338,14 @@ export default function ProfileScreen() {
             initialValue={profile.daily_goal_minutes}
             onSave={async (daily_goal_minutes) => {
               await update.mutateAsync({ daily_goal_minutes });
+            }}
+          />
+          <EditLevelSheet
+            ref={levelRef}
+            langName={targetLangName}
+            initialValue={declaredLevel}
+            onSave={async (level) => {
+              await setLevel.mutateAsync({ lang: profile.target_lang, level });
             }}
           />
           <SignInMethodsSheet ref={signInMethodsRef} />
