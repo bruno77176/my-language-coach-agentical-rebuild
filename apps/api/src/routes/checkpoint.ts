@@ -327,12 +327,22 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
     return null; // segment still active — don't auto-checkpoint yet
   }
 
-  const sinceDate = new Date(since);
-  // Count practice as first→last activity in the segment, not wall-clock-to-now,
-  // so a long idle gap before an auto-checkpoint doesn't inflate the streak.
+  // Segment start = the FIRST un-checkpointed message, NOT the previous
+  // checkpoint's endedAt. Otherwise the idle gap between segments (hours or days
+  // on a continuous thread — the user was away, not practicing) is counted as
+  // practice time, inflating every returning user's streak/stats/weekly summary
+  // (QA-2). Count first→last activity within the segment.
+  const firstNew = await db.query.messages.findFirst({
+    where: (t, { eq: e, and: a, gt: g }) =>
+      a(e(t.conversationId, conversation.id), g(t.createdAt, since)),
+    orderBy: (t, { asc: as }) => [as(t.createdAt)],
+  });
+  const segmentStart = firstNew
+    ? new Date(firstNew.createdAt)
+    : new Date(since);
   const secondsSpoken = Math.max(
     0,
-    Math.floor((newestAt.getTime() - sinceDate.getTime()) / 1000),
+    Math.floor((newestAt.getTime() - segmentStart.getTime()) / 1000),
   );
 
   const inserted = await db
@@ -341,7 +351,7 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
       conversationId: conversation.id,
       userId: conversation.userId,
       language: conversation.language,
-      startedAt: sinceDate,
+      startedAt: segmentStart,
       endedAt: newestAt,
       secondsSpoken,
     })
@@ -387,7 +397,10 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
     nativeLang: profile.nativeLang,
     memoryEnabled: profile.memoryEnabled,
     platform,
-    since: sinceDate,
+    // Feedback transcript lower bound stays the previous checkpoint boundary
+    // (messages after it = this segment); the idle-gap trim above only affects
+    // the seconds/streak math, not which messages are summarized.
+    since: new Date(since),
     checkpointId,
   });
 

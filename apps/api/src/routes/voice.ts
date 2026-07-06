@@ -1224,6 +1224,41 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       );
     }
 
+    // A continuous thread must NOT be /end-ed. /end would set endedAt on the
+    // never-ending thread, count seconds from the thread's CREATION (potentially
+    // weeks → corrupted streak/goal/stats), send the ENTIRE transcript to
+    // feedback, and pollute /sessions/recent. Convert to a checkpoint (identical
+    // to /checkpoint) so the segment still gets feedback/streak and the thread
+    // stays open (QA-1). This protects installed clients whose stale-session
+    // guard still calls /end on threads.
+    if (conversation.kind === "thread") {
+      const result = await maybeCheckpoint({
+        db: deps.db,
+        deps,
+        conversation: {
+          id: conversation.id,
+          userId,
+          language: conversation.language,
+          startedAt: conversation.startedAt,
+        },
+        profile: {
+          timezone: profile.timezone,
+          dailyGoalMinutes: profile.dailyGoalMinutes,
+          memoryEnabled: profile.memoryEnabled,
+          nativeLang: profile.nativeLang,
+        },
+        platform: platformFromHeader(c.req.header("X-Client-Platform")),
+        now: new Date(),
+        force: true,
+        inactivityMs: 0,
+      });
+      return c.json({
+        checkpoint_id: result?.checkpointId ?? null,
+        seconds_spoken: result?.secondsSpoken ?? 0,
+        goal_reached: result?.goalReached ?? false,
+      });
+    }
+
     // Idempotent: if already ended, return current state without re-counting.
     if (conversation.endedAt) {
       return c.json({

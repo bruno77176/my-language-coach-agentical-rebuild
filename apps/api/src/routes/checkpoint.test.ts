@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { upsertStreakDay, runFeedbackAndMemory } from "./checkpoint";
+import {
+  upsertStreakDay,
+  runFeedbackAndMemory,
+  maybeCheckpoint,
+} from "./checkpoint";
 
 const userId = "00000000-0000-0000-0000-000000000001";
 const conversationId = "11111111-1111-1111-1111-111111111111";
@@ -63,6 +67,84 @@ function makeFakeDb(transcript: Array<{ role: string; text: string }>) {
   };
   return { db, inserts, updates };
 }
+
+describe("maybeCheckpoint segment seconds (QA-2)", () => {
+  it("counts first→last activity, NOT the idle gap since the last checkpoint", async () => {
+    const insertedValues: Array<Record<string, unknown>> = [];
+    const db = {
+      query: {
+        sessionCheckpoints: {
+          // Last checkpoint ended 2 days before this segment's first message.
+          findFirst: vi
+            .fn()
+            .mockResolvedValue({ endedAt: new Date("2026-07-01T10:00:00Z") }),
+        },
+        messages: {
+          findFirst: vi
+            .fn()
+            // 1st call = newest (desc): segment's last activity.
+            .mockResolvedValueOnce({ createdAt: "2026-07-03T10:05:00Z" })
+            // 2nd call = first un-checkpointed (asc): segment's first activity.
+            .mockResolvedValueOnce({ createdAt: "2026-07-03T10:00:00Z" }),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+        coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
+      },
+      insert: vi.fn(() => ({
+        values: vi.fn((v: Record<string, unknown>) => {
+          insertedValues.push(v);
+          const p = Promise.resolve(undefined) as unknown as {
+            onConflictDoNothing: (t?: unknown) => unknown;
+          } & Promise<undefined>;
+          p.onConflictDoNothing = () => {
+            const q = Promise.resolve(undefined) as unknown as {
+              returning: () => Promise<Array<{ id: string }>>;
+            } & Promise<undefined>;
+            q.returning = () => Promise.resolve([{ id: checkpointId }]);
+            return q;
+          };
+          return p;
+        }),
+      })),
+      update: vi.fn(() => ({
+        set: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+      })),
+      execute: vi.fn().mockResolvedValue([]),
+    };
+
+    const result = await maybeCheckpoint({
+      db: db as never,
+      deps: {
+        generateFeedback: vi.fn().mockResolvedValue(null),
+        extractMemory: vi.fn().mockResolvedValue(null),
+      } as never,
+      conversation: {
+        id: conversationId,
+        userId,
+        language: "es",
+        startedAt: new Date("2026-06-01T00:00:00Z"),
+      },
+      profile: {
+        timezone: "UTC",
+        dailyGoalMinutes: 10,
+        memoryEnabled: false,
+        nativeLang: "en",
+      },
+      platform: "ios",
+      now: new Date("2026-07-03T10:10:00Z"),
+      force: true,
+      inactivityMs: 0,
+    });
+    await flush();
+
+    // Segment = 10:00 → 10:05 = 300s. The OLD code counted from the last
+    // checkpoint's endedAt (07-01), giving ~2 days.
+    expect(result?.secondsSpoken).toBe(300);
+    const cp = insertedValues.find((v) => "secondsSpoken" in v);
+    expect(cp?.secondsSpoken).toBe(300);
+    expect(cp?.startedAt).toEqual(new Date("2026-07-03T10:00:00Z"));
+  });
+});
 
 describe("runFeedbackAndMemory", () => {
   it("keys feedback + digest on the checkpoint and generates feedback for a thread segment", async () => {

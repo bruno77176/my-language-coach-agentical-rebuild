@@ -167,9 +167,13 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
           }),
         },
         sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
-        // newest un-checkpointed message drives the segment upper bound
+        // 1st findFirst = newest (segment upper bound); 2nd = first new message
+        // (segment lower bound — QA-2). Here 10:00 → 10:05 = 300s.
         messages: {
-          findFirst: vi.fn().mockResolvedValue({ createdAt: newestAt }),
+          findFirst: vi
+            .fn()
+            .mockResolvedValueOnce({ createdAt: newestAt })
+            .mockResolvedValueOnce({ createdAt: startedAt }),
           findMany: vi.fn().mockResolvedValue([]),
         },
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
@@ -203,6 +207,71 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
     expect(body.seconds_spoken).toBe(300);
     // Streak upsert ran.
     expect(db.execute).toHaveBeenCalled();
+  });
+
+  it("POST /end on a THREAD converts to a checkpoint, not a thread-end (QA-1)", async () => {
+    const convId = "11111111-1111-1111-1111-111111111111";
+    const startedAt = new Date("2026-07-05T10:00:00Z");
+    const newestAt = new Date("2026-07-05T10:05:00Z"); // +300s
+    const conversationsUpdate = vi.fn(() => ({
+      set: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+    }));
+    const db = {
+      query: {
+        conversations: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: convId,
+            userId,
+            kind: "thread",
+            language: "de",
+            startedAt,
+            endedAt: null,
+            secondsSpoken: 0,
+          }),
+        },
+        profiles: {
+          findFirst: vi.fn().mockResolvedValue({
+            timezone: "UTC",
+            dailyGoalMinutes: 10,
+            memoryEnabled: false,
+            nativeLang: "en",
+          }),
+        },
+        sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        messages: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValueOnce({ createdAt: newestAt })
+            .mockResolvedValueOnce({ createdAt: startedAt }),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+        coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
+      },
+      insert: vi.fn(() => ({
+        values: vi.fn(() => ({
+          onConflictDoNothing: vi.fn(() => ({
+            returning: vi.fn().mockResolvedValue([{ id: "cp1" }]),
+          })),
+          onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+        })),
+      })),
+      update: conversationsUpdate,
+      execute: vi.fn().mockResolvedValue([]),
+    };
+    const routes = createVoiceRoutes({ db: db as never, ...noopProviderDeps });
+    const res = await appWithVoice(routes).request(
+      `/v1/voice/sessions/${convId}/end`,
+      { method: "POST" },
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      checkpoint_id: string | null;
+      seconds_spoken: number;
+    };
+    // Converted to a checkpoint: returns checkpoint_id + segment seconds (300),
+    // NOT a thread-end (which would count from thread creation and set endedAt).
+    expect(body.checkpoint_id).toBe("cp1");
+    expect(body.seconds_spoken).toBe(300);
   });
 
   it("400s a checkpoint against a non-thread (scenario/legacy) conversation", async () => {
