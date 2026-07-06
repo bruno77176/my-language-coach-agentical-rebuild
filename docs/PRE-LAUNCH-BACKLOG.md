@@ -16,37 +16,59 @@ Legend — Type: 🐛 bug · ✨ feature · 💰 monetization · 🎬 marketing 
 
 Verified against the codebase (not checkboxes). **Most of the original backlog is shipped.** Status: ✅ done · 🟡 partial · ⬜ not done.
 
-| #   | Item                             | Status | Note (if not done)                                                                                                                                    |
-| --- | -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Time-limit gate + warm screen    | 🟡     | Start gate exists but no `MIN_SESSION_START_SECONDS` warm threshold; no-entitlement users skip the start gate; `daily-limit.tsx` has no animated Lisa |
-| 2   | Wire subscriptions (RevenueCat)  | ✅     | Purchasable + entitlements + gates end-to-end                                                                                                         |
-| 3   | Time caps + ad unlock            | ✅     | Enforced server-side (per **day**, not per session)                                                                                                   |
-| 19  | Real rewarded ad                 | 🟡     | Real AdMob client wired; server-side ad verification (SSV) still a stub                                                                               |
-| 4   | Share carries install link       | ✅     | All three share types include the link                                                                                                                |
-| 5   | Like a quote → save              | 🟡     | Like/persist works; **no collection screen** to browse liked quotes                                                                                   |
-| 6   | Share-app / leave-review prompt  | ✅     | Store-review prompt + profile share row                                                                                                               |
-| 7   | Word deck: source sentence       | ✅     | Captured + shown in deck/review                                                                                                                       |
-| 8   | Prompt improvement               | ⬜     | No dedicated quality pass yet (`packages/shared/src/prompts.ts`)                                                                                      |
-| 9   | Avatar / picture upload          | ⬜     | Only generated initial-circle; no image picker                                                                                                        |
-| 10  | App UI i18n                      | ⬜     | No i18n framework in mobile; UI is hard-coded EN                                                                                                      |
-| 11  | Promotional videos               | ⬜     | No video assets                                                                                                                                       |
-| 12  | Audio stop on navigation         | ✅     | `stopAllPlayback()` on blur                                                                                                                           |
-| 13  | Interrupt coach voice (barge-in) | ✅     | Done for push-to-talk; Live WS mode still lacks it                                                                                                    |
-| 14  | Timer never stops                | ✅     | Timer pauses on blur / end                                                                                                                            |
-| 15  | Greeting voice ≠ session         | ✅     | Both resolve the same voice (BRU-19)                                                                                                                  |
-| 16  | Lisa deep persona                | ⬜     | Only a name + tone; no canon                                                                                                                          |
-| 17  | Shared images black border       | ✅     | Shadow removed from captured node (minor rounded-corner residue possible)                                                                             |
-| 18  | "Discover Lisa" game             | ⬜     | Blocked on #16                                                                                                                                        |
-| 20  | Tap-to-save word only + hint     | ✅     | Per-word tap + first-run hint                                                                                                                         |
-| 21  | Goal celebration toast           | ✅     | Non-blocking toast, confetti kept                                                                                                                     |
-| 22  | Save conversations               | ✅     | Full transcripts persisted + viewable                                                                                                                 |
-| 23  | Spaced-repetition review         | ✅     | Leitner SRS scheduler                                                                                                                                 |
-| 24  | Save words with article          | ✅     | `der Tisch` etc., LLM-derived                                                                                                                         |
-| 25  | Share link clickable             | ✅     | Isolated-line link treatment                                                                                                                          |
-| I1  | Gemini preview voices?           | ✅     | Resolved — they're GA voices, nothing to remove                                                                                                       |
-| I2  | Notifications strategy           | 🟡     | Infra + onboarding drip exist; **missing recurring/inactivity re-engagement + prefs UI** → now tracked as **#27**                                     |
+| #   | Item                             | Status | Note (if not done)                                                                                                                                           |
+| --- | -------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Time-limit gate + warm screen    | 🟡     | Start gate exists but no `MIN_SESSION_START_SECONDS` warm threshold; no-entitlement users skip the start gate; `daily-limit.tsx` has no animated Lisa        |
+| 2   | Wire subscriptions (RevenueCat)  | ✅     | Purchasable + entitlements + gates end-to-end                                                                                                                |
+| 3   | Time caps + ad unlock            | ✅     | Enforced server-side (per **day**, not per session)                                                                                                          |
+| 19  | Real rewarded ad                 | 🟡     | Real AdMob client wired; server-side ad verification (SSV) still a stub                                                                                      |
+| 4   | Share carries install link       | ✅     | All three share types include the link                                                                                                                       |
+| 5   | Like a quote → save              | 🟡     | Like/persist works; **no collection screen** to browse liked quotes                                                                                          |
+| 6   | Share-app / leave-review prompt  | ✅     | Store-review prompt + profile share row                                                                                                                      |
+| 7   | Word deck: source sentence       | ✅     | Captured + shown in deck/review                                                                                                                              |
+| 8   | Prompt improvement               | ✅     | Full AI-quality pass 2026-07-06 (AI-1/3/4/5/6/7): correction policy, CEFR level adaptation, L1 support, STT-tolerance, honest-if-asked, safety, eval harness |
+| 9   | Avatar / picture upload          | ⬜     | Only generated initial-circle; no image picker                                                                                                               |
+| 10  | App UI i18n                      | ⬜     | No i18n framework in mobile; UI is hard-coded EN                                                                                                             |
+| 11  | Promotional videos               | ⬜     | No video assets                                                                                                                                              |
+| 12  | Audio stop on navigation         | ✅     | `stopAllPlayback()` on blur                                                                                                                                  |
+| 13  | Interrupt coach voice (barge-in) | ✅     | Done for push-to-talk; Live WS mode still lacks it                                                                                                           |
+| 14  | Timer never stops                | ✅     | Timer pauses on blur / end                                                                                                                                   |
+| 15  | Greeting voice ≠ session         | ✅     | Both resolve the same voice (BRU-19)                                                                                                                         |
+| 16  | Lisa deep persona                | ⬜     | Only a name + tone; no canon                                                                                                                                 |
+| 17  | Shared images black border       | ✅     | Shadow removed from captured node (minor rounded-corner residue possible)                                                                                    |
+| 18  | "Discover Lisa" game             | ⬜     | Blocked on #16                                                                                                                                               |
+| 20  | Tap-to-save word only + hint     | ✅     | Per-word tap + first-run hint                                                                                                                                |
+| 21  | Goal celebration toast           | ✅     | Non-blocking toast, confetti kept                                                                                                                            |
+| 22  | Save conversations               | ✅     | Full transcripts persisted + viewable                                                                                                                        |
+| 23  | Spaced-repetition review         | ✅     | Leitner SRS scheduler                                                                                                                                        |
+| 24  | Save words with article          | ✅     | `der Tisch` etc., LLM-derived                                                                                                                                |
+| 25  | Share link clickable             | ✅     | Isolated-line link treatment                                                                                                                                 |
+| I1  | Gemini preview voices?           | ✅     | Resolved — they're GA voices, nothing to remove                                                                                                              |
+| I2  | Notifications strategy           | 🟡     | Infra + onboarding drip exist; **missing recurring/inactivity re-engagement + prefs UI** → now tracked as **#27**                                            |
 
-**Still open:** 1 🟡, 19 🟡, 5 🟡, 8, 9, 10, 11, 16, 18, plus new #26 & #27 below.
+**Still open:** 1 🟡, 19 🟡, 5 🟡, 9, 10, 11, 16, 18, plus new #26 & #27 below.
+
+---
+
+## ✅ Shipped 2026-07-06 — audit implementation pass
+
+Large batch from [`PRE-LAUNCH-AUDIT-2026-07-06.md`](./PRE-LAUNCH-AUDIT-2026-07-06.md) implemented + deployed (green rows in the HTML export). Merged PRs #86–#93.
+
+**Bugs fixed (user-reported + launch-critical):**
+
+- 🐛 Coach voice went **silent after ~8 min** — device-side audio-player leak; now reuses one player (#86, build 92).
+- 🐛 Vocabulary review **never showed newest words** — newest-first ordering + reserved new-word slots so the due backlog can't starve them (#90, build 95).
+- 🐛 End-of-session **"Wrap up & get feedback" blank** — checkpointId threaded through so it reads the right segment + polls on "missing" instead of giving up (#90, build 95).
+- 🐛 Play **"advertising ID" release blocked** — declared the AD_ID permission to match the Play declaration (build 94).
+
+**Audit P0s fixed:** MON-1 (tier TTS free→Gemini / Pro→ElevenLabs — the biggest cost leak), MON-2 (voice = Pro server gate), MON-3 (server-authoritative quota floor), QA-1 (`/end` thread corruption), QA-2 (checkpoint idle-gap), INF-1 (ElevenLabs timeout), AI-1 (coach pedagogy), AI-2 (native voices).
+
+**Audit P1s fixed:** AI-3/4/5/6/7 (model, STT-tolerance, honesty, safety, eval harness), MON-6 (Deepgram rate cards ×10 + re-seeded prod), QA-4/INF-3 (bounded per-turn history), INF-5 (account-deletion pagination). Backlog **#8 → ✅**.
+
+**Also shipped:** self-declared proficiency **level** (onboarding step + profile editor) → covers UX-3's "no level question" + the "dots say 4, steps are 5" bug; friendly re-engagement **notifications** (#27 infra).
+
+**Still open — code (next up):** QA-5/MON-4 (RC webhook lifecycle — cancel ≠ revoke), MON-7 (server scenario gate), SEC-1/2/3, INF-2b (admin dashboard 500), MON-8/#19 (AdMob SSV), UX-1/2/4/6/7.
+**Needs Bruno — external:** MON-5 (iOS sandbox purchase test), MKT-1 analytics accounts/keys, MKT-2/3/4 (store listing, ratings, videos), INF-2 alerting dashboards, INF-6 (2 machines — cost call), SEC-7 (legacy key rotation).
 
 ---
 

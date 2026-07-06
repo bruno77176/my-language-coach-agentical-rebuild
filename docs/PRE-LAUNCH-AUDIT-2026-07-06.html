@@ -255,5 +255,39 @@ The core loop is polished and differentiated (persistent Lisa + cross-session me
 
 <div class="foot">Generated 2026-07-06 · 7 parallel code-grounded audits, every finding verified against source (file:line) before inclusion · prior audit 2026-06-27 · severities reflect impact on a paid-acquisition launch targeting hundreds of paying users at 10K-user scale.</div>
 
-</div></body>
+</div>
+<style>
+tr.fixed{background:var(--ok-bg)!important}
+tr.fixed td{border-bottom-color:var(--ok)!important}
+tr.fixed td:first-child{font-weight:800;color:var(--ok);white-space:nowrap}
+tr.partial{background:var(--p2-bg)!important}
+tr.partial td:first-child{font-weight:800;color:var(--p2);white-space:nowrap}
+.fxbadge{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:800;letter-spacing:.03em;padding:2px 6px;border-radius:999px;background:var(--ok);color:#fff;vertical-align:middle}
+.fxbadge.pt{background:var(--p2)}
+.fxsum{background:var(--ok-bg);border:1px solid var(--ok);border-left:6px solid var(--ok);border-radius:14px;padding:18px 22px;margin:0 0 24px}
+.fxsum h3{color:var(--ok);margin:0 0 10px;font-size:17px}
+.fxsum .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fxsum .chip{font-family:ui-monospace,monospace;font-size:12px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--ok);color:#fff}
+.fxsum .chip.pt{background:var(--p2)}
+.fxsum p{margin:6px 0 0;font-size:13px;color:var(--muted)}
+.pill.done{background:var(--ok-bg);color:var(--ok)}
+</style>
+<script>
+(function(){
+var FIXED=["AI-1","AI-2","AI-3","AI-4","AI-5","AI-6","AI-7","QA-1","QA-2","QA-4","INF-1","INF-3","INF-5","MON-1","MON-2","MON-3","MON-6"];
+var PARTIAL=["UX-3"];
+var fx={},pt={};FIXED.forEach(function(i){fx[i]=1});PARTIAL.forEach(function(i){pt[i]=1});
+function expand(s){var m=s.match(/([A-Z]+)-([\d\/]+)/);if(!m)return[];var p=m[1];return m[2].split('/').map(function(n){return p+'-'+n});}
+document.querySelectorAll('table tr').forEach(function(tr){var td=tr.querySelector('td');if(!td)return;var id=(td.textContent||'').trim();
+if(fx[id]){tr.classList.add('fixed');var b=document.createElement('span');b.className='fxbadge';b.textContent='✅ FIXED';td.appendChild(b);}
+else if(pt[id]){tr.classList.add('partial');var b=document.createElement('span');b.className='fxbadge pt';b.textContent='◑ PARTIAL';td.appendChild(b);}});
+document.querySelectorAll('td span.pill').forEach(function(sp){var t=sp.textContent||'';if(t.indexOf('❌')<0)return;var ids=expand(t);if(!ids.length)return;
+if(ids.every(function(i){return fx[i]})){sp.className='pill done';sp.textContent=t.replace('❌','✅');var r=sp.closest('tr');if(r)r.classList.add('fixed');}});
+var wrap=document.querySelector('.wrap')||document.body;var hero=wrap.querySelector('header.hero');
+var box=document.createElement('div');box.className='fxsum';
+box.innerHTML='<h3>✅ Implemented 2026-07-06 — '+FIXED.length+' audit findings fixed &amp; deployed</h3><div class="chips">'+FIXED.map(function(i){return '<span class="chip">'+i+'</span>'}).join('')+PARTIAL.map(function(i){return '<span class="chip pt">'+i+' partial</span>'}).join('')+'</div><p>Green rows below are fixed &amp; live. Also fixed (bugs): vocabulary review now surfaces your newest words, end-of-session feedback, the 8-minute silent-voice bug, and the Play AD_ID release gate. Remaining P0/P1 are follow-up code or need Bruno (store listings, analytics accounts, alerting dashboards, iOS sandbox purchase, legacy key rotation).</p>';
+if(hero){hero.parentNode.insertBefore(box,hero.nextSibling);}else{wrap.insertBefore(box,wrap.firstChild);}
+})();
+</script>
+</body>
 </html>
