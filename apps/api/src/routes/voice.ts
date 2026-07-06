@@ -961,12 +961,21 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         //    against tampering / long idle gaps. Resets at local midnight.
         //  speechSeconds is 0 for typed turns (no voice). (computed above)
         const elapsedRaw = Number(formData?.get("elapsed_delta_seconds") ?? 0);
-        const wallclockDelta = Number.isFinite(elapsedRaw)
-          ? Math.min(
-              MAX_TURN_WALLCLOCK_DELTA_SECONDS,
-              Math.max(0, Math.round(elapsedRaw)),
-            )
+        const clientDelta = Number.isFinite(elapsedRaw)
+          ? Math.max(0, Math.round(elapsedRaw))
           : 0;
+        // Server floor (MON-3): the debit was purely client-reported and clamped
+        // only from ABOVE, so a modded client sending 0 never debited and could
+        // burn unlimited free STT/LLM/TTS. Debit at least the work actually done
+        // this turn — the user's transcribed speech + an estimate of the coach's
+        // spoken reply (~15 chars/s) — so the client value can only round HONEST
+        // idle time up, never hide real usage.
+        const estimatedCoachSeconds = Math.ceil(fullCoachText.length / 15);
+        const serverFloor = speechSeconds + estimatedCoachSeconds;
+        const wallclockDelta = Math.min(
+          MAX_TURN_WALLCLOCK_DELTA_SECONDS,
+          Math.max(clientDelta, serverFloor),
+        );
         const turnNow = new Date();
         const sameDay =
           localDayKey(entitlement.dailyResetAt, tz) ===

@@ -414,6 +414,28 @@ describe("POST /v1/voice/sessions/:id/turns", () => {
     expect(historyPart[19]!.content).toBe("msg-29");
   });
 
+  it("debits the server-measured work even when the client reports 0 elapsed (MON-3)", async () => {
+    // makeAudioFormData sets no elapsed_delta_seconds → the route reads 0, as a
+    // modded client would send to never debit. The server floor (transcribed
+    // speech + coach-audio estimate) must still debit > 0.
+    const { app, fakeDb } = setupRoute();
+    const res = await app.request(
+      `/v1/voice/sessions/${conversationId}/turns`,
+      { method: "POST", body: makeAudioFormData(50_000) },
+    );
+    expect(res.status).toBe(200);
+    await readSseEvents(res.body!);
+
+    const updateChain = fakeDb.update.mock.results[0]!.value as {
+      set: { mock: { calls: Array<[Record<string, unknown>]> } };
+    };
+    const dailySet = updateChain.set.mock.calls
+      .map((call) => call[0])
+      .find((v) => "dailyVoiceSecondsUsed" in v);
+    expect(dailySet).toBeDefined();
+    expect(Number(dailySet!.dailyVoiceSecondsUsed)).toBeGreaterThan(0);
+  });
+
   it("returns 422 AUDIO_TOO_SHORT when audio < 4KB", async () => {
     const { app } = setupRoute();
     const res = await app.request(
