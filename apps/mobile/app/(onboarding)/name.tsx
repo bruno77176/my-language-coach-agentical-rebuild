@@ -77,7 +77,7 @@ export default function NameStep() {
 
   return (
     <View style={styles.container}>
-      <ProgressDots step={0} total={4} />
+      <ProgressDots step={0} total={5} />
 
       <EditorialText kind="displayLg">What&apos;s your name?</EditorialText>
       <EditorialText kind="bodyMd" color={palette.inkSoft}>

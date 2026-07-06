@@ -32,6 +32,7 @@ import { parseTtsConfig } from "../providers/tts-config";
 import {
   buildCoachSystemPrompt,
   coachReplyModel,
+  toProficiencyLevel,
   parseCoachMemoryRow,
   ROLE_PLAY_SCENARIOS,
   getOpeningLine,
@@ -840,10 +841,17 @@ export function createVoiceRoutes(deps: VoiceDeps) {
               systemPromptFragment: scenario.systemPromptFragment,
             }
           : null;
+        // Self-declared level (onboarding/profile) — the coach's level fallback
+        // until the AI has inferred one from real conversation. Read ungated by
+        // memoryEnabled: it's a stated preference, not extracted personal data.
+        const declaredLevel = toProficiencyLevel(
+          profile.selfDeclaredLevels?.[conversation.language],
+        );
         const sysPrompt = buildCoachSystemPrompt({
           targetLanguage: conversation.language,
           userDisplayName: profile.displayName,
           nativeLanguage: profile.nativeLang,
+          declaredLevel,
           memory,
           memoryDepth,
           scenario: scenarioFragment,
@@ -892,7 +900,10 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             messages: promptMessages,
             languageCode,
             ttsConfig: voiceConfig,
-            model: coachReplyModel(languageCode, memory?.proficiency_level),
+            model: coachReplyModel(
+              languageCode,
+              memory?.proficiency_level ?? declaredLevel,
+            ),
             onUsage,
           },
           async ({ index, text, audio }) => {

@@ -1,0 +1,241 @@
+<title>Aperçu des notifications — My Language Coach</title>
+<style>
+  :root {
+    --ground: #f7efe6;
+    --panel: #fffaf3;
+    --ink: #2a2118;
+    --ink-soft: #6f6255;
+    --line: #ece0d1;
+    --peach: #f2884b;
+    --peach-deep: #d9662a;
+    --accent-soft: #fbe4d2;
+    --shadow: 24px 40px 80px -40px rgba(70, 40, 15, 0.45);
+    --phone-wall-1: #ffd9a8;
+    --phone-wall-2: #f4a06b;
+    --phone-wall-3: #b56b8f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #191410;
+      --panel: #241c15;
+      --ink: #f4ece2;
+      --ink-soft: #b3a493;
+      --line: #362a20;
+      --accent-soft: #3a2114;
+      --shadow: 24px 40px 80px -40px rgba(0, 0, 0, 0.7);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f7efe6; --panel: #fffaf3; --ink: #2a2118; --ink-soft: #6f6255;
+    --line: #ece0d1; --accent-soft: #fbe4d2; --shadow: 24px 40px 80px -40px rgba(70,40,15,0.45);
+  }
+  :root[data-theme="dark"] {
+    --ground: #191410; --panel: #241c15; --ink: #f4ece2; --ink-soft: #b3a493;
+    --line: #362a20; --accent-soft: #3a2114; --shadow: 24px 40px 80px -40px rgba(0,0,0,0.7);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 64px) clamp(20px, 5vw, 48px) 72px;
+  }
+  header { margin-bottom: clamp(32px, 5vw, 56px); }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--peach-deep); font-weight: 700; margin: 0 0 10px;
+  }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic; font-weight: 500;
+    font-size: clamp(30px, 5vw, 46px); line-height: 1.05;
+    margin: 0 0 14px; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  header p { margin: 0; max-width: 60ch; color: var(--ink-soft); font-size: 16px; }
+  header b { color: var(--ink); font-weight: 600; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 60px);
+    align-items: start;
+  }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; justify-items: center; } }
+
+  /* ---- Phone ---- */
+  .phone {
+    width: 320px; height: 660px; border-radius: 52px;
+    padding: 12px;
+    background: #0e0b08;
+    box-shadow: var(--shadow);
+    position: sticky; top: 32px;
+  }
+  .screen {
+    position: relative; width: 100%; height: 100%; border-radius: 42px; overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 50% -10%, var(--phone-wall-1), transparent 60%),
+      linear-gradient(160deg, var(--phone-wall-2) 0%, var(--phone-wall-3) 100%);
+    display: flex; flex-direction: column; align-items: center;
+    color: #fff;
+  }
+  .notch {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 116px; height: 30px; background: #0e0b08; border-radius: 16px;
+  }
+  .lock-time {
+    margin-top: 74px; font-size: 74px; font-weight: 600; letter-spacing: -0.02em;
+    text-shadow: 0 2px 24px rgba(60, 25, 10, 0.3);
+  }
+  .lock-date { margin-top: -6px; font-size: 17px; font-weight: 500; opacity: 0.95; text-transform: capitalize; }
+
+  .banner {
+    margin: auto 14px 0; width: calc(100% - 28px);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-radius: 22px; padding: 13px 14px;
+    display: grid; grid-template-columns: 42px 1fr auto; gap: 11px; align-items: start;
+    color: #1c140d;
+    box-shadow: 0 10px 30px -12px rgba(50, 20, 5, 0.5);
+    animation: drop 0.7s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  }
+  .banner:last-of-type { margin-bottom: 30px; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-14px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .banner { animation: none; } }
+
+  .app-icon {
+    width: 42px; height: 42px; border-radius: 11px;
+    background: radial-gradient(120% 120% at 30% 20%, #ffd9a0, #f2884b 55%, #d9662a);
+    position: relative; overflow: hidden; flex: none;
+  }
+  .app-icon::after {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% 118%, rgba(255,255,255,0.95) 0 22%, transparent 23%),
+      linear-gradient(transparent 60%, rgba(217,102,42,0.45) 61% 63%, transparent 64%),
+      linear-gradient(transparent 68%, rgba(217,102,42,0.35) 69% 71%, transparent 72%);
+  }
+  .b-body { min-width: 0; }
+  .b-app { font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.55; }
+  .b-title { font-size: 15px; font-weight: 700; margin: 1px 0 1px; line-height: 1.25; }
+  .b-text { font-size: 14px; line-height: 1.3; color: #3a2c20; }
+  .b-time { font-size: 12px; opacity: 0.5; white-space: nowrap; }
+
+  /* ---- Copy list ---- */
+  .list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .list-head h2 { font-family: Georgia, serif; font-style: italic; font-weight: 500; font-size: 22px; margin: 0; }
+  .list-head span { font-size: 13px; color: var(--ink-soft); }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    padding: 16px 18px; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start;
+  }
+  .card .app-icon { width: 40px; height: 40px; }
+  .tag {
+    display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--peach-deep);
+    background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; margin-bottom: 7px;
+  }
+  .card .b-title { color: var(--ink); }
+  .card .b-text { color: var(--ink-soft); }
+  .when { font-size: 12px; color: var(--ink-soft); margin-top: 7px; }
+  .when b { color: var(--ink); font-weight: 600; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 13.5px; max-width: 70ch; }
+  footer b { color: var(--ink); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">My Language Coach · Rappels amicaux</p>
+    <h1>Voici à quoi ressemblent tes notifications</h1>
+    <p>En français (ta langue), dans la voix de <b>Lisa</b>. Elles arrivent vers <b>9 h</b>, ton heure locale (Europe/Zurich) — jamais insistantes, une par lapse au maximum.</p>
+  </header>
+
+  <div class="stage">
+    <div class="phone" aria-label="Écran verrouillé avec une notification">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="lock-time">9:00</div>
+        <div class="lock-date">mardi 7 juillet</div>
+
+        <div class="banner" style="animation-delay: .05s">
+          <div class="app-icon"></div>
+          <div class="b-body">
+            <div class="b-app">My Language Coach</div>
+            <div class="b-title">Lisa pense à toi 👋</div>
+            <div class="b-text">Ça fait quelques jours — 5 minutes suffisent pour rester au top.</div>
+          </div>
+          <div class="b-time">main.</div>
+        </div>
+
+        <div class="banner" style="animation-delay: .18s">
+          <div class="app-icon"></div>
+          <div class="b-body">
+            <div class="b-app">My Language Coach</div>
+            <div class="b-title">Ton premier bilan est prêt 🎉</div>
+            <div class="b-text">Lisa a noté des remarques de ta première session — jette un œil.</div>
+          </div>
+          <div class="b-time">9:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="list-head">
+        <h2>Les quatre rappels</h2>
+        <span>traduits dans les 15 langues de l'app</span>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <div class="app-icon"></div>
+          <div class="b-body">
+            <span class="tag">Relance · inactivité</span>
+            <div class="b-title">Lisa pense à toi 👋</div>
+            <div class="b-text">Ça fait quelques jours — 5 minutes suffisent pour rester au top.</div>
+            <div class="when">Se déclenche après <b>3 jours sans pratique</b> · une fois par semaine max.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="app-icon"></div>
+          <div class="b-body">
+            <span class="tag">Jour 1 · feedback</span>
+            <div class="b-title">Ton premier bilan est prêt 🎉</div>
+            <div class="b-text">Lisa a noté des remarques de ta première session — jette un œil.</div>
+            <div class="when">Le lendemain de ta première conversation.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="app-icon"></div>
+          <div class="b-body">
+            <span class="tag">Jour 2 · échauffement</span>
+            <div class="b-title">5 minutes avec Lisa ?</div>
+            <div class="b-text">Une petite conversation entretient ta série.</div>
+            <div class="when">Pour garder l'élan des premiers jours.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="app-icon"></div>
+          <div class="b-body">
+            <span class="tag">Jour 7 · bilan</span>
+            <div class="b-title">Ta première semaine 🌱</div>
+            <div class="b-text">Regarde le chemin parcouru.</div>
+            <div class="when">Ouvre directement ton résumé hebdomadaire.</div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <b>Note :</b> ceci est une maquette fidèle du texte et du rendu — pas un vrai push. Ton app actuelle n'a pas encore enregistré de jeton de notification (c'est justement ce qu'ajoute le build 53/89). Installe-le, connecte-toi, et je déclenche une vraie notification sur ton téléphone dans la seconde.
+      </footer>
+    </div>
+  </div>
+</div>

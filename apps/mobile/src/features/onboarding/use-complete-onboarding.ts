@@ -8,8 +8,13 @@ export function useCompleteOnboarding() {
 
   return useMutation({
     mutationFn: async () => {
-      const { displayName, nativeLang, targetLang, dailyGoalMinutes } =
-        useOnboardingStore.getState();
+      const {
+        displayName,
+        nativeLang,
+        targetLang,
+        selfDeclaredLevel,
+        dailyGoalMinutes,
+      } = useOnboardingStore.getState();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const { data, error } = await supabase.rpc("complete_onboarding", {
@@ -18,6 +23,7 @@ export function useCompleteOnboarding() {
         p_target_lang: targetLang,
         p_daily_goal_minutes: dailyGoalMinutes,
         p_timezone: timezone,
+        p_self_declared_level: selfDeclaredLevel || null,
       });
 
       if (error) throw error;

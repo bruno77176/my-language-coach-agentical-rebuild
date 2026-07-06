@@ -53,7 +53,7 @@ export default function DailyGoalStep() {
 
   return (
     <View style={styles.container}>
-      <ProgressDots step={3} total={4} />
+      <ProgressDots step={4} total={5} />
 
       <EditorialText kind="displayLg">Daily practice goal</EditorialText>
       <EditorialText kind="bodyMd" color={palette.inkSoft}>
