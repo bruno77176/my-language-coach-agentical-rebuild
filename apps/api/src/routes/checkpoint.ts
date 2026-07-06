@@ -314,47 +314,52 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
   });
   const since = last?.endedAt ?? conversation.startedAt;
 
-  // Newest un-checkpointed message (segment upper bound = last activity).
-  const newest = await db.query.messages.findFirst({
-    where: (t, { eq: e, and: a, gt: g }) =>
-      a(e(t.conversationId, conversation.id), g(t.createdAt, since)),
-    orderBy: (t, { desc: d }) => [d(t.createdAt)],
-  });
-  if (!newest) {
-    // TEMP DIAG (feedback-wrong-session): nothing new since the last checkpoint.
-    console.warn(
-      `[CHK-DIAG] nothing-new conv=${conversation.id} force=${force} hasLast=${!!last} since=${new Date(since).toISOString()}`,
-    );
-    return null; // nothing new since the last checkpoint
-  }
-
-  const newestAt = new Date(newest.createdAt);
-  if (!force && now.getTime() - newestAt.getTime() <= inactivityMs) {
-    return null; // segment still active — don't auto-checkpoint yet
-  }
-
-  // Segment start = the FIRST un-checkpointed message, NOT the previous
-  // checkpoint's endedAt. Otherwise the idle gap between segments (hours or days
-  // on a continuous thread — the user was away, not practicing) is counted as
-  // practice time, inflating every returning user's streak/stats/weekly summary
-  // (QA-2). Count first→last activity within the segment.
-  const firstNew = await db.query.messages.findFirst({
+  // Load every un-checkpointed message and isolate the CURRENT SITTING — the
+  // most recent contiguous run of messages (no gap > SITTING_GAP_MS). A wrap-up
+  // must report on the conversation the user just HAD, not a backlog of messages
+  // accumulated across days. Without this, a stuck/old boundary made the segment
+  // swallow the whole thread (28-hour "sessions", empty/whole-thread feedback,
+  // and a started_at collision that blocked every new checkpoint).
+  const SITTING_GAP_MS = 20 * 60 * 1000;
+  const range = await db.query.messages.findMany({
     where: (t, { eq: e, and: a, gt: g }) =>
       a(e(t.conversationId, conversation.id), g(t.createdAt, since)),
     orderBy: (t, { asc: as }) => [as(t.createdAt)],
+    columns: { createdAt: true, role: true },
   });
-  const segmentStart = firstNew
-    ? new Date(firstNew.createdAt)
-    : new Date(since);
+  if (range.length === 0) {
+    return null; // nothing new since the last checkpoint
+  }
+  const newestAt = new Date(range[range.length - 1]!.createdAt);
+  if (!force && now.getTime() - newestAt.getTime() <= inactivityMs) {
+    return null; // segment still active — don't auto-checkpoint yet
+  }
+  // Walk forward; every gap > SITTING_GAP_MS starts a fresh sitting. The last
+  // one is "this session".
+  let sittingStartIdx = 0;
+  for (let i = 1; i < range.length; i++) {
+    const gap =
+      new Date(range[i]!.createdAt).getTime() -
+      new Date(range[i - 1]!.createdAt).getTime();
+    if (gap > SITTING_GAP_MS) sittingStartIdx = i;
+  }
+  const sitting = range.slice(sittingStartIdx);
+  // Don't checkpoint a sitting with nothing the student said — no feedback worth
+  // generating, and it avoids the zero-length checkpoints that poisoned the
+  // boundary before.
+  if (!sitting.some((m) => m.role === "user")) {
+    return null;
+  }
+  const segmentStart = new Date(sitting[0]!.createdAt);
+  // Feedback/memory summarize only this sitting (gt is exclusive, so step back
+  // 1ms to include the sitting's first message).
+  const feedbackSince = new Date(segmentStart.getTime() - 1);
   const secondsSpoken = Math.max(
     0,
     Math.floor((newestAt.getTime() - segmentStart.getTime()) / 1000),
   );
-  // TEMP DIAG (feedback-wrong-session): a wrap-up should cover only the CURRENT
-  // session's messages. If `since` is far back (no recent checkpoint boundary),
-  // segStart is old and this segment swallows the whole thread → 28-min feedback.
   console.warn(
-    `[CHK-DIAG] seg conv=${conversation.id} force=${force} hasLast=${!!last} since=${new Date(since).toISOString()} segStart=${segmentStart.toISOString()} newest=${newestAt.toISOString()} secs=${secondsSpoken}`,
+    `[CHK-DIAG] seg conv=${conversation.id} force=${force} hasLast=${!!last} since=${new Date(since).toISOString()} segStart=${segmentStart.toISOString()} newest=${newestAt.toISOString()} secs=${secondsSpoken} totalMsgs=${range.length} sittingMsgs=${sitting.length}`,
   );
 
   const inserted = await db
@@ -409,10 +414,8 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
     nativeLang: profile.nativeLang,
     memoryEnabled: profile.memoryEnabled,
     platform,
-    // Feedback transcript lower bound stays the previous checkpoint boundary
-    // (messages after it = this segment); the idle-gap trim above only affects
-    // the seconds/streak math, not which messages are summarized.
-    since: new Date(since),
+    // Summarize only the current sitting (not any older un-checkpointed backlog).
+    since: feedbackSince,
     checkpointId,
   });
 

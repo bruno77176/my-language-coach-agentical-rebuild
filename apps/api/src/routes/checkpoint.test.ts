@@ -80,13 +80,13 @@ describe("maybeCheckpoint segment seconds (QA-2)", () => {
             .mockResolvedValue({ endedAt: new Date("2026-07-01T10:00:00Z") }),
         },
         messages: {
-          findFirst: vi
-            .fn()
-            // 1st call = newest (desc): segment's last activity.
-            .mockResolvedValueOnce({ createdAt: "2026-07-03T10:05:00Z" })
-            // 2nd call = first un-checkpointed (asc): segment's first activity.
-            .mockResolvedValueOnce({ createdAt: "2026-07-03T10:00:00Z" }),
-          findMany: vi.fn().mockResolvedValue([]),
+          // The current sitting: 10:00 → 10:05 = 300s (a single contiguous run).
+          // The 2-day gap from the last checkpoint (07-01) to 10:00 is NOT
+          // counted — segmentStart is the sitting's first message (QA-2).
+          findMany: vi.fn().mockResolvedValue([
+            { createdAt: "2026-07-03T10:00:00Z", role: "user" },
+            { createdAt: "2026-07-03T10:05:00Z", role: "coach" },
+          ]),
         },
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
       },

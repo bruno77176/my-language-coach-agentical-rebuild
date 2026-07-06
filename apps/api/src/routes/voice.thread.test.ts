@@ -126,7 +126,7 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
           }),
         },
         sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
-        messages: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        messages: { findMany: vi.fn().mockResolvedValue([]) },
       },
     };
     const routes = createVoiceRoutes({ db: db as never, ...noopProviderDeps });
@@ -173,7 +173,7 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
           }),
         },
         // …and nothing is new since it, so maybeCheckpoint returns null.
-        messages: { findFirst: vi.fn().mockResolvedValue(undefined) },
+        messages: { findMany: vi.fn().mockResolvedValue([]) },
       },
     };
     const routes = createVoiceRoutes({ db: db as never, ...noopProviderDeps });
@@ -215,14 +215,13 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
           }),
         },
         sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
-        // 1st findFirst = newest (segment upper bound); 2nd = first new message
-        // (segment lower bound — QA-2). Here 10:00 → 10:05 = 300s.
+        // The current sitting spans 10:00 → 10:05 = 300s (one contiguous run
+        // with a user turn); segmentStart = first message of the sitting.
         messages: {
-          findFirst: vi
-            .fn()
-            .mockResolvedValueOnce({ createdAt: newestAt })
-            .mockResolvedValueOnce({ createdAt: startedAt }),
-          findMany: vi.fn().mockResolvedValue([]),
+          findMany: vi.fn().mockResolvedValue([
+            { createdAt: startedAt, role: "user" },
+            { createdAt: newestAt, role: "coach" },
+          ]),
         },
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
       },
@@ -287,11 +286,10 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
         },
         sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
         messages: {
-          findFirst: vi
-            .fn()
-            .mockResolvedValueOnce({ createdAt: newestAt })
-            .mockResolvedValueOnce({ createdAt: startedAt }),
-          findMany: vi.fn().mockResolvedValue([]),
+          findMany: vi.fn().mockResolvedValue([
+            { createdAt: startedAt, role: "user" },
+            { createdAt: newestAt, role: "coach" },
+          ]),
         },
         coachMemory: { findFirst: vi.fn().mockResolvedValue(undefined) },
       },
@@ -366,7 +364,10 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
         },
         sessionCheckpoints: { findFirst: vi.fn().mockResolvedValue(undefined) },
         messages: {
-          findFirst: vi.fn().mockResolvedValue({ createdAt: newestAt }),
+          findMany: vi.fn().mockResolvedValue([
+            { createdAt: startedAt, role: "user" },
+            { createdAt: newestAt, role: "coach" },
+          ]),
         },
       },
       // A concurrent checkpoint already closed this segment → insert returns [].
