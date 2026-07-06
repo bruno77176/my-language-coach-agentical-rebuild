@@ -220,12 +220,14 @@ Respond ONLY as JSON: {"pass": boolean, "reason": string}.`;
 }
 
 describe.runIf(RUN)("coach pedagogy eval (LLM judge, audit §5 AI-7)", () => {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
   for (const c of CASES) {
     it(
       c.name,
       async () => {
+        // Construct lazily INSIDE the test: the describe body runs even when the
+        // suite is skipped (runIf false), and `new OpenAI()` without a key throws
+        // at collection time. Tests only run when RUN is true (key present).
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         const memory: CoachMemory | null = c.level
           ? { ...emptyCoachMemory(), proficiency_level: c.level }
           : null;
