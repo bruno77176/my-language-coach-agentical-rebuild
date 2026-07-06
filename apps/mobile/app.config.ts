@@ -90,7 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "56",
+      buildNumber: "57",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
@@ -107,7 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 94,
+      versionCode: 95,
       // Firebase Cloud Messaging config — required for Android push tokens
       // (getExpoPushTokenAsync). Without it the native FCM SDK is unconfigured
       // and token retrieval fails silently. Pairs with the FCM V1 service-account

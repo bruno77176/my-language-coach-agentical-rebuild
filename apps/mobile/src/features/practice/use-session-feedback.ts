@@ -43,8 +43,14 @@ export function useSessionFeedback(
     queryKey: ["session-feedback", kind, id],
     enabled: !!id,
     refetchInterval: (q) => {
-      const data = q.state.data;
-      if (data && data.status === "pending") return 1500;
+      const status = q.state.data?.status;
+      // Keep polling while the coach generates feedback. "missing" means the
+      // pending row hasn't committed yet — the checkpoint response can beat the
+      // fire-and-forget feedback insert — so poll until it appears (bounded, so
+      // a genuinely absent row doesn't poll forever). Was: stopped on "missing",
+      // which left the screen permanently blank.
+      if (status === "pending") return 1500;
+      if (status === "missing" && q.state.dataUpdateCount < 30) return 1500;
       return false;
     },
     queryFn: () => fetchFeedback(id!, kind),

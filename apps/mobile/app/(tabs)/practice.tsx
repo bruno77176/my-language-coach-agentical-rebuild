@@ -620,6 +620,7 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
       void (async () => {
         let endResult: {
           conversationId: string | null;
+          checkpointId: string | null;
           secondsSpoken: number;
         } | null = null;
         try {
@@ -641,6 +642,10 @@ function ActiveConversation({ scenarioId }: { scenarioId?: string }) {
             pathname: "/(modals)/end-of-session",
             params: {
               conversationId: endResult.conversationId,
+              // Thread segments key feedback on the checkpoint (scenarios don't).
+              ...(endResult.checkpointId
+                ? { checkpointId: endResult.checkpointId }
+                : {}),
               secondsSpoken: String(endResult.secondsSpoken),
             },
           });
