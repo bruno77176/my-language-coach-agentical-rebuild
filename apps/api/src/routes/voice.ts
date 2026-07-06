@@ -31,6 +31,7 @@ import type { RoutedTtsInput } from "../providers/tts-router";
 import { parseTtsConfig } from "../providers/tts-config";
 import {
   buildCoachSystemPrompt,
+  coachReplyModel,
   parseCoachMemoryRow,
   ROLE_PLAY_SCENARIOS,
   getOpeningLine,
@@ -842,6 +843,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         const sysPrompt = buildCoachSystemPrompt({
           targetLanguage: conversation.language,
           userDisplayName: profile.displayName,
+          nativeLanguage: profile.nativeLang,
           memory,
           memoryDepth,
           scenario: scenarioFragment,
@@ -890,7 +892,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             messages: promptMessages,
             languageCode,
             ttsConfig: voiceConfig,
-            model: "gpt-4o-mini",
+            model: coachReplyModel(languageCode, memory?.proficiency_level),
             onUsage,
           },
           async ({ index, text, audio }) => {
@@ -1133,7 +1135,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           });
           const gptStream = deps.streamChatCompletion({
             messages: [{ role: "system" as const, content: sysPrompt }],
-            model: "gpt-4o-mini",
+            model: coachReplyModel(conversation.language, null),
             onUsage,
           });
           for await (const delta of gptStream) {

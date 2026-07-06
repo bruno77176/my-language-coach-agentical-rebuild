@@ -22,12 +22,39 @@ const el = (voiceId: string): TtsConfig => ({
   style: "warm",
 });
 
+// Gemini GA Cloud TTS. Its prebuilt voices (Kore, …) are multilingual — the
+// model speaks whatever language we pin via languageCode, in a NATIVE accent.
+// Used for languages with no native ElevenLabs voice in the account, so they
+// stop falling back to the English-accented default "Sarah" (audit §5 AI-2).
+// Gemini is a non-streaming REST call that can occasionally exceed its timeout;
+// when it does, the TTS router falls back to OpenAI (still intelligible), so
+// these never go silent — they just lose the native accent on that chunk.
+const gem = (voiceId = "Kore"): TtsConfig => ({
+  provider: "gemini",
+  voiceId,
+  speed: 1.0,
+  style: "warm",
+});
+
 const VOICE_BY_LANGUAGE: Record<string, TtsConfig> = {
+  // Native ElevenLabs voices (recorded by native speakers).
   en: el("EXAVITQu4vr4xnSDxMaL"), // Sarah — native English (American)
   de: el("7eVMgwCnXydb3CikjV7a"), // Lea - Clear and Feminine — native German
   es: el("Ir1QNHvhaJXbAGhT50w3"), // Sara Martin — native Spanish (peninsular)
   fr: el("ucMmKRQbfDEYyb2IIGax"), // Aurore — native French (parisian)
   it: el("kAzI34nYjizE0zON6rXv"), // Sami — native Italian
+  // Native-accent Gemini TTS for the rest — previously English-accented Sarah.
+  // CJK especially (Sarah speaking Japanese/Chinese/Korean is unusable).
+  ja: gem(),
+  zh: gem(),
+  ko: gem(),
+  ru: gem(),
+  tr: gem(),
+  pt: gem(),
+  sv: gem(),
+  da: gem(),
+  ro: gem(),
+  hu: gem(),
 };
 
 // Resolve the TTS voice for a target language. Falls back to the global default

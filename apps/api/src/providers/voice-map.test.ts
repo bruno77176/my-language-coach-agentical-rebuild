@@ -31,9 +31,24 @@ describe("voiceConfigForLanguage", () => {
     });
   });
 
-  it("falls back to the default voice for a language with no native voice", () => {
-    // Japanese has no dedicated native voice yet.
-    expect(voiceConfigForLanguage("ja")).toEqual(DEFAULT_TTS_CONFIG);
+  it("routes languages without a native ElevenLabs voice to Gemini (native accent, audit §5 AI-2)", () => {
+    // CJK + the other 7 previously fell back to English-accented Sarah.
+    for (const code of [
+      "ja",
+      "zh",
+      "ko",
+      "ru",
+      "tr",
+      "pt",
+      "sv",
+      "da",
+      "ro",
+      "hu",
+    ]) {
+      expect(voiceConfigForLanguage(code)).toMatchObject({
+        provider: "gemini",
+      });
+    }
   });
 
   it("falls back to the default voice when languageCode is undefined", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCoachSystemPrompt } from "./prompts";
+import { buildCoachSystemPrompt, coachReplyModel } from "./prompts";
 import { emptyCoachMemory, type CoachMemory } from "./coach-memory-schema";
 
 describe("buildCoachSystemPrompt", () => {
@@ -107,6 +107,69 @@ describe("buildCoachSystemPrompt", () => {
     expect(out).not.toContain("<context>");
     expect(out).not.toContain("trip to Italy");
     expect(out).not.toContain("Talked about food.");
+  });
+});
+
+describe("coach pedagogy (audit §5)", () => {
+  const p = (over: Record<string, unknown> = {}) =>
+    buildCoachSystemPrompt({
+      targetLanguage: "de",
+      userDisplayName: "Bruno",
+      nativeLanguage: "fr",
+      ...over,
+    });
+
+  it("carries a real correction policy (recast, not correct-every-slip)", () => {
+    expect(p()).toContain("RECAST");
+    expect(p().toLowerCase()).toContain("never correct every slip");
+  });
+
+  it("adds an L1 escape hatch in the learner's native language", () => {
+    expect(p()).toContain("French"); // nativeLanguage "fr"
+    expect(p()).toContain("clarification in French");
+  });
+
+  it("omits the L1 hatch when native == target or absent", () => {
+    expect(p({ nativeLanguage: "de" })).not.toContain("clarification in");
+    expect(
+      buildCoachSystemPrompt({ targetLanguage: "de", userDisplayName: "B" }),
+    ).not.toContain("clarification in");
+  });
+
+  it("tolerates STT errors (treats garble as mishearing)", () => {
+    expect(p().toLowerCase()).toContain("misheard");
+  });
+
+  it("is honest-if-asked, not deceptive", () => {
+    expect(p()).toContain("AI language coach");
+    expect(p()).not.toContain("you are simply Lisa");
+  });
+
+  it("deflects unsafe/off-topic in character", () => {
+    expect(p().toLowerCase()).toContain("steer back to practice");
+  });
+
+  it("reflects the learner's CEFR level when known", () => {
+    expect(
+      p({ memory: { ...emptyCoachMemory(), proficiency_level: "A1" } }),
+    ).toContain("A1");
+  });
+});
+
+describe("coachReplyModel (audit §5 AI-3)", () => {
+  it("uses gpt-4o for CJK regardless of level", () => {
+    expect(coachReplyModel("ja", null)).toBe("gpt-4o");
+    expect(coachReplyModel("zh", "A1")).toBe("gpt-4o");
+    expect(coachReplyModel("ko", undefined)).toBe("gpt-4o");
+  });
+  it("uses gpt-4o for B1+ learners", () => {
+    expect(coachReplyModel("de", "B1")).toBe("gpt-4o");
+    expect(coachReplyModel("fr", "C1")).toBe("gpt-4o");
+  });
+  it("uses gpt-4o-mini for A1–A2 / unknown in non-CJK", () => {
+    expect(coachReplyModel("de", "A1")).toBe("gpt-4o-mini");
+    expect(coachReplyModel("es", "A2")).toBe("gpt-4o-mini");
+    expect(coachReplyModel("it", null)).toBe("gpt-4o-mini");
   });
 });
 
