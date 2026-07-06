@@ -124,7 +124,11 @@ Produce promo videos for the app (store listing / marketing / social). Relates t
 
 ### 27. ✨ Friendly-reminder / re-engagement notifications _(upgraded from I2)_
 
-Prevent early churn — nudge people back after they download so they don't stop using the app. **Infra already exists** (verified 2026-07-05): `expo-notifications`, `push_tokens`/`push_schedule` tables, a 60s `push-runner`, and a Day-1/2/7 onboarding drip (`push-scheduler.ts`). **What's missing:** recurring practice/streak reminders, **inactivity-triggered re-engagement** ("you haven't practiced in N days"), anything beyond day 7, and a **notification-preferences/opt-out toggle** in Profile. Tie the messaging into the **churn-prevention** skill (retention nudges, not just reminders). Pairs with #26 (a lapsed thread is a natural re-engagement hook).
+Prevent early churn — nudge people back after they download so they don't stop using the app. **Infra already exists** (verified 2026-07-05): `expo-notifications`, `push_tokens`/`push_schedule` tables, a 60s `push-runner`, and a Day-1/2/7 onboarding drip (`push-scheduler.ts`). **What's missing:** recurring practice/streak reminders, **inactivity-triggered re-engagement** ("you haven't practiced in N days"), anything beyond day 7, and a **notification-preferences/opt-out toggle** in Profile. Tie the messaging into the **churn-prevention** skill (retention nudges, not just reminders). Pairs with #26 (a lapsed thread is a natural re-engagement hook). _(Built + shipped 2026-07-05: token registration, native-language copy in all 15 langs, inactivity sweep, Android FCM — verified on-device. Still open: opt-out toggle in Profile.)_
+
+### 28. 🎬🐛 App Store screenshots too heavy — don't load on a weak connection
+
+On a poor mobile connection, the **App Store listing screenshots don't render** (blank gallery) — a friend saw this installing on iPhone. Likely the uploaded images are too large. A blank screenshot gallery on the store page hurts install conversion, especially for exactly the users (mobile data / weak signal) who most need to see what the app is. **Fix:** re-export the App Store (and Play) screenshots at optimized size/format (compress, right resolution per device class, modern codec where the stores allow) so they load fast even on slow connections; re-upload to App Store Connect + Play Console. Relates to the **aso** and **image** skills. _(Bruno 2026-07-06, from a real install on iPhone.)_
 
 ### 20. ✨🐛 Tap-to-save word — select the word only + make it discoverable
 
