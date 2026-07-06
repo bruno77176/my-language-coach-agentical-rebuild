@@ -155,18 +155,26 @@ export function createApp(
     secret: env.ACCOUNT_DELETION_SECRET,
     publicWebBaseUrl: env.PUBLIC_WEB_BASE_URL,
     findUserByEmail: async (email: string) => {
-      const { data, error } = await supabaseAdmin.auth.admin.listUsers({
-        perPage: 1000,
-      });
-      if (error) throw error;
-      const u = data.users.find(
-        (u) => u.email?.toLowerCase() === email.toLowerCase(),
-      );
-      if (!u) return null;
-      const profile = await db.query.profiles.findFirst({
-        where: (p, { eq }) => eq(p.userId, u.id),
-      });
-      return { id: u.id, displayName: profile?.displayName ?? "" };
+      // Paginate: listUsers({perPage:1000}) scanned only page 1, so a GDPR
+      // deletion for user #1001+ returned "not found" (INF-5). Walk pages until
+      // found or exhausted (cap = 100 pages = 100k users, a safety bound).
+      const target = email.toLowerCase();
+      for (let page = 1; page <= 100; page++) {
+        const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        });
+        if (error) throw error;
+        const u = data.users.find((x) => x.email?.toLowerCase() === target);
+        if (u) {
+          const profile = await db.query.profiles.findFirst({
+            where: (p, { eq }) => eq(p.userId, u.id),
+          });
+          return { id: u.id, displayName: profile?.displayName ?? "" };
+        }
+        if (data.users.length < 1000) break; // reached the last page
+      }
+      return null;
     },
     sendEmail: (input: {
       to: string;

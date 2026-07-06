@@ -134,7 +134,16 @@ function setupRoute(overrides: SetupOverrides = {}) {
         findFirst: vi.fn().mockResolvedValue(profile ?? undefined),
       },
       messages: {
-        findMany: vi.fn().mockResolvedValue(history),
+        // Mimic the real query the turn route now runs — ORDER BY created_at
+        // DESC LIMIT n on a chronological array (the route reverses it back).
+        // Non-limit callers get the full history unchanged.
+        findMany: vi.fn((opts?: { limit?: number }) =>
+          Promise.resolve(
+            opts?.limit != null
+              ? history.slice(-opts.limit).reverse()
+              : history,
+          ),
+        ),
       },
       // Plan 8 M1: voice.ts /turns reads coach memory before building the
       // system prompt. Tests default to "no memory row" so the prompt builder

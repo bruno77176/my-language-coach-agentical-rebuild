@@ -4,6 +4,13 @@ import { ProviderError } from "./deepgram";
 import type { OnUsage } from "./usage";
 import type { TtsStyle } from "@language-coach/shared";
 import { elevenLabsStyleSettings } from "./tts-config";
+import { withTimeout } from "../lib/timeout";
+
+// Latency bound for a single ElevenLabs synthesis (open + full drain). The
+// default provider had NO timeout, so a hung stream (open or mid-drain) held
+// the turn forever — the fallback router only rescues on throw/empty, not on
+// hang (INF-1). Flash v2.5 streams sub-second; 10s is a generous ceiling.
+const EL_SYNTH_TIMEOUT_MS = 10_000;
 
 export function createElevenLabs(env: Env): ElevenLabsClient {
   return new ElevenLabsClient({ apiKey: env.ELEVENLABS_API_KEY });
@@ -30,14 +37,14 @@ export async function synthesizeSpeech(
   client: ElevenLabsClient,
   input: SynthesizeInput,
 ): Promise<SynthesizeResult> {
-  let stream: AsyncIterable<Uint8Array>;
-  try {
-    // Cast: SDK types stream() as returning ReadableStream<Uint8Array>, but
-    // Web ReadableStream is async-iterable in Node 20+ and our tests mock it
-    // as a plain AsyncGenerator. Either way, `for await` consumes it.
-    const settings = elevenLabsStyleSettings(input.style ?? "warm");
-    const elSpeed = Math.min(1.2, Math.max(0.7, input.speed ?? 1.0));
-    stream = (await client.textToSpeech.stream(input.voiceId, {
+  const settings = elevenLabsStyleSettings(input.style ?? "warm");
+  const elSpeed = Math.min(1.2, Math.max(0.7, input.speed ?? 1.0));
+
+  // Open the stream AND drain it under a single latency bound. Cast: SDK types
+  // stream() as ReadableStream<Uint8Array>, but Web ReadableStream is
+  // async-iterable in Node 20+ and tests mock it as a plain AsyncGenerator.
+  const collect = async (): Promise<Buffer> => {
+    const stream = (await client.textToSpeech.stream(input.voiceId, {
       text: input.text,
       modelId: input.modelId ?? "eleven_flash_v2_5",
       languageCode: input.languageCode,
@@ -48,24 +55,27 @@ export async function synthesizeSpeech(
       },
       outputFormat: "mp3_44100_128",
     })) as unknown as AsyncIterable<Uint8Array>;
+    const parts: Uint8Array[] = [];
+    for await (const chunk of stream) {
+      parts.push(chunk);
+    }
+    return Buffer.concat(parts);
+  };
+
+  let audioBuffer: Buffer;
+  try {
+    audioBuffer = await withTimeout(
+      collect(),
+      EL_SYNTH_TIMEOUT_MS,
+      "ElevenLabs synth",
+    );
   } catch (err) {
+    // Includes TimeoutError — surfaces as TTS_PROVIDER_FAILURE so the router
+    // falls back to OpenAI instead of the turn hanging.
     throw new ProviderError(
       "TTS_PROVIDER_FAILURE",
       503,
       `ElevenLabs error: ${(err as Error).message}`,
-    );
-  }
-
-  const chunks: Uint8Array[] = [];
-  try {
-    for await (const chunk of stream) {
-      chunks.push(chunk);
-    }
-  } catch (err) {
-    throw new ProviderError(
-      "TTS_PROVIDER_FAILURE",
-      503,
-      `ElevenLabs stream error: ${(err as Error).message}`,
     );
   }
 
@@ -81,7 +91,6 @@ export async function synthesizeSpeech(
     });
   }
 
-  const audioBuffer = Buffer.concat(chunks);
   // ElevenLabs can close the stream with 0 bytes on a soft limit (concurrency /
   // quota) WITHOUT throwing — which would otherwise surface as a silent coach
   // message. Treat empty audio as a failure so the router falls back to OpenAI.

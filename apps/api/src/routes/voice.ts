@@ -825,10 +825,15 @@ export function createVoiceRoutes(deps: VoiceDeps) {
           .returning({ id: messages.id });
         const userMsgId = userMsgRows[0]!.id;
 
-        // 3. Build prompt + history
-        const history = await deps.db.query.messages.findMany({
+        // 3. Build prompt + history. Fetch only the last MAX_HISTORY_MESSAGES
+        // (desc + limit, then reversed to chronological) instead of the whole
+        // thread — on the infinite continuous thread the full read grew linearly
+        // with account age, forever (QA-4/INF-3). Older context is preserved via
+        // coach memory (the rolling summary in the system prompt).
+        const recent = await deps.db.query.messages.findMany({
           where: (t, { eq: e }) => e(t.conversationId, conversationId),
-          orderBy: (t, { asc: a }) => [a(t.createdAt)],
+          orderBy: (t, { desc: d }) => [d(t.createdAt)],
+          limit: MAX_HISTORY_MESSAGES,
         });
         const scenario = conversation.scenarioId
           ? (ROLE_PLAY_SCENARIOS.find(
@@ -861,7 +866,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
               ? ((memoryRow?.nextPlan as LessonPlan | null) ?? null)
               : null,
         });
-        const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
+        const recentHistory = recent.slice().reverse();
         const promptMessages: ChatMessage[] = [
           { role: "system" as const, content: sysPrompt },
           ...recentHistory.map((m) => ({

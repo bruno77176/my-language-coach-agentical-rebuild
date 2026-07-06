@@ -76,7 +76,7 @@ const SEEDS: Seed[] = [
     provider: "deepgram",
     operation: "transcribe:nova-3",
     unitType: "seconds",
-    pricePerUnit: "0.0000072", // $0.0043/min for nova-3 pay-as-you-go ≈ $0.0000717/s
+    pricePerUnit: "0.0000717", // $0.0043/min for nova-3 pay-as-you-go = $0.0000717/s (MON-6: was 10x low)
     // NOTE: verify against your billing — Deepgram tiers change.
   },
   // Deepgram Nova-2 (used for Mandarin Chinese — nova-3 lacks zh support)
@@ -84,7 +84,7 @@ const SEEDS: Seed[] = [
     provider: "deepgram",
     operation: "transcribe:nova-2",
     unitType: "seconds",
-    pricePerUnit: "0.0000072", // mirror nova-3 PAYG; verify against billing
+    pricePerUnit: "0.0000717", // mirror nova-3 PAYG = $0.0043/min (MON-6: was 10x low)
     // NOTE: verify the nova-2 pre-recorded PAYG rate — Deepgram tiers change.
   },
   // Deepgram streaming STT (Live voice mode). Billed per connection-second
@@ -94,7 +94,7 @@ const SEEDS: Seed[] = [
     provider: "deepgram",
     operation: "transcribe:streaming",
     unitType: "seconds",
-    pricePerUnit: "0.0000128", // ~$0.0077/min nova streaming PAYG; verify billing
+    pricePerUnit: "0.000128", // ~$0.0077/min nova streaming PAYG = $0.000128/s (MON-6: was 10x low)
   },
   // ElevenLabs TTS (when re-enabled). Operation name must match the provider's
   // active default in providers/elevenlabs.ts so recordUsage finds a rate card.
