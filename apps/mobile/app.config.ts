@@ -107,7 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 93,
+      versionCode: 94,
       // Firebase Cloud Messaging config — required for Android push tokens
       // (getExpoPushTokenAsync). Without it the native FCM SDK is unconfigured
       // and token retrieval fails silently. Pairs with the FCM V1 service-account
@@ -116,7 +116,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
       // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
       edgeToEdgeEnabled: true,
-      permissions: ["RECORD_AUDIO"],
+      // AD_ID: the app uses the advertising ID via the AdMob SDK (rewarded ad),
+      // and the Play Console advertising-ID declaration says "Yes". The SDK is
+      // meant to merge this permission, but it wasn't landing in the built AAB —
+      // declare it explicitly so the manifest matches the declaration (Play
+      // blocks the release otherwise). See Play Console → advertising ID.
+      permissions: ["RECORD_AUDIO", "com.google.android.gms.permission.AD_ID"],
       intentFilters: [
         {
           action: "VIEW",
