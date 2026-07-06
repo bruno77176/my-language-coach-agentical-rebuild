@@ -143,6 +143,54 @@ describe("POST /v1/voice/sessions/:id/checkpoint", () => {
     });
   });
 
+  it("returns the most recent checkpoint when nothing is new (auto-checkpoint already closed the segment) — not a dead-end", async () => {
+    const convId = "11111111-1111-1111-1111-111111111111";
+    const db = {
+      query: {
+        conversations: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: convId,
+            userId,
+            kind: "thread",
+            language: "de",
+            startedAt: new Date(),
+          }),
+        },
+        profiles: {
+          findFirst: vi.fn().mockResolvedValue({
+            timezone: "UTC",
+            dailyGoalMinutes: 10,
+            memoryEnabled: true,
+            nativeLang: "en",
+          }),
+        },
+        // A prior checkpoint exists (e.g. the auto-checkpoint on thread re-open)…
+        sessionCheckpoints: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: "cp-prev",
+            endedAt: new Date(),
+            secondsSpoken: 120,
+          }),
+        },
+        // …and nothing is new since it, so maybeCheckpoint returns null.
+        messages: { findFirst: vi.fn().mockResolvedValue(undefined) },
+      },
+    };
+    const routes = createVoiceRoutes({ db: db as never, ...noopProviderDeps });
+    const res = await appWithVoice(routes).request(
+      `/v1/voice/sessions/${convId}/checkpoint`,
+      { method: "POST" },
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      checkpoint_id: string | null;
+      seconds_spoken: number;
+    };
+    // Non-null → the user lands on that segment's feedback, not the chooser.
+    expect(body.checkpoint_id).toBe("cp-prev");
+    expect(body.seconds_spoken).toBe(120);
+  });
+
   it("creates a checkpoint over the new segment and reports seconds", async () => {
     const convId = "11111111-1111-1111-1111-111111111111";
     const startedAt = new Date("2026-07-05T10:00:00Z");

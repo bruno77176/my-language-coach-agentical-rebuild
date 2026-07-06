@@ -557,10 +557,26 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       force: true,
       inactivityMs: 0,
     });
+    if (result) {
+      return c.json({
+        checkpoint_id: result.checkpointId,
+        seconds_spoken: result.secondsSpoken,
+        goal_reached: result.goalReached,
+      });
+    }
+    // Nothing new to checkpoint — most commonly because the auto-checkpoint that
+    // runs when a thread is re-opened (30-min inactivity) already closed the last
+    // segment. Return the MOST RECENT existing checkpoint so "Wrap up & get
+    // feedback" still opens that segment's report instead of dead-ending the user
+    // on the practice chooser with no feedback shown.
+    const lastCp = await deps.db.query.sessionCheckpoints.findFirst({
+      where: (t, { eq: e }) => e(t.conversationId, conversationId),
+      orderBy: (t, { desc: d }) => [d(t.endedAt)],
+    });
     return c.json({
-      checkpoint_id: result?.checkpointId ?? null,
-      seconds_spoken: result?.secondsSpoken ?? 0,
-      goal_reached: result?.goalReached ?? false,
+      checkpoint_id: lastCp?.id ?? null,
+      seconds_spoken: lastCp?.secondsSpoken ?? 0,
+      goal_reached: false,
     });
   });
 
