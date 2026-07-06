@@ -320,7 +320,13 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
       a(e(t.conversationId, conversation.id), g(t.createdAt, since)),
     orderBy: (t, { desc: d }) => [d(t.createdAt)],
   });
-  if (!newest) return null; // nothing new since the last checkpoint
+  if (!newest) {
+    // TEMP DIAG (feedback-wrong-session): nothing new since the last checkpoint.
+    console.warn(
+      `[CHK-DIAG] nothing-new conv=${conversation.id} force=${force} hasLast=${!!last} since=${new Date(since).toISOString()}`,
+    );
+    return null; // nothing new since the last checkpoint
+  }
 
   const newestAt = new Date(newest.createdAt);
   if (!force && now.getTime() - newestAt.getTime() <= inactivityMs) {
@@ -343,6 +349,12 @@ export async function maybeCheckpoint(args: MaybeCheckpointArgs): Promise<{
   const secondsSpoken = Math.max(
     0,
     Math.floor((newestAt.getTime() - segmentStart.getTime()) / 1000),
+  );
+  // TEMP DIAG (feedback-wrong-session): a wrap-up should cover only the CURRENT
+  // session's messages. If `since` is far back (no recent checkpoint boundary),
+  // segStart is old and this segment swallows the whole thread → 28-min feedback.
+  console.warn(
+    `[CHK-DIAG] seg conv=${conversation.id} force=${force} hasLast=${!!last} since=${new Date(since).toISOString()} segStart=${segmentStart.toISOString()} newest=${newestAt.toISOString()} secs=${secondsSpoken}`,
   );
 
   const inserted = await db
