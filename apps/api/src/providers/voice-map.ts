@@ -57,12 +57,19 @@ const VOICE_BY_LANGUAGE: Record<string, TtsConfig> = {
   hu: gem(),
 };
 
-// Resolve the TTS voice for a target language. Falls back to the global default
-// when the language has no dedicated native voice yet (so unknown/unconfigured
-// languages still produce audio rather than erroring).
+// The FREE-tier voice: cheap, native-accent Gemini on EVERY language (MON-1).
+// The ElevenLabs premium voices (5–10× the cost) that serve the 5 major
+// languages are reserved for Pro ("Coach's voice = Pro").
+const FREE_VOICE: TtsConfig = gem();
+
+// Resolve the TTS voice for a target language + tier. Free → Gemini everywhere;
+// Pro → the premium per-language map (ElevenLabs on en/de/es/fr/it, native
+// Gemini on the rest), falling back to the global default for unknown languages.
 export function voiceConfigForLanguage(
   languageCode: string | undefined,
+  isPro: boolean,
 ): TtsConfig {
+  if (!isPro) return FREE_VOICE;
   if (!languageCode) return DEFAULT_TTS_CONFIG;
   return VOICE_BY_LANGUAGE[languageCode] ?? DEFAULT_TTS_CONFIG;
 }

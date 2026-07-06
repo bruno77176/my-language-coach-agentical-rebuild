@@ -16,6 +16,7 @@ export type SynthesizeGreetingFn = (input: {
   text: string;
   languageCode?: string;
   config?: TtsConfig;
+  isPro: boolean;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -84,6 +85,18 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
       return c.json({ error: { code: "BAD_REQUEST" } }, 400);
     }
     const { lang, name, config } = parsed.data;
+    // Greeting voice must match the session's turn voice (same tier). Free →
+    // cheap Gemini default; Pro → premium/selected (MON-1/MON-2).
+    const entitlement = userId
+      ? ((await deps.db.query?.entitlements?.findFirst?.({
+          where: (t, { eq: e }) => e(t.userId, userId),
+        })) ?? null)
+      : null;
+    const isPro = Boolean(
+      entitlement?.plan === "pro" &&
+      entitlement.proUntil &&
+      entitlement.proUntil > new Date(),
+    );
     const nameHash = nameHashOf(name);
     // Hash the RESOLVED voice (the one actually spoken), not the raw submitted
     // config: for a default config the real voice comes from the per-language
@@ -91,7 +104,7 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
     // and (b) serve stale audio after the native-voice map changes. Resolving
     // here keys the cache on the true voice and keeps the greeting in lock-step
     // with the session's turns (BRU-19).
-    const resolved = resolveTtsConfig({ config, languageCode: lang });
+    const resolved = resolveTtsConfig({ config, languageCode: lang, isPro });
     const voiceHash = voiceHashOf(resolved);
 
     const cached = await deps.getCachedGreetingUrl({
@@ -116,6 +129,7 @@ export function createVoiceGreetingRoutes(deps: VoiceGreetingDeps) {
         text,
         languageCode: lang,
         config: resolved,
+        isPro,
         onUsage,
       });
     } catch {

@@ -195,7 +195,7 @@ describe("POST /v1/voice/sessions/:id/opening", () => {
   });
 
   it("does not touch quota or seconds (no entitlement/conversation update)", async () => {
-    const { app, fakeDb, updateChain } = setupRoute();
+    const { app, updateChain } = setupRoute();
     await readSseEvents(
       (
         await app.request(`/v1/voice/sessions/${conversationId}/opening`, {
@@ -203,8 +203,9 @@ describe("POST /v1/voice/sessions/:id/opening", () => {
         })
       ).body!,
     );
-    // The /turns path updates conversations + entitlements; the opener must not.
-    expect(fakeDb.query.entitlements.findFirst).not.toHaveBeenCalled();
+    // The opener may READ the entitlement to pick the voice tier (MON-1), but it
+    // must never DEBIT quota — no conversations/entitlements UPDATE (the /turns
+    // path does that; the opener is free).
     expect(updateChain.set).not.toHaveBeenCalled();
   });
 

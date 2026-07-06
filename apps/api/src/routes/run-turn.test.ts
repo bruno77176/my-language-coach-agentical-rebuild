@@ -15,7 +15,11 @@ describe("runTurn", () => {
     const chunks: { index: number; text: string; audioLen: number }[] = [];
     const out = await runTurn(
       { streamChatCompletion: () => fakeLLM(), synthesizeSpeech },
-      { messages: [{ role: "user", content: "hi" }], languageCode: "en" },
+      {
+        messages: [{ role: "user", content: "hi" }],
+        languageCode: "en",
+        isPro: true,
+      },
       (c) => {
         chunks.push({
           index: c.index,
@@ -43,7 +47,7 @@ describe("runTurn", () => {
     const errs: number[] = [];
     await runTurn(
       { streamChatCompletion: () => fakeLLM(), synthesizeSpeech },
-      { messages: [], languageCode: "en" },
+      { messages: [], languageCode: "en", isPro: true },
       (c) => {
         ok.push(c.text);
       },
@@ -64,7 +68,7 @@ describe("runTurn", () => {
     const chunks: string[] = [];
     await runTurn(
       { streamChatCompletion: () => fakeLLM(), synthesizeSpeech },
-      { messages: [], languageCode: "en", signal: ac.signal },
+      { messages: [], languageCode: "en", isPro: true, signal: ac.signal },
       (c) => {
         chunks.push(c.text);
       },

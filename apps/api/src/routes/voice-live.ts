@@ -71,6 +71,8 @@ export function createLiveConnection(
       {
         messages: [...convo],
         languageCode: params.ctx.languageCode,
+        // Live mode is allowlist-gated (a premium beta) → premium voice tier.
+        isPro: true,
         signal: turn.signal,
       },
       ({ index, text, audio }) => {

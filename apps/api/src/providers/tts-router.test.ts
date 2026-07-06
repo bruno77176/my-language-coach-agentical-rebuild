@@ -27,7 +27,7 @@ describe("makeSynthesizeSpeech", () => {
     const openai = vi.fn().mockResolvedValue(result);
     const synth = makeSynthesizeSpeech(deps({ gemini, eleven, openai }));
     // "ja" now maps to Gemini (audit §5 AI-2) — native accent instead of Sarah.
-    await synth({ text: "こんにちは", languageCode: "ja" });
+    await synth({ text: "こんにちは", languageCode: "ja", isPro: true });
     expect(gemini).toHaveBeenCalledWith(
       GEMINI_AUTH,
       expect.objectContaining({ voiceId: "Kore", languageCode: "ja" }),
@@ -36,12 +36,32 @@ describe("makeSynthesizeSpeech", () => {
     expect(openai).not.toHaveBeenCalled();
   });
 
+  it("free tier: ignores a client ElevenLabs config and serves cheap Gemini (MON-1/MON-2)", async () => {
+    const gemini = vi.fn().mockResolvedValue(result);
+    const eleven = vi.fn().mockResolvedValue(result);
+    const synth = makeSynthesizeSpeech(deps({ gemini, eleven }));
+    await synth({
+      text: "hallo",
+      languageCode: "de", // Pro would get ElevenLabs "Lea" here.
+      // A free/modded client tries to force a premium ElevenLabs voice.
+      config: {
+        provider: "elevenlabs",
+        voiceId: "v1",
+        speed: 1.0,
+        style: "warm",
+      },
+      isPro: false,
+    });
+    expect(eleven).not.toHaveBeenCalled();
+    expect(gemini).toHaveBeenCalled();
+  });
+
   it("picks the per-language native voice when no per-user config is given", async () => {
     const eleven = vi.fn().mockResolvedValue(result);
     const synth = makeSynthesizeSpeech(deps({ eleven }));
     // German → native "Lea - Clear and Feminine"; Spanish → native "Sara Martin".
-    await synth({ text: "hallo", languageCode: "de" });
-    await synth({ text: "hola", languageCode: "es" });
+    await synth({ text: "hallo", languageCode: "de", isPro: true });
+    await synth({ text: "hola", languageCode: "es", isPro: true });
     expect(eleven).toHaveBeenNthCalledWith(
       1,
       expect.anything(),
@@ -63,6 +83,7 @@ describe("makeSynthesizeSpeech", () => {
       text: "hallo",
       languageCode: "de",
       config: DEFAULT_TTS_CONFIG,
+      isPro: true,
     });
     expect(eleven).toHaveBeenCalledWith(
       expect.anything(),
@@ -83,6 +104,7 @@ describe("makeSynthesizeSpeech", () => {
         speed: 1.1,
         style: "calm",
       },
+      isPro: true,
     });
     expect(openai).not.toHaveBeenCalled();
     expect(eleven).toHaveBeenCalledWith(
@@ -107,6 +129,7 @@ describe("makeSynthesizeSpeech", () => {
         speed: 1.0,
         style: "warm",
       },
+      isPro: true,
     });
     expect(gemini).toHaveBeenCalledWith(
       GEMINI_AUTH,
@@ -129,6 +152,7 @@ describe("makeSynthesizeSpeech", () => {
         speed: 1.0,
         style: "warm",
       },
+      isPro: true,
     });
     expect(out).toBe(result);
     expect(gemini).toHaveBeenCalled();
@@ -151,6 +175,7 @@ describe("makeSynthesizeSpeech", () => {
           speed: 1.0,
           style: "warm",
         },
+        isPro: true,
       }),
     ).rejects.toThrow("openai down");
     expect(openai).toHaveBeenCalledTimes(1);
@@ -174,6 +199,7 @@ describe("makeSynthesizeSpeech", () => {
         speed: 1.0,
         style: "warm",
       },
+      isPro: true,
     });
     expect(out).toBe(result);
     expect(eleven).toHaveBeenCalled();
@@ -195,6 +221,7 @@ describe("makeSynthesizeSpeech", () => {
         speed: 1.0,
         style: "warm",
       },
+      isPro: true,
     });
     expect(inworld).toHaveBeenCalledWith(
       "ik",
