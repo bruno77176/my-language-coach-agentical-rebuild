@@ -50,6 +50,7 @@ export function makeLoadContext(db: Database) {
     const sysPrompt = buildCoachSystemPrompt({
       targetLanguage: conversation.language,
       userDisplayName: profile.displayName,
+      nativeLanguage: profile.nativeLang,
       memory,
       memoryDepth: "basic",
       scenario: scenario

@@ -73,8 +73,8 @@ Hono + Drizzle ORM over Supabase Postgres, deployed to Fly.io. ESM, `tsx`-run, V
 A transport-agnostic `runTurn()` drives the cascade, called by both the SSE turns route and the `/v1/voice/live` WebSocket route:
 
 - **STT:** Deepgram. `nova-3` for most langs; **Chinese (`zh`) must route to `nova-2`** (nova-3 lacks zh).
-- **LLM:** OpenAI gpt-4o (replies + feedback), gpt-4o-mini (memory extraction).
-- **TTS:** provider-agnostic router (`makeSynthesizeSpeech`). Providers: ElevenLabs (per-language native voices, see `voice-map.ts`), Google **Gemini GA** (`gemini-2.5-flash-tts` via Cloud TTS/Vertex service-account OAuth — NOT the AI-Studio preview endpoint), OpenAI `gpt-4o-mini-tts`, Inworld.
+- **LLM:** OpenAI. Coach replies use `coachReplyModel()` (`packages/shared/prompts.ts`) — gpt-4o for CJK + B1+ learners (where correction quality matters most), gpt-4o-mini otherwise; feedback uses gpt-4o; memory extraction gpt-4o-mini.
+- **TTS:** provider-agnostic router (`makeSynthesizeSpeech`) with an OpenAI-`nova` fallback whenever a provider throws OR returns empty audio. Voice per language (`voice-map.ts`): native ElevenLabs voices for en/de/es/fr/it; **native-accent Gemini GA** (`gemini-2.5-flash-tts`, Cloud TTS service-account OAuth) for ja/zh/ko/ru/tr/pt/sv/da/ro/hu. Also OpenAI `gpt-4o-mini-tts`, Inworld.
 - **Live mode:** `/v1/voice/live` WS relay, gated by `VOICE_LIVE_USER_IDS`. Still half-duplex / being stabilized.
 
 ## Frontend — mobile (`apps/mobile/`)

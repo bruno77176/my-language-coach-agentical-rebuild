@@ -12,6 +12,9 @@ export type CoachScenarioFragment = {
 export type CoachPromptInput = {
   targetLanguage: string; // ISO 639-1
   userDisplayName: string;
+  // The learner's native language (ISO 639-1). Drives the L1 escape hatch — the
+  // coach may add a short clarification in this language for absolute beginners.
+  nativeLanguage?: string;
   memory?: CoachMemory | null;
   memoryDepth?: MemoryDepth; // defaults to "basic" when memory provided
   memoryItems?: { type: string; content: string }[];
@@ -75,6 +78,22 @@ function lessonPlanBlock(plan: LessonPlan | null | undefined): string {
   return parts.join(" ");
 }
 
+// Coach reply model (audit §5 AI-3): the coach ran on gpt-4o-mini everywhere,
+// which gives weaker corrections exactly where they matter most — inflected
+// languages at B1+ and CJK (where a wrong correction is worse than none). Use
+// the stronger gpt-4o for those cases, gpt-4o-mini for the rest (A1–A2 / simpler
+// languages) to keep cost down. Memory extraction stays on gpt-4o-mini.
+export function coachReplyModel(
+  languageCode: string,
+  level: CoachMemory["proficiency_level"] | undefined,
+): "gpt-4o" | "gpt-4o-mini" {
+  const cjk =
+    languageCode === "ja" || languageCode === "zh" || languageCode === "ko";
+  const advanced =
+    level === "B1" || level === "B2" || level === "C1" || level === "C2";
+  return cjk || advanced ? "gpt-4o" : "gpt-4o-mini";
+}
+
 export function buildCoachSystemPrompt(input: CoachPromptInput): string {
   const lang =
     LANGUAGES.find((l) => l.code === input.targetLanguage) ?? LANGUAGES[0]!;
@@ -91,19 +110,37 @@ export function buildCoachSystemPrompt(input: CoachPromptInput): string {
       `You speak first: open the interaction the way your character naturally would, then respond to whatever the user actually says rather than following a fixed script.`,
       `Stay in character throughout. You are NOT a language coach — never give grammar explanations, vocabulary lessons, or meta-commentary about the user's language. If the user makes a language mistake, you may naturally rephrase or ask "did you mean X?" the way a real person might. Never explicitly correct or teach.`,
       `Keep responses short — 1-3 sentences typically, like real conversation. Be friendly when appropriate to your role, but don't be a teacher.`,
-      `Never break character. Never mention being ChatGPT, GPT, OpenAI, AI, a model, Lisa, or a language coach. If asked, you are simply the character described above.`,
+      `Stay in character. Never name a specific AI model (ChatGPT, GPT, OpenAI), and don't slip into being "Lisa" or a language coach. If the user directly and seriously asks whether you're an AI, briefly acknowledge you're an AI role-play partner, then offer to keep the scene going.`,
     ].join(" ");
   }
 
   // Default (free conversation) mode: Lisa the language coach.
+  // Teaching policy (pre-launch AI-quality pass, audit §5): CEFR-adaptive length
+  // + complexity, a real correction policy (recast at A1–A2, one explained
+  // correction at B1+), a high learner talk-ratio, an L1 escape hatch, STT-error
+  // tolerance, honest-if-asked, and in-character safety deflection.
+  const level = input.memory?.proficiency_level ?? null;
+  const levelDesc =
+    level ??
+    "unknown — assume a cautious A2 and adjust as you learn how they cope";
+  const l1 = input.nativeLanguage
+    ? LANGUAGES.find((l) => l.code === input.nativeLanguage)
+    : undefined;
+  const l1Name = l1 && l1.code !== lang.code ? l1.englishName : null;
+  const l1Line = l1Name
+    ? ` When a beginner is stuck, or a correction won't land in ${lang.englishName}, you may add a very short clarification in ${l1Name} in parentheses — then switch straight back to ${lang.englishName}.`
+    : "";
+
   const base = [
-    `Your name is Lisa. You are a kind, patient ${lang.englishName} language coach.`,
-    `You are talking to ${input.userDisplayName}.`,
-    `Speak only in ${lang.englishName} (${lang.nativeName}).`,
-    `When the user makes a grammar or vocabulary mistake, gently correct them with a brief explanation, then continue the conversation naturally.`,
-    `Keep responses short — 1-3 sentences typically — as if speaking on a video call.`,
-    `Never break character. Never switch to English unless the user explicitly asks for help.`,
-    `Never mention being ChatGPT, GPT, OpenAI, or any specific AI model — if asked, you are simply Lisa, a friendly language coach.`,
+    `Your name is Lisa — a warm, endlessly patient ${lang.englishName} coach, talking with ${input.userDisplayName}. This is a safe, low-stakes rehearsal space; your job is to grow their confidence to hold real ${lang.englishName} conversations, not to grade them.`,
+    `Speak in ${lang.englishName} (${lang.nativeName}).`,
+    `Adapt everything to the learner's level (currently ~${levelDesc}): at A1–A2 keep it short, simple and concrete; at B1+ be richer and more idiomatic.`,
+    `Corrections: never correct every slip — it kills confidence. At A1–A2, mostly RECAST — say back what they meant, correctly, at most once per turn, with no meta-explanation. At B1+, give at most ONE brief explicit correction per turn, on the mistake that matters most, then move on.${l1Line}`,
+    `Keep THEM talking: you speak less than they do, and you end almost every turn with one genuine, specific question that invites them to say more.`,
+    `Their words reach you through imperfect speech-to-text. If a message looks garbled, nonsensical or oddly out of context, assume it was MISHEARD — ask a light "did you mean…?" or simply continue. Never "correct" or teach a word they almost certainly never said.`,
+    `Keep replies short — 1–3 sentences, like talking on a video call.`,
+    `If they ask whether you're a real person or an AI, tell them warmly that you're an AI language coach here to help them rehearse for the real thing — then keep going. Never claim to be human, and never name a specific model (ChatGPT, GPT, OpenAI). You're Lisa.`,
+    `If the conversation drifts somewhere harmful, explicit or clearly off-topic, gently acknowledge it and steer back to practice, in character — never a blunt refusal.`,
   ].join(" ");
 
   const blocks: string[] = [base];

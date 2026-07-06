@@ -21,21 +21,19 @@ describe("makeSynthesizeSpeech", () => {
     };
   }
 
-  it("falls back to the default voice for a language with no native voice", async () => {
+  it("routes a Gemini-mapped language (ja) to native-accent Gemini, not the ElevenLabs default", async () => {
+    const gemini = vi.fn().mockResolvedValue(result);
     const eleven = vi.fn().mockResolvedValue(result);
     const openai = vi.fn().mockResolvedValue(result);
-    const synth = makeSynthesizeSpeech(deps({ eleven, openai }));
-    // "ja" (Japanese) has no dedicated native voice yet → DEFAULT_TTS_CONFIG.
+    const synth = makeSynthesizeSpeech(deps({ gemini, eleven, openai }));
+    // "ja" now maps to Gemini (audit §5 AI-2) — native accent instead of Sarah.
     await synth({ text: "こんにちは", languageCode: "ja" });
-    expect(openai).not.toHaveBeenCalled();
-    // DEFAULT_TTS_CONFIG is ElevenLabs "Sarah" on Flash v2.5.
-    expect(eleven).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        voiceId: "EXAVITQu4vr4xnSDxMaL",
-        languageCode: "ja",
-      }),
+    expect(gemini).toHaveBeenCalledWith(
+      GEMINI_AUTH,
+      expect.objectContaining({ voiceId: "Kore", languageCode: "ja" }),
     );
+    expect(eleven).not.toHaveBeenCalled();
+    expect(openai).not.toHaveBeenCalled();
   });
 
   it("picks the per-language native voice when no per-user config is given", async () => {
