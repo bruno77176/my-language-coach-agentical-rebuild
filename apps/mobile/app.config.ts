@@ -1,6 +1,7 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
 import withStripBootCompleted from "./plugins/with-strip-boot-completed";
 import withModularHeaders from "./plugins/with-modular-headers";
+import withAdIdPermission from "./plugins/with-ad-id-permission";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
@@ -36,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ],
     withStripBootCompleted,
     withModularHeaders,
+    withAdIdPermission,
   ] as unknown as NonNullable<ExpoConfig["plugins"]>;
   if (googleIosUrlScheme) {
     plugins.push([
@@ -107,7 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: "com.anonymous.mylanguagecoach",
-      versionCode: 95,
+      versionCode: 96,
       // Firebase Cloud Messaging config — required for Android push tokens
       // (getExpoPushTokenAsync). Without it the native FCM SDK is unconfigured
       // and token retrieval fails silently. Pairs with the FCM V1 service-account
@@ -116,12 +118,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // SDK 54 Expo Android applies edge-to-edge by default when enabled here;
       // fixes the Play Console "edge-to-edge display" advisory for Android 15+.
       edgeToEdgeEnabled: true,
-      // AD_ID: the app uses the advertising ID via the AdMob SDK (rewarded ad),
-      // and the Play Console advertising-ID declaration says "Yes". The SDK is
-      // meant to merge this permission, but it wasn't landing in the built AAB —
-      // declare it explicitly so the manifest matches the declaration (Play
-      // blocks the release otherwise). See Play Console → advertising ID.
-      permissions: ["RECORD_AUDIO", "com.google.android.gms.permission.AD_ID"],
+      // AD_ID permission is added by the withAdIdPermission config plugin with
+      // tools:node="replace" — a plain entry here got stripped by the ads SDK's
+      // tools:node="remove" (builds 94/95 kept failing the Play ad-ID check).
+      permissions: ["RECORD_AUDIO"],
       intentFilters: [
         {
           action: "VIEW",
