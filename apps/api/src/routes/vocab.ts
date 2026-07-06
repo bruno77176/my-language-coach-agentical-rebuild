@@ -12,6 +12,8 @@ import { nextSchedule, masteryForBox } from "../lib/srs";
 // Cards shown in a single daily review session (BRU-30): due reviews first,
 // then new words fill up to this target.
 const DAILY_REVIEW_TARGET = 15;
+// Guaranteed new-word slots per session so a due backlog can't starve new cards.
+const NEW_PER_SESSION = 5;
 
 export type TranslateInput = {
   text: string;
@@ -117,19 +119,36 @@ export function createVocabRoutes(deps: VocabDeps) {
         ),
       orderBy: (t, { asc: as }) => [as(t.dueAt)],
     });
-    // Never-introduced words, oldest-saved first.
+    // Never-introduced words, NEWEST-saved first. Was oldest-first, which meant
+    // freshly-added words sat permanently behind the legacy backlog (migration
+    // 0020 dumped the whole pre-existing deck here with due_at NULL) and never
+    // surfaced — the user only ever saw old words. Newest-first introduces the
+    // words they just added.
     const newAll = await deps.db.query.vocabItems.findMany({
       where: (t, { eq: e, and: a, isNull }) =>
         a(e(t.userId, userId), e(t.language, lang), isNull(t.dueAt)),
-      orderBy: (t, { asc: as }) => [as(t.createdAt)],
+      orderBy: (t, { desc: d }) => [d(t.createdAt)],
     });
 
-    const dueQueue = dueAll.slice(0, DAILY_REVIEW_TARGET);
-    const newQueue = newAll.slice(
+    // Guarantee up to NEW_PER_SESSION new words even when a due backlog exists,
+    // so an ever-growing pile of overdue old cards can't fully starve new ones
+    // (previously due took all 15 slots and new got 0). New words go first so
+    // the user sees their recent additions promptly; due fills the rest; if due
+    // is short, backfill with more new words.
+    const newQueue = newAll.slice(0, NEW_PER_SESSION);
+    const dueQueue = dueAll.slice(
       0,
-      Math.max(0, DAILY_REVIEW_TARGET - dueQueue.length),
+      Math.max(0, DAILY_REVIEW_TARGET - newQueue.length),
     );
-    const items = [...dueQueue, ...newQueue];
+    const filled = newQueue.length + dueQueue.length;
+    const backfill =
+      filled < DAILY_REVIEW_TARGET
+        ? newAll.slice(
+            NEW_PER_SESSION,
+            NEW_PER_SESSION + (DAILY_REVIEW_TARGET - filled),
+          )
+        : [];
+    const items = [...newQueue, ...dueQueue, ...backfill];
 
     return c.json({
       items,

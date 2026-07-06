@@ -715,17 +715,26 @@ export function useConversation(
   // a conversationId only when there's feedback to show (a checkpoint was made).
   async function end(): Promise<{
     conversationId: string | null;
+    // For a continuous thread, the specific checkpoint just closed. The
+    // feedback screen keys on THIS so it reads the right segment's feedback
+    // (the thread has one feedback row per checkpoint under one conversationId,
+    // so a conversation-keyed read would race/return a stale prior segment).
+    checkpointId: string | null;
     secondsSpoken: number;
   }> {
     const conversationId = conversationIdRef.current;
     if (!conversationId) {
       await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
-      return { conversationId: null, secondsSpoken: 0 };
+      return { conversationId: null, checkpointId: null, secondsSpoken: 0 };
     }
     if (scenarioId) {
       const result = await endSession(conversationId);
       await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
-      return { conversationId, secondsSpoken: result.seconds_spoken ?? 0 };
+      return {
+        conversationId,
+        checkpointId: null, // scenarios key feedback on the conversation
+        secondsSpoken: result.seconds_spoken ?? 0,
+      };
     }
     // Continuous thread → checkpoint the open segment (feedback + memory +
     // streak) without ending it.
@@ -733,9 +742,13 @@ export function useConversation(
     await AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch(() => {});
     if (!result.checkpoint_id) {
       // Nothing new since the last checkpoint — just leave, no feedback screen.
-      return { conversationId: null, secondsSpoken: 0 };
+      return { conversationId: null, checkpointId: null, secondsSpoken: 0 };
     }
-    return { conversationId, secondsSpoken: result.seconds_spoken ?? 0 };
+    return {
+      conversationId,
+      checkpointId: result.checkpoint_id,
+      secondsSpoken: result.seconds_spoken ?? 0,
+    };
   }
 
   // Continuous-thread "load earlier": page in older messages above the current

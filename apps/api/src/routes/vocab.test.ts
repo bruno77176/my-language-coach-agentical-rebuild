@@ -432,7 +432,7 @@ describe("vocab routes", () => {
     expect(db._data.find((r) => r.id === "a")?.mastery).toBe(0);
   });
 
-  it("GET /review/today returns due-first then new fill, with counts (BRU-30)", async () => {
+  it("GET /review/today surfaces newest new words first, then due, with counts", async () => {
     const now = Date.now();
     const past = new Date(now - 86_400_000); // due yesterday
     const future = new Date(now + 7 * 86_400_000); // not due yet
@@ -472,11 +472,50 @@ describe("vocab routes", () => {
     expect(body.newCount).toBe(2); // new1 + new2
     expect(body.remainingTotal).toBe(3);
     const ids = body.items.map((i) => i.id);
-    expect(ids[0]).toBe("due1"); // due first
-    expect(ids).toContain("new1");
-    expect(ids).toContain("new2");
+    // New words come first, NEWEST-saved first (new2 created after new1), then due.
+    expect(ids[0]).toBe("new2");
+    expect(ids[1]).toBe("new1");
+    expect(ids[2]).toBe("due1");
     expect(ids).not.toContain("notdue");
-    expect(body.items).toHaveLength(3); // 1 due + 2 new, under the 15 cap
+    expect(body.items).toHaveLength(3);
+  });
+
+  it("GET /review/today guarantees new words even with a large due backlog", async () => {
+    const now = Date.now();
+    const past = new Date(now - 86_400_000);
+    const rows = [];
+    // 20 overdue old cards — more than the 15/session cap on their own.
+    for (let i = 0; i < 20; i++) {
+      rows.push(
+        row({
+          id: `due${i}`,
+          term: `old${i}`,
+          dueAt: new Date(past.getTime() - i * 1000),
+          createdAt: new Date("2026-05-01T00:00:00Z"),
+        }),
+      );
+    }
+    // 3 freshly-added words (null dueAt, recent createdAt).
+    for (let i = 0; i < 3; i++) {
+      rows.push(
+        row({
+          id: `new${i}`,
+          term: `fresh${i}`,
+          dueAt: null,
+          createdAt: new Date(`2026-06-0${i + 1}T00:00:00Z`),
+        }),
+      );
+    }
+    const db = makeFakeDb({ rows });
+    const app = appWithVocab(createVocabRoutes(deps(db)));
+    const res = await app.request("/v1/vocab/review/today?language=fr");
+    const body = (await res.json()) as { items: { id: string }[] };
+    const ids = body.items.map((i) => i.id);
+    // Despite 20 overdue cards, the newest words still appear (previously 0 did).
+    expect(ids).toContain("new2");
+    expect(ids).toContain("new1");
+    expect(ids).toContain("new0");
+    expect(body.items).toHaveLength(15); // still capped
   });
 
   it("DELETE removes the row and returns ok", async () => {

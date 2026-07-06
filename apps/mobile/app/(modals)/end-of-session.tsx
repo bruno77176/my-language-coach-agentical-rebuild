@@ -54,7 +54,7 @@ export default function EndOfSessionScreen() {
           You spoke for {min} min {sec} sec
         </EditorialText>
 
-        {(!data || data.status === "pending") && (
+        {(!data || data.status === "pending" || data.status === "missing") && (
           <View style={styles.loading}>
             <ActivityIndicator color={palette.accent} />
             <EditorialText kind="bodyMd" color={palette.inkSoft}>
