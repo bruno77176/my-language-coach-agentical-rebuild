@@ -15,6 +15,7 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { useSessionFeedback } from "@/src/features/practice/use-session-feedback";
+import type { Correction } from "@language-coach/shared";
 import { buildFeedbackText } from "@/src/features/sharing/share-text";
 import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
 import { FeedbackShareCard } from "@/src/features/sharing/share-cards";
@@ -93,14 +94,7 @@ export default function EndOfSessionScreen() {
                   Nothing to fix — nice.
                 </EditorialText>
               ) : (
-                data.corrections.map((c, i) => (
-                  <Item
-                    key={i}
-                    top={`You said "${c.you_said}"`}
-                    middle={`Better: "${c.better}"`}
-                    bottom={c.explanation}
-                  />
-                ))
+                data.corrections.map((c, i) => <CorrectionCard key={i} c={c} />)
               )}
             </Section>
             <Section title="📚 Worth remembering">
@@ -164,6 +158,51 @@ export default function EndOfSessionScreen() {
   );
 }
 
+// A correction the user can tap to reveal the grammar rule + example (the
+// deeper "why"), instead of one flat line. Collapsed by default to keep the
+// report skimmable.
+function CorrectionCard({ c }: { c: Correction }) {
+  const [open, setOpen] = useState(false);
+  const hasDetail = Boolean(c.rule || c.example || c.explanation);
+  return (
+    <Pressable
+      onPress={() => hasDetail && setOpen((v) => !v)}
+      style={styles.item}
+    >
+      <EditorialText kind="bodyMd" style={styles.itemTop}>
+        You said “{c.you_said}”
+      </EditorialText>
+      <EditorialText kind="bodySm" color={palette.accent}>
+        Better: “{c.better}”
+      </EditorialText>
+      {!open && hasDetail ? (
+        <EditorialText kind="bodySm" color={palette.inkSoft}>
+          Tap for the rule ▾
+        </EditorialText>
+      ) : null}
+      {open ? (
+        <View style={styles.detail}>
+          {c.explanation ? (
+            <EditorialText kind="bodySm" color={palette.inkSoft}>
+              {c.explanation}
+            </EditorialText>
+          ) : null}
+          {c.rule ? (
+            <EditorialText kind="bodySm" color={palette.ink}>
+              📘 {c.rule}
+            </EditorialText>
+          ) : null}
+          {c.example ? (
+            <EditorialText kind="bodySm" color={palette.inkSoft} italic>
+              e.g. {c.example}
+            </EditorialText>
+          ) : null}
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View style={styles.section}>
@@ -224,6 +263,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   itemTop: { color: palette.ink },
+  detail: { gap: spacing.xs, marginTop: spacing.xs },
   actions: {
     flexDirection: "row",
     gap: spacing.md,

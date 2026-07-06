@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   EditorialText,
   GlassCard,
@@ -138,16 +139,21 @@ function PracticeChooser() {
   const onFree = () => router.replace("/(tabs)/practice?start=free");
   // A recent session opens its saved TRANSCRIPT (BRU-29); the feedback report
   // is reachable from there.
+  // Recent sessions now open the FEEDBACK REPORT (not the raw transcript): with
+  // free practice being one continuous thread, the useful history is "what you
+  // learned each session", not re-reading the chat. Checkpoint rows key feedback
+  // on the checkpoint id; legacy/scenario rows on the conversation id.
   const onReview = (
     id: string,
     kind: "session" | "checkpoint" | undefined,
     secondsSpoken: number,
   ) =>
     router.push({
-      pathname: "/(modals)/transcript",
+      pathname: "/(modals)/end-of-session",
       params: {
-        conversationId: id,
-        kind: kind ?? "session",
+        ...(kind === "checkpoint"
+          ? { checkpointId: id }
+          : { conversationId: id }),
         secondsSpoken: String(secondsSpoken),
       },
     });
@@ -202,39 +208,27 @@ function PracticeChooser() {
         )}
 
         {/* Free conversation first — main functionality. */}
-        <Pressable onPress={onFree} style={chooserStyles.card}>
-          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
-            💬 Free conversation with your language coach
-          </EditorialText>
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Lisa talks with you about anything — she&apos;ll gently correct
-            grammar and vocabulary as you go.
-          </EditorialText>
-        </Pressable>
-
-        <Pressable onPress={onScenario} style={chooserStyles.card}>
-          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
-            🎭 Practice a scenario
-          </EditorialText>
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Real-life conversation with a stranger — at the café, the doctor, a
-            job interview. They&apos;re not there to teach you, but they can be
-            friendly.
-          </EditorialText>
-        </Pressable>
-
-        <Pressable
+        <ChooserCard
+          icon="forum"
+          tint={palette.accent}
+          title="Free conversation with Lisa"
+          subtitle="Lisa talks with you about anything — she'll gently correct your grammar and vocabulary as you go."
+          onPress={onFree}
+        />
+        <ChooserCard
+          icon="drama-masks"
+          tint={palette.coral}
+          title="Practice a life scenario"
+          subtitle="A real-life exchange with a stranger — the café, the doctor, a job interview. They're not there to teach you, but they can be friendly."
+          onPress={onScenario}
+        />
+        <ChooserCard
+          icon="cards-outline"
+          tint={palette.mauve}
+          title="Review your words"
+          subtitle="Practise the words you've saved from your conversations — spaced out so they stick."
           onPress={() => router.push("/vocab")}
-          style={chooserStyles.card}
-        >
-          <EditorialText kind="bodyMd" style={chooserStyles.cardTitle}>
-            📇 Review your words
-          </EditorialText>
-          <EditorialText kind="bodySm" color={palette.inkSoft}>
-            Practise the words you&apos;ve saved from your conversations —
-            spaced out so they stick.
-          </EditorialText>
-        </Pressable>
+        />
 
         <EditorialText
           kind="bodySm"
@@ -270,6 +264,40 @@ function PracticeChooser() {
         />
       </ScrollView>
     </Screen>
+  );
+}
+
+function ChooserCard({
+  icon,
+  tint,
+  title,
+  subtitle,
+  onPress,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  tint: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={chooserStyles.card}>
+      <View style={chooserStyles.cardRow}>
+        <View
+          style={[chooserStyles.iconBadge, { backgroundColor: `${tint}22` }]}
+        >
+          <MaterialCommunityIcons name={icon} size={26} color={tint} />
+        </View>
+        <View style={chooserStyles.cardTextCol}>
+          <EditorialText kind="bodyLg" style={chooserStyles.cardTitle}>
+            {title}
+          </EditorialText>
+          <EditorialText kind="bodySm" color={palette.inkSoft}>
+            {subtitle}
+          </EditorialText>
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -946,9 +974,25 @@ const chooserStyles = StyleSheet.create({
     gap: spacing.xs,
     ...shadow.card,
   },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.base,
+  },
+  iconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardTextCol: {
+    flex: 1,
+    gap: 2,
+  },
   cardTitle: {
     color: palette.ink,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   historyHeader: {
     marginTop: spacing.xl,
