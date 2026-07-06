@@ -132,7 +132,18 @@ describe("POST /v1/voice/greeting/audio", () => {
   it("keys the cache by voice — different voices look up different files", async () => {
     const getCached = vi.fn().mockResolvedValue(null);
     const routes = createVoiceGreetingRoutes({
-      db: {} as never,
+      // Pro entitlement so the two explicit voices are honored (voice selection
+      // is a Pro feature) and produce different cache keys.
+      db: {
+        query: {
+          entitlements: {
+            findFirst: async () => ({
+              plan: "pro",
+              proUntil: new Date(Date.now() + 86_400_000),
+            }),
+          },
+        },
+      } as never,
       getCachedGreetingUrl: getCached,
       synthesizeSpeech: vi.fn().mockResolvedValue({
         audioBuffer: Buffer.from("x"),
@@ -195,7 +206,8 @@ describe("POST /v1/voice/greeting/audio", () => {
       body: JSON.stringify({ lang: "fr", name: "Bruno" }),
     });
     const passedConfig = tts.mock.calls[0]?.[0]?.config;
-    expect(passedConfig).toEqual(voiceConfigForLanguage("fr"));
+    // No entitlement in this test's db → free tier → the cheap Gemini voice.
+    expect(passedConfig).toEqual(voiceConfigForLanguage("fr", false));
   });
 
   it("uses sha1-truncated nameHash so 'Bruno' and 'bruno' share cache", async () => {

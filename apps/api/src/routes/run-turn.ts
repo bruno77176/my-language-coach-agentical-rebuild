@@ -20,6 +20,9 @@ export type RunTurnInput = {
   messages: ChatMessage[];
   languageCode: string;
   ttsConfig?: TtsConfig;
+  // Speaking user's tier — free gets the cheap default voice and can't override
+  // it; Pro gets premium/selected voices (MON-1/MON-2).
+  isPro: boolean;
   model?: string;
   onUsage?: OnUsage;
   // Barge-in: when this aborts, runTurn stops starting new sentences. A
@@ -56,6 +59,7 @@ export async function runTurn(
         text,
         languageCode: input.languageCode,
         config: input.ttsConfig,
+        isPro: input.isPro,
         onUsage: input.onUsage,
       });
     } catch (err) {

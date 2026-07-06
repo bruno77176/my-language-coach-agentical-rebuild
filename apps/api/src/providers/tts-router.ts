@@ -20,6 +20,10 @@ export type RoutedTtsInput = {
   text: string;
   languageCode?: string;
   config?: TtsConfig;
+  // Whether the speaking user is Pro. Free users get the cheap per-language
+  // default (Gemini) and cannot override the voice (MON-1/MON-2). Required so no
+  // path silently downgrades a Pro user OR leaks an ElevenLabs voice to free.
+  isPro: boolean;
   onUsage?: OnUsage;
 };
 
@@ -79,12 +83,17 @@ function isDefaultTtsConfig(c: TtsConfig): boolean {
 export function resolveTtsConfig(input: {
   config?: TtsConfig;
   languageCode?: string;
+  isPro: boolean;
 }): TtsConfig {
+  // Voice selection is a Pro feature ("Coach's voice = Pro", MON-2). A free or
+  // modded client could POST an expensive ElevenLabs voice_config, so free
+  // users' explicit config is ignored — they always get the cheap per-language
+  // default (Gemini, MON-1).
   const explicit =
-    input.config && !isDefaultTtsConfig(input.config)
+    input.isPro && input.config && !isDefaultTtsConfig(input.config)
       ? input.config
       : undefined;
-  return explicit ?? voiceConfigForLanguage(input.languageCode);
+  return explicit ?? voiceConfigForLanguage(input.languageCode, input.isPro);
 }
 
 export function makeSynthesizeSpeech(deps: TtsDeps) {
@@ -100,6 +109,7 @@ export function makeSynthesizeSpeech(deps: TtsDeps) {
     const config = resolveTtsConfig({
       config: input.config,
       languageCode: input.languageCode,
+      isPro: input.isPro,
     });
     const shared = {
       text: input.text,

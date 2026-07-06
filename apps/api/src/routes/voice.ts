@@ -759,12 +759,12 @@ export function createVoiceRoutes(deps: VoiceDeps) {
       memoryRow && profile.memoryEnabled
         ? parseCoachMemoryRow(memoryRow)
         : null;
-    const memoryDepth =
+    const isPro = Boolean(
       entitlement.plan === "pro" &&
       entitlement.proUntil &&
-      entitlement.proUntil > new Date()
-        ? ("deep" as const)
-        : ("basic" as const);
+      entitlement.proUntil > new Date(),
+    );
+    const memoryDepth = isPro ? ("deep" as const) : ("basic" as const);
 
     const memoryItems =
       memoryDepth === "deep" && profile.memoryEnabled
@@ -905,6 +905,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             messages: promptMessages,
             languageCode,
             ttsConfig: voiceConfig,
+            isPro,
             model: coachReplyModel(
               languageCode,
               memory?.proficiency_level ?? declaredLevel,
@@ -1040,6 +1041,16 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         404,
       );
     }
+    // Opener voice must match the session tier (free → Gemini, Pro → premium).
+    const openerEntitlement =
+      (await deps.db.query?.entitlements?.findFirst?.({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      })) ?? null;
+    const isPro = Boolean(
+      openerEntitlement?.plan === "pro" &&
+      openerEntitlement.proUntil &&
+      openerEntitlement.proUntil > new Date(),
+    );
     if (!conversation.scenarioId) {
       return c.json(
         {
@@ -1111,6 +1122,7 @@ export function createVoiceRoutes(deps: VoiceDeps) {
             audio = await deps.synthesizeSpeech({
               text,
               languageCode,
+              isPro,
               onUsage,
             });
           } catch {
@@ -1357,7 +1369,15 @@ export function createVoiceRoutes(deps: VoiceDeps) {
         ? body.text
         : buildGreeting(sampleLang, "Alex");
     try {
-      const audio = await deps.synthesizeSpeech({ text, languageCode, config });
+      // Voice Lab preview: play the exact requested voice so users can audition
+      // it (isPro:true bypasses the free downgrade). The Lab itself is Pro-gated
+      // in the UI; abuse of this one-shot sample is bounded by rate-limiting.
+      const audio = await deps.synthesizeSpeech({
+        text,
+        languageCode,
+        config,
+        isPro: true,
+      });
       return c.json({
         audioBase64: audio.audioBuffer.toString("base64"),
         contentType: audio.contentType,

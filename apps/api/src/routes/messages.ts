@@ -17,6 +17,7 @@ export type SynthesizeSpeechFn = (input: {
   text: string;
   languageCode?: string;
   config?: TtsConfig;
+  isPro: boolean;
   onUsage?: OnUsage;
 }) => Promise<{ audioBuffer: Buffer; contentType: string }>;
 
@@ -137,11 +138,23 @@ export function createMessagesRoutes(deps: MessagesDeps) {
       conversationId: message.conversation.id,
     });
 
+    // Message-repeat audio must match the session voice tier (MON-1).
+    const entitlement =
+      (await deps.db.query?.entitlements?.findFirst?.({
+        where: (t, { eq: e }) => e(t.userId, userId),
+      })) ?? null;
+    const isPro = Boolean(
+      entitlement?.plan === "pro" &&
+      entitlement.proUntil &&
+      entitlement.proUntil > new Date(),
+    );
+
     let audio: { audioBuffer: Buffer; contentType: string };
     try {
       audio = await deps.synthesizeSpeech({
         text: message.text,
         languageCode: message.conversation.language,
+        isPro,
         onUsage,
       });
     } catch {
