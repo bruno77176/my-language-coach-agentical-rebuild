@@ -4,73 +4,95 @@ import { configureForPlayback } from "@/src/lib/audio-session";
 /**
  * App-wide single-player audio controller.
  *
- * One player at a time across the whole practice screen — greeting, coach
- * chunks, and per-message repeat all funnel through `playOnce` here. That
- * gives us:
+ * ONE native player is created for the whole app and reused for every sound
+ * (greeting, coach chunks, per-message repeat) via `player.replace(source)`.
  *
- * - Tapping a second sound stops the first immediately (volume=0 first
- *   because Android pause+remove can lag, letting the buffer finish).
- * - Every player has a guaranteed cleanup path (didJustFinish OR timeout),
- *   so no player can leak and starve the native audio session over time.
- * - `stopActivePlayer()` kills in-flight audio when navigating away.
+ * Why one player: the previous implementation called `createAudioPlayer()` per
+ * sentence and `.remove()`d it on finish, but expo-audio doesn't free the native
+ * player immediately — so over a long conversation the instances piled up and,
+ * after ~30 (≈ 7-8 minutes of talking), the OS refused to start new ones and
+ * coach audio silently died while text kept streaming. Reusing a single player
+ * removes the leak entirely (verified: the server was still producing full audio
+ * at the moment playback went silent, so the fault was device-side).
+ *
+ * A monotonically increasing `activeToken` identifies the current play; a newer
+ * `playOnce` bumps it so an older play's status callbacks and timeout become
+ * no-ops. `stopActivePlayer()`/`stopAllPlayback()` pause the shared player (they
+ * never remove it) so it stays ready for the next sound.
  */
 
-let currentPlayer: AudioPlayer | null = null;
+let sharedPlayer: AudioPlayer | null = null;
 
 // Latch set when playback is hard-stopped (navigating away from Practice).
-// While set, every playOnce is a no-op, so neither chunks already queued nor
-// chunks an in-flight stream enqueues afterwards can start. Cleared by
-// resumePlayback() when the Practice screen regains focus.
+// While set, every playOnce is a no-op. Cleared by resumePlayback().
 let playbackStopped = false;
 
-function safeStop(p: AudioPlayer): void {
+// Identifies the currently-active play. Bumped by every playOnce and by
+// stopActivePlayer, so a superseded/stopped play's callbacks stop acting.
+let activeToken = 0;
+
+function setVolume(p: AudioPlayer, v: number): void {
   try {
-    (p as { volume?: number }).volume = 0;
-  } catch {
-    // ignore
-  }
-  try {
-    p.pause();
-  } catch {
-    // ignore
-  }
-  try {
-    p.remove();
+    (p as { volume?: number }).volume = v;
   } catch {
     // ignore
   }
 }
 
+/** Get the shared player, creating it on first use and swapping its source after. */
+function ensurePlayer(source: { uri: string } | number): AudioPlayer {
+  if (!sharedPlayer) {
+    sharedPlayer = createAudioPlayer(source);
+    return sharedPlayer;
+  }
+  try {
+    sharedPlayer.replace(source);
+  } catch {
+    // replace failed (rare) — recreate as a last resort rather than go silent.
+    try {
+      sharedPlayer.remove();
+    } catch {
+      // ignore
+    }
+    sharedPlayer = createAudioPlayer(source);
+  }
+  return sharedPlayer;
+}
+
 export function stopActivePlayer(): void {
-  if (!currentPlayer) return;
-  safeStop(currentPlayer);
-  currentPlayer = null;
+  // Invalidate any in-flight play so its callbacks/timeout stop acting, then
+  // pause the shared player (volume=0 first because Android pause can lag).
+  activeToken++;
+  if (!sharedPlayer) return;
+  setVolume(sharedPlayer, 0);
+  try {
+    sharedPlayer.pause();
+  } catch {
+    // ignore
+  }
 }
 
 /**
  * Hard-stop all playback and latch playback off. Use when navigating away from
- * the Practice screen: the active player is stopped AND every subsequent
- * playOnce (queued chunks, or chunks an in-flight SSE stream is still
- * enqueuing) becomes a no-op until resumePlayback() is called.
+ * the Practice screen: the active play is stopped AND every subsequent playOnce
+ * (queued chunks, or chunks an in-flight SSE stream is still enqueuing) becomes
+ * a no-op until resumePlayback() is called.
  */
 export function stopAllPlayback(): void {
   playbackStopped = true;
   stopActivePlayer();
 }
 
-/**
- * Re-enable playback after a stopAllPlayback(). Called when the Practice screen
- * regains focus so new greetings / turns / repeats can play again.
- */
+/** Re-enable playback after a stopAllPlayback() (Practice screen regains focus). */
 export function resumePlayback(): void {
   playbackStopped = false;
 }
 
 /**
- * Play a single audio source through the global slot. Resolves when audio
+ * Play a single audio source through the shared player. Resolves when audio
  * finishes OR after a hard timeout (estimated from text length / explicit
- * durationMs). Always cleans up the player — no leaks even if the audio
- * never reports `didJustFinish`.
+ * durationMs). Never creates a per-call player, so playback can't starve the
+ * native audio system over a long session.
  */
 export async function playOnce(input: {
   source: { uri: string } | number;
@@ -80,13 +102,13 @@ export async function playOnce(input: {
   // The default configureForPlayback() sets allowsRecording:false, which on iOS
   // switches the category to .playback and KILLS the always-on mic capture —
   // so after the first coach reply no more audio reaches Deepgram and it
-  // idle-closes (NET-0001 / 1011). Live passes true to keep the mic alive.
+  // idle-closes. Live passes true to keep the mic alive.
   keepSession?: boolean;
 }): Promise<void> {
-  // If playback was hard-stopped (navigated away), don't start anything.
   if (playbackStopped) return;
-  // Stop any prior playback before creating a new player.
-  stopActivePlayer();
+  // This is now the active play; supersede any prior one.
+  const myToken = ++activeToken;
+
   if (!input.keepSession) {
     try {
       await configureForPlayback();
@@ -94,10 +116,11 @@ export async function playOnce(input: {
       // best-effort
     }
   }
-  // Re-check: a stop may have landed while we awaited the session config.
-  if (playbackStopped) return;
-  const player = createAudioPlayer(input.source);
-  currentPlayer = player;
+  // A stop or newer play may have landed while we awaited the session config.
+  if (playbackStopped || myToken !== activeToken) return;
+
+  const player = ensurePlayer(input.source);
+  setVolume(player, 1);
 
   await new Promise<void>((resolve) => {
     let resolved = false;
@@ -108,14 +131,7 @@ export async function playOnce(input: {
       if (resolved) return;
       resolved = true;
       if (timeoutId) clearTimeout(timeoutId);
-      // Only release the slot if THIS player is still the active one (it may
-      // have been displaced by a newer playOnce while we were waiting).
-      if (currentPlayer === player) currentPlayer = null;
-      try {
-        player.remove();
-      } catch {
-        // ignore
-      }
+      sub.remove();
       resolve();
     };
 
@@ -126,6 +142,11 @@ export async function playOnce(input: {
         playing?: boolean;
         didJustFinish?: boolean;
       }) => {
+        // A newer play (or a stop) took over — stop reacting to this source.
+        if (myToken !== activeToken) {
+          finish();
+          return;
+        }
         if (s.isLoaded && !triggered) {
           triggered = true;
           try {
@@ -134,27 +155,21 @@ export async function playOnce(input: {
             // ignore
           }
         }
-        if (s.didJustFinish) {
-          sub.remove();
-          finish();
-        }
+        if (s.didJustFinish) finish();
       },
     );
 
-    // Hard timeout fallback so the player never leaks. The estimate is
-    // generous (text length × 80ms = roughly speaking pace, plus 6s buffer)
-    // because we'd rather wait too long than starve the audio session.
+    // Hard timeout fallback so a play always resolves (and its listener is
+    // removed) even if the source never reports didJustFinish. Generous
+    // (text length × 80ms ≈ speaking pace, plus 6s buffer).
     const estimatedMs =
       input.durationMs && input.durationMs > 0
         ? input.durationMs
         : Math.max(2500, (input.text?.length ?? 0) * 80);
-    timeoutId = setTimeout(() => {
-      sub.remove();
-      finish();
-    }, estimatedMs + 6000);
+    timeoutId = setTimeout(finish, estimatedMs + 6000);
 
-    // Also try to start immediately — if the source is a bundled module
-    // (require result), it may already be loaded, and isLoaded won't fire.
+    // Also try to start immediately — a bundled module (require result) may
+    // already be loaded, so isLoaded won't fire.
     try {
       player.play();
     } catch {

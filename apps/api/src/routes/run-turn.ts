@@ -59,21 +59,9 @@ export async function runTurn(
         onUsage: input.onUsage,
       });
     } catch (err) {
-      // TEMP DIAG (revert after the ~8-min silent-voice repro): a synth failure
-      // that even the OpenAI fallback couldn't rescue — the chunk ships with NO
-      // audio. If this fires around minute 8, the cause is server-side TTS.
-      console.warn(
-        `[TTS-DIAG] SYNTH_FAIL chunk=${index} textLen=${text.length} err=${(err as Error)?.message}`,
-      );
       await onChunkError?.(index, err);
       return;
     }
-    // TEMP DIAG: per-chunk audio size. Healthy speech is many KB; a drop to ~0
-    // (or SYNTH_FAIL above) around minute 8 pins the fault to the server. If
-    // these stay healthy the whole session, the audio is lost on the device.
-    console.warn(
-      `[TTS-DIAG] chunk=${index} textLen=${text.length} audioBytes=${audio.audioBuffer.length} ct=${audio.contentType}`,
-    );
     await onChunk({ index, text, audio });
   };
 
