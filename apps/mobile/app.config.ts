@@ -55,7 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: "My Language Coach",
     slug: "my-language-coach",
     scheme: "mylanguagecoach",
-    version: "2.0.3",
+    version: "2.0.4",
     orientation: "portrait",
     userInterfaceStyle: "light",
     newArchEnabled: true,
@@ -92,7 +92,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.brunomoise.mylanguagecoach",
-      buildNumber: "58",
+      buildNumber: "59",
       usesAppleSignIn: true,
       associatedDomains: ["applinks:www.mylanguagecoach.app"],
       infoPlist: {
