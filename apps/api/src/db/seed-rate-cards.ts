@@ -96,13 +96,22 @@ const SEEDS: Seed[] = [
     unitType: "seconds",
     pricePerUnit: "0.000128", // ~$0.0077/min nova streaming PAYG = $0.000128/s (MON-6: was 10x low)
   },
-  // ElevenLabs TTS (when re-enabled). Operation name must match the provider's
-  // active default in providers/elevenlabs.ts so recordUsage finds a rate card.
+  // ElevenLabs TTS. Operation name must match the provider's active default in
+  // providers/elevenlabs.ts so recordUsage finds a rate card.
   {
     provider: "elevenlabs",
     operation: "tts:eleven_flash_v2_5",
     unitType: "characters",
-    pricePerUnit: "0.00033", // ~$0.33/1k chars on Creator tier; verify
+    pricePerUnit: "0.00005", // verified 2026-07: $0.05/1k marginal API rate (was a $0.33/1k guess). Tiers $0.05-0.11/1k.
+  },
+  // Google Gemini-TTS ("Kore", the free-tier voice). Operation must match
+  // providers/gemini.ts. Google bills $10/1M audio tokens @ 25 tok/s = $0.015/min;
+  // the app records characters, so convert at ~13 chars/s => ~$0.0000192/char.
+  {
+    provider: "gemini",
+    operation: "tts:gemini-2.5-flash-tts",
+    unitType: "characters",
+    pricePerUnit: "0.0000192", // ~$19/1M chars; speaking-rate dependent, refine with real usage
   },
 ];
 
