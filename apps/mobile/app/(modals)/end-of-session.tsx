@@ -15,6 +15,7 @@ import {
   spacing,
 } from "@language-coach/design-tokens";
 import { useSessionFeedback } from "@/src/features/practice/use-session-feedback";
+import { useRetryFeedback } from "@/src/features/practice/use-retry-feedback";
 import type { Correction } from "@language-coach/shared";
 import { buildFeedbackText } from "@/src/features/sharing/share-text";
 import { ShareCardModal } from "@/src/features/sharing/share-card-modal";
@@ -28,10 +29,10 @@ export default function EndOfSessionScreen() {
     checkpointId?: string;
     secondsSpoken?: string;
   }>();
-  const { data } = useSessionFeedback(
-    checkpointId ?? conversationId ?? null,
-    checkpointId ? "checkpoint" : "session",
-  );
+  const feedbackId = checkpointId ?? conversationId ?? null;
+  const feedbackKind = checkpointId ? "checkpoint" : "session";
+  const { data } = useSessionFeedback(feedbackId, feedbackKind);
+  const retry = useRetryFeedback(feedbackId, feedbackKind);
   const [shareOpen, setShareOpen] = useState(false);
 
   const goHome = () => router.replace("/(tabs)/home");
@@ -65,14 +66,34 @@ export default function EndOfSessionScreen() {
         )}
 
         {data?.status === "failed" && (
-          <EditorialText
-            kind="bodyMd"
-            color={palette.inkSoft}
-            style={styles.failed}
-          >
-            Couldn't generate feedback this session. No worries — try another
-            conversation.
-          </EditorialText>
+          <View style={styles.failedBlock}>
+            <EditorialText
+              kind="bodyMd"
+              color={palette.inkSoft}
+              style={styles.failed}
+            >
+              Couldn't generate feedback this session. No worries — you can try
+              again.
+            </EditorialText>
+            <Pressable
+              onPress={() => retry.mutate()}
+              disabled={retry.isPending}
+              style={[styles.btn, styles.btnPrimary, styles.retryBtn]}
+            >
+              {retry.isPending ? (
+                <ActivityIndicator color={palette.peach} />
+              ) : (
+                <EditorialText kind="bodyMd" color={palette.peach}>
+                  Try again
+                </EditorialText>
+              )}
+            </Pressable>
+            {retry.isError ? (
+              <EditorialText kind="bodySm" color={palette.inkSoft}>
+                Something went wrong. Give it another tap.
+              </EditorialText>
+            ) : null}
+          </View>
         )}
 
         {data?.status === "ready" && (
@@ -247,7 +268,9 @@ const styles = StyleSheet.create({
   title: { color: palette.ink },
   subtitle: { marginBottom: spacing.xl },
   loading: { gap: spacing.md, alignItems: "center", marginTop: spacing.xl },
-  failed: { marginTop: spacing.xl },
+  failedBlock: { marginTop: spacing.xl, gap: spacing.md, alignItems: "center" },
+  failed: { textAlign: "center" },
+  retryBtn: { alignSelf: "stretch" },
   shareRow: { alignItems: "center", marginTop: spacing.xl },
   section: { marginTop: spacing.xl },
   sectionTitle: {

@@ -288,7 +288,13 @@ export function createApp(
     }),
   );
 
-  app.route("/v1", createFeedbackRoutes({ db }));
+  app.route(
+    "/v1",
+    createFeedbackRoutes({
+      db,
+      generateFeedback: (input) => generateFeedback(openai, input),
+    }),
+  );
   app.route(
     "/v1",
     createVoiceModesRoute({
