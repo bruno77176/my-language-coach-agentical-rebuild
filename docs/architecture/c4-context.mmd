@@ -1,0 +1,51 @@
+---
+title: My Language Coach — C4 Context
+---
+%% Last updated: 2026-05-29
+%% Scope: My Language Coach as a black box, its users, and external systems it depends on.
+%% Audience: non-technical stakeholders, new joiners, marketing decks.
+
+C4Context
+    title System Context — My Language Coach
+
+    Person(learner, "Language learner", "EU-based user practicing a foreign language daily, primarily on mobile")
+    Person(admin, "Bruno (admin)", "Operator monitoring cost, usage and revenue")
+
+    System_Boundary(mlc, "My Language Coach") {
+        System(web, "Landing site", "Public marketing site at mylanguagecoach.app")
+        System(mobile, "Mobile app", "iOS + Android — main product experience")
+        System(api, "Backend API", "Voice + chat + storage + cost recording")
+        System(adminUi, "Admin dashboard", "Internal-only cost & revenue charts")
+    }
+
+    System_Ext(openai, "OpenAI", "LLM chat completions + text-to-speech")
+    System_Ext(deepgram, "Deepgram", "Streaming speech-to-text")
+    System_Ext(elevenlabs, "ElevenLabs", "Alt TTS provider for richer voices")
+    System_Ext(supabase, "Supabase", "Hosted Postgres, auth, storage, realtime")
+    System_Ext(resend, "Resend", "Transactional email (account deletion, OTP)")
+    System_Ext(apple, "Apple", "Sign in with Apple + App Store distribution")
+    System_Ext(google, "Google", "Sign in with Google + Play Store distribution")
+    System_Ext(sentry, "Sentry", "Crash + error reporting")
+    System_Ext(posthog, "PostHog", "Product analytics")
+
+    Rel(learner, web, "Browses, taps download link", "HTTPS")
+    Rel(learner, mobile, "Practices voice conversations", "HTTPS + WebSocket")
+    Rel(admin, adminUi, "Reads metrics", "HTTPS")
+
+    Rel(mobile, api, "Calls", "HTTPS / WebSocket")
+    Rel(mobile, supabase, "Reads own rows", "HTTPS, anon key + RLS")
+    Rel(adminUi, api, "Reads metrics", "HTTPS, JWT")
+
+    Rel(api, supabase, "Persists + reads", "Postgres / SQL")
+    Rel(api, openai, "Chat + TTS", "HTTPS, SSE")
+    Rel(api, deepgram, "Streams audio", "WebSocket")
+    Rel(api, elevenlabs, "Synthesizes voice", "HTTPS")
+    Rel(api, resend, "Sends emails", "HTTPS")
+    Rel(api, sentry, "Reports errors", "HTTPS")
+
+    Rel(mobile, apple, "Sign in + downloads", "OIDC / App Store")
+    Rel(mobile, google, "Sign in + downloads", "OIDC / Play Store")
+    Rel(mobile, posthog, "Sends events", "HTTPS")
+    Rel(mobile, sentry, "Reports crashes", "HTTPS")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

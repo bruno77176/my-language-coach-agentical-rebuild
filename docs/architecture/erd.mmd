@@ -1,0 +1,101 @@
+---
+title: Database schema — Supabase Postgres
+---
+%% Last updated: 2026-05-29
+%% Scope: Application tables in the public schema. The auth.users table is Supabase-managed.
+%% All user-scoped tables carry a user_id FK to auth.users and have RLS policies
+%% restricting access to "WHERE user_id = auth.uid()".
+
+erDiagram
+    auth_users ||--|| profiles : "1:1"
+    auth_users ||--o{ conversations : "owns"
+    conversations ||--|{ messages : "contains"
+    conversations }o--o| topics : "drives toward"
+    auth_users ||--o{ streak_days : "tracks"
+    auth_users ||--o{ usage_events : "generates"
+    auth_users ||--o| entitlements : "has tier"
+    auth_users ||--o{ vocab_items : "extracts"
+    auth_users ||--o{ push_tokens : "owns"
+    auth_users ||--o{ revenue_events : "purchases"
+    rate_cards }o--o{ usage_events : "prices"
+
+    auth_users {
+        uuid id PK
+        text email UK
+        timestamp created_at
+    }
+    profiles {
+        uuid user_id PK
+        text display_name
+        text languages_practiced
+        int daily_goal_minutes
+        timestamp created_at
+        timestamp updated_at
+    }
+    conversations {
+        uuid id PK
+        uuid user_id FK
+        text language
+        uuid topic_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+    messages {
+        uuid id PK
+        uuid conversation_id FK
+        text role
+        text content
+        timestamp created_at
+    }
+    streak_days {
+        uuid user_id PK
+        date day PK
+        int minutes
+    }
+    usage_events {
+        uuid id PK
+        uuid user_id FK
+        text service
+        text model
+        int input_tokens
+        int output_tokens
+        timestamp occurred_at
+    }
+    entitlements {
+        uuid user_id PK
+        text tier
+        timestamp expires_at
+    }
+    topics {
+        uuid id PK
+        text slug UK
+        text title
+        text languages
+    }
+    vocab_items {
+        uuid id PK
+        uuid user_id FK
+        text term
+        text translation
+        timestamp created_at
+    }
+    push_tokens {
+        uuid id PK
+        uuid user_id FK
+        text platform
+        text token UK
+    }
+    rate_cards {
+        text service PK
+        text model PK
+        numeric usd_per_unit
+        text unit
+        date effective_from PK
+    }
+    revenue_events {
+        uuid id PK
+        uuid user_id FK
+        numeric amount_usd
+        text source
+        timestamp occurred_at
+    }
